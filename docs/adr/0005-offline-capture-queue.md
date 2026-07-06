@@ -1,0 +1,5 @@
+# Offline Capture Queue
+
+Observation captures use an optimistic UI with an IndexedDB-backed queue. When a teacher taps save, the UI marks the kid captured immediately; the write is queued in the background. If the network is unavailable, the write persists locally and retries on reconnect. We rejected a hard-fail approach (no network = no save) because the recall window is roughly two hours post-class — a lost capture cannot be reconstructed later, so failing on network drop would lose data permanently. We rejected a full PWA offline-first architecture as overkill for v1.
+
+The queue applies only to writes (capture); reads (roster, schedule) require network on open in v1. Sync conflicts on reconnect are resolved via the same optimistic-locking and two-layer conflict UI used for concurrent online edits — only single-value fields (mood, appetite, absence, activity participation) can conflict and refresh; notes are append-only and always persist. This protects the recall window's integrity, which is the single most fragile part of the capture flow.

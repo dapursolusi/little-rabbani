@@ -1,0 +1,3 @@
+# Two-Layer Report Model
+
+Daily, Monthly, and Quarterly reports are composed of two layers: a read-only structured layer (generated from stored observations — source of truth) and an editable narrative layer on top (AI-drafted, owner-polished). We rejected editable structured data because it risks drift between stored observations and reports, which would silently corrupt monthly/quarterly aggregates. We rejected pure-narrative reports because they lose scannable facts parents value and make aggregation impossible. The read-only structured layer guarantees a single source of truth; the narrative layer preserves the warm voice the owner currently refines through repeated AI-chat loops.

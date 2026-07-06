@@ -1,0 +1,5 @@
+# Owner-Only Class Activity Capture
+
+Only the Owner captures class-level activities (selected from the Activity Catalog, plus optional "other" free-text) when writing the Daily Class Report. Teachers then record per-kid participation by tapping yes/no against each class-level activity. Capture is two-pass: Pass 1 (mood, appetite, absence, notes) is available anytime post-class; Pass 2 (activity participation) unlocks after the Owner's Daily Class Report is done.
+
+We chose top-down (class-level first, per-kid second) rather than bottom-up (derive class activities from per-kid participation) because the class is the source of truth for "what happened today" — bottom-up risks inferring "class did painting" from a single kid's participation. We restrict typing to the Owner because teachers are one-handed and post-class chaotic; a typing surface would violate the tap-fast constraint that makes distributed capture viable. This splits work by context: the Owner types while seated and reviewing; teachers tap-only while recalling.
