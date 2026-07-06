@@ -1,0 +1,36 @@
+name: Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  quality-gate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Check Formatting
+        run: bunx --bun prettier --check .
+
+      - name: Run Linter
+        run: bun lint
+
+      - name: Check TypeScript Types
+        run: bunx --bun tsc --noEmit
+
+      - name: Run Tests
+        run: bun run test --run --passWithNoTests
+
+      - name: Verify Production Build
+        run: bun run build
