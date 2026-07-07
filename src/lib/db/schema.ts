@@ -3,6 +3,7 @@ import {
   boolean,
   date,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -431,11 +432,11 @@ export const dailyReportSnapshot = pgTable(
     sessionId: uuid('session_id')
       .notNull()
       .references(() => termSession.id, { onDelete: 'cascade' }),
-    structuredJson: text('structured_json').notNull(), // JSON string of structured data
+    structuredJson: jsonb('structured_json').notNull(), // JSONB of structured data
     narrativeAiDraft: text('narrative_ai_draft'),
     narrativeFinal: text('narrative_final'),
     status: dailyReportStatusEnum('status').notNull().default('draft'),
-    editedBy: text('edited_by').references(() => user.id, {
+    editedBy: uuid('edited_by').references(() => user.id, {
       onDelete: 'set null',
     }),
     generatedAt: timestamp('generated_at').notNull().defaultNow(),

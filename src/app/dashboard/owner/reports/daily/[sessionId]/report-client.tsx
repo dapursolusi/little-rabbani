@@ -36,7 +36,7 @@ interface IKid {
 interface IReport {
   id: string;
   kidId: string;
-  structuredJson: string;
+  structuredJson: unknown;
   narrativeAiDraft: string | null;
   narrativeFinal: string | null;
   status: 'draft' | 'sent' | 'stale';
@@ -163,14 +163,33 @@ export function DailyReportClient({
         return;
       }
 
-      // Update reports with the new generation results
-      toast.success('Laporan berhasil dibuat');
-
-      // Refresh to get updated reports
-      router.refresh();
-
       // Show per-kid results
       const results = result.data;
+
+      // Immediately update local state so reports appear without waiting for navigation
+      setReports((prev) => {
+        const updated = new Map(prev.map((r) => [r.kidId, r]));
+        for (const r of results) {
+          if (r.status === 'success' && r.reportId) {
+            updated.set(r.kidId, {
+              id: r.reportId,
+              kidId: r.kidId,
+              structuredJson: '',
+              narrativeAiDraft: null,
+              narrativeFinal: null,
+              status: 'draft',
+              generatedAt: new Date(),
+            });
+          }
+        }
+        return Array.from(updated.values());
+      });
+
+      toast.success('Laporan berhasil dibuat');
+
+      // Refresh to sync with server
+      router.refresh();
+
       for (const r of results) {
         if (r.status === 'skipped') {
           toast.info(
@@ -335,7 +354,7 @@ export function DailyReportClient({
 
     const text = buildFullReportText(
       expandedReportDetail.structuredData,
-      editNarrative || expandedReportDetail.narrative,
+      expandedReportDetail.narrative,
       expandedReportDetail.kidName
     );
 

@@ -11,6 +11,8 @@
  */
 import { logger } from '@/lib/logger';
 
+import { env } from '../../env.mjs';
+
 const OPENROUTER_BASE_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /** Default fallback models used when the primary model fails. */
@@ -151,13 +153,17 @@ async function callOpenRouter(
   messages: { role: string; content: string }[],
   signal?: AbortSignal
 ): Promise<string> {
+  const timeoutSignal = AbortSignal.timeout(30_000);
+  const combinedSignal = signal
+    ? AbortSignal.any([signal, timeoutSignal])
+    : timeoutSignal;
+
   const response = await fetch(OPENROUTER_BASE_URL, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      Authorization: `Bearer ${process.env.OPENROUTER_API_KEY ?? ''}`,
-      'HTTP-Referer':
-        process.env.NEXT_PUBLIC_APP_URL ?? 'http://localhost:3000',
+      Authorization: `Bearer ${env.OPENROUTER_API_KEY}`,
+      'HTTP-Referer': env.NEXT_PUBLIC_APP_URL,
       'X-Title': 'Little Rabbani - Laporan Harian',
     },
     body: JSON.stringify({
@@ -166,7 +172,7 @@ async function callOpenRouter(
       max_tokens: 1024,
       temperature: 0.7,
     }),
-    signal,
+    signal: combinedSignal,
   });
 
   if (!response.ok) {
@@ -208,8 +214,7 @@ export async function generateNarrative(
     { role: 'user', content: userPrompt },
   ];
 
-  const primaryModel =
-    process.env.OPENROUTER_MODEL ?? 'deepseek/deepseek-v4-flash';
+  const primaryModel = env.OPENROUTER_MODEL;
   const modelsToTry = [primaryModel, ...FALLBACK_MODELS];
 
   let lastError: unknown;

@@ -1,5 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+// Mock env.mjs before importing ai.ts (it uses the same relative path)
+vi.mock('../../env.mjs', () => ({
+  env: {
+    OPENROUTER_API_KEY: 'test-key-12345',
+    OPENROUTER_MODEL: 'deepseek/deepseek-v4-flash',
+    NEXT_PUBLIC_APP_URL: 'http://localhost:3000',
+  },
+}));
+
 // Mock fetch globally
 const mockFetch = vi.fn();
 vi.stubGlobal('fetch', mockFetch);
@@ -225,10 +234,8 @@ describe('generateNarrative', () => {
     await generateNarrative(sampleContext);
 
     const headers = mockFetch.mock.calls[0][1].headers;
-    expect(headers.Authorization).toBe(
-      `Bearer ${process.env.OPENROUTER_API_KEY}`
-    );
-    expect(headers['HTTP-Referer']).toBeTruthy();
+    expect(headers.Authorization).toBe('Bearer test-key-12345');
+    expect(headers['HTTP-Referer']).toBe('http://localhost:3000');
     expect(headers['X-Title']).toBeTruthy();
   });
 });

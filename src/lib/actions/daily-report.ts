@@ -327,7 +327,7 @@ export async function generateDailyReports(sessionId: string) {
           await db
             .update(dailyReportSnapshot)
             .set({
-              structuredJson: JSON.stringify(structuredData),
+              structuredJson: structuredData,
               narrativeAiDraft: narrativeAiDraft || null,
               narrativeFinal: null,
               status: 'draft',
@@ -350,7 +350,7 @@ export async function generateDailyReports(sessionId: string) {
             .values({
               kidId: kidData.id,
               sessionId,
-              structuredJson: JSON.stringify(structuredData),
+              structuredJson: structuredData,
               narrativeAiDraft: narrativeAiDraft || null,
               status: 'draft',
               editedBy: auth.userId,
@@ -516,13 +516,9 @@ export async function getDailyReportDetail(kidId: string, sessionId: string) {
     return { success: false as const, error: 'Laporan tidak ditemukan' };
   }
 
-  // Parse structured data JSON
-  let structuredData: IStructuredData | null = null;
-  try {
-    structuredData = JSON.parse(report.structuredJson) as IStructuredData;
-  } catch {
-    // If JSON parse fails, return raw string
-  }
+  // structuredJson is jsonb — Drizzle returns it as a parsed object
+  const structuredData =
+    report.structuredJson as unknown as IStructuredData | null;
 
   return {
     success: true as const,
