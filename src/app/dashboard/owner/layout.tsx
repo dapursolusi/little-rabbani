@@ -29,6 +29,7 @@ export default function OwnerLayout({
           <NavLink href="/dashboard/owner/term">Term</NavLink>
           <NavLink href="/dashboard/owner/session">Sesi</NavLink>
           <NavLink href="/dashboard/owner/activity">Aktivitas</NavLink>
+          <NavLink href="/dashboard/owner/schedule">Jadwal</NavLink>
         </nav>
       </header>
 

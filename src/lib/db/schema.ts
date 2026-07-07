@@ -2,12 +2,26 @@ import { relations } from 'drizzle-orm';
 import {
   boolean,
   date,
+  integer,
   pgEnum,
   pgTable,
   text,
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
+
+export const activityCategoryEnum = pgEnum('activity_category', [
+  'seni',
+  'olahraga',
+  'musik',
+  'bahasa',
+  'matematika',
+  'sains',
+  'agama',
+  'bermain',
+  'outing',
+  'lainnya',
+]);
 
 export const roleEnum = pgEnum('role', ['owner', 'teacher']);
 export const kidStatusEnum = pgEnum('kid_status', [
@@ -164,9 +178,61 @@ export const termRelations = relations(term, ({ many }) => ({
   sessions: many(termSession),
 }));
 
-export const termSessionRelations = relations(termSession, ({ one }) => ({
+export const activity = pgTable('activity', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  category: activityCategoryEnum('category').notNull().default('lainnya'),
+  isDeleted: boolean('is_deleted').notNull().default(false),
+  deletedAt: timestamp('deleted_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const scheduleItemTypeEnum = pgEnum('schedule_item_type', [
+  'activity',
+  'outing',
+]);
+
+export const scheduleItem = pgTable('schedule_item', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sessionId: uuid('session_id')
+    .notNull()
+    .references(() => termSession.id, { onDelete: 'cascade' }),
+  activityId: uuid('activity_id').references(() => activity.id, {
+    onDelete: 'set null',
+  }),
+  type: scheduleItemTypeEnum('type').notNull(),
+  outingLocation: text('outing_location'),
+  outingBringItems: text('outing_bring_items'),
+  outingPermissionRequired: boolean('outing_permission_required')
+    .notNull()
+    .default(false),
+  sortOrder: integer('sort_order').notNull().default(0),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const termSessionRelations = relations(termSession, ({ one, many }) => ({
   term: one(term, {
     fields: [termSession.termId],
     references: [term.id],
+  }),
+  scheduleItems: many(scheduleItem),
+}));
+
+export const scheduleItemRelations = relations(scheduleItem, ({ one }) => ({
+  session: one(termSession, {
+    fields: [scheduleItem.sessionId],
+    references: [termSession.id],
+  }),
+  activity: one(activity, {
+    fields: [scheduleItem.activityId],
+    references: [activity.id],
   }),
 }));

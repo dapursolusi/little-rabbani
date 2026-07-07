@@ -22,6 +22,20 @@
       "when": 1783438788528,
       "tag": "0002_melted_the_professor",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1783439893762,
+      "tag": "0003_lethal_mauler",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1783447095065,
+      "tag": "0004_superb_zzzax",
+      "breakpoints": true
     }
   ]
 }
