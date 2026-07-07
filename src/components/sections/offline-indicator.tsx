@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react';
 
 import { useOnlineStatus } from '@/hooks/use-online-status';
 
+import { checkStorageQuota } from '@/lib/capture-offline';
+
 // ─────────────── Offline Indicator ───────────────
 // VAL-CAPTURE-039: Offline indicator visible to teacher while offline
 // VAL-CAPTURE-041: Quota warning when IndexedDB near full
@@ -18,7 +20,6 @@ export function OfflineIndicator() {
   useEffect(() => {
     const checkQuota = async () => {
       try {
-        const { checkStorageQuota } = await import('@/lib/capture-offline');
         const quota = await checkStorageQuota();
         setQuotaMessage(quota.message);
       } catch {

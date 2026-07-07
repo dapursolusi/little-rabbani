@@ -1,6 +1,14 @@
 'use client';
 
 import { savePass1Observation } from '@/lib/actions/capture';
+import {
+  estimateStorageUsage,
+  getPendingObservations,
+  hasIdempotencyKey,
+  removeSyncedObservation,
+  storeIdempotencyKey,
+  updateSyncStatus,
+} from '@/lib/db/dexie';
 import { generateIdempotencyKey } from '@/lib/idempotency';
 
 // ─────────────── Types ───────────────
@@ -98,14 +106,6 @@ export async function flushOfflineQueue(): Promise<{
   isSyncing = true;
 
   try {
-    const {
-      getPendingObservations,
-      removeSyncedObservation,
-      storeIdempotencyKey,
-      hasIdempotencyKey,
-      updateSyncStatus,
-    } = await import('@/lib/db/dexie');
-
     const pendingItems = await getPendingObservations();
     if (pendingItems.length === 0) {
       return { synced: 0, conflicts: 0, errors: 0 };
@@ -141,6 +141,8 @@ export async function flushOfflineQueue(): Promise<{
           formData.append('notes', item.notes);
         }
         formData.append('idempotencyKey', item.idempotencyKey);
+        // Pass the version the client knew when it queued the observation
+        formData.append('version', String(item.version));
 
         const result = await savePass1Observation(formData);
 
@@ -242,7 +244,6 @@ export async function checkStorageQuota(): Promise<{
   message: string | null;
 }> {
   try {
-    const { estimateStorageUsage } = await import('@/lib/db/dexie');
     const usage = await estimateStorageUsage();
 
     if (usage.isQuotaExceeded) {

@@ -36,6 +36,7 @@ const SavePass1Schema = z.object({
   absenceReason: AbsenceReasonSchema.optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
   idempotencyKey: z.string().optional().or(z.literal('')),
+  version: z.coerce.number().int().optional(), // client-provided version for optimistic locking
 });
 
 const Pass2ActivitySchema = z.object({
@@ -357,6 +358,8 @@ export async function savePass1Observation(formData: FormData) {
   const { kidId, sessionId, mood, appetite, presence, notes } = parsed.data;
   const absenceReason = parsed.data.absenceReason || null;
   const idempotencyKeyValue = parsed.data.idempotencyKey || null;
+  // Client-provided version for optimistic locking (the version the client had when it loaded the data)
+  const clientVersion = parsed.data.version;
 
   // VAL-CAPTURE-040: Check idempotency key for duplicate prevention
   if (idempotencyKeyValue) {
@@ -406,7 +409,11 @@ export async function savePass1Observation(formData: FormData) {
 
     if (existing) {
       // VAL-CAPTURE-030: Update existing observation (re-capture) with optimistic locking
-      newVersion = existing.version + 1;
+      // Use the client-provided version in the WHERE clause, NOT the freshly-fetched DB version.
+      // This ensures concurrent saves with stale versions return 409 conflict.
+      const expectedVersion =
+        clientVersion !== undefined ? clientVersion : existing.version;
+      newVersion = expectedVersion + 1;
 
       const [updated] = await db
         .update(observation)
@@ -423,7 +430,7 @@ export async function savePass1Observation(formData: FormData) {
         .where(
           and(
             eq(observation.id, existing.id),
-            eq(observation.version, existing.version)
+            eq(observation.version, expectedVersion)
           )
         )
         .returning();

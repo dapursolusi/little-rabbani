@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 
 import {
+  getKidObservation,
   getPass2Activities,
   getPass2Status,
   savePass1Observation,
@@ -17,6 +18,7 @@ import {
 } from '@/lib/actions/capture';
 import { isBrowserOnline, setOnConflictCallback } from '@/lib/capture-offline';
 import type { IConflictData } from '@/lib/capture-offline';
+import { estimateStorageUsage, saveObservationOffline } from '@/lib/db/dexie';
 import { generateIdempotencyKey } from '@/lib/idempotency';
 
 // ─────────────── Types ───────────────
@@ -134,6 +136,7 @@ export function CaptureRosterClient({
   const [appetite, setAppetite] = useState<TAppetite>('good');
   const [presence, setPresence] = useState<TPresence>('present_full');
   const [absenceReason, setAbsenceReason] = useState<TAbsenceReason | ''>('');
+  const [otherAbsenceReason, setOtherAbsenceReason] = useState('');
   const [notes, setNotes] = useState('');
   const [existingNotes, setExistingNotes] = useState<IObservationNote[]>([]);
   const [validationError, setValidationError] = useState('');
@@ -203,6 +206,7 @@ export function CaptureRosterClient({
         setAppetite(kid.observation.appetite);
         setPresence(kid.observation.presence);
         setAbsenceReason(kid.observation.absenceReason ?? '');
+        setOtherAbsenceReason('');
         setExistingNotes(kid.observation.notes || []);
         setNotes('');
       } else {
@@ -210,6 +214,7 @@ export function CaptureRosterClient({
         setAppetite('good');
         setPresence('present_full');
         setAbsenceReason('');
+        setOtherAbsenceReason('');
         setExistingNotes([]);
         setNotes('');
       }
@@ -272,6 +277,7 @@ export function CaptureRosterClient({
   // Handle absence reason change
   const handleAbsenceReasonChange = useCallback((value: TAbsenceReason) => {
     setAbsenceReason(value);
+    setOtherAbsenceReason('');
     setValidationError('');
   }, []);
 
@@ -307,11 +313,8 @@ export function CaptureRosterClient({
     try {
       // VAL-CAPTURE-036: When offline, save to IndexedDB queue
       if (!isBrowserOnline()) {
-        const { saveObservationOffline } = await import('@/lib/db/dexie');
-
         // VAL-CAPTURE-041: Check quota before offline save
         try {
-          const { estimateStorageUsage } = await import('@/lib/db/dexie');
           const usage = await estimateStorageUsage();
           if (usage.isQuotaExceeded) {
             setValidationError(
@@ -343,7 +346,11 @@ export function CaptureRosterClient({
           appetite,
           presence,
           absenceReason: absenceReason || null,
-          notes: notes.trim(),
+          notes:
+            absenceReason === 'other' && otherAbsenceReason.trim()
+              ? (notes.trim() ? notes.trim() + '\n' : '') +
+                `Alasan lain: ${otherAbsenceReason.trim()}`
+              : notes.trim(),
           capturedAt: new Date().toISOString(),
           idempotencyKey,
           version: selectedKid?.observation?.version ?? 0,
@@ -389,8 +396,19 @@ export function CaptureRosterClient({
       if (absenceReason) {
         formData.append('absenceReason', absenceReason);
       }
-      if (notes.trim()) {
-        formData.append('notes', notes.trim());
+      let finalNotes = notes.trim();
+      // Include custom reason text when "other" selected (VAL-CAPTURE-021)
+      if (absenceReason === 'other' && otherAbsenceReason.trim()) {
+        finalNotes =
+          (finalNotes ? finalNotes + '\n' : '') +
+          `Alasan lain: ${otherAbsenceReason.trim()}`;
+      }
+      if (finalNotes) {
+        formData.append('notes', finalNotes);
+      }
+      // Send client's known version for optimistic locking
+      if (selectedKid?.observation?.version !== undefined) {
+        formData.append('version', String(selectedKid.observation.version));
       }
 
       const result = await savePass1Observation(formData);
@@ -454,7 +472,6 @@ export function CaptureRosterClient({
         ) {
           // Fetch server values for conflict UI
           try {
-            const { getKidObservation } = await import('@/lib/actions/capture');
             const serverObs = await getKidObservation(
               selectedKid!.id,
               sessionId
@@ -755,6 +772,16 @@ export function CaptureRosterClient({
                         </button>
                       ))}
                     </div>
+                    {/* Free-text field for "other" reason (VAL-CAPTURE-021) */}
+                    {absenceReason === 'other' && (
+                      <input
+                        type="text"
+                        value={otherAbsenceReason}
+                        onChange={(e) => setOtherAbsenceReason(e.target.value)}
+                        placeholder="Tulis alasan ketidakhadiran..."
+                        className="mt-2 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                      />
+                    )}
                   </div>
                 )}
 

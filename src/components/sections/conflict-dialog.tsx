@@ -73,6 +73,9 @@ export function ConflictDialog({
       formData.append('appetite', conflict.serverFields.appetite);
       formData.append('presence', conflict.serverFields.presence);
 
+      // Pass the latest server version so the update succeeds
+      formData.append('version', String(conflict.serverVersion));
+
       // VAL-CAPTURE-033: Notes always persist (append-only)
       // Preserve local notes by re-saving them alongside server notes
       const allNotes = [...conflict.serverNotes, ...conflict.localNotes].filter(
@@ -114,6 +117,9 @@ export function ConflictDialog({
           ? 'present_full'
           : conflict.serverFields.presence
       );
+
+      // Pass the latest server version so the update succeeds
+      formData.append('version', String(conflict.serverVersion));
 
       // VAL-CAPTURE-033: Notes always persist (append-only)
       const allNotes = [...conflict.serverNotes, ...conflict.localNotes].filter(

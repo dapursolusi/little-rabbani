@@ -8,6 +8,7 @@ import {
   isBrowserOnline,
   subscribeOnlineStatus,
 } from '@/lib/capture-offline';
+import { getPendingObservations } from '@/lib/db/dexie';
 
 // ─────────────── Online Status Hook ───────────────
 // VAL-CAPTURE-039: Offline indicator visible to teacher
@@ -36,7 +37,6 @@ export function useOnlineStatus(): IOnlineStatusState & {
 
   const updateCount = useCallback(async () => {
     try {
-      const { getPendingObservations } = await import('@/lib/db/dexie');
       const items = await getPendingObservations();
       setState((prev) => ({ ...prev, pendingCount: items.length }));
     } catch {
