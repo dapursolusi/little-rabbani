@@ -55,7 +55,7 @@ export async function proxy(request: NextRequest) {
   }
 
   // Protected dashboard routes
-  if (pathname.startsWith('/dashboard/')) {
+  if (pathname.startsWith('/dashboard/') || pathname === '/dashboard') {
     try {
       const session = await auth.api.getSession({
         headers: requestHeaders,
