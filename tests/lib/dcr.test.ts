@@ -182,7 +182,7 @@ describe('DCR Server Actions', () => {
       };
 
       vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
-        mockDcr as any
+        mockDcr as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       const result = await dcrActions.getDcrBySession('session-1');
@@ -257,7 +257,7 @@ describe('DCR Server Actions', () => {
           updatedAt: new Date(),
           activity: null,
         },
-      ] as any);
+      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const result = await dcrActions.getScheduleActivitiesForDcr('session-1');
       expect(result.success).toBe(true);
@@ -299,7 +299,7 @@ describe('DCR Server Actions', () => {
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newDcr]),
         }),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const formData = new FormData();
       formData.append('sessionId', 'session-1');
@@ -343,7 +343,7 @@ describe('DCR Server Actions', () => {
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newDcr]),
         }),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const formData = new FormData();
       formData.append('sessionId', 'session-2');
@@ -396,7 +396,7 @@ describe('DCR Server Actions', () => {
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newDcr]),
         }),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const formData = new FormData();
       formData.append('sessionId', 'session-3');
@@ -434,7 +434,7 @@ describe('DCR Server Actions', () => {
       };
 
       vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
-        existingDcr as any
+        existingDcr as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.update).mockReturnValue({
@@ -447,11 +447,11 @@ describe('DCR Server Actions', () => {
               ]),
           }),
         }),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       vi.mocked(db.delete).mockReturnValue({
         where: vi.fn().mockResolvedValue(undefined),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const formData = new FormData();
       formData.append('sessionId', 'session-1');
@@ -519,7 +519,7 @@ describe('DCR Server Actions', () => {
           createdAt: new Date(),
           activity: null,
         },
-      ] as any);
+      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const result = await dcrActions.getDcrActivitiesForPass2('dcr-1');
       expect(result.success).toBe(true);
@@ -576,7 +576,7 @@ describe('DCR Server Actions', () => {
             updatedAt: new Date(),
           },
         },
-      ] as any);
+      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       vi.mocked(db.query.dailyClassReport.findMany).mockResolvedValue([
         {
@@ -586,7 +586,7 @@ describe('DCR Server Actions', () => {
           capturedBy: 'owner-1',
           capturedAt: new Date(),
         },
-      ] as any);
+      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const result = await dcrActions.getSessionsForDcr();
       expect(result.success).toBe(true);

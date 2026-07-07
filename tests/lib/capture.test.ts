@@ -188,7 +188,7 @@ describe('Capture Server Actions', () => {
       ];
 
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any
+        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.query.term.findFirst).mockResolvedValue({
@@ -199,9 +199,9 @@ describe('Capture Server Actions', () => {
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-      vi.mocked(db.query.kid.findMany).mockResolvedValue(mockKids as any);
+      vi.mocked(db.query.kid.findMany).mockResolvedValue(mockKids as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       // No existing observations
       vi.mocked(db.query.observation.findMany).mockResolvedValue([]);
@@ -220,7 +220,7 @@ describe('Capture Server Actions', () => {
       mockTeacherSession();
 
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any
+        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.query.term.findFirst).mockResolvedValue({
@@ -231,7 +231,7 @@ describe('Capture Server Actions', () => {
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       vi.mocked(db.query.kid.findMany).mockResolvedValue([]);
 
@@ -247,7 +247,7 @@ describe('Capture Server Actions', () => {
       mockTeacherSession();
 
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession({ isHoliday: true }) as any
+        mockSession({ isHoliday: true }) as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       const result = await captureActions.getSessionWithKids('session-1');
@@ -261,7 +261,7 @@ describe('Capture Server Actions', () => {
       vi.setSystemTime(new Date('2026-07-08T05:00:00')); // Before 08:00
 
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession({ startTime: '08:00' }) as any
+        mockSession({ startTime: '08:00' }) as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       const result = await captureActions.getSessionWithKids('session-1');
@@ -277,7 +277,7 @@ describe('Capture Server Actions', () => {
       vi.setSystemTime(new Date('2026-07-08T10:05:00')); // 5 min after 10:00
 
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession({ endTime: '10:00' }) as any
+        mockSession({ endTime: '10:00' }) as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.query.term.findFirst).mockResolvedValue({
@@ -288,7 +288,7 @@ describe('Capture Server Actions', () => {
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       vi.mocked(db.query.kid.findMany).mockResolvedValue([]);
 
@@ -303,7 +303,7 @@ describe('Capture Server Actions', () => {
         mockSession({
           date: '2026-07-05',
           endTime: '10:00',
-        }) as any
+        }) as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.query.term.findFirst).mockResolvedValue({
@@ -314,7 +314,7 @@ describe('Capture Server Actions', () => {
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       vi.mocked(db.query.kid.findMany).mockResolvedValue([]);
 
@@ -326,7 +326,7 @@ describe('Capture Server Actions', () => {
       mockTeacherSession();
 
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any
+        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.query.term.findFirst).mockResolvedValue({
@@ -337,7 +337,7 @@ describe('Capture Server Actions', () => {
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       vi.mocked(db.query.kid.findMany).mockResolvedValue([
         {
@@ -360,7 +360,7 @@ describe('Capture Server Actions', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-      ] as any);
+      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       // One observation exists
       vi.mocked(db.query.observation.findMany).mockResolvedValue([
@@ -378,7 +378,7 @@ describe('Capture Server Actions', () => {
           createdAt: new Date(),
           updatedAt: new Date(),
         },
-      ] as any);
+      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const result = await captureActions.getSessionWithKids('session-1');
       expect(result.success).toBe(true);
@@ -411,7 +411,7 @@ describe('Capture Server Actions', () => {
       };
 
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any
+        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(undefined);
@@ -420,7 +420,7 @@ describe('Capture Server Actions', () => {
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newObservation]),
         }),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const formData = new FormData();
       formData.append('kidId', 'kid-1');
@@ -504,11 +504,11 @@ describe('Capture Server Actions', () => {
       };
 
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any
+        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(
-        existingObs as any
+        existingObs as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.update).mockReturnValue({
@@ -519,7 +519,7 @@ describe('Capture Server Actions', () => {
               .mockResolvedValue([{ ...existingObs, mood: 5, version: 1 }]),
           }),
         }),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const formData = new FormData();
       formData.append('kidId', 'kid-1');
@@ -552,11 +552,11 @@ describe('Capture Server Actions', () => {
       };
 
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any
+        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(
-        existingObs as any
+        existingObs as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.update).mockReturnValue({
@@ -567,7 +567,7 @@ describe('Capture Server Actions', () => {
               .mockResolvedValue([{ ...existingObs, version: 2 }]),
           }),
         }),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const formData = new FormData();
       formData.append('kidId', 'kid-1');
@@ -601,7 +601,7 @@ describe('Capture Server Actions', () => {
       };
 
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any
+        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(undefined);
@@ -610,7 +610,7 @@ describe('Capture Server Actions', () => {
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newObservation]),
         }),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const formData = new FormData();
       formData.append('kidId', 'kid-2');
@@ -662,7 +662,7 @@ describe('Capture Server Actions', () => {
       };
 
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(
-        existingObs as any
+        existingObs as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
       const formData = new FormData();
@@ -719,7 +719,7 @@ describe('Capture Server Actions', () => {
         id: 'dcr-1',
         sessionId: 'session-1',
         capturedAt: new Date(),
-      } as any);
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const result = await captureActions.getPass2Status('session-1');
       expect(result.success).toBe(true);
@@ -754,7 +754,7 @@ describe('Capture Server Actions', () => {
             updatedAt: new Date(),
           },
         },
-      ] as any);
+      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const result = await captureActions.getPass2Activities('session-1');
       expect(result.success).toBe(true);
@@ -825,7 +825,7 @@ describe('Capture Server Actions', () => {
             updatedAt: new Date(),
           },
         },
-      ] as any);
+      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       const result = await captureActions.getTeacherSessions();
       expect(result.success).toBe(true);

@@ -2,7 +2,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Re-import after mocks
 import {
-  captureDb,
   estimateStorageUsage,
   getPendingObservations,
   hasIdempotencyKey,
@@ -158,6 +157,7 @@ describe('Offline Queue (Dexie Store)', () => {
         notes: 'Anak ceria hari ini',
         capturedAt: new Date().toISOString(),
         idempotencyKey: 'ik-001',
+        version: 0,
       };
 
       await saveObservationOffline(offlineObservation);
@@ -177,6 +177,7 @@ describe('Offline Queue (Dexie Store)', () => {
         notes: 'Test',
         capturedAt: new Date().toISOString(),
         idempotencyKey: 'ik-002',
+        version: 0,
       };
 
       await saveObservationOffline(offlineObservation);
@@ -198,9 +199,18 @@ describe('Offline Queue (Dexie Store)', () => {
           id: 1,
           kidId: 'kid-1',
           sessionId: 'session-1',
+          teacherId: 'teacher-1',
           mood: 4,
-          status: 'pending',
+          appetite: 'good',
+          presence: 'present_full',
+          absenceReason: null,
+          notes: 'Test notes',
+          capturedAt: new Date().toISOString(),
           idempotencyKey: 'ik-001',
+          version: 0,
+          status: 'pending' as const,
+          retryCount: 0,
+          errorMessage: null,
           createdAt: Date.now() - 1000,
         },
       ];
@@ -307,8 +317,10 @@ describe('IdempotencyService', () => {
 describe('Conflict Handling Logic', () => {
   // VAL-CAPTURE-031: Version mismatch -> conflict
   it('should detect version conflict when versions mismatch', () => {
-    expect(0 !== 1).toBe(true);
-    expect(1 !== 1).toBe(false);
+    const v1: number = 0;
+    const v2: number = 1;
+    expect(v1 !== v2).toBe(true);
+    expect(v1 !== v1).toBe(false);
   });
 
   // VAL-CAPTURE-033: Notes always persist (append-only)

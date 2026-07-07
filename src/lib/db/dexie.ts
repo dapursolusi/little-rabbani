@@ -96,7 +96,7 @@ export async function saveObservationOffline(
     createdAt: Date.now(),
   } as ISyncQueueItem);
 
-  return id;
+  return id as number;
 }
 
 /**

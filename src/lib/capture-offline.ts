@@ -1,7 +1,6 @@
 'use client';
 
 import { savePass1Observation } from '@/lib/actions/capture';
-import type { ISyncQueueItem } from '@/lib/db/dexie';
 import { generateIdempotencyKey } from '@/lib/idempotency';
 
 // ─────────────── Types ───────────────

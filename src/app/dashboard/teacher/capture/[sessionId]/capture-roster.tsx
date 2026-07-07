@@ -298,8 +298,7 @@ export function CaptureRosterClient({
     try {
       // VAL-CAPTURE-036: When offline, save to IndexedDB queue
       if (!isBrowserOnline()) {
-        const { saveObservationOffline, checkStorageQuota } =
-          await import('@/lib/db/dexie');
+        const { saveObservationOffline } = await import('@/lib/db/dexie');
 
         // VAL-CAPTURE-041: Check quota before offline save
         try {
