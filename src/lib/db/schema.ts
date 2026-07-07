@@ -410,6 +410,64 @@ export const reportTemplate = pgTable('report_template', {
     .$onUpdateFn(() => new Date()),
 });
 
+// ─────────────── Daily Report Snapshots Table ───────────────
+// Stores generated daily parent reports for each kid per session.
+// One snapshot per (kid_id, session_id) — re-generation upserts.
+// Two-layer model: structured_json (read-only) + editable AI narrative.
+
+export const dailyReportStatusEnum = pgEnum('daily_report_status', [
+  'draft',
+  'sent',
+  'stale',
+]);
+
+export const dailyReportSnapshot = pgTable(
+  'daily_report_snapshot',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    kidId: uuid('kid_id')
+      .notNull()
+      .references(() => kid.id, { onDelete: 'cascade' }),
+    sessionId: uuid('session_id')
+      .notNull()
+      .references(() => termSession.id, { onDelete: 'cascade' }),
+    structuredJson: text('structured_json').notNull(), // JSON string of structured data
+    narrativeAiDraft: text('narrative_ai_draft'),
+    narrativeFinal: text('narrative_final'),
+    status: dailyReportStatusEnum('status').notNull().default('draft'),
+    editedBy: text('edited_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    generatedAt: timestamp('generated_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+  },
+  (table) => ({
+    uniqueKidSession: unique().on(table.kidId, table.sessionId),
+  })
+);
+
+export const dailyReportSnapshotRelations = relations(
+  dailyReportSnapshot,
+  ({ one }) => ({
+    kid: one(kid, {
+      fields: [dailyReportSnapshot.kidId],
+      references: [kid.id],
+    }),
+    session: one(termSession, {
+      fields: [dailyReportSnapshot.sessionId],
+      references: [termSession.id],
+    }),
+    editor: one(user, {
+      fields: [dailyReportSnapshot.editedBy],
+      references: [user.id],
+    }),
+  })
+);
+
 // ─────────────── Observation Relations ───────────────
 
 export const observationRelations = relations(observation, ({ one, many }) => ({

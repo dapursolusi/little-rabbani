@@ -31,6 +31,9 @@ export default function OwnerLayout({
           <NavLink href="/dashboard/owner/activity">Aktivitas</NavLink>
           <NavLink href="/dashboard/owner/schedule">Jadwal</NavLink>
           <NavLink href="/dashboard/owner/dcr">Laporan Harian</NavLink>
+          <NavLink href="/dashboard/owner/reports/daily">
+            Laporan Wali Murid
+          </NavLink>
         </nav>
       </header>
 
