@@ -29,6 +29,9 @@ jobs:
       - name: Check TypeScript Types
         run: bunx --bun tsc --noEmit
 
+      - name: Validate AGENTS.md Freshness
+        run: bun run validate:agents-md
+
       - name: Run Tests
         run: bun run test --run --passWithNoTests
 

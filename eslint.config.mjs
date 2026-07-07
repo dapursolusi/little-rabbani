@@ -25,6 +25,7 @@ const eslintConfig = defineConfig([
     'sentry.edge.config.ts',
     'sentry.server.config.ts',
     'sentry.client.config.ts',
+    'scripts/**',
   ]),
   {
     rules: {
