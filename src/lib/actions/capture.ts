@@ -7,6 +7,7 @@ import { db } from '@/lib/db';
 import {
   dailyClassReport,
   dcrActivity,
+  idempotencyKey as idempotencyKeyTable,
   kid,
   observation,
   observationActivity,
@@ -34,6 +35,7 @@ const SavePass1Schema = z.object({
   presence: PresenceSchema,
   absenceReason: AbsenceReasonSchema.optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
+  idempotencyKey: z.string().optional().or(z.literal('')),
 });
 
 const Pass2ActivitySchema = z.object({
@@ -354,6 +356,27 @@ export async function savePass1Observation(formData: FormData) {
 
   const { kidId, sessionId, mood, appetite, presence, notes } = parsed.data;
   const absenceReason = parsed.data.absenceReason || null;
+  const idempotencyKeyValue = parsed.data.idempotencyKey || null;
+
+  // VAL-CAPTURE-040: Check idempotency key for duplicate prevention
+  if (idempotencyKeyValue) {
+    const existingKeys = await db
+      .select()
+      .from(idempotencyKeyTable)
+      .where(eq(idempotencyKeyTable.key, idempotencyKeyValue))
+      .limit(1);
+
+    if (existingKeys.length > 0) {
+      return {
+        success: true as const,
+        data: {
+          id: existingKeys[0].id,
+          version: 0,
+          deduplicated: true,
+        },
+      };
+    }
+  }
 
   // VAL-CAPTURE-021: Absence reason required when absent
   if (presence === 'absent' && !absenceReason) {
@@ -443,9 +466,19 @@ export async function savePass1Observation(formData: FormData) {
       });
     }
 
+    // VAL-CAPTURE-040: Store idempotency key on successful save
+    if (idempotencyKeyValue) {
+      const sevenDaysFromNow = new Date();
+      sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
+      await db.insert(idempotencyKeyTable).values({
+        key: idempotencyKeyValue,
+        expiresAt: sevenDaysFromNow,
+      });
+    }
+
     return {
       success: true as const,
-      data: { id: obsId, version: newVersion },
+      data: { id: obsId, version: newVersion, deduplicated: false as const },
     };
   } catch (error) {
     console.error('Gagal menyimpan observasi:', error);

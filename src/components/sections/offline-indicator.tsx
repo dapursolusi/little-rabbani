@@ -1,0 +1,138 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+
+import { useOnlineStatus } from '@/hooks/use-online-status';
+
+// ─────────────── Offline Indicator ───────────────
+// VAL-CAPTURE-039: Offline indicator visible to teacher while offline
+// VAL-CAPTURE-041: Quota warning when IndexedDB near full
+
+export function OfflineIndicator() {
+  const { isOnline, pendingCount, isSyncing, lastSyncResult } =
+    useOnlineStatus();
+  const [quotaMessage, setQuotaMessage] = useState<string | null>(null);
+  const [syncToast, setSyncToast] = useState<string | null>(null);
+
+  // Check storage quota periodically
+  useEffect(() => {
+    const checkQuota = async () => {
+      try {
+        const { checkStorageQuota } = await import('@/lib/capture-offline');
+        const quota = await checkStorageQuota();
+        setQuotaMessage(quota.message);
+      } catch {
+        // Dexie not available
+      }
+    };
+
+    checkQuota();
+    const interval = setInterval(checkQuota, 60000); // Every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  // Show sync toast when sync completes
+  useEffect(() => {
+    if (
+      lastSyncResult &&
+      (lastSyncResult.synced > 0 ||
+        lastSyncResult.conflicts > 0 ||
+        lastSyncResult.errors > 0)
+    ) {
+      const parts: string[] = [];
+      if (lastSyncResult.synced > 0) {
+        parts.push(`${lastSyncResult.synced} tersimpan`);
+      }
+      if (lastSyncResult.conflicts > 0) {
+        parts.push(`${lastSyncResult.conflicts} konflik`);
+      }
+      if (lastSyncResult.errors > 0) {
+        parts.push(`${lastSyncResult.errors} gagal`);
+      }
+
+      const message = `Sinkronisasi: ${parts.join(', ')}`;
+      // Use microtask to avoid cascading renders
+      const id = setTimeout(() => {
+        setSyncToast(message);
+      }, 0);
+      const clearId = setTimeout(() => setSyncToast(null), 4000);
+
+      return () => {
+        clearTimeout(id);
+        clearTimeout(clearId);
+      };
+    }
+  }, [lastSyncResult]);
+
+  return (
+    <>
+      {/* VAL-CAPTURE-039: Offline indicator */}
+      {!isOnline && (
+        <div className="sticky top-0 z-50 bg-amber-500 px-4 py-1.5 text-center text-xs font-medium text-white">
+          <div className="flex items-center justify-center gap-2">
+            <span className="inline-block h-2 w-2 rounded-full bg-white" />
+            <span>
+              Offline — data akan tersimpan secara lokal
+              {pendingCount > 0 && ` (${pendingCount} antrean)`}
+            </span>
+          </div>
+        </div>
+      )}
+
+      {/* Syncing indicator */}
+      {isSyncing && (
+        <div className="sticky top-0 z-50 bg-blue-500 px-4 py-1.5 text-center text-xs font-medium text-white">
+          <div className="flex items-center justify-center gap-2">
+            <svg
+              className="h-3 w-3 animate-spin text-white"
+              fill="none"
+              viewBox="0 0 24 24"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
+              />
+            </svg>
+            <span>Menyinkronkan data offline...</span>
+          </div>
+        </div>
+      )}
+
+      {/* Sync toast */}
+      {syncToast && (
+        <div className="sticky top-0 z-50 bg-green-500 px-4 py-1.5 text-center text-xs font-medium text-white transition-all">
+          {syncToast}
+        </div>
+      )}
+
+      {/* VAL-CAPTURE-041: Quota warning */}
+      {quotaMessage && isOnline && (
+        <div className="sticky top-0 z-50 bg-red-500 px-4 py-1.5 text-center text-xs font-medium text-white">
+          ⚠️ {quotaMessage}
+        </div>
+      )}
+
+      {/* Pending count badge (when online with pending items) */}
+      {isOnline && pendingCount > 0 && !isSyncing && (
+        <div className="sticky top-0 z-50 bg-blue-600 px-4 py-1.5 text-center text-xs font-medium text-white">
+          <button
+            type="button"
+            className="flex items-center justify-center gap-2"
+          >
+            <span>{pendingCount} data offline menunggu sinkronisasi</span>
+            <span className="underline">Sinkronkan</span>
+          </button>
+        </div>
+      )}
+    </>
+  );
+}

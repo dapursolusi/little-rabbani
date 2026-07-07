@@ -367,6 +367,16 @@ export const observationActivity = pgTable('observation_activity', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
+// ─────────────── Idempotency Keys Table ───────────────
+// VAL-CAPTURE-040: Server-side idempotency key storage for deduplication
+
+export const idempotencyKey = pgTable('idempotency_key', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  key: text('key').notNull().unique(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  expiresAt: timestamp('expires_at').notNull(),
+});
+
 // ─────────────── Observation Relations ───────────────
 
 export const observationRelations = relations(observation, ({ one, many }) => ({
