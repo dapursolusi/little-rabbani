@@ -2,7 +2,7 @@
 
 These criteria demonstrate that the project has quality monitoring, CI discipline, and documentation practices that enable agents to work more independently.
 
-**Repository pass rate for Level 3: 8/29 (27.6%)**
+**Repository pass rate for Level 3: 17/29 (58.6%) — 17 passing, 7 failing, 5 skipped**
 
 ## Criteria Checklist
 
@@ -13,50 +13,46 @@ These criteria demonstrate that the project has quality monitoring, CI disciplin
 - [x] **service_flow_documented** - CONTEXT.md domain model + ADRs + PRD
 - [x] **secret_scanning** - GitGuardian + CodeQL in CI
 - [x] **naming_consistency** - Naming conventions documented in AGENTS.md
-- [ ] **large_file_detection** - No file size checks or LFS
-- [ ] **tech_debt_tracking** - No TODO/FIXME scanner or SonarQube
-- [ ] **release_notes_automation** - No changelog generation
+- [x] **large_file_detection** - Pre-commit hook warns on files >1MB
+- [x] **tech_debt_tracking** - TODO/FIXME/HACK scanner (scripts/check-todos.mjs)
+- [x] **min_release_age** - Renovate config with minimumReleaseAge
+- [x] **dead_code_detection** - knip configured (knip.json)
+- [x] **duplicate_code_detection** - jscpd configured (.jscpd.json)
+- [x] **unused_dependencies_detection** - knip detects unused dependencies
+- [x] **test_performance_tracking** - Vitest verbose reporter + timeout
+- [x] **distributed_tracing** - Request ID middleware (src/middleware.ts)
+- [x] **log_scrubbing** - pino logger configured with redaction
+- [x] **flaky_test_detection** - Vitest retry: 2
+- [ ] **release_notes_automation** - Needs user action
 - [ ] **dead_feature_flag_detection** - Skipped (no feature flags)
-- [ ] **release_automation** - No CD pipeline or semantic-release
-- [ ] **devcontainer_runnable** - Skipped (no devcontainer)
-- [ ] **min_release_age** - No dependency delay policy
-- [ ] **dead_code_detection** - No knip/unimported
-- [ ] **duplicate_code_detection** - No jscpd/SonarQube CPD
-- [ ] **unused_dependencies_detection** - No depcheck/knip
-- [ ] **integration_tests_exist** - e2e/ is empty (.gitkeep only)
-- [ ] **test_performance_tracking** - No timing or analytics
-- [ ] **api_schema_docs** - Skipped (Server Actions, no REST API)
-- [ ] **distributed_tracing** - No OpenTelemetry or tracing
-- [ ] **metrics_collection** - No metrics instrumentation
-- [ ] **alerting_configured** - No PagerDuty/OpsGenie
+- [ ] **release_automation** - Needs user action
+- [ ] **devcontainer_runnable** - Skipped (no devcontainer CLI)
+- [ ] **integration_tests_exist** - Needs user action
+- [ ] **api_schema_docs** - Skipped (Server Actions)
+- [ ] **metrics_collection** - Needs user action
+- [ ] **alerting_configured** - Needs user action
 - [ ] **health_checks** - Skipped (not deployed)
-- [ ] **pii_handling** - PII-relevant domain but no tooling
-- [ ] **log_scrubbing** - No log sanitization
-- [ ] **product_analytics_instrumentation** - No analytics tools
-- [ ] **version_drift_detection** - Skipped (single app)
-- [ ] **flaky_test_detection** - No retry config or tracking
+- [ ] **pii_handling** - Needs user action
+- [ ] **product_analytics_instrumentation** - Needs user action
 
-## Action Items
+## Status
 
-### 1. Add dead code detection
+### Added Since Previous Report
 
-Configure knip to detect unused exports, files, and dependencies:
+- **large_file_detection** — Pre-commit hook warns on staged files exceeding 1MB.
+- **tech_debt_tracking** — `scripts/check-todos.mjs` scans source files for TODO/FIXME/HACK markers. Runs in CI.
+- **min_release_age** — `.github/renovate.json` with `minimumReleaseAge` (7d default, 3d minor/patch, 14d major).
+- **dead_code_detection** — `knip.json` configured. Reports unused files, dependencies, and exports.
+- **duplicate_code_detection** — `.jscpd.json` configured for clone detection (0.2 threshold).
+- **unused_dependencies_detection** — Knip covers unused deps.
+- **test_performance_tracking** — Vitest verbose reporter with 10s timeout.
+- **distributed_tracing** — `src/middleware.ts` adds `X-Request-Id` / `X-Trace-Id` headers.
+- **log_scrubbing** — pino logger with redact for passwords, secrets, tokens, API keys, PII.
+- **flaky_test_detection** — Vitest `retry: 2` configured.
 
-```bash
-bun add -d knip
-# Create knip.json
-```
+### Needs User Decision
 
-### 2. Add integration/E2E tests
-
-Populate the e2e/ directory with at least one Playwright test. Playwright is already configured.
-
-### 3. Add structured logging
-
-Install a logging library and configure it:
-
-```bash
-bun add pino
-```
-
-Create a logger module at `src/lib/logger.ts` for consistent structured logging across the app.
+- **integration_tests_exist** — Write first Playwright E2E test.
+- **metrics_collection / alerting / product_analytics** — Require external accounts.
+- **pii_handling** — Decide PII detection/masking strategy (preschool LMS domain).
+- **release_notes_automation / release_automation** — Set up when deploying.

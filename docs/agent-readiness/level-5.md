@@ -2,35 +2,23 @@
 
 These are the highest-level criteria showing mature engineering practices: complexity analysis and error-to-insight pipelines.
 
-**Repository pass rate for Level 5: 0/2 (0.0%)**
+**Repository pass rate for Level 5: 1/2 (50.0%)**
 
 ## Criteria Checklist
 
-- [ ] **cyclomatic_complexity** - No complexity analysis tools
-- [ ] **error_to_insight_pipeline** - No error-to-issue automation
+- [x] **cyclomatic_complexity** - ESLint complexity rules (max 10, max-depth 4, max-params 4, max-nested-callbacks 4, max-statements 25)
+- [ ] **error_to_insight_pipeline** - Needs user action
 
-## Action Items
+## Status
 
-### 1. Add complexity analysis (ESLint rule)
+### Passing
 
-Configure the ESLint complexity rule to flag overly complex functions:
+- **cyclomatic_complexity** — ESLint configured with `complexity: [warn, { max: 10 }]`, `max-depth`, `max-params`, `max-nested-callbacks`, and `max-statements`.
 
-```js
-// eslint.config.mjs - add to rules
-{
-  rules: {
-    complexity: ['warn', { max: 10 }],
-    'max-depth': ['warn', { max: 4 }],
-    'max-statements': ['warn', { max: 25 }],
-  },
-}
-```
+### Needs User Decision
 
-### 2. Add error tracking with issue creation
-
-Set up Sentry with GitHub integration so production errors automatically create issues:
-
-1. Add Sentry SDK: `bun add @sentry/nextjs`
-2. Enable Sentry's GitHub integration in the Sentry dashboard
-3. Configure SENTRY_ORG and SENTRY_PROJECT in env.mjs
-4. This creates a pipeline from production errors to actionable GitHub issues that agents can triage and fix.
+- **error_to_insight_pipeline** — Requires:
+  1. Creating a Sentry account and project
+  2. Adding `@sentry/nextjs` dependency
+  3. Enabling Sentry-GitHub integration in Sentry dashboard
+  4. Configuring `SENTRY_ORG` and `SENTRY_PROJECT` in env.mjs

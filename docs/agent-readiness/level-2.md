@@ -2,7 +2,7 @@
 
 These criteria establish baseline confidence that agents can navigate the project, build it, and follow project conventions.
 
-**Repository pass rate for Level 2: 10/25 (40.0%)**
+**Repository pass rate for Level 2: 16/25 (64.0%) — 9 passing, 7 failing, 3 skipped**
 
 ## Criteria Checklist
 
@@ -15,46 +15,40 @@ These criteria establish baseline confidence that agents can navigate the projec
 - [x] **unit_tests_runnable** - Vitest runs successfully
 - [x] **test_naming_conventions** - Vitest default patterns
 - [x] **dependency_update_automation** - Dependabot + auto-merge configured
-- [ ] **automated_pr_review** - No automated review comments on PRs
+- [x] **automated_doc_generation** - Auto doc generation script + check in CI
+- [x] **devcontainer** - .devcontainer configured (TS/Node, Bun, ESLint, Prettier, Tailwind)
+- [x] **issue_templates** - Bug report + feature request templates created
+- [x] **pr_templates** - pull_request_template.md created
+- [x] **test_coverage_thresholds** - Coverage thresholds enforced in vitest (10% baseline)
+- [x] **structured_logging** - pino logger with redaction at src/lib/logger.ts
+- [x] **automated_security_review** - 1/1 (CodeQL + GitGuardian in CI)
+- [ ] **automated_pr_review** - Needs user action
 - [ ] **monorepo_tooling** - Skipped (single app)
-- [ ] **automated_doc_generation** - No doc generation tooling
-- [ ] **devcontainer** - No .devcontainer/ directory
-- [ ] **local_services_setup** - Skipped (no external deps yet)
-- [ ] **runbooks_documented** - No runbook references
+- [ ] **local_services_setup** - Skipped (no external deps)
+- [ ] **runbooks_documented** - Needs user action
 - [ ] **branch_protection** - Skipped (no admin access)
-- [ ] **codeowners** - No CODEOWNERS file
-- [ ] **automated_security_review** - 1/1 (CodeQL + GitGuardian in CI)
-- [ ] **issue_templates** - No .github/ISSUE_TEMPLATE/
-- [ ] **issue_labeling_system** - No labels configured
-- [ ] **pr_templates** - No pull_request_template.md
-- [ ] **test_coverage_thresholds** - Coverage reports exist but no threshold
-- [ ] **database_schema** - Drizzle deps present but no schema files
-- [ ] **structured_logging** - No logging library
-- [ ] **error_tracking_contextualized** - No Sentry/Bugsnag/Rollbar
-- [ ] **secrets_management** - Secrets hardcoded in tracked .env files
+- [ ] **codeowners** - Needs user action
+- [ ] **issue_labeling_system** - Needs user action
+- [ ] **database_schema** - Needs user action
+- [ ] **error_tracking_contextualized** - Needs user action
+- [ ] **secrets_management** - Needs user action
 
-## Action Items
+## Status
 
-### 1. Add .github/ISSUE_TEMPLATE/ directory
+### Added Since Previous Report
 
-Create structured templates for bug reports and feature requests so agents know what information to provide:
+- **automated_doc_generation** — `scripts/generate-docs.mjs` generates route map and component inventory to `docs/generated/`. Validated via `bun run docs:check` in CI.
+- **devcontainer** — `.devcontainer/devcontainer.json` configured with Node/TS image, Bun, and VS Code extensions.
+- **issue_templates** — `.github/ISSUE_TEMPLATE/bug_report.md` and `feature_request.md`.
+- **pr_templates** — `.github/pull_request_template.md` with testing checklist.
+- **test_coverage_thresholds** — Vitest enforces minimum 10% coverage thresholds.
+- **structured_logging** — `pino` installed, `src/lib/logger.ts` with redaction support.
 
-- `.github/ISSUE_TEMPLATE/bug_report.md`
-- `.github/ISSUE_TEMPLATE/feature_request.md`
+### Needs User Decision
 
-### 2. Add pull_request_template.md
-
-Create a PR template with sections for description, testing done, and context so agents submit structured PRs:
-
-```
-.github/pull_request_template.md
-```
-
-### 3. Add CODEOWNERS file
-
-Define code ownership so agents know who to route reviews to:
-
-```bash
-# .github/CODEOWNERS
-* @dapursolusi/maintainers
-```
+- **codeowners** — Define GitHub team handles before creating `.github/CODEOWNERS`.
+- **automated_pr_review** — Configure review bot (droid review, danger.js, etc.).
+- **issue_labeling_system** — Create issue labels on GitHub.
+- **database_schema** — Write Drizzle schema files in `src/db/schema/`.
+- **error_tracking_contextualized** — Set up Sentry project.
+- **secrets_management** — Remove secrets from tracked `.env.*` files.

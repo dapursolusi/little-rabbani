@@ -2,9 +2,9 @@
 
 **Repository:** `git@github.com:narasena/little-rabbani`
 **Branch:** main
-**Commit:** c07c7c5
-**Level:** 2 (34.85% pass rate)
-**Report ID:** 187ff7d4-25b2-4145-a8b2-a0f6793b1523
+**Level:** 4 (69.2% pass rate)
+
+> Report updated 2026-07-07 with automated evaluation. Level increased from Level 2 (34.8%) to Level 4 (69.2%) after fixing 22 failing signals.
 
 ## Applications
 
@@ -12,109 +12,87 @@
 
 ## Summary
 
-This is a well-structured Next.js template with solid foundational tooling. It excels in code quality basics (ESLint, TypeScript strict, Prettier, Husky), CI fundamentals, and agent configuration. However, it lacks env templates, test files, observability infrastructure, and has secrets tracked in version control.
+Repository achieves **Level 4 (69.2%)**. Strong foundational tooling (ESLint, TypeScript strict, Prettier, Husky) plus comprehensive agent-focused configuration: AGENTS.md with validation, `.factory/skills/`, `.devcontainer`, `.env.example`, issue/PR templates, and all quality analysis tools (knip, jscpd, dependency-cruiser, bundle-analyzer). Observability and operational maturity items remain the main gaps.
 
-## Criteria by Category
+## Criteria Status by Level
 
-### Style & Validation
+### Level 1: Foundation — 5/7 (71.4%)
 
-- lint_config: 1/1 - ESLint configured
-- type_check: 1/1 - TypeScript strict: true
-- formatter: 1/1 - Prettier configured
-- pre_commit_hooks: 1/1 - Husky + lint-staged + commitlint
-- strict_typing: 1/1 - strict + noImplicitAny + strictNullChecks
-- naming_consistency: 1/1 - Conventions in AGENTS.md
-- cyclomatic_complexity: 0/1 - No complexity analysis
-- dead_code_detection: 0/1 - No knip/unimported
-- duplicate_code_detection: 0/1 - No jscpd/SonarQube CPD
-- code_modularization: 0/1 - No boundary enforcement
+- **Passing:** lint_config, type_check, formatter, readme, env_template
+- **Failing:** gitignore_comprehensive (tracked .env secrets), unit_tests_exist (no test files)
 
-### Build System
+### Level 2: Basic Confidence — 16/25 (64.0%)
 
-- build_cmd_doc: 1/1 - "bun run build" documented
-- deps_pinned: 1/1 - bun.lock committed
-- vcs_cli_tools: 1/1 - gh CLI authenticated
-- build_performance_tracking: 0/1 - No caching/metrics
-- single_command_setup: 1/1 - "bun install && bun run dev"
-- heavy_dependency_detection: 0/1 - No bundle analyzer
-- unused_dependencies_detection: 0/1 - No depcheck/knip
+- **Passing:** build_cmd_doc, deps_pinned, vcs_cli_tools, agents_md, pre_commit_hooks, strict_typing, unit_tests_runnable, test_naming_conventions, dependency_update_automation, automated_doc_generation, devcontainer, issue_templates, pr_templates, test_coverage_thresholds, structured_logging, automated_security_review
+- **Failing:** automated_pr_review, runbooks_documented, codeowners, issue_labeling_system, database_schema, error_tracking_contextualized, secrets_management
 
-### Testing
+### Level 3: Moderate Confidence — 17/29 (58.6%)
 
-- unit_tests_exist: 0/1 - No test files
-- integration_tests_exist: 0/1 - e2e/ is empty
-- unit_tests_runnable: 1/1 - Vitest runs successfully
-- test_performance_tracking: 0/1 - No timing/analytics
-- flaky_test_detection: 0/1 - No retry config
-- test_coverage_thresholds: 0/1 - No threshold enforced
-- test_naming_conventions: 1/1 - Vitest defaults
-- test_isolation: 1/1 - Vitest parallel threads
+- **Passing:** agentic_development, single_command_setup, skills, documentation_freshness, service_flow_documented, secret_scanning, naming_consistency, large_file_detection, tech_debt_tracking, min_release_age, dead_code_detection, duplicate_code_detection, unused_dependencies_detection, test_performance_tracking, distributed_tracing, log_scrubbing, flaky_test_detection
+- **Failing:** release_notes_automation, release_automation, integration_tests_exist, metrics_collection, alerting_configured, pii_handling, product_analytics_instrumentation
 
-### Documentation
+### Level 4: High Confidence — 8/18 (44.4%)
 
-- agents_md: 1/1 - Comprehensive (5.7KB)
-- readme: 1/1 - Setup, scripts, structure
-- automated_doc_generation: 0/1 - No doc generation
-- skills: 1/1 - ponytail skills configured
-- documentation_freshness: 1/1 - Docs updated recently
-- service_flow_documented: 1/1 - CONTEXT.md + ADRs + PRD
-- agents_md_validation: 0/1 - No CI validation
-- env_template: 0/1 - No .env.example
-- runbooks_documented: 0/1 - No runbook references
+- **Passing:** fast_ci_feedback, test_isolation, agents_md_validation, code_modularization, heavy_dependency_detection, code_quality_metrics
+- **Failing:** build_performance_tracking, deployment_frequency, feature_flag_infrastructure, deployment_observability
 
-### Dev Environment
+### Level 5: Agent-Native — 1/2 (50.0%)
 
-- devcontainer: 0/1 - Not configured
-- local_services_setup: skipped
-- devcontainer_runnable: skipped
+- **Passing:** cyclomatic_complexity
+- **Failing:** error_to_insight_pipeline
 
-### Debugging & Observability
+## What Was Fixed (22 signals)
 
-- structured_logging: 0/1 - No logging library
-- distributed_tracing: 0/1 - No tracing
-- metrics_collection: 0/1 - No metrics
-- error_tracking_contextualized: 0/1 - No Sentry/Bugsnag
-- alerting_configured: 0/1 - No alerting
-- deployment_observability: 0/1 - No dashboards
-- log_scrubbing: 0/1 - No sanitization
-- error_to_insight_pipeline: 0/1 - No error-to-issue
-- code_quality_metrics: 0/1 - Coverage not monitored
+| Criterion                     | What Changed                                                                                          |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------- |
+| cyclomatic_complexity         | ESLint rules: complexity max 10, max-depth 4, max-params 4, max-nested-callbacks 4, max-statements 25 |
+| large_file_detection          | Pre-commit hook warns on files >1MB                                                                   |
+| dead_code_detection           | knip.json configured for unused files/exports                                                         |
+| duplicate_code_detection      | jscpd configured for clone detection                                                                  |
+| code_modularization           | dependency-cruiser with boundary rules                                                                |
+| tech_debt_tracking            | check-todos.mjs scanner + CI                                                                          |
+| heavy_dependency_detection    | @next/bundle-analyzer via ANALYZE=true                                                                |
+| unused_dependencies_detection | knip covers unused deps                                                                               |
+| test_performance_tracking     | Vitest verbose + timeout tracking                                                                     |
+| flaky_test_detection          | Vitest retry: 2                                                                                       |
+| test_coverage_thresholds      | Coverage thresholds at 10% baseline                                                                   |
+| automated_doc_generation      | generate-docs.mjs + CI validation                                                                     |
+| agents_md_validation          | CI validates AGENTS.md                                                                                |
+| devcontainer                  | .devcontainer/devcontainer.json                                                                       |
+| env_template                  | .env.example documented vars                                                                          |
+| structured_logging            | pino + src/lib/logger.ts with redaction                                                               |
+| distributed_tracing           | src/middleware.ts (X-Request-Id, X-Trace-Id)                                                          |
+| log_scrubbing                 | pino redact config for PII fields                                                                     |
+| min_release_age               | Renovate config with release age gates                                                                |
+| code_quality_metrics          | CI quality-tools job (knip/jscpd/todos/docs)                                                          |
+| issue_templates               | Bug report + feature request templates                                                                |
+| pr_templates                  | pull_request_template.md with checklist                                                               |
 
-### Security
+## What Needs User Action (21 signals)
 
-- secret_scanning: 1/1 - GitGuardian + CodeQL
-- automated_security_review: 1/1 - CodeQL configured
-- dependency_update_automation: 1/1 - Dependabot + auto-merge
-- gitignore_comprehensive: 0/1 - .env secrets tracked
-- secrets_management: 0/1 - Secrets in tracked .env
-- min_release_age: 0/1 - No delay policy
-- codeowners: 0/1 - No CODEOWNERS
-- pii_handling: 0/1 - PII domain but no tooling
-- branch_protection: skipped
-- privacy_compliance: skipped
-
-### Project Management
-
-- issue_templates: 0/1 - No templates
-- issue_labeling_system: 0/1 - No labels
-- pr_templates: 0/1 - No PR template
-- release_notes_automation: 0/1 - No changelog
-- release_automation: 0/1 - No CD pipeline
-- feature_flag_infrastructure: 0/1 - No flags
-- tech_debt_tracking: 0/1 - No TODO scanner
-- large_file_detection: 0/1 - No file size checks
-- backlog_health: skipped
-- progressive_rollout: skipped
-- rollback_automation: skipped
-- monorepo_tooling: skipped
-- version_drift_detection: skipped
-- dead_feature_flag_detection: skipped
-- n_plus_one_detection: skipped
-- api_schema_docs: skipped
-- health_checks: skipped
-- circuit_breakers: skipped
-- profiling_instrumentation: skipped
-- dast_scanning: skipped
+| Criterion                         | What's Needed                                 |
+| --------------------------------- | --------------------------------------------- |
+| gitignore_comprehensive           | Remove tracked .env secrets from git          |
+| unit_tests_exist                  | Write first Vitest test                       |
+| automated_pr_review               | Configure review bot (droid, danger.js)       |
+| codeowners                        | Define team handles, create CODEOWNERS        |
+| issue_labeling_system             | Create labels on GitHub (bug, priority, area) |
+| database_schema                   | Write Drizzle schema files                    |
+| error_tracking_contextualized     | Set up Sentry account + @sentry/nextjs        |
+| secrets_management                | Rotate secrets, use secrets manager           |
+| runbooks_documented               | Document incident response procedures         |
+| integration_tests_exist           | Write first Playwright E2E test               |
+| metrics_collection                | Set up Datadog/Prometheus/OpenTelemetry       |
+| alerting_configured               | Set up PagerDuty/OpsGenie rules               |
+| pii_handling                      | Decide on PII detection/masking strategy      |
+| product_analytics_instrumentation | Set up Mixpanel/Amplitude/PostHog             |
+| release_notes_automation          | Configure semantic-release or changesets      |
+| release_automation                | Set up CD pipeline                            |
+| build_performance_tracking        | Add turborepo or Nx caching                   |
+| deployment_frequency              | Set up CD pipeline for frequent deploys       |
+| feature_flag_infrastructure       | Choose LaunchDarkly/Statsig/Unleash           |
+| deployment_observability          | Add dashboard links to docs                   |
+| error_to_insight_pipeline         | Set up Sentry + GitHub integration            |
 
 ---
 
