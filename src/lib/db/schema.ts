@@ -236,3 +236,71 @@ export const scheduleItemRelations = relations(scheduleItem, ({ one }) => ({
     references: [activity.id],
   }),
 }));
+
+// ─────────────── Daily Class Report (DCR) ───────────────
+
+export const deviationEnum = pgEnum('deviation', [
+  'done',
+  'skipped',
+  'modified',
+]);
+
+export const dailyClassReport = pgTable('daily_class_report', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  sessionId: uuid('session_id')
+    .notNull()
+    .unique()
+    .references(() => termSession.id, { onDelete: 'cascade' }),
+  learningNotes: text('learning_notes'),
+  capturedBy: text('captured_by')
+    .notNull()
+    .references(() => user.id, { onDelete: 'set null' }),
+  capturedAt: timestamp('captured_at').notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const dcrActivity = pgTable('dcr_activity', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  dcrId: uuid('dcr_id')
+    .notNull()
+    .references(() => dailyClassReport.id, { onDelete: 'cascade' }),
+  activityId: uuid('activity_id').references(() => activity.id, {
+    onDelete: 'set null',
+  }),
+  activityNameOther: text('activity_name_other'),
+  deviation: deviationEnum('deviation').notNull().default('done'),
+  wasPlanned: boolean('was_planned').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+// ─────────────── DCR Relations ───────────────
+
+export const dailyClassReportRelations = relations(
+  dailyClassReport,
+  ({ one, many }) => ({
+    session: one(termSession, {
+      fields: [dailyClassReport.sessionId],
+      references: [termSession.id],
+    }),
+    capturedByUser: one(user, {
+      fields: [dailyClassReport.capturedBy],
+      references: [user.id],
+    }),
+    dcrActivities: many(dcrActivity),
+  })
+);
+
+export const dcrActivityRelations = relations(dcrActivity, ({ one }) => ({
+  dcr: one(dailyClassReport, {
+    fields: [dcrActivity.dcrId],
+    references: [dailyClassReport.id],
+  }),
+  activity: one(activity, {
+    fields: [dcrActivity.activityId],
+    references: [activity.id],
+  }),
+}));
