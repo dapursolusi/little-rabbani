@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 
 import { and, eq } from 'drizzle-orm';
 
+import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import { observation, observationActivity } from '@/lib/db/schema';
 
@@ -12,6 +13,18 @@ import { observation, observationActivity } from '@/lib/db/schema';
  */
 export async function GET(request: NextRequest) {
   try {
+    // Require authentication
+    const session = await auth.api.getSession({
+      headers: request.headers,
+    });
+
+    if (!session) {
+      return NextResponse.json(
+        { success: false, error: 'Tidak terautentikasi' },
+        { status: 401 }
+      );
+    }
+
     const kidId = request.nextUrl.searchParams.get('kidId');
     const sessionId = request.nextUrl.searchParams.get('sessionId');
 

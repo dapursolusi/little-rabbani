@@ -7,6 +7,7 @@ import {
   pgTable,
   text,
   timestamp,
+  unique,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -252,9 +253,9 @@ export const dailyClassReport = pgTable('daily_class_report', {
     .unique()
     .references(() => termSession.id, { onDelete: 'cascade' }),
   learningNotes: text('learning_notes'),
-  capturedBy: text('captured_by')
-    .notNull()
-    .references(() => user.id, { onDelete: 'set null' }),
+  capturedBy: text('captured_by').references(() => user.id, {
+    onDelete: 'set null',
+  }),
   capturedAt: timestamp('captured_at').notNull().defaultNow(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
@@ -322,29 +323,35 @@ export const absenceReasonEnum = pgEnum('absence_reason', [
 ]);
 export const participationEnum = pgEnum('participation', ['yes', 'no']);
 
-export const observation = pgTable('observation', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  kidId: uuid('kid_id')
-    .notNull()
-    .references(() => kid.id, { onDelete: 'cascade' }),
-  sessionId: uuid('session_id')
-    .notNull()
-    .references(() => termSession.id, { onDelete: 'cascade' }),
-  teacherId: text('teacher_id')
-    .notNull()
-    .references(() => user.id, { onDelete: 'set null' }),
-  mood: integer('mood').notNull(),
-  appetite: appetiteEnum('appetite').notNull(),
-  presence: presenceEnum('presence').notNull(),
-  absenceReason: absenceReasonEnum('absence_reason'),
-  version: integer('version').notNull().default(0),
-  capturedAt: timestamp('captured_at').notNull().defaultNow(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .defaultNow()
-    .$onUpdateFn(() => new Date()),
-});
+export const observation = pgTable(
+  'observation',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    kidId: uuid('kid_id')
+      .notNull()
+      .references(() => kid.id, { onDelete: 'cascade' }),
+    sessionId: uuid('session_id')
+      .notNull()
+      .references(() => termSession.id, { onDelete: 'cascade' }),
+    teacherId: text('teacher_id').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    mood: integer('mood').notNull(),
+    appetite: appetiteEnum('appetite').notNull(),
+    presence: presenceEnum('presence').notNull(),
+    absenceReason: absenceReasonEnum('absence_reason'),
+    version: integer('version').notNull().default(0),
+    capturedAt: timestamp('captured_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+  },
+  (table) => ({
+    uniqueKidSession: unique().on(table.kidId, table.sessionId),
+  })
+);
 
 export const observationNote = pgTable('observation_note', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -355,17 +362,26 @@ export const observationNote = pgTable('observation_note', {
   createdAt: timestamp('created_at').notNull().defaultNow(),
 });
 
-export const observationActivity = pgTable('observation_activity', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  observationId: uuid('observation_id')
-    .notNull()
-    .references(() => observation.id, { onDelete: 'cascade' }),
-  dcrActivityId: uuid('dcr_activity_id')
-    .notNull()
-    .references(() => dcrActivity.id, { onDelete: 'cascade' }),
-  participated: participationEnum('participated').notNull(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-});
+export const observationActivity = pgTable(
+  'observation_activity',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    observationId: uuid('observation_id')
+      .notNull()
+      .references(() => observation.id, { onDelete: 'cascade' }),
+    dcrActivityId: uuid('dcr_activity_id')
+      .notNull()
+      .references(() => dcrActivity.id, { onDelete: 'cascade' }),
+    participated: participationEnum('participated').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+  },
+  (table) => ({
+    uniqueObservationActivity: unique().on(
+      table.observationId,
+      table.dcrActivityId
+    ),
+  })
+);
 
 // ─────────────── Idempotency Keys Table ───────────────
 // VAL-CAPTURE-040: Server-side idempotency key storage for deduplication

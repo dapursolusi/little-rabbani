@@ -105,7 +105,8 @@ export default async function ScheduleTermPage({
       ) : (
         <div className="space-y-4">
           {sessions.map((session) => {
-            const isLocked = nowISO >= `${session.date}T${session.endTime}:00`;
+            const isLocked =
+              nowISO >= `${session.date}T${session.startTime}:00`;
             const isFuture = nowISO < `${session.date}T${session.startTime}:00`;
 
             return (

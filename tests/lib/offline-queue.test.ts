@@ -360,8 +360,8 @@ describe('Conflict Handling Logic', () => {
 
   // VAL-CAPTURE-035: Version mismatch prevents overwrite even with same teacher
   it('should detect conflict when same teacher opens two tabs', () => {
-    const tab2Version = 1;
-    const serverVersion = 2;
+    const tab2Version: number = 1;
+    const serverVersion: number = 2;
     expect(tab2Version !== serverVersion).toBe(true);
   });
 

@@ -15,7 +15,7 @@ import {
   savePass1Observation,
   savePass2Observation,
 } from '@/lib/actions/capture';
-import { isBrowserOnline } from '@/lib/capture-offline';
+import { isBrowserOnline, setOnConflictCallback } from '@/lib/capture-offline';
 import type { IConflictData } from '@/lib/capture-offline';
 import { generateIdempotencyKey } from '@/lib/idempotency';
 
@@ -180,6 +180,15 @@ export function CaptureRosterClient({
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
+  }, []);
+
+  // Wire up setOnConflictCallback so offline conflicts surface in UI
+  useEffect(() => {
+    setOnConflictCallback((conflict: IConflictData) => {
+      setConflictData(conflict);
+      setIsConflictDialogOpen(true);
+    });
+    return () => setOnConflictCallback(null);
   }, []);
 
   // Handle kid selection

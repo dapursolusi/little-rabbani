@@ -57,6 +57,13 @@
       "when": 1783452084504,
       "tag": "0007_wonderful_wendell_vaughn",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1783453858686,
+      "tag": "0008_early_smasher",
+      "breakpoints": true
     }
   ]
 }

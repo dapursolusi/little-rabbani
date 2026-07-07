@@ -356,6 +356,24 @@ export async function reorderScheduleItems(
     return { success: false as const, error: auth.error };
   }
 
+  if (items.length === 0) {
+    return { success: true as const, data: undefined };
+  }
+
+  // Check session lock for the first item's session
+  const firstItem = await db.query.scheduleItem.findFirst({
+    where: eq(scheduleItem.id, items[0].id),
+  });
+
+  if (!firstItem) {
+    return { success: false as const, error: 'Item jadwal tidak ditemukan' };
+  }
+
+  const lockError = await checkSessionLock(firstItem.sessionId);
+  if (lockError) {
+    return { success: false as const, error: lockError };
+  }
+
   try {
     for (const item of items) {
       await db
