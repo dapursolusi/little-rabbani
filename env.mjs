@@ -9,6 +9,8 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: z.string().min(1),
     GOOGLE_CLIENT_SECRET: z.string().min(1),
     DEV_AUTH_BYPASS: z.enum(['0', '1', 'true', 'false']).optional(),
+    OPENROUTER_API_KEY: z.string().min(1),
+    OPENROUTER_MODEL: z.string().min(1).default('deepseek/deepseek-v4-flash'),
     FF_NEW_DASHBOARD: z.enum(['0', '1', 'true', 'false']).optional(),
     FF_NEW_AUTH_FLOW: z.enum(['0', '1', 'true', 'false']).optional(),
     FF_NEW_ONBOARDING: z.enum(['0', '1', 'true', 'false']).optional(),
@@ -25,6 +27,9 @@ export const env = createEnv({
     GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
     DEV_AUTH_BYPASS: process.env.DEV_AUTH_BYPASS,
+    OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
+    OPENROUTER_MODEL:
+      process.env.OPENROUTER_MODEL ?? 'deepseek/deepseek-v4-flash',
     FF_NEW_DASHBOARD: process.env.FF_NEW_DASHBOARD,
     FF_NEW_AUTH_FLOW: process.env.FF_NEW_AUTH_FLOW,
     FF_NEW_ONBOARDING: process.env.FF_NEW_ONBOARDING,

@@ -393,6 +393,23 @@ export const idempotencyKey = pgTable('idempotency_key', {
   expiresAt: timestamp('expires_at').notNull(),
 });
 
+// ─────────────── Report Templates Table ───────────────
+// Stores prompt templates for AI narrative generation so Owner can
+// iterate wording without code deploys. Key is a unique identifier
+// (e.g., "daily_narrative_system", "daily_narrative_user"), template_text
+// contains the actual prompt template string.
+
+export const reportTemplate = pgTable('report_template', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  key: text('key').notNull().unique(),
+  templateText: text('template_text').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
 // ─────────────── Observation Relations ───────────────
 
 export const observationRelations = relations(observation, ({ one, many }) => ({

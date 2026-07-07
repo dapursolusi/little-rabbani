@@ -64,6 +64,13 @@
       "when": 1783453858686,
       "tag": "0008_early_smasher",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1783465762424,
+      "tag": "0009_worthless_zarek",
+      "breakpoints": true
     }
   ]
 }
