@@ -1,0 +1,21 @@
+{
+  "mcpServers": {
+    "magicuidesign-mcp": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["--bun", "-y", "@magicuidesign/mcp@latest"]
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["--bun", "-y", "@playwright/mcp@latest"],
+      "disabled": false
+    },
+    "shadcn-ui": {
+      "type": "stdio",
+      "command": "bunx",
+      "args": ["--bun", "-y", "@shadcn-ui/mcp@latest"],
+      "disabled": false
+    }
+  }
+}
