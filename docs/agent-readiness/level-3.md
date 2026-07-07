@@ -2,7 +2,7 @@
 
 These criteria demonstrate that the project has quality monitoring, CI discipline, and documentation practices that enable agents to work more independently.
 
-**Repository pass rate for Level 3: 17/29 (58.6%) — 17 passing, 7 failing, 5 skipped**
+**Repository pass rate for Level 3: 21/29 (72.4%) — 21 passing, 3 failing, 5 skipped**
 
 ## Criteria Checklist
 
@@ -23,16 +23,16 @@ These criteria demonstrate that the project has quality monitoring, CI disciplin
 - [x] **distributed_tracing** - Request ID middleware (src/middleware.ts)
 - [x] **log_scrubbing** - pino logger configured with redaction
 - [x] **flaky_test_detection** - Vitest retry: 2
-- [ ] **release_notes_automation** - Needs user action
-- [ ] **dead_feature_flag_detection** - Skipped (no feature flags)
-- [ ] **release_automation** - Needs user action
+- [x] **release_notes_automation** - .changeset/config.json for automated changelog generation
+- [x] **release_automation** - release-please workflow (.github/workflows/release-please.yml)
+- [x] **integration_tests_exist** - playwright.config.ts + e2e/homepage.spec.ts with 3 Playwright tests
+- [x] **pii_handling** - src/lib/pii.ts with detectPiiField, maskPiiValue, maskPiiFields for kid/guardian data
+- [ ] **dead_feature_flag_detection** - Skipped (no feature flags — see Level 4)
 - [ ] **devcontainer_runnable** - Skipped (no devcontainer CLI)
-- [ ] **integration_tests_exist** - Needs user action
 - [ ] **api_schema_docs** - Skipped (Server Actions)
 - [ ] **metrics_collection** - Needs user action
 - [ ] **alerting_configured** - Needs user action
 - [ ] **health_checks** - Skipped (not deployed)
-- [ ] **pii_handling** - Needs user action
 - [ ] **product_analytics_instrumentation** - Needs user action
 
 ## Status
@@ -49,10 +49,11 @@ These criteria demonstrate that the project has quality monitoring, CI disciplin
 - **distributed_tracing** — `src/middleware.ts` adds `X-Request-Id` / `X-Trace-Id` headers.
 - **log_scrubbing** — pino logger with redact for passwords, secrets, tokens, API keys, PII.
 - **flaky_test_detection** — Vitest `retry: 2` configured.
+- **release_notes_automation** — `.changeset/config.json` with changesets for automated changelog.
+- **release_automation** — `.github/workflows/release-please.yml` creates releases on push to main.
+- **integration_tests_exist** — `playwright.config.ts` + `e2e/homepage.spec.ts` with 3 smoke tests.
+- **pii_handling** — `src/lib/pii.ts` with 11 unit tests covering detection, masking, and object scanning.
 
 ### Needs User Decision
 
-- **integration_tests_exist** — Write first Playwright E2E test.
 - **metrics_collection / alerting / product_analytics** — Require external accounts.
-- **pii_handling** — Decide PII detection/masking strategy (preschool LMS domain).
-- **release_notes_automation / release_automation** — Set up when deploying.

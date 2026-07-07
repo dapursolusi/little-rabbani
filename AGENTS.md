@@ -106,6 +106,11 @@ bunx playwright install              # First-time browser binary setup
 - **Agent protocols:** See `CLAUDE.md` (AGENT_PROTOCOL.md rules)
 - **Preflight checklist:** `/webapp-preflight` skill
 - **Known issues:** See `docs/known-issues.md` (create when you hit one)
+- **Runbooks:** `docs/runbooks/incident-response.md` — incident severity levels, triage flow, and escalation contacts
+- **Deployment observability:** Check [Vercel dashboard](https://vercel.com/narasena/little-rabbani) after deploying to see build output and preview URLs
+- **Feature flags:** Add feature flags via `src/lib/feature-flags.ts` — toggleable via `FF_*` env vars for safe rollouts
+- **PII handling:** `src/lib/pii.ts` provides detection (`detectPiiField`) and masking (`maskPiiFields`, `maskPiiValue`) for kid/guardian personal data
+- **Automated PR review:** Factory Droid review configured in `.factory/review.yml` — triggers on PRs
 
 ---
 

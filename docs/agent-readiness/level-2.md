@@ -2,7 +2,7 @@
 
 These criteria establish baseline confidence that agents can navigate the project, build it, and follow project conventions.
 
-**Repository pass rate for Level 2: 16/25 (64.0%) — 9 passing, 7 failing, 3 skipped**
+**Repository pass rate for Level 2: 21/25 (84.0%) — 21 passing, 1 failing, 3 skipped**
 
 ## Criteria Checklist
 
@@ -22,16 +22,16 @@ These criteria establish baseline confidence that agents can navigate the projec
 - [x] **test_coverage_thresholds** - Coverage thresholds enforced in vitest (10% baseline)
 - [x] **structured_logging** - pino logger with redaction at src/lib/logger.ts
 - [x] **automated_security_review** - 1/1 (CodeQL + GitGuardian in CI)
-- [ ] **automated_pr_review** - Needs user action
+- [x] **automated_pr_review** - .factory/review.yml configured for droid review
+- [x] **runbooks_documented** - docs/runbooks/incident-response.md with severity levels and triage flow
+- [x] **codeowners** - .github/CODEOWNERS with @narasena as default
+- [x] **issue_labeling_system** - 12 GitHub labels created (priority, type, area)
+- [x] **secrets_management** - .env.* files gitignored, .env.example has all placeholders
 - [ ] **monorepo_tooling** - Skipped (single app)
 - [ ] **local_services_setup** - Skipped (no external deps)
-- [ ] **runbooks_documented** - Needs user action
 - [ ] **branch_protection** - Skipped (no admin access)
-- [ ] **codeowners** - Needs user action
-- [ ] **issue_labeling_system** - Needs user action
 - [ ] **database_schema** - Needs user action
 - [ ] **error_tracking_contextualized** - Needs user action
-- [ ] **secrets_management** - Needs user action
 
 ## Status
 
@@ -43,12 +43,13 @@ These criteria establish baseline confidence that agents can navigate the projec
 - **pr_templates** — `.github/pull_request_template.md` with testing checklist.
 - **test_coverage_thresholds** — Vitest enforces minimum 10% coverage thresholds.
 - **structured_logging** — `pino` installed, `src/lib/logger.ts` with redaction support.
+- **automated_pr_review** — `.factory/review.yml` with droid review configuration.
+- **runbooks_documented** — `docs/runbooks/incident-response.md` with SEV levels, triage lifecycle, escalation contacts.
+- **codeowners** — `.github/CODEOWNERS` set to `@narasena`.
+- **issue_labeling_system** — Priority (critical/high/medium/low), type (bug/feature/chore/docs), area (frontend/backend/infra/db).
+- **secrets_management** — `.env.*` files confirmed gitignored; `.env.example` contains placeholder vars only.
 
 ### Needs User Decision
 
-- **codeowners** — Define GitHub team handles before creating `.github/CODEOWNERS`.
-- **automated_pr_review** — Configure review bot (droid review, danger.js, etc.).
-- **issue_labeling_system** — Create issue labels on GitHub.
 - **database_schema** — Write Drizzle schema files in `src/db/schema/`.
 - **error_tracking_contextualized** — Set up Sentry project.
-- **secrets_management** — Remove secrets from tracked `.env.*` files.

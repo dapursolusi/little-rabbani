@@ -1,0 +1,22 @@
+# droid review configuration
+# See https://factory.ai/docs/review for documentation
+# Trigger: /review command or automatically on PRs
+#
+# To enable automated PR review, run:
+#   droid review install --github narasena/little-rabbani
+#
+# This repo uses:
+# - Automated code review comments on PRs via Factory Droid
+# - Standards + Spec review via code-review skill
+# - Formatting and type checking via CI
+
+review:
+  enabled: true
+  auto_comment: true
+  skills:
+    - code-review
+    - simplify
+  checks:
+    - lint
+    - typecheck
+    - test

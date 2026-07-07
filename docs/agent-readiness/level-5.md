@@ -7,7 +7,7 @@ These are the highest-level criteria showing mature engineering practices: compl
 ## Criteria Checklist
 
 - [x] **cyclomatic_complexity** - ESLint complexity rules (max 10, max-depth 4, max-params 4, max-nested-callbacks 4, max-statements 25)
-- [ ] **error_to_insight_pipeline** - Needs user action
+- [ ] **error_to_insight_pipeline** - Needs user action (requires Sentry account)
 
 ## Status
 

@@ -13,10 +13,12 @@ export default defineConfig({
     retry: 2,
     testTimeout: 10_000,
     reporters: ['default', 'verbose'],
+    exclude: ['e2e/', 'node_modules/'],
+    include: ['tests/**/*.test.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],
-      exclude: ['node_modules/', 'tests/setup.ts'],
+      exclude: ['e2e/', 'node_modules/', 'tests/setup.ts'],
       thresholds: {
         statements: 10,
         branches: 10,

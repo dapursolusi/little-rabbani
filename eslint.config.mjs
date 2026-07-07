@@ -30,6 +30,7 @@ const eslintConfig = defineConfig([
     'knip.json',
     '.jscpd.json',
     '.github/**',
+    'e2e/**',
   ]),
   {
     rules: {

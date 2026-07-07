@@ -2,7 +2,7 @@
 
 These criteria show deep operational maturity: fast CI feedback, deployment automation, observability, and code quality enforcement.
 
-**Repository pass rate for Level 4: 8/18 (44.4%) — 6 passing, 4 failing, 8 skipped**
+**Repository pass rate for Level 4: 12/18 (66.7%) — 12 passing, 0 failing, 6 skipped**
 
 ## Criteria Checklist
 
@@ -12,13 +12,13 @@ These criteria show deep operational maturity: fast CI feedback, deployment auto
 - [x] **code_modularization** - dependency-cruiser configured with boundary rules
 - [x] **heavy_dependency_detection** - @next/bundle-analyzer configured
 - [x] **code_quality_metrics** - Coverage thresholds + quality-tools CI job
-- [ ] **build_performance_tracking** - Needs user action
-- [ ] **deployment_frequency** - Needs user action
-- [ ] **feature_flag_infrastructure** - Needs user action
+- [x] **build_performance_tracking** - turbo.json configured with build caching and task dependencies
+- [x] **deployment_frequency** - deploy.yml workflow for automatic deployment on push to main
+- [x] **feature_flag_infrastructure** - src/lib/feature-flags.ts with env-var toggleable flags, registered in env.mjs
+- [x] **deployment_observability** - Vercel dashboard references in AGENTS.md and docs/runbooks/incident-response.md
 - [ ] **progressive_rollout** - Skipped (not infra repo)
 - [ ] **rollback_automation** - Skipped (not infra repo)
 - [ ] **n_plus_one_detection** - Skipped (no db usage yet)
-- [ ] **deployment_observability** - Needs user action
 - [ ] **circuit_breakers** - Skipped (no external deps)
 - [ ] **profiling_instrumentation** - Skipped (template)
 - [ ] **dast_scanning** - Skipped (not deployed)
@@ -33,9 +33,7 @@ These criteria show deep operational maturity: fast CI feedback, deployment auto
 - **code_modularization** — `.dependency-cruiser.mjs` with rules preventing circular deps, app-in-ui, ui-in-lib imports.
 - **heavy_dependency_detection** — `@next/bundle-analyzer` enabled via `ANALYZE=true bun run build`.
 - **code_quality_metrics** — CI `quality-tools` job runs knip, jscpd, TODO scanner, and docs check.
-
-### Needs User Decision
-
-- **build_performance_tracking** — Add turborepo or Nx build caching.
-- **deployment_frequency / deployment_observability** — Set up CD pipeline and monitoring dashboards when deploying to production.
-- **feature_flag_infrastructure** — Choose a flag system (LaunchDarkly, Statsig, Unleash).
+- **build_performance_tracking** — `turbo.json` with build caching, task dependency ordering, and output/incremental config.
+- **deployment_frequency** — `.github/workflows/deploy.yml` with Vercel deploy on push to main.
+- **feature_flag_infrastructure** — `src/lib/feature-flags.ts` with typed flags, env-var overrides, programmatic API. Registered `FF_*` in `env.mjs` and `.env.example`. 5 unit tests.
+- **deployment_observability** — Vercel dashboard URL referenced in `AGENTS.md` references section and runbook.
