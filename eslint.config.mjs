@@ -31,6 +31,8 @@ const eslintConfig = defineConfig([
     '.jscpd.json',
     '.github/**',
     'e2e/**',
+    'drizzle.config.ts',
+    'drizzle/**',
   ]),
   {
     rules: {
