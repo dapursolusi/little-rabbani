@@ -40,6 +40,7 @@ UI Component (Server Component) → Server Action → Service → ORM → DB
 2. Toast feedback (sonner) required on all user-facing mutations.
 3. Check `env.mjs` before adding env vars. Add only when needed — don't pre-add "just in case".
 4. Every page must export a `metadata` object. Use `baseMetadata` from `@/lib/metadata`.
+5. Must use shadcn components at all times. Prefer custom registries first then the standard shadcn.
 
 ## Forbidden
 
