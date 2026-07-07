@@ -47,6 +47,7 @@
     "dexie-react-hooks": "4.4.0",
     "drizzle-orm": "0.45.2",
     "next": "16.2.10",
+    "next-themes": "0.4.6",
     "papaparse": "5.5.4",
     "pino": "10.3.1",
     "react": "19.2.7",

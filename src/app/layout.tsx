@@ -1,6 +1,7 @@
 import { Geist, Geist_Mono, Roboto } from 'next/font/google';
 
 import type { Metadata } from 'next';
+import { Toaster } from 'sonner';
 
 import { cn } from '@/lib/utils';
 
@@ -40,7 +41,10 @@ export default function RootLayout({
         roboto.variable
       )}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        {children}
+        <Toaster position="top-right" richColors />
+      </body>
     </html>
   );
 }

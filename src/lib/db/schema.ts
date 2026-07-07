@@ -1,6 +1,20 @@
-import { boolean, pgEnum, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
+import { relations } from 'drizzle-orm';
+import {
+  boolean,
+  date,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 export const roleEnum = pgEnum('role', ['owner', 'teacher']);
+export const kidStatusEnum = pgEnum('kid_status', [
+  'waiting',
+  'enrolled',
+  'alumni',
+]);
 
 export const user = pgTable('user', {
   id: text('id').primaryKey(),
@@ -64,3 +78,69 @@ export const verification = pgTable('verification', {
     .defaultNow()
     .$onUpdateFn(() => new Date()),
 });
+
+export const guardian = pgTable('guardian', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  phone: text('phone').notNull(),
+  email: text('email'),
+  secondContactName: text('second_contact_name'),
+  secondContactPhone: text('second_contact_phone'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const term = pgTable('term', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  startDate: date('start_date').notNull(),
+  endDate: date('end_date').notNull(),
+  isActive: boolean('is_active').notNull().default(false),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const kid = pgTable('kid', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  dob: date('dob').notNull(),
+  status: kidStatusEnum('status').notNull().default('waiting'),
+  guardianId: uuid('guardian_id')
+    .notNull()
+    .references(() => guardian.id, { onDelete: 'restrict' }),
+  enrolledTermId: uuid('enrolled_term_id').references(() => term.id, {
+    onDelete: 'set null',
+  }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+// Relations
+
+export const guardianRelations = relations(guardian, ({ many }) => ({
+  kids: many(kid),
+}));
+
+export const kidRelations = relations(kid, ({ one }) => ({
+  guardian: one(guardian, {
+    fields: [kid.guardianId],
+    references: [guardian.id],
+  }),
+  enrolledTerm: one(term, {
+    fields: [kid.enrolledTermId],
+    references: [term.id],
+  }),
+}));
+
+export const termRelations = relations(term, ({ many }) => ({
+  kids: many(kid),
+}));
