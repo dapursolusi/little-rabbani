@@ -182,9 +182,7 @@ describe('DCR Server Actions', () => {
       };
 
       vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
-        mockDcr as unknown as ReturnType<
-          typeof db.query.dailyClassReport.findFirst
-        >
+        mockDcr as any
       );
 
       const result = await dcrActions.getDcrBySession('session-1');
@@ -259,7 +257,7 @@ describe('DCR Server Actions', () => {
           updatedAt: new Date(),
           activity: null,
         },
-      ] as unknown as ReturnType<typeof db.query.scheduleItem.findMany>);
+      ] as any);
 
       const result = await dcrActions.getScheduleActivitiesForDcr('session-1');
       expect(result.success).toBe(true);
@@ -301,7 +299,7 @@ describe('DCR Server Actions', () => {
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newDcr]),
         }),
-      } as unknown as ReturnType<typeof db.insert>);
+      } as any);
 
       const formData = new FormData();
       formData.append('sessionId', 'session-1');
@@ -345,7 +343,7 @@ describe('DCR Server Actions', () => {
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newDcr]),
         }),
-      } as unknown as ReturnType<typeof db.insert>);
+      } as any);
 
       const formData = new FormData();
       formData.append('sessionId', 'session-2');
@@ -398,7 +396,7 @@ describe('DCR Server Actions', () => {
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newDcr]),
         }),
-      } as unknown as ReturnType<typeof db.insert>);
+      } as any);
 
       const formData = new FormData();
       formData.append('sessionId', 'session-3');
@@ -436,9 +434,7 @@ describe('DCR Server Actions', () => {
       };
 
       vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
-        existingDcr as unknown as ReturnType<
-          typeof db.query.dailyClassReport.findFirst
-        >
+        existingDcr as any
       );
 
       vi.mocked(db.update).mockReturnValue({
@@ -451,11 +447,11 @@ describe('DCR Server Actions', () => {
               ]),
           }),
         }),
-      } as unknown as ReturnType<typeof db.update>);
+      } as any);
 
       vi.mocked(db.delete).mockReturnValue({
         where: vi.fn().mockResolvedValue(undefined),
-      } as unknown as ReturnType<typeof db.delete>);
+      } as any);
 
       const formData = new FormData();
       formData.append('sessionId', 'session-1');
@@ -523,7 +519,7 @@ describe('DCR Server Actions', () => {
           createdAt: new Date(),
           activity: null,
         },
-      ] as unknown as ReturnType<typeof db.query.dcrActivity.findMany>);
+      ] as any);
 
       const result = await dcrActions.getDcrActivitiesForPass2('dcr-1');
       expect(result.success).toBe(true);
@@ -580,7 +576,7 @@ describe('DCR Server Actions', () => {
             updatedAt: new Date(),
           },
         },
-      ] as unknown as ReturnType<typeof db.query.termSession.findMany>);
+      ] as any);
 
       vi.mocked(db.query.dailyClassReport.findMany).mockResolvedValue([
         {
@@ -590,7 +586,7 @@ describe('DCR Server Actions', () => {
           capturedBy: 'owner-1',
           capturedAt: new Date(),
         },
-      ] as unknown as ReturnType<typeof db.query.dailyClassReport.findMany>);
+      ] as any);
 
       const result = await dcrActions.getSessionsForDcr();
       expect(result.success).toBe(true);

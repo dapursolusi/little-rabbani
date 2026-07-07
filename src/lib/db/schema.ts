@@ -304,3 +304,108 @@ export const dcrActivityRelations = relations(dcrActivity, ({ one }) => ({
     references: [activity.id],
   }),
 }));
+
+// ─────────────── Teacher Observation Capture ───────────────
+
+export const appetiteEnum = pgEnum('appetite', ['good', 'moderate', 'poor']);
+export const presenceEnum = pgEnum('presence', [
+  'present_full',
+  'late',
+  'early_pickup',
+  'absent',
+]);
+export const absenceReasonEnum = pgEnum('absence_reason', [
+  'sick',
+  'family',
+  'permission',
+  'other',
+]);
+export const participationEnum = pgEnum('participation', ['yes', 'no']);
+
+export const observation = pgTable('observation', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  kidId: uuid('kid_id')
+    .notNull()
+    .references(() => kid.id, { onDelete: 'cascade' }),
+  sessionId: uuid('session_id')
+    .notNull()
+    .references(() => termSession.id, { onDelete: 'cascade' }),
+  teacherId: text('teacher_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'set null' }),
+  mood: integer('mood').notNull(),
+  appetite: appetiteEnum('appetite').notNull(),
+  presence: presenceEnum('presence').notNull(),
+  absenceReason: absenceReasonEnum('absence_reason'),
+  version: integer('version').notNull().default(0),
+  capturedAt: timestamp('captured_at').notNull().defaultNow(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const observationNote = pgTable('observation_note', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  observationId: uuid('observation_id')
+    .notNull()
+    .references(() => observation.id, { onDelete: 'cascade' }),
+  text: text('text').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const observationActivity = pgTable('observation_activity', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  observationId: uuid('observation_id')
+    .notNull()
+    .references(() => observation.id, { onDelete: 'cascade' }),
+  dcrActivityId: uuid('dcr_activity_id')
+    .notNull()
+    .references(() => dcrActivity.id, { onDelete: 'cascade' }),
+  participated: participationEnum('participated').notNull(),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+// ─────────────── Observation Relations ───────────────
+
+export const observationRelations = relations(observation, ({ one, many }) => ({
+  kid: one(kid, {
+    fields: [observation.kidId],
+    references: [kid.id],
+  }),
+  session: one(termSession, {
+    fields: [observation.sessionId],
+    references: [termSession.id],
+  }),
+  teacher: one(user, {
+    fields: [observation.teacherId],
+    references: [user.id],
+  }),
+  notes: many(observationNote),
+  activities: many(observationActivity),
+}));
+
+export const observationNoteRelations = relations(
+  observationNote,
+  ({ one }) => ({
+    observation: one(observation, {
+      fields: [observationNote.observationId],
+      references: [observation.id],
+    }),
+  })
+);
+
+export const observationActivityRelations = relations(
+  observationActivity,
+  ({ one }) => ({
+    observation: one(observation, {
+      fields: [observationActivity.observationId],
+      references: [observation.id],
+    }),
+    dcrActivity: one(dcrActivity, {
+      fields: [observationActivity.dcrActivityId],
+      references: [dcrActivity.id],
+    }),
+  })
+);

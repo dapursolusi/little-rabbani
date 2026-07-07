@@ -43,6 +43,13 @@
       "when": 1783448514849,
       "tag": "0005_lucky_fixer",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1783449451469,
+      "tag": "0006_cute_mephistopheles",
+      "breakpoints": true
     }
   ]
 }
