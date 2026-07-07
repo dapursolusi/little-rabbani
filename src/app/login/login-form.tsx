@@ -6,15 +6,16 @@ import { authClient } from '@/lib/auth-client';
 
 interface ILoginFormProps {
   error?: string;
+  redirect?: string;
 }
 
-export function LoginForm({ error }: ILoginFormProps) {
+export function LoginForm({ error, redirect: redirectUrl }: ILoginFormProps) {
   const handleSignIn = useCallback(async () => {
     await authClient.signIn.social({
       provider: 'google',
-      callbackURL: '/dashboard/owner',
+      callbackURL: redirectUrl ?? '/login',
     });
-  }, []);
+  }, [redirectUrl]);
 
   const accessDenied = error === 'access_denied';
 

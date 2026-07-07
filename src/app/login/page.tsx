@@ -13,13 +13,17 @@ export default async function LoginPage(props: {
 }) {
   const searchParams = await props.searchParams;
   const error = searchParams.error as string | undefined;
+  const redirectUrl = searchParams.redirect as string | undefined;
 
-  // If there's a valid session, redirect to dashboard
+  // If there's a valid session, redirect to dashboard or original destination
   const session = await auth.api.getSession({
     headers: await headers(),
   });
 
   if (session) {
+    if (redirectUrl) {
+      redirect(redirectUrl);
+    }
     const role = session.user.role as string;
     if (role === 'owner') {
       redirect('/dashboard/owner');
@@ -28,5 +32,5 @@ export default async function LoginPage(props: {
     }
   }
 
-  return <LoginForm error={error} />;
+  return <LoginForm error={error} redirect={redirectUrl} />;
 }
