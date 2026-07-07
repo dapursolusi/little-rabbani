@@ -1,8 +1,12 @@
 'use server';
 
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
+
 import { and, asc, eq } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
+import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 import {
   dailyClassReport,
@@ -98,29 +102,21 @@ async function validateSessionForCapture(
 async function requireTeacher(): Promise<
   { authorized: true; userId: string } | { authorized: false; error: string }
 > {
-  const { headers } = await import('next/headers');
-  const headerStore = await headers();
-  const sessionData = await (
-    await import('@/lib/auth')
-  ).auth.api.getSession({
-    headers: headerStore,
+  const session = await auth.api.getSession({
+    headers: await headers(),
   });
-  if (!sessionData) {
-    const { redirect } = await import('next/navigation');
+  if (!session) {
     redirect('/login');
     return { authorized: false, error: 'Redirecting...' };
   }
-  if (
-    sessionData.user.role !== 'teacher' &&
-    sessionData.user.role !== 'owner'
-  ) {
+  if (session.user.role !== 'teacher' && session.user.role !== 'owner') {
     return {
       authorized: false,
       error: 'Akses ditolak.',
     };
   }
 
-  return { authorized: true, userId: sessionData.user.id };
+  return { authorized: true, userId: session.user.id };
 }
 
 // ─────────────── Read Operations ───────────────

@@ -11,7 +11,7 @@ import { checkStorageQuota } from '@/lib/capture-offline';
 // VAL-CAPTURE-041: Quota warning when IndexedDB near full
 
 export function OfflineIndicator() {
-  const { isOnline, pendingCount, isSyncing, lastSyncResult } =
+  const { isOnline, pendingCount, isSyncing, lastSyncResult, syncNow } =
     useOnlineStatus();
   const [quotaMessage, setQuotaMessage] = useState<string | null>(null);
   const [syncToast, setSyncToast] = useState<string | null>(null);
@@ -127,6 +127,7 @@ export function OfflineIndicator() {
         <div className="sticky top-0 z-50 bg-blue-600 px-4 py-1.5 text-center text-xs font-medium text-white">
           <button
             type="button"
+            onClick={syncNow}
             className="flex items-center justify-center gap-2"
           >
             <span>{pendingCount} data offline menunggu sinkronisasi</span>
