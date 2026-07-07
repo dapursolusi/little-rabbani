@@ -124,6 +124,24 @@ export const kid = pgTable('kid', {
     .$onUpdateFn(() => new Date()),
 });
 
+export const termSession = pgTable('term_session', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  termId: uuid('term_id')
+    .notNull()
+    .references(() => term.id, { onDelete: 'cascade' }),
+  date: date('date').notNull(),
+  startTime: text('start_time').notNull(),
+  endTime: text('end_time').notNull(),
+  label: text('label').notNull(),
+  isHoliday: boolean('is_holiday').notNull().default(false),
+  holidayReason: text('holiday_reason'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
 // Relations
 
 export const guardianRelations = relations(guardian, ({ many }) => ({
@@ -143,4 +161,12 @@ export const kidRelations = relations(kid, ({ one }) => ({
 
 export const termRelations = relations(term, ({ many }) => ({
   kids: many(kid),
+  sessions: many(termSession),
+}));
+
+export const termSessionRelations = relations(termSession, ({ one }) => ({
+  term: one(term, {
+    fields: [termSession.termId],
+    references: [term.id],
+  }),
 }));

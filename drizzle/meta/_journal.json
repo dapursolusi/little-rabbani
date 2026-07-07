@@ -15,6 +15,13 @@
       "when": 1783437607948,
       "tag": "0001_motionless_butterfly",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1783438788528,
+      "tag": "0002_melted_the_professor",
+      "breakpoints": true
     }
   ]
 }
