@@ -1,14 +1,17 @@
 # Spec: Capture Flow
 
 ## Problem
+
 No way to plan a teaching week, capture what happened in class, or record per-kid observations. The core loop — plan → run → capture — is missing.
 
 ## Scope
+
 **IN:** Weekly Schedule (Owner assigns catalog activities + outings to sessions, with location / bring-items / permission flag, editable until session start, holiday warnings, real-time Teacher dashboard propagation), Daily Class Report (Owner captures class activities prefilled from schedule, deviation tracking: done / skipped / modified, add unplanned activities mid-capture with prompt-to-add-to-catalog), Teacher Observation Capture — two passes (Pass 1: mood 5-level, appetite 3-level, presence: present_full / late / early_pickup / absent, absence_reason: sick / family / permission / other, free-text notes; Pass 2: yes/no activity participation per class-level activity), roster view with per-kid capture state (✓/✗), optimistic locking (version field) with two-layer conflict UI (single-value refresh; notes append-only, always persist), offline capture queue (IndexedDB, sync on reconnect, conflict surfacing on flush).
 
 **OUT:** AI narrative, report generation, WhatsApp reminders, schedule deviation reason free-text (v2), any PDF, parent portal.
 
 ## Happy Path
+
 1. Owner enters weekly schedule: picks session slots, adds catalog activities + outings (location, bring-items, permission flag). Holiday dates show warnings.
 2. Teacher opens dashboard → sees today's session schedule, activities listed (no re-login).
 3. Owner edits schedule (add activity, swap session) → Teacher dashboard updates in real-time without re-login.
@@ -19,6 +22,7 @@ No way to plan a teaching week, capture what happened in class, or record per-ki
 8. Network drops during capture → taps queue to IndexedDB → reconnects → syncs, surfaces any version conflicts.
 
 ## Data Model
+
 ```sql
 schedule_items: id, session_id (FK sessions), activity_id (FK activities, nullable — null = outing), type (enum: activity|outing), outing_location, outing_bring_items, outing_permission_required, sort_order, created_at, updated_at
 
@@ -38,6 +42,7 @@ Unique constraint: (session_id) on daily_class_reports — one DCR per session.
 Unique constraint: (observation_id, dcr_activity_id) on observation_activities.
 
 ## Edge Cases
+
 - Teacher opens capture before DCR is done → Pass 2 locked, banner: "Waiting for class report."
 - Two teachers capture same kid simultaneously → second save hits version mismatch → conflict UI: refresh single-value fields (mood, appetite, presence), notes always appended (never overwritten).
 - Kid absence → skip activity participation (Pass 2), show absence reason in roster.
@@ -49,6 +54,7 @@ Unique constraint: (observation_id, dcr_activity_id) on observation_activities.
 - Capture on holiday session → blocked, session marked as non-capturable.
 
 ## Acceptance Criteria
+
 - [ ] Owner can enter weekly schedule with catalog activities and outings.
 - [ ] Schedule edits propagate to Teacher dashboard in real-time without re-login.
 - [ ] Holiday dates show warnings when scheduling.
@@ -63,6 +69,7 @@ Unique constraint: (observation_id, dcr_activity_id) on observation_activities.
 - [ ] Deployed to staging, working end-to-end.
 
 ## Technical Notes
+
 Depends on: 001-scaffold-auth, 002-master-data.
 
 Real-time propagation via Supabase Realtime (broadcast channel) or simple polling — decision at implementation time. Offline queue via Dexie.js (IndexedDB wrapper). Optimistic version check on observation upsert: WHERE version = oldVersion, SET version = oldVersion + 1. All mutations except observation capture are Owner-only.

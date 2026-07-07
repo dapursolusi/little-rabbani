@@ -26,11 +26,20 @@ const eslintConfig = defineConfig([
     'sentry.server.config.ts',
     'sentry.client.config.ts',
     'scripts/**',
+    '.dependency-cruiser.mjs',
+    'knip.json',
+    '.jscpd.json',
+    '.github/**',
   ]),
   {
     rules: {
       'no-console': ['warn', { allow: ['warn', 'error'] }],
       '@typescript-eslint/no-explicit-any': 'error',
+      complexity: ['warn', { max: 10 }],
+      'max-depth': ['warn', { max: 4 }],
+      'max-params': ['warn', { max: 4 }],
+      'max-nested-callbacks': ['warn', { max: 4 }],
+      'max-statements': ['warn', { max: 25 }],
     },
   },
 ]);

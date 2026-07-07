@@ -32,8 +32,36 @@ jobs:
       - name: Validate AGENTS.md Freshness
         run: bun run validate:agents-md
 
-      - name: Run Tests
-        run: bun run test --run --passWithNoTests
+      - name: Run Tests with Coverage
+        run: bun run test:coverage
 
       - name: Verify Production Build
         run: bun run build
+
+  quality-tools:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version-file: .bun-version
+
+      - name: Install Dependencies
+        run: bun install
+
+      - name: Dead Code Detection (knip)
+        run: bun run knip
+
+      - name: Duplicate Code Detection (jscpd)
+        run: bun run jscpd
+
+      - name: TODO/FIXME Scanner
+        run: bun run check:todos
+
+      - name: Automated Docs Check
+        run: bun run docs:check

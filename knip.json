@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  "entry": ["src/app/**/page.tsx", "src/app/**/layout.tsx"],
+  "project": ["src/**/*.ts", "src/**/*.tsx"],
+  "rules": {
+    "files": "warn",
+    "dependencies": "warn",
+    "unlisted": "warn",
+    "exports": "warn",
+    "types": "warn",
+    "duplicates": "warn"
+  }
+}

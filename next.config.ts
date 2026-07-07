@@ -5,4 +5,9 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
 };
 
-export default nextConfig;
+const withBundleAnalyzer =
+  process.env.ANALYZE === 'true'
+    ? (await import('@next/bundle-analyzer')).default({ enabled: true })
+    : (config: NextConfig) => config;
+
+export default withBundleAnalyzer(nextConfig);

@@ -1,14 +1,17 @@
 # Spec: Master Data
 
 ## Problem
+
 No kids, guardians, terms, sessions, or activities exist. Every feature downstream needs these entities.
 
 ## Scope
+
 **IN:** Kid CRUD (name, dob, status: waiting/enrolled/alumni, guardian link), Guardian CRUD (name, phone, email, optional second_contact), sibling linking (one guardian → many kids), Term CRUD, Session CRUD (recurring schedule + holiday overrides), cohort assignment (kids to terms), Activity Catalog CRUD (name, category, soft-delete, prompt-to-add from "other" entries), CSV seed import for Kids / Guardians / Teachers / Waiting list / Activity Catalog.
 
 **OUT:** Schedule assignment (activities per session), class capture, observations, reports, any AI.
 
 ## Happy Path
+
 1. Owner adds a Kid (name, dob) and links to a Guardian (name, phone, email).
 2. Owner creates a Term (name, start_date, end_date) → enrolls kids from waiting list into the term cohort.
 3. Owner defines Session schedule: recurring days-of-week + time slots within the term, with holiday overrides (date, reason).
@@ -16,6 +19,7 @@ No kids, guardians, terms, sessions, or activities exist. Every feature downstre
 5. Owner imports CSV for bulk Kid/Guardian/Catalog seeding.
 
 ## Data Model
+
 ```sql
 kids: id, name, dob, status (enum: waiting|enrolled|alumni), guardian_id (FK guardians), enrolled_term_id (FK terms, nullable), created_at, updated_at
 
@@ -33,6 +37,7 @@ Cohort = kids with `enrolled_term_id = X`.
 "Sibling linking" = guardian has multiple kids → same guardian_id.
 
 ## Edge Cases
+
 - CSV parse error → reject row with line number, continue rest.
 - Duplicate kid name + dob → warn, skip (not error — names can repeat in real world; manual dedup).
 - Kid status transition: waiting → enrolled → alumni (no reverse except alumni → enrolled by Owner override).
@@ -42,6 +47,7 @@ Cohort = kids with `enrolled_term_id = X`.
 - Guardian with no enrolled kids → hidden from active roster, visible in "all guardians" admin view.
 
 ## Acceptance Criteria
+
 - [ ] Owner can create, read, update, and delete Kids and Guardians.
 - [ ] Kid status transitions follow waiting → enrolled → alumni (reverse only by override).
 - [ ] Owner can create Terms and Sessions with recurring schedule + holiday overrides.
@@ -53,6 +59,7 @@ Cohort = kids with `enrolled_term_id = X`.
 - [ ] Deployed to staging, working end-to-end.
 
 ## Technical Notes
+
 Depends on: 001-scaffold-auth.
 Parallel-buildable: Kid+Guardian CRUD is independent of Term+Session CRUD and Activity Catalog CRUD — one dev can work all three sequentially within this spec.
 

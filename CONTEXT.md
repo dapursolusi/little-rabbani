@@ -29,7 +29,7 @@ _Avoid_: Admin, principal.
 ### Capture
 
 **Observation**:
-A single structured record of something noted about a kid during a session (e.g., mood, appetite, an activity participated in, absence). Captured by recall *after* the session ends — not in real time — within the memory window the short class length allows. The atomic unit of the system; reports are projections of stored observations.
+A single structured record of something noted about a kid during a session (e.g., mood, appetite, an activity participated in, absence). Captured by recall _after_ the session ends — not in real time — within the memory window the short class length allows. The atomic unit of the system; reports are projections of stored observations.
 _Avoid_: Entry, log, report-item, data-point.
 
 **Note**:
@@ -63,4 +63,3 @@ A generated summary of one kid's observations across a school quarter (≈3 mont
 **Daily Class Report**:
 A whole-class summary of one session — the activities run that day and what the class learned. Captured by the owner (not teachers). Distinct from per-kid Daily Parent Reports, which are projections of individual observations.
 _Avoid_: Class summary, session recap.
-

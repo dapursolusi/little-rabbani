@@ -1,1 +1,18 @@
 bun run lint-staged
+
+# Check for large files (over 1MB)
+threshold=$((1 * 1024 * 1024))
+large_files=$(git diff --cached --name-only -z | xargs -0 -I{} sh -c '
+  if [ -f "{}" ]; then
+    size=$(stat -c%s "{}" 2>/dev/null)
+    if [ "$size" -gt 1048576 ]; then
+      echo "{} ($size bytes)"
+    fi
+  fi
+')
+
+if [ -n "$large_files" ]; then
+  echo "Warning: Large files staged for commit:"
+  echo "$large_files"
+  echo "Consider using Git LFS or removing them."
+fi

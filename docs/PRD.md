@@ -1,6 +1,7 @@
 # PRD: Full Preschool LMS Phase 1
 
 ## Document Info
+
 - **Owner:** Hanifah Khoerul Amien (Preschool Owner/My Wife)
 - **Status:** Approved
 - **Date:** 2026-06-25
@@ -11,6 +12,7 @@
 ## 1. Problem Statement
 
 ### Current Pain
+
 - At the start of the preschool, my wife managed to send daily report + daily class report manually to each kid's parent. But doing so take so much of my wife's time who also need to take care of the family (me and my 2 kids - 2.5 y.o. boy and 5 y.o. girl) and the household. Using AI's text voice prompt, she need to create individual report per kid and refine the response multiple times. And copy the response to whatsapp and sometimes need to be adjusted manually before sent. It usually take from 12.00 pm where the school ends until 18.00. And that from daily report alone. The daily report consist of:
   1. Mood of the kid
   2. Appetite (the preschool offer free snack and the kid bring brunch box)
@@ -23,11 +25,13 @@
 - Because of these issue, my wife halt all the reports. So unless parent ask first, my wife only then create the report.
 
 ### Root Cause
+
 - Manual reporting system (AI chat generation + whatsapp)
 - No automation
 - No template
 
 ### Why Now
+
 - Until 13th June, 2026 the preschool is in school holiday term.
 - A lot of enthusiasm from neighborhood. So many have lined in waiting list. So my wife's planning open two session within a day.
 
@@ -36,13 +40,16 @@
 ## 2. Goals & Success Metrics
 
 ### Goals (outcomes, not features)
+
 - G1: Daily Parent Report generation time ≤ 30 min total (all kids), down from 6 hours today.
 - G2: Observations persisted per kid per session, enabling Monthly/Quarterly aggregation without reconstructing from WhatsApp history.
 - G3: Two-session operation viable without overloading the Owner — distributed capture by Teachers via tap-fast UX.
 - G4: Reports sent proactively (daily + monthly + quarterly PDF), replacing the halted-unless-asked status quo.
 
 ### Non-Goals (explicitly not in this slice)
+
 Your anti-scope-creep contract.
+
 - NG1: Parent portal / guardian self-serve login (deferred to phase 2).
 - NG2: WhatsApp Business API auto-send (v1 uses copy button + manual paste).
 - NG3: Multi-guardian login per kid (one guardian record per kid; second guardian = optional contact field).
@@ -54,16 +61,19 @@ Your anti-scope-creep contract.
 ## 3. User Personas
 
 ### Persona A: Hanifah — Owner
+
 - Context: Preschool owner-operator, also wife and mother of 2 kids. Manages class, captures observations, generates/polishes all reports, maintains catalog and schedule. Default actor.
 - Primary pain: 6-hour daily report loop (AI chat → refine → WhatsApp paste). Monthly/quarterly reports reconstructed from WhatsApp memory because daily data isn't stored. Reports halted unless parent asks first.
 - What success feels like for them: Daily reports done in under 30 min. Data persists. Reports generated, not hand-composed. Time recovered for family and household.
 
 ### Persona B: Teacher
+
 - Context: Staff handling a session cohort (5–8 kids). Salary-constrained — no budget for extra report-writing time. Post-class is chaotic (kids leaving, parents asking); no time to hold phone during class itself. 2-hour class length makes recall reliable within a short post-class window.
 - Primary pain: No tool today. Composing narrative reports = ~30 min/kid = prohibitive on salary.
 - What success feels like for them: Tap ~1 min/kid post-class. No typing. No narrative composition. Done within recall window.
 
 ### Persona C: Guardian
+
 - Context: Parent/caretaker of an enrolled kid. Receives reports via WhatsApp (existing channel).
 - Primary pain: Reports halted unless they ask first. No visibility into kid's day, month, or term growth.
 - What success feels like for them: Daily report on WhatsApp within hours of class. Monthly summaries. Quarterly PDF with growth narrative. No need to chase.
@@ -75,6 +85,7 @@ Your anti-scope-creep contract.
 Format: "As a [persona], I want [action], so that [outcome]."
 
 ### Must-Have (v1)
+
 - As Owner, I want to capture the Daily Class Report (activities + learning) so that Teachers can record per-kid participation against it.
 - As Teacher, I want to capture per-kid observations (mood, appetite, absence, notes) by tapping, so that data persists without composing narratives.
 - As Teacher, I want to record per-kid activity participation after the Daily Class Report is done, so that participation data is structured.
@@ -88,6 +99,7 @@ Format: "As a [persona], I want [action], so that [outcome]."
 - As Teacher, I want my captures to queue offline, so that network drops don't lose data within the recall window.
 
 ### Nice-to-Have (v2)
+
 - As Guardian, I want to log in and view report history (parent portal).
 - As Owner, I want auto-send via WhatsApp Business API instead of copy/paste.
 - As Owner, I want photo attachments in observations.
@@ -100,6 +112,7 @@ Format: "As a [persona], I want [action], so that [outcome]."
 High-level sequence — no wireframes, just the flow.
 
 **Daily flow:**
+
 1. Owner enters the weekly schedule before Friday (catalog activities + outings). Items can be added/swapped/removed anytime up until the session starts — changes appear on Teacher dashboard immediately without re-login.
 2. Class runs (no in-class phone use). Post-class, Owner captures the Daily Class Report — activities prefilled from schedule, deviation tracked (done/skipped/modified).
 3. Teachers open app, pick today's session, see roster with ✓/✗ captured state. Pass 1 (mood/appetite/absence+reason/notes) captured anytime; Pass 2 (activity participation) unlocked after Daily Class Report done.
@@ -143,6 +156,7 @@ What the system must do. Still no implementation detail.
 ## 8. Out of Scope (v1)
 
 Be explicit. This prevents scope creep mid-build.
+
 - Parent portal / Guardian self-serve login (v2)
 - WhatsApp Business API auto-send (v2 — v1 uses copy button + manual paste)
 - Multi-guardian login per kid (v2 — second guardian is optional contact field only)
@@ -162,6 +176,7 @@ Be explicit. This prevents scope creep mid-build.
 ## 9. Assumptions, Risks & Open Questions
 
 ### Assumptions
+
 - A1: Teachers will adopt tap-based capture (salary-neutral, ~1 min/kid, faster than status quo).
 - A2: AI-generated Bahasa Indonesia narrative quality is sufficient after Owner polish.
 - A3: DeepSeek (or fallback on OpenRouter) remains available and affordable for the term.
@@ -170,6 +185,7 @@ Be explicit. This prevents scope creep mid-build.
 - A6: One Guardian per kid is sufficient for v1 (second guardian deferred).
 
 ### Risks
+
 - R1: Recall window miss → Teachers forget before capture → data gap. → Mitigation: roster pending counter visible on dashboard, end-of-session WhatsApp nudge to Owner.
 - R2: AI narrative warmth/quality in Bahasa. → Mitigation: editable narrative layer, ReportTemplates stored in DB (iterate without dev), Owner reviews every report before send.
 - R3: Teacher adoption resistance. → Mitigation: tap-only UX, no typing, ~1 min/kid, free-capture-any-kid coordination (no formal assignment).
@@ -177,16 +193,18 @@ Be explicit. This prevents scope creep mid-build.
 - R5: July 13 timeline slip. → Mitigation: documented v1 cuts (~5–6 days saved), vertical-slice specs enable incremental ship.
 
 ### Open Questions (must answer before writing spec)
-| Question | Owner | Deadline |
-|----------|-------|----------|
-| Q1: Exact DeepSeek model string on OpenRouter at wiring time (V3.x vs newer) | Dev | Implementation start |
-| Q2: Outing permission-slip tracking depth (flag-only vs digital consent) | Product | v2 scoping |
+
+| Question                                                                     | Owner   | Deadline             |
+| ---------------------------------------------------------------------------- | ------- | -------------------- |
+| Q1: Exact DeepSeek model string on OpenRouter at wiring time (V3.x vs newer) | Dev     | Implementation start |
+| Q2: Outing permission-slip tracking depth (flag-only vs digital consent)     | Product | v2 scoping           |
 
 ---
 
 ## 10. Acceptance Criteria (Product-Level)
 
 These are NOT unit tests — they're "a human agrees it works."
+
 - AC1: Owner can generate Daily Parent Reports for all kids in ≤30 min total (was 6 hours).
 - AC2: Observations persist per kid per session; Monthly Report generates without manual WhatsApp reconstruction.
 - AC3: Two-session day operable — Teachers capture independently across sessions, Owner reviews combined.
