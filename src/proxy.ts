@@ -72,7 +72,10 @@ export async function proxy(request: NextRequest) {
 
       // Teacher trying to access owner-only routes → 403
       if (role === 'teacher' && pathname.startsWith('/dashboard/owner')) {
-        return new NextResponse('Forbidden', { status: 403 });
+        const response = new NextResponse('Akses Diblokir', { status: 403 });
+        response.headers.set('X-Request-Id', requestId);
+        response.headers.set('X-Trace-Id', requestId);
+        return response;
       }
 
       // Owner accessing /dashboard/teacher — allowed, falls through
