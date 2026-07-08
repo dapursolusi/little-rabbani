@@ -237,6 +237,58 @@ describe('Daily Report - Server Actions', () => {
         expect(result.error).toBeDefined();
       }
     });
+
+    it('includes unplanned DCR activities (activityNameOther) in structured data', async () => {
+      // Mock observation with unplanned activity that has activityNameOther
+      mockDb.query.observation.findFirst.mockResolvedValue({
+        ...mockObservation,
+        activities: [
+          {
+            participated: 'yes',
+            dcrActivity: {
+              activity: null, // No catalog activity linked
+              activityNameOther: 'Kunjungan dokter gigi', // Unplanned activity name
+            },
+          },
+        ],
+      });
+
+      // Mock upsert - no existing report
+      mockDb.query.dailyReportSnapshot.findFirst.mockResolvedValue(null);
+
+      // Mock AI generation
+      mockGenerateNarrative.mockResolvedValue('Narasi untuk hari ini...');
+
+      // Mock insert returning with structured data we can check
+      let capturedValues: Record<string, unknown> | null = null;
+      mockDb.insert.mockReturnValue({
+        values: (vals: Record<string, unknown>) => {
+          capturedValues = vals;
+          return {
+            returning: vi.fn().mockResolvedValue([{ id: 'new-report' }]),
+          };
+        },
+      });
+
+      const result = await generateDailyReports(sessionId);
+
+      expect(result.success).toBe(true);
+      if (result.success) {
+        const successResults = result.data.filter(
+          (r) => r.status === 'success'
+        );
+        expect(successResults.length).toBeGreaterThanOrEqual(1);
+      }
+
+      // Verify the structured data includes the unplanned activity name
+      expect(capturedValues).not.toBeNull();
+      if (capturedValues) {
+        const structured = (
+          capturedValues as { structuredJson?: { activities: string[] } }
+        ).structuredJson;
+        expect(structured?.activities).toContain('Kunjungan dokter gigi');
+      }
+    });
   });
 
   describe('getDailyReportStatus', () => {
@@ -279,7 +331,21 @@ describe('Daily Report - Server Actions', () => {
 
     beforeEach(() => {
       mockDb.update.mockReturnValue({
-        set: () => ({ where: vi.fn().mockResolvedValue(undefined) }),
+        set: () => ({
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              {
+                id: mockReport.id,
+                kidId: kidId1,
+                sessionId,
+                status: 'draft',
+                narrativeFinal: 'Narasi yang sudah diedit...',
+                editedBy: ownerUserId,
+                updatedAt: new Date(),
+              },
+            ]),
+          }),
+        }),
       });
     });
 
@@ -302,6 +368,25 @@ describe('Daily Report - Server Actions', () => {
       mockDb.query.dailyReportSnapshot.findFirst.mockResolvedValue({
         ...mockReport,
         status: 'sent',
+      });
+
+      // Override returning to reflect stale status
+      mockDb.update.mockReturnValue({
+        set: () => ({
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              {
+                id: mockReport.id,
+                kidId: kidId1,
+                sessionId,
+                status: 'stale',
+                narrativeFinal: 'Edited narrative',
+                editedBy: ownerUserId,
+                updatedAt: new Date(),
+              },
+            ]),
+          }),
+        }),
       });
 
       const result = await updateDailyReportNarrative(
@@ -344,7 +429,21 @@ describe('Daily Report - Server Actions', () => {
 
     beforeEach(() => {
       mockDb.update.mockReturnValue({
-        set: () => ({ where: vi.fn().mockResolvedValue(undefined) }),
+        set: () => ({
+          where: vi.fn().mockReturnValue({
+            returning: vi.fn().mockResolvedValue([
+              {
+                id: mockReport.id,
+                kidId: kidId1,
+                sessionId,
+                status: 'sent',
+                narrativeFinal: null,
+                editedBy: ownerUserId,
+                updatedAt: new Date(),
+              },
+            ]),
+          }),
+        }),
       });
     });
 
@@ -354,6 +453,9 @@ describe('Daily Report - Server Actions', () => {
       const result = await markDailyReportSent(kidId1, sessionId);
 
       expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data.status).toBe('sent');
+      }
     });
 
     it('returns error when report not in draft status', async () => {

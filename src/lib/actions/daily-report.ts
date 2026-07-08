@@ -109,10 +109,19 @@ async function getObservationData(
     absenceReason: obs.absenceReason,
     activities: obs.activities
       .filter((a: { participated: string }) => a.participated === 'yes')
-      .map(
-        (a: { dcrActivity: { activity: { name: string } | null } }) =>
-          a.dcrActivity?.activity?.name ?? 'Aktivitas'
-      )
+      .map((a) => {
+        const dcrAct = (
+          a as {
+            dcrActivity: {
+              activity: { name: string } | null;
+              activityNameOther: string | null;
+            };
+          }
+        ).dcrActivity;
+        return (
+          dcrAct?.activity?.name ?? dcrAct?.activityNameOther ?? 'Aktivitas'
+        );
+      })
       .filter(Boolean),
     notes: obs.notes.map((n: { text: string }) => n.text),
   };
@@ -426,7 +435,7 @@ export async function updateDailyReportNarrative(
   // Determine new status: editing a sent report makes it stale
   const newStatus = report.status === 'sent' ? 'stale' : report.status;
 
-  await db
+  const [updatedReport] = await db
     .update(dailyReportSnapshot)
     .set({
       narrativeFinal: narrative,
@@ -434,9 +443,24 @@ export async function updateDailyReportNarrative(
       editedBy: auth.userId,
       updatedAt: new Date(),
     })
-    .where(eq(dailyReportSnapshot.id, report.id));
+    .where(eq(dailyReportSnapshot.id, report.id))
+    .returning({
+      id: dailyReportSnapshot.id,
+      kidId: dailyReportSnapshot.kidId,
+      sessionId: dailyReportSnapshot.sessionId,
+      status: dailyReportSnapshot.status,
+      narrativeFinal: dailyReportSnapshot.narrativeFinal,
+      editedBy: dailyReportSnapshot.editedBy,
+      updatedAt: dailyReportSnapshot.updatedAt,
+    });
 
-  return { success: true as const, data: { status: newStatus } };
+  return {
+    success: true as const,
+    data: {
+      status: updatedReport?.status ?? newStatus,
+      report: updatedReport ?? null,
+    },
+  };
 }
 
 /**
@@ -462,7 +486,7 @@ export async function markDailyReportSent(kidId: string, sessionId: string) {
       eq(dailyReportSnapshot.kidId, kidId),
       eq(dailyReportSnapshot.sessionId, sessionId)
     ),
-    columns: { id: true, status: true },
+    columns: { id: true, status: true, narrativeFinal: true },
   });
 
   if (!report) {
@@ -479,16 +503,29 @@ export async function markDailyReportSent(kidId: string, sessionId: string) {
     };
   }
 
-  await db
+  const [updatedReport] = await db
     .update(dailyReportSnapshot)
     .set({
       status: 'sent',
+      narrativeFinal: report.narrativeFinal ?? null,
       editedBy: auth.userId,
       updatedAt: new Date(),
     })
-    .where(eq(dailyReportSnapshot.id, report.id));
+    .where(eq(dailyReportSnapshot.id, report.id))
+    .returning({
+      id: dailyReportSnapshot.id,
+      kidId: dailyReportSnapshot.kidId,
+      sessionId: dailyReportSnapshot.sessionId,
+      status: dailyReportSnapshot.status,
+      narrativeFinal: dailyReportSnapshot.narrativeFinal,
+      editedBy: dailyReportSnapshot.editedBy,
+      updatedAt: dailyReportSnapshot.updatedAt,
+    });
 
-  return { success: true as const, data: { status: 'sent' } };
+  return {
+    success: true as const,
+    data: { status: 'sent' as const, reportId: updatedReport?.id ?? report.id },
+  };
 }
 
 /**
