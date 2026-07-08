@@ -30,12 +30,17 @@ export function TeacherPendingCaptureBanner() {
   }, []);
 
   useEffect(() => {
-    // Initial fetch
-    refreshCount();
+    // Defer initial fetch to avoid synchronous setState in effect body
+    const raf = requestAnimationFrame(() => {
+      void refreshCount();
+    });
 
     // Poll every 5 seconds
     const interval = setInterval(refreshCount, 5000);
-    return () => clearInterval(interval);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(interval);
+    };
   }, [refreshCount]);
 
   // Don't render anything while loading or when count is 0
