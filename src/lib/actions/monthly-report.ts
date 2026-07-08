@@ -518,16 +518,19 @@ export async function generateMonthlyReport(
           )
         : 3;
 
+    // Concatenate daily narrative texts so the AI can reference them (VAL-MONTHLY-003)
+    const concatenatedDailyNarratives = dailyNarratives
+      .map((d) => `[${d.date}] ${d.narrative}`)
+      .join('\n\n');
+
     narrativeAiDraft = await generateNarrative({
       kidName: kidInfo.name,
       mood: toplevelMood,
       appetite: 'good',
       activities: Object.keys(stats.activityParticipation),
-      notes:
-        dailyNarratives.length > 0
-          ? `Ringkasan bulanan: ${dailyNarratives.length} hari dengan laporan. Kehadiran ${stats.attendancePercent}%.`
-          : undefined,
+      notes: concatenatedDailyNarratives || undefined,
       presence: 'present_full',
+      reportType: 'monthly',
     });
 
     // Enhance with monthly-specific content if AI returned result

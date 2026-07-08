@@ -439,7 +439,7 @@ export const monthlyReportSnapshot = pgTable(
     narrativeFinal: text('narrative_final'),
     lockedObservationIds: jsonb('locked_observation_ids'), // JSONB array of observation IDs
     status: monthlyReportStatusEnum('status').notNull().default('draft'),
-    editedBy: text('edited_by').references(() => user.id, {
+    editedBy: uuid('edited_by').references(() => user.id, {
       onDelete: 'set null',
     }),
     generatedAt: timestamp('generated_at').notNull().defaultNow(),
@@ -559,7 +559,7 @@ export const quarterlyReportSnapshot = pgTable(
     pdfData: text('pdf_data'), // base64-encoded PDF data
     previousSnapshotId: uuid('previous_snapshot_id'), // FK added via migration (self-ref)
     status: quarterlyReportStatusEnum('status').notNull().default('draft'),
-    editedBy: text('edited_by').references(() => user.id, {
+    editedBy: uuid('edited_by').references(() => user.id, {
       onDelete: 'set null',
     }),
     generatedAt: timestamp('generated_at').notNull().defaultNow(),

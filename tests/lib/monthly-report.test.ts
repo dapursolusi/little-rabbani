@@ -358,6 +358,38 @@ describe('Monthly Report - Server Actions', () => {
         expect(result.error).toContain('Belum ada data');
       }
     });
+
+    it('passes concatenated daily narratives and reportType: monthly to AI (VAL-MONTHLY-003)', async () => {
+      // Mock AI generation
+      mockGenerateNarrative.mockResolvedValue(
+        'Bu/Pak, selama bulan ini Ananda Ahmad menunjukkan perkembangan yang baik...'
+      );
+
+      // Mock insert result
+      mockDb.insert.mockReturnValue({
+        values: () => ({
+          returning: vi.fn().mockResolvedValue([{ id: reportId }]),
+        }),
+      });
+
+      await generateMonthlyReport(kidId1, termId, month);
+
+      // Verify generateNarrative was called with the right arguments
+      expect(mockGenerateNarrative).toHaveBeenCalledTimes(1);
+      const callArgs = mockGenerateNarrative.mock.calls[0][0];
+
+      // Should include reportType: 'monthly'
+      expect(callArgs.reportType).toBe('monthly');
+
+      // Should include concatenated daily narratives
+      expect(callArgs.notes).toContain('[2025-06-03]');
+      expect(callArgs.notes).toContain('Ananda Ahmad bersemangat hari ini.');
+      expect(callArgs.notes).toContain('[2025-06-05]');
+      expect(callArgs.notes).toContain('Ananda Ahmad belajar dengan baik.');
+
+      // Should NOT use the old summary string
+      expect(callArgs.notes).not.toContain('Ringkasan bulanan');
+    });
   });
 
   describe('updateMonthlyReportNarrative', () => {

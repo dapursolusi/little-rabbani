@@ -16,8 +16,11 @@ interface IGeneratePDFParams {
   previousTermName?: string;
 }
 
+const PDF_TIMEOUT_MS = 30_000;
+
 /**
  * Generate a quarterly report PDF buffer using react-pdf.
+ * Wraps renderToBuffer in a 30s timeout via Promise.race (VAL-MONTHLY-003 fix).
  * Returns the buffer on success, or null on failure (so caller can fallback).
  *
  * VAL-QUARTERLY-009: react-pdf render failure — fallback to plain HTML view.
@@ -26,7 +29,7 @@ export async function generateQuarterlyPdf(
   params: IGeneratePDFParams
 ): Promise<Buffer | null> {
   try {
-    const buffer = await renderToBuffer(
+    const renderPromise = renderToBuffer(
       <QuarterlyReportDocument
         kidName={params.kidName}
         termName={params.termName}
@@ -36,6 +39,15 @@ export async function generateQuarterlyPdf(
         previousTermName={params.previousTermName}
       />
     );
+
+    const timeoutPromise = new Promise<never>((_, reject) =>
+      setTimeout(
+        () => reject(new Error('PDF generation timed out')),
+        PDF_TIMEOUT_MS
+      )
+    );
+
+    const buffer = await Promise.race([renderPromise, timeoutPromise]);
     return buffer;
   } catch (error) {
     console.error('react-pdf generation failed:', error);

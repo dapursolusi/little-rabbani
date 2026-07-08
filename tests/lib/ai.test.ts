@@ -238,4 +238,143 @@ describe('generateNarrative', () => {
     expect(headers['HTTP-Referer']).toBe('http://localhost:3000');
     expect(headers['X-Title']).toBeTruthy();
   });
+
+  describe('monthly report type', () => {
+    const monthlyContext = {
+      kidName: 'Ahmad',
+      mood: 4,
+      appetite: 'good' as const,
+      activities: ['Mewarnai', 'Menggambar'],
+      notes:
+        '[2025-06-03] Ananda Ahmad bersemangat hari ini.\n\n[2025-06-05] Ananda Ahmad belajar dengan baik.',
+      presence: 'present_full' as const,
+      reportType: 'monthly' as const,
+    };
+
+    it('uses monthly system prompt (ringkasan bulanan)', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            choices: [
+              {
+                message: {
+                  content:
+                    'Bu/Pak, selama bulan ini Ananda Ahmad menunjukkan perkembangan yang baik...',
+                },
+              },
+            ],
+          }),
+      });
+
+      await generateNarrative(monthlyContext);
+
+      const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      const systemMessage = requestBody.messages.find(
+        (m: { role: string }) => m.role === 'system'
+      ).content;
+      expect(systemMessage).toContain('ringkasan bulanan');
+      expect(systemMessage).toContain('laporan bulanan');
+      expect(systemMessage).toContain('Jangan gunakan frasa');
+    });
+
+    it('passes daily narratives concatenated in the user prompt', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            choices: [
+              {
+                message: {
+                  content:
+                    'Bu/Pak, selama bulan ini Ananda Ahmad menunjukkan perkembangan yang baik...',
+                },
+              },
+            ],
+          }),
+      });
+
+      await generateNarrative(monthlyContext);
+
+      const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      const userMessage = requestBody.messages.find(
+        (m: { role: string }) => m.role === 'user'
+      ).content;
+
+      // Should be monthly prompt
+      expect(userMessage).toContain('laporan bulanan');
+      // Should include daily narrative texts
+      expect(userMessage).toContain('[2025-06-03]');
+      expect(userMessage).toContain('bersemangat hari ini');
+      expect(userMessage).toContain('[2025-06-05]');
+      expect(userMessage).toContain('belajar dengan baik');
+      // Should include stats context
+      expect(userMessage).toContain('Ringkasan statistik');
+      expect(userMessage).toContain('4/5');
+    });
+
+    it('generates narrative successfully with monthly context', async () => {
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            choices: [
+              {
+                message: {
+                  content:
+                    'Bu/Pak, selama bulan ini Ananda Ahmad menunjukkan perkembangan yang baik dalam berbagai aktivitas...',
+                },
+              },
+            ],
+          }),
+      });
+
+      const result = await generateNarrative(monthlyContext);
+
+      expect(result).toBeTruthy();
+      expect(result).toContain('Ahmad');
+      expect(result).toContain('bulan');
+    });
+
+    it('handles AI failure gracefully with monthly context', async () => {
+      mockFetch.mockRejectedValueOnce(new Error('Network error'));
+
+      const result = await generateNarrative(monthlyContext);
+
+      expect(result).toBe('');
+    });
+
+    it('handles monthly report without daily narratives', async () => {
+      const monthlyNoNarratives = {
+        ...monthlyContext,
+        notes: undefined,
+      };
+
+      mockFetch.mockResolvedValueOnce({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            choices: [
+              {
+                message: {
+                  content:
+                    'Bu/Pak, selama bulan ini Ananda Ahmad menunjukkan perkembangan yang baik...',
+                },
+              },
+            ],
+          }),
+      });
+
+      const result = await generateNarrative(monthlyNoNarratives);
+
+      expect(result).toBeTruthy();
+      const requestBody = JSON.parse(mockFetch.mock.calls[0][1].body);
+      const userMessage = requestBody.messages.find(
+        (m: { role: string }) => m.role === 'user'
+      ).content;
+      expect(userMessage).toContain('laporan bulanan');
+      // User prompt should not have narratives section when none provided
+      expect(userMessage).not.toContain('yang dapat dijadikan referensi');
+    });
+  });
 });

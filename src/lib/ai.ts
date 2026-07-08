@@ -21,6 +21,9 @@ const FALLBACK_MODELS = [
   'mistralai/mistral-small-3.1-24b-instruct',
 ];
 
+/** Report type — affects the prompt context used by the AI. */
+export type TReportType = 'daily' | 'monthly' | 'quarterly';
+
 export interface TNarrativeContext {
   /** Kid's full name. */
   kidName: string;
@@ -36,6 +39,8 @@ export interface TNarrativeContext {
   presence?: 'present_full' | 'late' | 'early_pickup' | 'absent';
   /** Absence reason (if presence is 'absent'). */
   absenceReason?: 'sick' | 'family' | 'permission' | 'other' | string;
+  /** Report type for prompt context (defaults to 'daily'). */
+  reportType?: TReportType;
 }
 
 /**
@@ -80,7 +85,22 @@ function translateAbsenceReason(value: string): string {
  * Builds the system prompt that instructs the AI model to
  * generate a warm narrative in Bahasa Indonesia addressing the guardian.
  */
-function buildSystemPrompt(): string {
+function buildSystemPrompt(reportType?: TReportType): string {
+  if (reportType === 'monthly') {
+    return `Anda adalah asisten guru PAUD yang membantu membuat laporan bulanan untuk wali murid.
+
+Tugas Anda:
+- Buat narasi hangat dan personal dalam Bahasa Indonesia yang ditujukan langsung kepada wali murid.
+- Gunakan sapaan "Bu/Pak" dan panggilan "Ananda" diikuti nama anak.
+- Narasi adalah ringkasan bulanan yang terdiri dari 3-4 paragraf yang menggambarkan perkembangan anak selama satu bulan penuh.
+- Cantumkan informasi tentang kehadiran, suasana hati (mood), nafsu makan, aktivitas yang diikuti, dan catatan guru sepanjang bulan.
+- Gunakan kalimat-kalimat yang merangkum pengalaman anak selama sebulan, seperti "Selama bulan ini..." atau "Sepanjang bulan...".
+- Gunakan bahasa yang hangat, positif, dan mendukung.
+- Jangan menambahkan informasi yang tidak ada dalam data yang diberikan.
+- Jangan gunakan tanda bintang (*) atau markdown. Gunakan paragraf biasa.
+- Jangan gunakan frasa "hari ini" — ini adalah laporan bulanan.`;
+  }
+
   return `Anda adalah asisten guru PAUD yang membantu membuat laporan harian untuk wali murid.
 
 Tugas Anda:
@@ -102,44 +122,74 @@ Kami bersyukur melihat perkembangan positif pada Ananda [nama]. Semoga Ananda [n
 
 /**
  * Builds the user prompt with the kid's observation data.
+ * Supports daily, monthly, and quarterly report types.
  */
 function buildUserPrompt(context: TNarrativeContext): string {
+  const { kidName, mood, appetite, activities, notes, reportType } = context;
+
+  // For monthly reports, use a monthly-specific prompt that includes daily narratives
+  if (reportType === 'monthly') {
+    const appetiteId = translateAppetite(appetite);
+    const activitiesList =
+      activities.length > 0
+        ? activities.map((a) => `- ${a}`).join('\n')
+        : 'Tidak ada aktivitas tercatat';
+
+    // Build daily narratives section if notes contain narrative texts
+    let dailyNarrativesSection = '';
+    if (notes && notes.length > 0) {
+      dailyNarrativesSection = `\nBerikut adalah narasi laporan harian Ananda ${kidName} selama bulan ini yang dapat dijadikan referensi:\n${notes}`;
+    }
+
+    return `Buatkan laporan bulanan untuk wali murid Ananda ${kidName}.
+
+Ringkasan statistik bulan ini:
+- Nama anak: ${kidName}
+- Rata-rata suasana hati (mood): ${mood}/5
+- Rata-rata nafsu makan: ${appetiteId}
+- Aktivitas yang diikuti:
+${activitiesList}
+${dailyNarrativesSection}
+
+Tulis narasi ringkasan bulanan yang hangat sebanyak 3-4 paragraf dalam Bahasa Indonesia yang ditujukan kepada wali murid. Ini adalah laporan bulanan, jangan gunakan frasa "hari ini".`;
+  }
+
   const {
-    kidName,
-    mood,
-    appetite,
-    activities,
-    notes,
-    presence,
-    absenceReason,
+    kidName: name,
+    mood: moodLevel,
+    appetite: app,
+    activities: acts,
+    notes: nts,
+    presence: pres,
+    absenceReason: reason,
   } = context;
 
-  const appetiteId = translateAppetite(appetite);
+  const appetiteId = translateAppetite(app);
   const activitiesList =
-    activities.length > 0
-      ? activities.map((a) => `- ${a}`).join('\n')
+    acts.length > 0
+      ? acts.map((a) => `- ${a}`).join('\n')
       : 'Tidak ada aktivitas tercatat';
 
   let presenceInfo: string;
-  if (presence === 'absent' && absenceReason) {
-    const reasonId = translateAbsenceReason(absenceReason);
-    presenceInfo = `Ananda ${kidName} tidak hadir hari ini karena ${reasonId}.`;
-  } else if (presence && presence !== 'present_full') {
-    presenceInfo = `Ananda ${kidName} ${translatePresence(presence)} hari ini.`;
+  if (pres === 'absent' && reason) {
+    const reasonId = translateAbsenceReason(reason);
+    presenceInfo = `Ananda ${name} tidak hadir hari ini karena ${reasonId}.`;
+  } else if (pres && pres !== 'present_full') {
+    presenceInfo = `Ananda ${name} ${translatePresence(pres)} hari ini.`;
   } else {
-    presenceInfo = `Ananda ${kidName} hadir penuh hari ini.`;
+    presenceInfo = `Ananda ${name} hadir penuh hari ini.`;
   }
 
-  return `Buatkan laporan harian untuk wali murid Ananda ${kidName}.
+  return `Buatkan laporan harian untuk wali murid Ananda ${name}.
 
 Data hari ini:
-- Nama anak: ${kidName}
-- Suasana hati (mood): ${mood}/5
+- Nama anak: ${name}
+- Suasana hati (mood): ${moodLevel}/5
 - Nafsu makan: ${appetiteId}
 - ${presenceInfo}
 - Aktivitas yang diikuti:
 ${activitiesList}
-${notes ? `- Catatan guru: ${notes}` : ''}
+${nts ? `- Catatan guru: ${nts}` : ''}
 
 Tulis narasi hangat 2-3 paragraf dalam Bahasa Indonesia yang ditujukan kepada wali murid.`;
 }
@@ -207,7 +257,8 @@ async function callOpenRouter(
 export async function generateNarrative(
   context: TNarrativeContext
 ): Promise<string> {
-  const systemPrompt = buildSystemPrompt();
+  const reportType = context.reportType ?? 'daily';
+  const systemPrompt = buildSystemPrompt(reportType);
   const userPrompt = buildUserPrompt(context);
   const messages = [
     { role: 'system', content: systemPrompt },
