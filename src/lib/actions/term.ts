@@ -1,6 +1,6 @@
 'use server';
 
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { db } from '@/lib/db';
@@ -211,18 +211,40 @@ export type SessionFormData = z.infer<typeof SessionFormSchema>;
 
 // ─────────────── Session CRUD ───────────────
 
-export async function getSessions(termId: string) {
+export async function getSessions(
+  termId: string,
+  params?: { search?: string; limit?: number; offset?: number }
+) {
   const authCheck = await requireOwner();
   if (!authCheck.authorized) {
     return { success: false as const, error: authCheck.error };
   }
 
-  const sessions = await db.query.termSession.findMany({
-    where: eq(termSession.termId, termId),
-    orderBy: (ts, { asc }) => [asc(ts.date), asc(ts.startTime)],
-  });
+  const { search, limit = 50, offset = 0 } = params ?? {};
 
-  return { success: true as const, data: sessions };
+  const conditions = [eq(termSession.termId, termId)];
+  if (search) {
+    conditions.push(
+      sql`(${termSession.label}::text ILIKE ${`%${search}%`} OR ${termSession.date}::text ILIKE ${`%${search}%`})`
+    );
+  }
+  const where = and(...conditions);
+
+  const [sessions, totalResult] = await Promise.all([
+    db.query.termSession.findMany({
+      where,
+      orderBy: (ts, { asc }) => [asc(ts.date), asc(ts.startTime)],
+      limit,
+      offset,
+    }),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(termSession)
+      .where(where),
+  ]);
+
+  const total = totalResult?.[0]?.count ?? 0;
+  return { success: true as const, data: sessions, total };
 }
 
 export async function getSession(id: string) {

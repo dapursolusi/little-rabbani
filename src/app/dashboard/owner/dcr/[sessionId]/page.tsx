@@ -5,31 +5,12 @@ import {
   getDcrBySession,
   getScheduleActivitiesForDcr,
 } from '@/lib/actions/dcr';
+import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 
 import { DcrForm } from './dcr-form';
 
 export const metadata = { ...baseMetadata, title: 'DCR / Observasi Kelas' };
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
-  const days = [
-    'Minggu',
-    'Senin',
-    'Selasa',
-    'Rabu',
-    'Kamis',
-    "Jum'at",
-    'Sabtu',
-  ];
-  const dayName = days[date.getDay()];
-  const formatted = date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  return `${dayName}, ${formatted}`;
-}
 
 interface IDcrCapturePageProps {
   params: Promise<{ sessionId: string }>;

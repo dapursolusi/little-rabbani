@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { SessionActions } from '@/components/sections/session-actions';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui/table';
 
 import { getSessions, getTerm } from '@/lib/actions/term';
+import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';
 
@@ -20,26 +22,6 @@ export const metadata = { ...baseMetadata, title: 'Sesi' };
 
 interface ISessionListPageProps {
   searchParams: Promise<{ termId?: string }>;
-}
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
-  const days = [
-    'Minggu',
-    'Senin',
-    'Selasa',
-    'Rabu',
-    'Kamis',
-    "Jum'at",
-    'Sabtu',
-  ];
-  const dayName = days[date.getDay()];
-  const formatted = date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  return `${dayName}, ${formatted}`;
 }
 
 export default async function SessionListPage({
@@ -117,23 +99,25 @@ export default async function SessionListPage({
 
       {/* Table */}
       {sessions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-          <p className="text-zinc-500">Belum ada sesi untuk term ini</p>
-          <div className="mt-4 flex gap-2">
-            <Link
-              href={`/dashboard/owner/session/create?termId=${termId}`}
-              className={cn(buttonVariants({ variant: 'default' }))}
-            >
-              Tambah Sesi
-            </Link>
-            <Link
-              href={`/dashboard/owner/session/generate?termId=${termId}`}
-              className={cn(buttonVariants({ variant: 'outline' }))}
-            >
-              Generate Berulang
-            </Link>
-          </div>
-        </div>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <p className="text-zinc-500">Belum ada sesi untuk term ini</p>
+            <div className="mt-4 flex gap-2">
+              <Link
+                href={`/dashboard/owner/session/create?termId=${termId}`}
+                className={cn(buttonVariants({ variant: 'default' }))}
+              >
+                Tambah Sesi
+              </Link>
+              <Link
+                href={`/dashboard/owner/session/generate?termId=${termId}`}
+                className={cn(buttonVariants({ variant: 'outline' }))}
+              >
+                Generate Berulang
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-zinc-200">
           <Table>
@@ -208,17 +192,19 @@ async function TermSelectorPage() {
       </div>
 
       {terms.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-          <p className="text-zinc-500">
-            Belum ada term. Buat term terlebih dahulu.
-          </p>
-          <Link
-            href="/dashboard/owner/term/create"
-            className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
-          >
-            Tambah Term
-          </Link>
-        </div>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <p className="text-zinc-500">
+              Belum ada term. Buat term terlebih dahulu.
+            </p>
+            <Link
+              href="/dashboard/owner/term/create"
+              className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
+            >
+              Tambah Term
+            </Link>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {terms.map((t) => (

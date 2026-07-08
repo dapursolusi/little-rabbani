@@ -2,6 +2,7 @@ import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
 import { Badge } from '@/components/ui/badge';
 
 import { getDailyReportsForSession } from '@/lib/actions/daily-report';
+import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 
 import { DailyReportClient } from './report-client';
@@ -10,26 +11,6 @@ export const metadata = {
   ...baseMetadata,
   title: 'Laporan Wali Murid',
 };
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
-  const days = [
-    'Minggu',
-    'Senin',
-    'Selasa',
-    'Rabu',
-    'Kamis',
-    "Jum'at",
-    'Sabtu',
-  ];
-  const dayName = days[date.getDay()];
-  const formatted = date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  return `${dayName}, ${formatted}`;
-}
 
 interface IDailyReportSessionPageProps {
   params: Promise<{ sessionId: string }>;

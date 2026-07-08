@@ -4,6 +4,8 @@ import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { MoreVerticalIcon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
 import { ConfirmDialog } from '@/components/sections/confirm-dialog';
@@ -74,19 +76,7 @@ export function TermActions({
         <DropdownMenuTrigger>
           <Button variant="ghost" size="sm">
             <span className="sr-only">Buka menu</span>
-            <svg
-              className="h-4 w-4"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={2}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 5v.01M12 12v.01M12 19v.01"
-              />
-            </svg>
+            <HugeiconsIcon icon={MoreVerticalIcon} className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

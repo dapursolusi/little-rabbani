@@ -4,6 +4,8 @@ import { useCallback } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { Button } from '@/components/ui/button';
+
 import { authClient } from '@/lib/auth-client';
 
 export function LogoutButtonClient() {
@@ -16,11 +18,8 @@ export function LogoutButtonClient() {
   }, [router]);
 
   return (
-    <button
-      onClick={handleLogout}
-      className="rounded-lg border border-zinc-300 bg-white px-4 py-2 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 active:bg-zinc-100"
-    >
+    <Button onClick={handleLogout} variant="outline">
       Keluar
-    </button>
+    </Button>
   );
 }

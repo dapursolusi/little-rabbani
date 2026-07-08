@@ -2,32 +2,14 @@ import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 
 import { getTerms } from '@/lib/actions/term';
+import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';
 
 export const metadata = { ...baseMetadata, title: 'Jadwal Mingguan' };
-
-function formatDate(dateStr: string) {
-  const date = new Date(dateStr + 'T00:00:00');
-  const days = [
-    'Minggu',
-    'Senin',
-    'Selasa',
-    'Rabu',
-    'Kamis',
-    "Jum'at",
-    'Sabtu',
-  ];
-  const dayName = days[date.getDay()];
-  const formatted = date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  return `${dayName}, ${formatted}`;
-}
 
 export default async function ScheduleSelectorPage() {
   const result = await getTerms();
@@ -52,17 +34,19 @@ export default async function ScheduleSelectorPage() {
       </div>
 
       {terms.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-          <p className="text-zinc-500">
-            Belum ada term. Buat term terlebih dahulu.
-          </p>
-          <Link
-            href="/dashboard/owner/term/create"
-            className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
-          >
-            Tambah Term
-          </Link>
-        </div>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <p className="text-zinc-500">
+              Belum ada term. Buat term terlebih dahulu.
+            </p>
+            <Link
+              href="/dashboard/owner/term/create"
+              className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
+            >
+              Tambah Term
+            </Link>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {terms.map((t) => (

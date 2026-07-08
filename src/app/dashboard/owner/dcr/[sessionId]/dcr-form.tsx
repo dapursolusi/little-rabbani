@@ -4,8 +4,11 @@ import { useCallback, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { Delete04Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -18,6 +21,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 import { createActivityFromUnplanned, saveDcr } from '@/lib/actions/dcr';
 
@@ -214,37 +218,39 @@ export function DcrForm({
                   {activity.activityName}
                 </span>
                 {!activity.wasPlanned && (
-                  <span className="rounded bg-purple-100 px-1.5 py-0.5 text-xs font-medium text-purple-700">
+                  <Badge
+                    variant="outline"
+                    className="bg-purple-100 text-purple-700"
+                  >
                     Tidak Terencana
-                  </span>
+                  </Badge>
                 )}
               </div>
             </div>
 
             <div className="flex items-center gap-2">
               {/* Deviation selector */}
-              <div className="flex gap-1">
+              <ToggleGroup
+                value={[activity.deviation]}
+                onValueChange={(value) => {
+                  if (value.length > 0)
+                    handleDeviationChange(
+                      activity.id,
+                      value[value.length - 1] as 'done' | 'skipped' | 'modified'
+                    );
+                }}
+              >
                 {DEVIATION_OPTIONS.map((opt) => (
-                  <button
+                  <ToggleGroupItem
                     key={opt.value}
-                    type="button"
-                    onClick={() =>
-                      handleDeviationChange(activity.id, opt.value)
-                    }
-                    className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
-                      activity.deviation === opt.value
-                        ? opt.value === 'done'
-                          ? 'bg-green-100 text-green-700'
-                          : opt.value === 'skipped'
-                            ? 'bg-red-100 text-red-700'
-                            : 'bg-amber-100 text-amber-700'
-                        : 'bg-zinc-100 text-zinc-400 hover:bg-zinc-200'
-                    }`}
+                    value={opt.value}
+                    size="sm"
+                    className="text-xs"
                   >
                     {opt.label}
-                  </button>
+                  </ToggleGroupItem>
                 ))}
-              </div>
+              </ToggleGroup>
 
               {/* Remove button (only for unplanned activities) */}
               {!activity.wasPlanned && (
@@ -254,19 +260,7 @@ export function DcrForm({
                   className="text-zinc-400 hover:text-destructive"
                   onClick={() => handleRemoveActivity(activity.id)}
                 >
-                  <svg
-                    className="h-4 w-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={2}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                    />
-                  </svg>
+                  <HugeiconsIcon icon={Delete04Icon} className="h-4 w-4" />
                 </Button>
               )}
             </div>

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
 import { SessionEditForm } from '@/components/sections/session-edit-form';
+import { Card, CardContent } from '@/components/ui/card';
 
 import { getSession } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
@@ -45,20 +46,22 @@ export default async function EditSessionPage({
         <p className="mt-1 text-sm text-zinc-500">Perbarui data sesi</p>
       </div>
 
-      <div className="mx-auto max-w-lg rounded-lg border border-zinc-200 bg-white p-6">
-        <SessionEditForm
-          initialData={{
-            id: sessionData.id,
-            termId: termId ?? sessionData.termId,
-            date: sessionData.date,
-            startTime: sessionData.startTime,
-            endTime: sessionData.endTime,
-            label: sessionData.label,
-            isHoliday: sessionData.isHoliday,
-            holidayReason: sessionData.holidayReason ?? '',
-          }}
-        />
-      </div>
+      <Card className="mx-auto max-w-lg">
+        <CardContent className="p-6">
+          <SessionEditForm
+            initialData={{
+              id: sessionData.id,
+              termId: termId ?? sessionData.termId,
+              date: sessionData.date,
+              startTime: sessionData.startTime,
+              endTime: sessionData.endTime,
+              label: sessionData.label,
+              isHoliday: sessionData.isHoliday,
+              holidayReason: sessionData.holidayReason ?? '',
+            }}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

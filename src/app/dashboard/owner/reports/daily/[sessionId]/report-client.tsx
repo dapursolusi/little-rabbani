@@ -4,6 +4,8 @@ import { useCallback, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { ChevronDownIcon, Loading03Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
 import { Badge } from '@/components/ui/badge';
@@ -416,25 +418,10 @@ export function DailyReportClient({
         >
           {isGenerating ? (
             <span className="flex items-center gap-2">
-              <svg
+              <HugeiconsIcon
+                icon={Loading03Icon}
                 className="h-4 w-4 animate-spin"
-                viewBox="0 0 24 24"
-                fill="none"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                />
-              </svg>
+              />
               Membuat Laporan...
             </span>
           ) : (
@@ -452,10 +439,11 @@ export function DailyReportClient({
           return (
             <div key={kid.id}>
               {/* Kid row */}
-              <button
+              <Button
                 type="button"
+                variant="ghost"
                 onClick={() => handleExpandReport(kid.id, kid.name)}
-                className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors hover:shadow-sm ${
+                className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors hover:shadow-sm h-auto ${
                   isExpanded
                     ? 'border-primary bg-blue-50'
                     : report
@@ -473,22 +461,13 @@ export function DailyReportClient({
                     </span>
                   )}
                 </div>
-                <svg
+                <HugeiconsIcon
+                  icon={ChevronDownIcon}
                   className={`h-5 w-5 text-zinc-400 transition-transform ${
                     isExpanded ? 'rotate-180' : ''
                   }`}
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={2}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M19 9l-7 7-7-7"
-                  />
-                </svg>
-              </button>
+                />
+              </Button>
 
               {/* Expanded report detail */}
               {isExpanded && expandedReportDetail && (

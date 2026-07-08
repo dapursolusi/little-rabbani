@@ -1,6 +1,6 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { and, eq, ilike, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -34,17 +34,36 @@ type ActivityActionResult =
   | { success: true; data: typeof activity.$inferSelect }
   | { success: false; error: string };
 
-export async function getActivities() {
+export async function getActivities(params?: {
+  search?: string;
+  limit?: number;
+  offset?: number;
+}) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const activities = await db.query.activity.findMany({
-    orderBy: (a, { asc }) => [asc(a.name)],
-  });
+  const { search, limit = 50, offset = 0 } = params ?? {};
 
-  return { success: true as const, data: activities };
+  const conditions = search ? [ilike(activity.name, `%${search}%`)] : [];
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [activities, totalResult] = await Promise.all([
+    db.query.activity.findMany({
+      where,
+      orderBy: (a, { asc }) => [asc(a.name)],
+      limit,
+      offset,
+    }),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(activity)
+      .where(where),
+  ]);
+
+  const total = totalResult?.[0]?.count ?? 0;
+  return { success: true as const, data: activities, total };
 }
 
 export async function getActiveActivities() {

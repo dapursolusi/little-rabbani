@@ -4,6 +4,9 @@ import { useCallback, useEffect, useState } from 'react';
 
 import Link from 'next/link';
 
+import { ChevronRightIcon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+
 import { getTeacherPendingCaptureCount } from '@/lib/actions/capture';
 
 /**
@@ -60,15 +63,10 @@ export function TeacherPendingCaptureBanner() {
             {pendingCount} capture tertunda
           </p>
         </div>
-        <svg
+        <HugeiconsIcon
+          icon={ChevronRightIcon}
           className="h-4 w-4 text-amber-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          strokeWidth={2}
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-        </svg>
+        />
       </div>
     </Link>
   );

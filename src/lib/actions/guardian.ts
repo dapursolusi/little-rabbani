@@ -1,6 +1,6 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { and, eq, ilike, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { db } from '@/lib/db';
@@ -18,28 +18,47 @@ const GuardianFormSchema = z.object({
 
 export type GuardianFormData = z.infer<typeof GuardianFormSchema>;
 
-export async function getGuardians() {
+export async function getGuardians(params?: {
+  search?: string;
+  limit?: number;
+  offset?: number;
+}) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const guardians = await db.query.guardian.findMany({
-    orderBy: (guardian, { asc }) => [asc(guardian.name)],
-  });
+  const { search, limit = 50, offset = 0 } = params ?? {};
+
+  const conditions = search ? [ilike(guardian.name, `%${search}%`)] : [];
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [guardians, totalResult] = await Promise.all([
+    db.query.guardian.findMany({
+      where,
+      orderBy: (guardian, { asc }) => [asc(guardian.name)],
+      limit,
+      offset,
+    }),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(guardian)
+      .where(where),
+  ]);
 
   // Count kids per guardian
   const result = await Promise.all(
     guardians.map(async (g) => {
-      const kids = await db
+      const kidsData = await db
         .select({ id: kid.id, name: kid.name, status: kid.status })
         .from(kid)
         .where(eq(kid.guardianId, g.id));
-      return { ...g, kids };
+      return { ...g, kids: kidsData };
     })
   );
 
-  return { success: true as const, data: result };
+  const total = totalResult?.[0]?.count ?? 0;
+  return { success: true as const, data: result, total };
 }
 
 export async function getGuardian(id: string) {

@@ -2,6 +2,11 @@
 
 import { useCallback, useState } from 'react';
 
+import { Loading03Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+
+import { Button } from '@/components/ui/button';
+
 import { authClient } from '@/lib/auth-client';
 
 interface ILoginFormProps {
@@ -62,68 +67,38 @@ export function LoginForm({ error, redirect: redirectUrl }: ILoginFormProps) {
         {oauthError && (
           <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-center">
             <p className="text-sm font-medium text-red-800">{oauthError}</p>
-            <button
+            <Button
               onClick={handleRetry}
               disabled={isLoading}
-              className="mt-3 inline-flex items-center gap-1.5 rounded-md bg-red-100 px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-200 disabled:opacity-50"
+              variant="secondary"
+              size="sm"
             >
               {isLoading ? (
                 <>
-                  <svg
+                  <HugeiconsIcon
+                    icon={Loading03Icon}
                     className="h-4 w-4 animate-spin"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    aria-hidden="true"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
+                  />
                   Memproses...
                 </>
               ) : (
                 'Coba Lagi'
               )}
-            </button>
+            </Button>
           </div>
         )}
 
-        <button
+        <Button
           onClick={handleSignIn}
           disabled={isLoading}
-          className="flex w-full items-center justify-center gap-3 rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium text-zinc-700 shadow-sm transition-colors hover:bg-zinc-50 active:bg-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+          variant="outline"
+          className="flex w-full items-center justify-center gap-3"
         >
           {isLoading ? (
-            <svg
-              className="h-5 w-5 animate-spin text-zinc-400"
-              viewBox="0 0 24 24"
-              fill="none"
-              aria-hidden="true"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              />
-            </svg>
+            <HugeiconsIcon
+              icon={Loading03Icon}
+              className="h-5 w-5 animate-spin"
+            />
           ) : (
             <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
               <path
@@ -145,7 +120,7 @@ export function LoginForm({ error, redirect: redirectUrl }: ILoginFormProps) {
             </svg>
           )}
           {isLoading ? 'Memproses...' : 'Masuk dengan Google'}
-        </button>
+        </Button>
       </div>
     </div>
   );

@@ -2,12 +2,22 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import {
+  CheckmarkCircle02Icon,
+  ChevronRightIcon,
+} from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
 import { ConflictDialog } from '@/components/sections/conflict-dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 import {
   getKidObservation,
@@ -584,13 +594,14 @@ export function CaptureRosterClient({
         <div className="flex flex-col">
           {/* Kid header */}
           <div className="border-b border-zinc-200 bg-white px-4 py-3">
-            <button
-              type="button"
+            <Button
+              variant="link"
+              size="sm"
               onClick={handleBackToRoster}
-              className="mb-1 text-sm text-primary hover:underline"
+              className="mb-1 px-0"
             >
               &larr; Kembali ke daftar
-            </button>
+            </Button>
             <h2 className="text-lg font-semibold text-zinc-900">
               {selectedKid.name}
             </h2>
@@ -604,39 +615,30 @@ export function CaptureRosterClient({
           </div>
 
           {/* Tab: Pass 1 / Pass 2 */}
-          <div className="flex border-b border-zinc-200 bg-white">
-            <button
-              type="button"
-              onClick={() => setActiveTab('pass1')}
-              className={`flex-1 py-3 text-center text-sm font-medium transition-colors ${
-                activeTab === 'pass1'
-                  ? 'border-b-2 border-primary text-primary'
-                  : 'text-zinc-500 hover:text-zinc-700'
-              }`}
+          <Tabs
+            value={activeTab}
+            onValueChange={(value) => {
+              if (value === 'pass2' && !isPass2Unlocked) return;
+              setActiveTab(value as 'pass1' | 'pass2');
+            }}
+            className="border-b border-zinc-200 bg-white"
+          >
+            <TabsList
+              className="w-full rounded-none bg-transparent"
+              variant="line"
             >
-              Pass 1
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (isPass2Unlocked) {
-                  setActiveTab('pass2');
-                }
-              }}
-              className={`relative flex-1 py-3 text-center text-sm font-medium transition-colors ${
-                activeTab === 'pass2'
-                  ? 'border-b-2 border-primary text-primary'
-                  : isPass2Unlocked
-                    ? 'text-zinc-500 hover:text-zinc-700'
-                    : 'text-zinc-300'
-              }`}
-            >
-              Pass 2{/* Lock indicator */}
-              {!isPass2Unlocked && (
-                <span className="ml-1 inline-block">🔒</span>
-              )}
-            </button>
-          </div>
+              <TabsTrigger value="pass1" className="flex-1">
+                Pass 1
+              </TabsTrigger>
+              <TabsTrigger
+                value="pass2"
+                className="flex-1"
+                disabled={!isPass2Unlocked}
+              >
+                Pass 2{!isPass2Unlocked && <span className="ml-1">🔒</span>}
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
 
           {/* VAL-CAPTURE-023: Pass 2 locked - banner */}
           {!isPass2Unlocked && activeTab === 'pass2' && (
@@ -669,25 +671,27 @@ export function CaptureRosterClient({
                   <label className="mb-2 block text-sm font-medium text-zinc-700">
                     Mood
                   </label>
-                  <div className="flex justify-between gap-1">
+                  <ToggleGroup
+                    value={[String(mood)]}
+                    onValueChange={(value) => {
+                      if (value.length) handleMoodSelect(Number(value[0]));
+                    }}
+                    className="flex justify-between gap-1"
+                  >
                     {MOOD_EMOJIS.map((opt) => (
-                      <button
+                      <ToggleGroupItem
                         key={opt.value}
-                        type="button"
-                        onClick={() => handleMoodSelect(opt.value)}
-                        className={`flex flex-col items-center gap-1 rounded-xl p-3 transition-all ${
-                          mood === opt.value
-                            ? 'bg-primary/10 ring-2 ring-primary scale-105'
-                            : 'bg-zinc-50 hover:bg-zinc-100'
-                        }`}
+                        value={String(opt.value)}
+                        className="flex flex-col items-center gap-1 rounded-xl p-3 aria-pressed:bg-primary/10 aria-pressed:ring-2 aria-pressed:ring-primary aria-pressed:scale-105"
+                        aria-label={opt.label}
                       >
                         <span className="text-2xl">{opt.emoji}</span>
                         <span className="text-[10px] text-zinc-500">
                           {opt.label}
                         </span>
-                      </button>
+                      </ToggleGroupItem>
                     ))}
-                  </div>
+                  </ToggleGroup>
                 </div>
 
                 {/* Appetite selector - VAL-CAPTURE-020: 3-level */}
@@ -695,29 +699,30 @@ export function CaptureRosterClient({
                   <label className="mb-2 block text-sm font-medium text-zinc-700">
                     Nafsu Makan
                   </label>
-                  <div className="flex gap-2">
+                  <RadioGroup
+                    value={appetite}
+                    onValueChange={(value) => {
+                      setAppetite(value as TAppetite);
+                      setValidationError('');
+                    }}
+                    className="flex gap-2"
+                  >
                     {APPETITE_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => {
-                          setAppetite(opt.value);
-                          setValidationError('');
-                        }}
-                        className={`flex-1 rounded-lg py-2.5 text-sm font-medium transition-all ${
-                          appetite === opt.value
-                            ? opt.value === 'good'
-                              ? 'bg-green-100 text-green-700 ring-2 ring-green-400'
-                              : opt.value === 'moderate'
-                                ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-400'
-                                : 'bg-red-100 text-red-700 ring-2 ring-red-400'
-                            : 'bg-zinc-50 text-zinc-500 hover:bg-zinc-100'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
+                      <div key={opt.value} className="flex-1">
+                        <RadioGroupItem
+                          value={opt.value}
+                          id={`appetite-${opt.value}`}
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor={`appetite-${opt.value}`}
+                          className={`flex cursor-pointer items-center justify-center rounded-lg py-2.5 text-sm font-medium transition-all peer-data-[checked]:ring-2 ${opt.value === 'good' ? 'peer-data-[checked]:bg-green-100 peer-data-[checked]:text-green-700 peer-data-[checked]:ring-green-400' : opt.value === 'moderate' ? 'peer-data-[checked]:bg-amber-100 peer-data-[checked]:text-amber-700 peer-data-[checked]:ring-amber-400' : 'peer-data-[checked]:bg-red-100 peer-data-[checked]:text-red-700 peer-data-[checked]:ring-red-400'} bg-zinc-50 text-zinc-500 hover:bg-zinc-100`}
+                        >
+                          {opt.label}
+                        </Label>
+                      </div>
                     ))}
-                  </div>
+                  </RadioGroup>
                 </div>
 
                 {/* Presence selector - VAL-CAPTURE-018 */}
@@ -725,28 +730,29 @@ export function CaptureRosterClient({
                   <label className="mb-2 block text-sm font-medium text-zinc-700">
                     Kehadiran
                   </label>
-                  <div className="grid grid-cols-2 gap-2">
+                  <RadioGroup
+                    value={presence}
+                    onValueChange={(value) =>
+                      handlePresenceChange(value as TPresence)
+                    }
+                    className="grid grid-cols-2 gap-2"
+                  >
                     {PRESENCE_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => handlePresenceChange(opt.value)}
-                        className={`rounded-lg py-2.5 text-sm font-medium transition-all ${
-                          presence === opt.value
-                            ? opt.value === 'absent'
-                              ? 'bg-red-100 text-red-700 ring-2 ring-red-400'
-                              : opt.value === 'late'
-                                ? 'bg-amber-100 text-amber-700 ring-2 ring-amber-400'
-                                : opt.value === 'early_pickup'
-                                  ? 'bg-blue-100 text-blue-700 ring-2 ring-blue-400'
-                                  : 'bg-green-100 text-green-700 ring-2 ring-green-400'
-                            : 'bg-zinc-50 text-zinc-500 hover:bg-zinc-100'
-                        }`}
-                      >
-                        {opt.label}
-                      </button>
+                      <div key={opt.value}>
+                        <RadioGroupItem
+                          value={opt.value}
+                          id={`presence-${opt.value}`}
+                          className="peer sr-only"
+                        />
+                        <Label
+                          htmlFor={`presence-${opt.value}`}
+                          className={`flex cursor-pointer items-center justify-center rounded-lg py-2.5 text-sm font-medium transition-all peer-data-[checked]:ring-2 ${opt.value === 'absent' ? 'peer-data-[checked]:bg-red-100 peer-data-[checked]:text-red-700 peer-data-[checked]:ring-red-400' : opt.value === 'late' ? 'peer-data-[checked]:bg-amber-100 peer-data-[checked]:text-amber-700 peer-data-[checked]:ring-amber-400' : opt.value === 'early_pickup' ? 'peer-data-[checked]:bg-blue-100 peer-data-[checked]:text-blue-700 peer-data-[checked]:ring-blue-400' : 'peer-data-[checked]:bg-green-100 peer-data-[checked]:text-green-700 peer-data-[checked]:ring-green-400'} bg-zinc-50 text-zinc-500 hover:bg-zinc-100`}
+                        >
+                          {opt.label}
+                        </Label>
+                      </div>
                     ))}
-                  </div>
+                  </RadioGroup>
                 </div>
 
                 {/* Absence reason (only shown when absent) - VAL-CAPTURE-021 */}
@@ -756,30 +762,37 @@ export function CaptureRosterClient({
                       Alasan Ketidakhadiran{' '}
                       <span className="text-destructive">*</span>
                     </label>
-                    <div className="grid grid-cols-2 gap-2">
+                    <RadioGroup
+                      value={absenceReason}
+                      onValueChange={(value) =>
+                        handleAbsenceReasonChange(value as TAbsenceReason)
+                      }
+                      className="grid grid-cols-2 gap-2"
+                    >
                       {ABSENCE_REASON_OPTIONS.map((opt) => (
-                        <button
-                          key={opt.value}
-                          type="button"
-                          onClick={() => handleAbsenceReasonChange(opt.value)}
-                          className={`rounded-lg py-2.5 text-sm font-medium transition-all ${
-                            absenceReason === opt.value
-                              ? 'bg-red-100 text-red-700 ring-2 ring-red-400'
-                              : 'bg-zinc-50 text-zinc-500 hover:bg-zinc-100'
-                          }`}
-                        >
-                          {opt.label}
-                        </button>
+                        <div key={opt.value}>
+                          <RadioGroupItem
+                            value={opt.value}
+                            id={`absence-${opt.value}`}
+                            className="peer sr-only"
+                          />
+                          <Label
+                            htmlFor={`absence-${opt.value}`}
+                            className="flex cursor-pointer items-center justify-center rounded-lg py-2.5 text-sm font-medium transition-all peer-data-[checked]:bg-red-100 peer-data-[checked]:text-red-700 peer-data-[checked]:ring-2 peer-data-[checked]:ring-red-400 bg-zinc-50 text-zinc-500 hover:bg-zinc-100"
+                          >
+                            {opt.label}
+                          </Label>
+                        </div>
                       ))}
-                    </div>
+                    </RadioGroup>
                     {/* Free-text field for "other" reason (VAL-CAPTURE-021) */}
                     {absenceReason === 'other' && (
-                      <input
+                      <Input
                         type="text"
                         value={otherAbsenceReason}
                         onChange={(e) => setOtherAbsenceReason(e.target.value)}
                         placeholder="Tulis alasan ketidakhadiran..."
-                        className="mt-2 w-full rounded-lg border border-input bg-background px-3 py-2 text-sm ring-offset-background placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+                        className="mt-2"
                       />
                     )}
                   </div>
@@ -872,34 +885,31 @@ export function CaptureRosterClient({
                               </Badge>
                             )}
                           </div>
-                          <div className="flex gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleParticipationToggle(dcaId, 'yes')
-                              }
-                              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                                currentValue === 'yes'
-                                  ? 'bg-green-100 text-green-700 ring-2 ring-green-400'
-                                  : 'bg-zinc-50 text-zinc-400 hover:bg-zinc-100'
-                              }`}
+                          <ToggleGroup
+                            value={currentValue ? [currentValue] : []}
+                            onValueChange={(value) => {
+                              if (value.length)
+                                handleParticipationToggle(
+                                  dcaId,
+                                  value[0] as 'yes' | 'no'
+                                );
+                            }}
+                          >
+                            <ToggleGroupItem
+                              value="yes"
+                              size="sm"
+                              className="text-xs aria-pressed:bg-green-100 aria-pressed:text-green-700 aria-pressed:ring-2 aria-pressed:ring-green-400"
                             >
                               Ya 👍
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() =>
-                                handleParticipationToggle(dcaId, 'no')
-                              }
-                              className={`rounded-lg px-3 py-1.5 text-xs font-medium transition-all ${
-                                currentValue === 'no'
-                                  ? 'bg-red-100 text-red-700 ring-2 ring-red-400'
-                                  : 'bg-zinc-50 text-zinc-400 hover:bg-zinc-100'
-                              }`}
+                            </ToggleGroupItem>
+                            <ToggleGroupItem
+                              value="no"
+                              size="sm"
+                              className="text-xs aria-pressed:bg-red-100 aria-pressed:text-red-700 aria-pressed:ring-2 aria-pressed:ring-red-400"
                             >
                               Tidak
-                            </button>
-                          </div>
+                            </ToggleGroupItem>
+                          </ToggleGroup>
                         </div>
                       );
                     })}
@@ -920,19 +930,10 @@ export function CaptureRosterClient({
             {/* Absent message in Pass 2 (VAL-CAPTURE-026) */}
             {activeTab === 'pass2' && isAbsent && (
               <div className="flex flex-col items-center justify-center py-8">
-                <svg
+                <HugeiconsIcon
+                  icon={CheckmarkCircle02Icon}
                   className="h-12 w-12 text-blue-300"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
+                />
                 <p className="mt-3 text-sm text-blue-600">
                   Anak tidak hadir — partisipasi tidak diperlukan
                 </p>
@@ -984,11 +985,12 @@ export function CaptureRosterClient({
               : null;
 
           return (
-            <button
+            <Button
               key={kid.id}
               type="button"
+              variant="ghost"
               onClick={() => handleSelectKid(kid)}
-              className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-zinc-50 active:bg-zinc-100"
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left h-auto rounded-none transition-colors hover:bg-zinc-50 active:bg-zinc-100"
             >
               {/* Capture state indicator */}
               <div
@@ -1022,20 +1024,11 @@ export function CaptureRosterClient({
               )}
 
               {/* Chevron */}
-              <svg
+              <HugeiconsIcon
+                icon={ChevronRightIcon}
                 className="h-4 w-4 shrink-0 text-zinc-300"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9 5l7 7-7 7"
-                />
-              </svg>
-            </button>
+              />
+            </Button>
           );
         })}
       </div>

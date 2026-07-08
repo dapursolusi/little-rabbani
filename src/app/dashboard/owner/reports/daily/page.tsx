@@ -1,31 +1,13 @@
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
+import { Card, CardContent } from '@/components/ui/card';
 
 import { getSessionsForDailyReports } from '@/lib/actions/daily-report';
+import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Laporan Wali Murid' };
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
-  const days = [
-    'Minggu',
-    'Senin',
-    'Selasa',
-    'Rabu',
-    'Kamis',
-    "Jum'at",
-    'Sabtu',
-  ];
-  const dayName = days[date.getDay()];
-  const formatted = date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  return `${dayName}, ${formatted}`;
-}
 
 export default async function DailyReportPickerPage() {
   const result = await getSessionsForDailyReports();
@@ -63,9 +45,11 @@ export default async function DailyReportPickerPage() {
 
       {/* No sessions */}
       {sessions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-          <p className="text-zinc-500">Belum ada sesi</p>
-        </div>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <p className="text-zinc-500">Belum ada sesi</p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="space-y-8">
           {Object.entries(sessionsByTerm).map(([termName, termSessions]) => (

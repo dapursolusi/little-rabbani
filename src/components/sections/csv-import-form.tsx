@@ -220,24 +220,21 @@ export function CsvImportForm() {
         <CardContent>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {IMPORT_TYPES.map((type) => (
-              <button
+              <Button
                 key={type.id}
                 type="button"
+                variant={selectedType === type.id ? 'default' : 'outline'}
+                className="h-auto flex-col items-start p-3 text-left"
                 onClick={() => {
                   setSelectedType(type.id);
                   handleReset();
                 }}
-                className={`rounded-lg border p-3 text-left text-sm transition-colors ${
-                  selectedType === type.id
-                    ? 'border-primary bg-primary/5 ring-1 ring-primary'
-                    : 'border-zinc-200 hover:border-zinc-300'
-                }`}
               >
                 <div className="font-medium text-zinc-900">{type.title}</div>
                 <div className="mt-1 text-xs text-zinc-500 line-clamp-2">
                   {type.description}
                 </div>
-              </button>
+              </Button>
             ))}
           </div>
         </CardContent>

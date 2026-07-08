@@ -1,6 +1,6 @@
 'use server';
 
-import { eq } from 'drizzle-orm';
+import { and, eq, ilike, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { db } from '@/lib/db';
@@ -27,21 +27,42 @@ const KidFormSchema = z.object({
 
 export type KidFormData = z.infer<typeof KidFormSchema>;
 
-export async function getKids() {
+export async function getKids(params?: {
+  search?: string;
+  limit?: number;
+  offset?: number;
+}) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const kids = await db.query.kid.findMany({
-    with: {
-      guardian: true,
-      enrolledTerm: true,
-    },
-    orderBy: (kid, { asc }) => [asc(kid.name)],
-  });
+  const { search, limit = 50, offset = 0 } = params ?? {};
 
-  return { success: true as const, data: kids };
+  const conditions = search ? [ilike(kid.name, `%${search}%`)] : [];
+
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const [kids, totalResult] = await Promise.all([
+    db.query.kid.findMany({
+      where,
+      with: {
+        guardian: true,
+        enrolledTerm: true,
+      },
+      orderBy: (kid, { asc }) => [asc(kid.name)],
+      limit,
+      offset,
+    }),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(kid)
+      .where(where),
+  ]);
+
+  const total = totalResult?.[0]?.count ?? 0;
+
+  return { success: true as const, data: kids, total };
 }
 
 export async function getKid(id: string) {

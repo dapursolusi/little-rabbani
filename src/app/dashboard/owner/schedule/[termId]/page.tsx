@@ -4,32 +4,13 @@ import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 
 import { getSessions, getTerm } from '@/lib/actions/term';
+import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';
 
 import { SessionScheduleEditor } from './session-schedule-editor';
 
 export const metadata = { ...baseMetadata, title: 'Jadwal Mingguan' };
-
-function formatDate(dateStr: string) {
-  const date = new Date(dateStr + 'T00:00:00');
-  const days = [
-    'Minggu',
-    'Senin',
-    'Selasa',
-    'Rabu',
-    'Kamis',
-    "Jum'at",
-    'Sabtu',
-  ];
-  const dayName = days[date.getDay()];
-  const formatted = date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  return `${dayName}, ${formatted}`;
-}
 
 interface IScheduleTermPageProps {
   params: Promise<{ termId: string }>;

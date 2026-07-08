@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { TermActions } from '@/components/sections/term-actions';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -13,19 +14,11 @@ import {
 } from '@/components/ui/table';
 
 import { getTerms } from '@/lib/actions/term';
+import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';
 
 export const metadata = { ...baseMetadata, title: 'Term' };
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr);
-  return date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-}
 
 export default async function TermListPage() {
   const result = await getTerms();
@@ -58,15 +51,17 @@ export default async function TermListPage() {
 
       {/* Table */}
       {terms.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-          <p className="text-zinc-500">Belum ada data term</p>
-          <Link
-            href="/dashboard/owner/term/create"
-            className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
-          >
-            Tambah Term
-          </Link>
-        </div>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <p className="text-zinc-500">Belum ada data term</p>
+            <Link
+              href="/dashboard/owner/term/create"
+              className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
+            >
+              Tambah Term
+            </Link>
+          </CardContent>
+        </Card>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-zinc-200">
           <Table>

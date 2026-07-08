@@ -3,31 +3,12 @@ import { redirect } from 'next/navigation';
 
 import { Badge } from '@/components/ui/badge';
 
+import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 
 import { getTeacherSessions } from './actions';
 
 export const metadata = { ...baseMetadata, title: 'Observasi Murid' };
-
-function formatDate(dateStr: string): string {
-  const date = new Date(dateStr + 'T00:00:00');
-  const days = [
-    'Minggu',
-    'Senin',
-    'Selasa',
-    'Rabu',
-    'Kamis',
-    "Jum'at",
-    'Sabtu',
-  ];
-  const dayName = days[date.getDay()];
-  const formatted = date.toLocaleDateString('id-ID', {
-    day: 'numeric',
-    month: 'long',
-    year: 'numeric',
-  });
-  return `${dayName}, ${formatted}`;
-}
 
 export default async function CaptureSessionPickerPage() {
   const result = await getTeacherSessions();

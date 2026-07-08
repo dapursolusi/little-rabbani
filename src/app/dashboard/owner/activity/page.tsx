@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
 import {
   Table,
   TableBody,
@@ -65,15 +66,17 @@ export default async function ActivityListPage() {
           Aktivitas Aktif ({activeActivities.length})
         </h2>
         {activeActivities.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-            <p className="text-zinc-500">Belum ada data aktivitas</p>
-            <Link
-              href="/dashboard/owner/activity/create"
-              className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
-            >
-              Tambah Aktivitas
-            </Link>
-          </div>
+          <Card className="border-dashed">
+            <CardContent className="flex flex-col items-center justify-center py-16">
+              <p className="text-zinc-500">Belum ada data aktivitas</p>
+              <Link
+                href="/dashboard/owner/activity/create"
+                className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
+              >
+                Tambah Aktivitas
+              </Link>
+            </CardContent>
+          </Card>
         ) : (
           <div className="overflow-x-auto rounded-lg border border-zinc-200">
             <Table>

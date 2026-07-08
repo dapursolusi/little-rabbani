@@ -4,6 +4,11 @@ import { useEffect, useState } from 'react';
 
 import { toast } from 'sonner';
 
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Switch } from '@/components/ui/switch';
+
 import {
   getReminderConfig,
   toggleCaptureReminder,
@@ -174,161 +179,149 @@ export default function OwnerSettingsPage() {
       </div>
 
       {/* Notification Permission */}
-      <section className="rounded-lg border border-zinc-200 bg-white p-4">
-        <h2 className="mb-4 text-lg font-medium text-zinc-900">
-          Izin Notifikasi
-        </h2>
+      <Card>
+        <CardHeader>
+          <CardTitle>Izin Notifikasi</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {!swSupported && (
+            <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+              Browser ini tidak mendukung Service Worker. Fitur notifikasi tidak
+              tersedia. Pengingat akan ditampilkan di dashboard.
+            </div>
+          )}
 
-        {!swSupported && (
-          <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
-            Browser ini tidak mendukung Service Worker. Fitur notifikasi tidak
-            tersedia. Pengingat akan ditampilkan di dashboard.
+          <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
+            <div>
+              <p className="text-sm font-medium text-zinc-900">
+                Notifikasi Browser
+              </p>
+              <p className="text-xs text-zinc-500">
+                {notificationStatus === 'granted'
+                  ? 'Notifikasi sudah diizinkan'
+                  : notificationStatus === 'denied'
+                    ? 'Notifikasi ditolak — pengingat akan muncul di dashboard'
+                    : notificationStatus === 'unsupported'
+                      ? 'Browser tidak mendukung notifikasi'
+                      : 'Izinkan notifikasi untuk menerima pengingat'}
+              </p>
+            </div>
+
+            {notificationStatus === 'granted' ? (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={handleUnsubscribe}
+              >
+                Berhenti
+              </Button>
+            ) : notificationStatus === 'denied' ? (
+              <span className="rounded-md bg-zinc-100 px-3 py-1.5 text-sm text-zinc-500">
+                Ditolak
+              </span>
+            ) : notificationStatus === 'prompt' ? (
+              <Button
+                variant="default"
+                size="sm"
+                onClick={handleRequestPermission}
+              >
+                Izinkan Notifikasi
+              </Button>
+            ) : null}
           </div>
-        )}
 
-        <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
-          <div>
-            <p className="text-sm font-medium text-zinc-900">
-              Notifikasi Browser
-            </p>
-            <p className="text-xs text-zinc-500">
-              {notificationStatus === 'granted'
-                ? 'Notifikasi sudah diizinkan'
-                : notificationStatus === 'denied'
-                  ? 'Notifikasi ditolak — pengingat akan muncul di dashboard'
-                  : notificationStatus === 'unsupported'
-                    ? 'Browser tidak mendukung notifikasi'
-                    : 'Izinkan notifikasi untuk menerima pengingat'}
-            </p>
-          </div>
-
-          {notificationStatus === 'granted' ? (
-            <button
-              type="button"
-              onClick={handleUnsubscribe}
-              className="rounded-md bg-red-50 px-3 py-1.5 text-sm font-medium text-red-700 transition-colors hover:bg-red-100"
-            >
-              Berhenti
-            </button>
-          ) : notificationStatus === 'denied' ? (
-            <span className="rounded-md bg-zinc-100 px-3 py-1.5 text-sm text-zinc-500">
-              Ditolak
-            </span>
-          ) : notificationStatus === 'prompt' ? (
-            <button
-              type="button"
-              onClick={handleRequestPermission}
-              className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white transition-colors hover:bg-blue-700"
-            >
-              Izinkan Notifikasi
-            </button>
-          ) : null}
-        </div>
-
-        {notificationStatus === 'denied' && (
-          <div className="mt-2 rounded-md bg-blue-50 p-3 text-sm text-blue-800">
-            Notifikasi tidak dapat dikirim karena izin ditolak. Jumlah capture
-            tertunda akan ditampilkan sebagai badge di dashboard Owner.
-          </div>
-        )}
-      </section>
+          {notificationStatus === 'denied' && (
+            <div className="mt-2 rounded-md bg-blue-50 p-3 text-sm text-blue-800">
+              Notifikasi tidak dapat dikirim karena izin ditolak. Jumlah capture
+              tertunda akan ditampilkan sebagai badge di dashboard Owner.
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Reminder Settings */}
-      <section className="rounded-lg border border-zinc-200 bg-white p-4">
-        <h2 className="mb-4 text-lg font-medium text-zinc-900">
-          Pengaturan Pengingat
-        </h2>
-
-        {loading ? (
-          <div className="space-y-4">
-            <div className="flex animate-pulse items-center justify-between rounded-md bg-zinc-50 p-3">
-              <div className="space-y-1">
-                <div className="h-4 w-40 rounded bg-zinc-200" />
-                <div className="h-3 w-64 rounded bg-zinc-200" />
+      <Card>
+        <CardHeader>
+          <CardTitle>Pengaturan Pengingat</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-6 w-12 rounded-full" />
               </div>
-              <div className="h-6 w-12 rounded-full bg-zinc-200" />
+              <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
+                <Skeleton className="h-4 w-40" />
+                <Skeleton className="h-6 w-12 rounded-full" />
+              </div>
             </div>
-            <div className="flex animate-pulse items-center justify-between rounded-md bg-zinc-50 p-3">
-              <div className="space-y-1">
-                <div className="h-4 w-40 rounded bg-zinc-200" />
-                <div className="h-3 w-64 rounded bg-zinc-200" />
-              </div>
-              <div className="h-6 w-12 rounded-full bg-zinc-200" />
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {/* Capture-pending toggle */}
-            <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
-              <div>
-                <p className="text-sm font-medium text-zinc-900">
-                  Capture Tertunda
-                </p>
-                <p className="text-xs text-zinc-500">
-                  Kirim pengingat 15 menit setelah sesi berakhir jika ada
-                  capture yang tertunda
-                </p>
-              </div>
-              <label className="relative inline-flex cursor-pointer items-center">
-                <input
-                  type="checkbox"
+          ) : (
+            <div className="space-y-4">
+              {/* Capture-pending toggle */}
+              <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
+                <div>
+                  <p className="text-sm font-medium text-zinc-900">
+                    Capture Tertunda
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    Kirim pengingat 15 menit setelah sesi berakhir jika ada
+                    capture yang tertunda
+                  </p>
+                </div>
+                <Switch
                   checked={captureEnabled}
-                  onChange={handleToggleCapture}
-                  className="peer sr-only"
+                  onCheckedChange={handleToggleCapture}
                 />
-                <div className="h-6 w-11 rounded-full bg-zinc-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-zinc-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white" />
-              </label>
-            </div>
-
-            {/* Schedule-entry toggle */}
-            <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
-              <div>
-                <p className="text-sm font-medium text-zinc-900">
-                  Jadwal Mingguan
-                </p>
-                <p className="text-xs text-zinc-500">
-                  Kirim pengingat hari Kamis pagi jika jadwal minggu depan belum
-                  diisi
-                </p>
               </div>
-              <label className="relative inline-flex cursor-pointer items-center">
-                <input
-                  type="checkbox"
+
+              {/* Schedule-entry toggle */}
+              <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
+                <div>
+                  <p className="text-sm font-medium text-zinc-900">
+                    Jadwal Mingguan
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    Kirim pengingat hari Kamis pagi jika jadwal minggu depan
+                    belum diisi
+                  </p>
+                </div>
+                <Switch
                   checked={scheduleEnabled}
-                  onChange={handleToggleSchedule}
-                  className="peer sr-only"
+                  onCheckedChange={handleToggleSchedule}
                 />
-                <div className="h-6 w-11 rounded-full bg-zinc-300 after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-zinc-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white" />
-              </label>
+              </div>
             </div>
-          </div>
-        )}
-      </section>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Info */}
-      <section className="rounded-lg border border-zinc-200 bg-white p-4">
-        <h2 className="mb-2 text-lg font-medium text-zinc-900">
-          Tentang Pengingat
-        </h2>
-        <ul className="space-y-2 text-sm text-zinc-600">
-          <li>
-            &bull; <strong>Capture Tertunda:</strong> Muncul 15 menit setelah
-            sesi berakhir jika masih ada murid yang belum dicapture.
-          </li>
-          <li>
-            &bull; <strong>Jadwal Mingguan:</strong> Muncul setiap hari Kamis
-            pagi jika jadwal minggu depan belum diisi.
-          </li>
-          <li>
-            &bull; Jika notifikasi ditolak, jumlah capture tertunda akan muncul
-            sebagai badge di halaman Dashboard Owner.
-          </li>
-          <li>
-            &bull; Log pengingat akan dibersihkan secara otomatis setelah 30
-            hari.
-          </li>
-        </ul>
-      </section>
+      <Card>
+        <CardHeader>
+          <CardTitle>Tentang Pengingat</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ul className="space-y-2 text-sm text-zinc-600">
+            <li>
+              &bull; <strong>Capture Tertunda:</strong> Muncul 15 menit setelah
+              sesi berakhir jika masih ada murid yang belum dicapture.
+            </li>
+            <li>
+              &bull; <strong>Jadwal Mingguan:</strong> Muncul setiap hari Kamis
+              pagi jika jadwal minggu depan belum diisi.
+            </li>
+            <li>
+              &bull; Jika notifikasi ditolak, jumlah capture tertunda akan
+              muncul sebagai badge di halaman Dashboard Owner.
+            </li>
+            <li>
+              &bull; Log pengingat akan dibersihkan secara otomatis setelah 30
+              hari.
+            </li>
+          </ul>
+        </CardContent>
+      </Card>
     </div>
   );
 }

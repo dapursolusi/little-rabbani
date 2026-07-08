@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 
 import { createSession } from '@/lib/actions/term';
@@ -113,13 +114,10 @@ export function SessionForm({ termId }: ISessionFormProps) {
 
       {/* Hari Libur Toggle */}
       <div className="flex items-center gap-2">
-        <input
+        <Switch
           id="isHoliday"
-          name="isHoliday"
-          type="checkbox"
           checked={isHoliday}
-          onChange={(e) => setIsHoliday(e.target.checked)}
-          className="h-4 w-4 rounded border-zinc-300"
+          onCheckedChange={(checked) => setIsHoliday(checked)}
         />
         <Label htmlFor="isHoliday">Tandai sebagai hari libur</Label>
       </div>

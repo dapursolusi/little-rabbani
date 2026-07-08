@@ -3,6 +3,10 @@
 import { useEffect, useState } from 'react';
 
 import { useOnlineStatus } from '@/hooks/use-online-status';
+import { Loading03Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+
+import { Button } from '@/components/ui/button';
 
 import { checkStorageQuota } from '@/lib/capture-offline';
 
@@ -84,25 +88,10 @@ export function OfflineIndicator() {
       {isSyncing && (
         <div className="sticky top-0 z-50 bg-blue-500 px-4 py-1.5 text-center text-xs font-medium text-white">
           <div className="flex items-center justify-center gap-2">
-            <svg
+            <HugeiconsIcon
+              icon={Loading03Icon}
               className="h-3 w-3 animate-spin text-white"
-              fill="none"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-              />
-            </svg>
+            />
             <span>Menyinkronkan data offline...</span>
           </div>
         </div>
@@ -125,14 +114,15 @@ export function OfflineIndicator() {
       {/* Pending count badge (when online with pending items) */}
       {isOnline && pendingCount > 0 && !isSyncing && (
         <div className="sticky top-0 z-50 bg-blue-600 px-4 py-1.5 text-center text-xs font-medium text-white">
-          <button
+          <Button
             type="button"
+            variant="ghost"
             onClick={syncNow}
-            className="flex items-center justify-center gap-2"
+            className="flex items-center justify-center gap-2 underline h-auto"
           >
             <span>{pendingCount} data offline menunggu sinkronisasi</span>
             <span className="underline">Sinkronkan</span>
-          </button>
+          </Button>
         </div>
       )}
     </>
