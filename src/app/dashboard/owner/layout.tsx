@@ -37,6 +37,9 @@ export default function OwnerLayout({
           <NavLink href="/dashboard/owner/reports/monthly">
             Laporan Bulanan
           </NavLink>
+          <NavLink href="/dashboard/owner/reports/quarterly">
+            Laporan Trivulanan
+          </NavLink>
         </nav>
       </header>
 

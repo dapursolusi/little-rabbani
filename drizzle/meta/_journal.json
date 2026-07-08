@@ -92,6 +92,13 @@
       "when": 1783473315862,
       "tag": "0012_good_cobalt_man",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1783474004264,
+      "tag": "0013_easy_thaddeus_ross",
+      "breakpoints": true
     }
   ]
 }

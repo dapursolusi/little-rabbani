@@ -530,6 +530,72 @@ export const dailyReportSnapshotRelations = relations(
   })
 );
 
+// ─────────────── Quarterly Report Snapshots Table ───────────────
+// Stores generated quarterly report PDFs and narrative sections for each
+// kid per term. AI-drafted from current-term daily narratives + previous-term
+// snapshot delta. First-term quarterly generates without delta.
+// PDF stored as base64 in DB for v1.
+
+export const quarterlyReportStatusEnum = pgEnum('quarterly_report_status', [
+  'draft',
+  'final',
+  'stale',
+]);
+
+export const quarterlyReportSnapshot = pgTable(
+  'quarterly_report_snapshot',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    kidId: uuid('kid_id')
+      .notNull()
+      .references(() => kid.id, { onDelete: 'cascade' }),
+    termId: uuid('term_id')
+      .notNull()
+      .references(() => term.id, { onDelete: 'cascade' }),
+    statsJson: jsonb('stats_json'), // JSONB of computed term stats (optional)
+    sectionsJson: jsonb('sections_json'), // JSONB of sections: {changes, improvements, recommendations}
+    narrativeAiDraft: text('narrative_ai_draft'),
+    narrativeFinal: text('narrative_final'),
+    pdfData: text('pdf_data'), // base64-encoded PDF data
+    previousSnapshotId: uuid('previous_snapshot_id'), // FK added via migration (self-ref)
+    status: quarterlyReportStatusEnum('status').notNull().default('draft'),
+    editedBy: text('edited_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    generatedAt: timestamp('generated_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+  },
+  (table) => ({
+    uniqueKidTerm: unique().on(table.kidId, table.termId),
+  })
+);
+
+export const quarterlyReportSnapshotRelations = relations(
+  quarterlyReportSnapshot,
+  ({ one }) => ({
+    kid: one(kid, {
+      fields: [quarterlyReportSnapshot.kidId],
+      references: [kid.id],
+    }),
+    term: one(term, {
+      fields: [quarterlyReportSnapshot.termId],
+      references: [term.id],
+    }),
+    editor: one(user, {
+      fields: [quarterlyReportSnapshot.editedBy],
+      references: [user.id],
+    }),
+    previousSnapshot: one(quarterlyReportSnapshot, {
+      fields: [quarterlyReportSnapshot.previousSnapshotId],
+      references: [quarterlyReportSnapshot.id],
+    }),
+  })
+);
+
 // ─────────────── Observation Relations ───────────────
 
 export const observationRelations = relations(observation, ({ one, many }) => ({

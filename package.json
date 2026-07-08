@@ -38,6 +38,7 @@
     "@hugeicons/core-free-icons": "^4.2.2",
     "@hugeicons/react": "^1.1.9",
     "@neondatabase/serverless": "1.1.0",
+    "@react-pdf/renderer": "4.5.1",
     "@t3-oss/env-nextjs": "0.13.11",
     "@types/papaparse": "5.5.2",
     "better-auth": "1.6.23",
