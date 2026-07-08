@@ -4,7 +4,7 @@ import { and, asc, desc, eq, inArray, not } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
-import { generateNarrative } from '@/lib/ai';
+import { type TQuarterlySectionType, generateNarrative } from '@/lib/ai';
 import { db } from '@/lib/db';
 import {
   dailyReportSnapshot,
@@ -218,15 +218,16 @@ async function getDailyNarrativesForTerm(
 }
 
 /**
- * Generate the AI prompt for quarterly report sections.
- * Uses current-term daily narratives and optionally previous snapshot data.
+ * Build a combined notes string containing stats, daily narratives, and delta
+ * that can be passed to each section's generateNarrative call.
+ * Each section call will receive the same context but with a different sectionType.
  */
-function buildQuarterlyPrompt(
+function buildNotesForSections(
   kidName: string,
   stats: IQuarterlyStats,
   dailyNarratives: { date: string; narrative: string }[],
   previousSnapshot?: { sections: IQuarterlySections; termName: string } | null
-): string {
+): { statsText: string; narrativesText: string; deltaText: string } {
   const narrativesText =
     dailyNarratives.length > 0
       ? dailyNarratives.map((n) => `[${n.date}] ${n.narrative}`).join('\n\n')
@@ -245,83 +246,75 @@ function buildQuarterlyPrompt(
     .map(([name, count]) => `- ${name}: ${count}x`)
     .join('\n');
 
-  let deltaContext = '';
+  const statsText = `Kehadiran: ${stats.attendancePercent}% (${stats.daysPresent} dari ${stats.totalSchoolDays} hari)
+Suasana hati: ${moodSummary || 'Tidak ada data'}
+Nafsu makan: ${appetiteSummary || 'Tidak ada data'}
+Partisipasi aktivitas:
+${activitySummary || 'Tidak ada data'}`;
+
+  let deltaText = '';
   if (previousSnapshot) {
-    deltaContext = `
-LAPORAN TRIVULAN SEBELUMNYA (${previousSnapshot.termName}):
+    deltaText = `LAPORAN TRIVULAN SEBELUMNYA (${previousSnapshot.termName}):
 Perubahan: ${previousSnapshot.sections.changes}
 Peningkatan: ${previousSnapshot.sections.improvements}
-Rekomendasi: ${previousSnapshot.sections.recommendations}
-
-Gunakan data laporan sebelumnya sebagai referensi untuk membandingkan perkembangan.`;
+Rekomendasi: ${previousSnapshot.sections.recommendations}`;
   } else {
-    deltaContext = `
-Ini adalah trivulan pertama untuk Ananda ${kidName}. Buat laporan berdasarkan data yang ada tanpa perbandingan dengan periode sebelumnya.`;
+    deltaText = `Ini adalah trivulan pertama untuk Ananda ${kidName}.`;
   }
 
-  return `Buatkan laporan trivulanan untuk wali murid Ananda ${kidName}.
-
-DATA STATISTIK TRIVULAN INI:
-- Kehadiran: ${stats.attendancePercent}% (${stats.daysPresent} dari ${stats.totalSchoolDays} hari)
-- Suasana hati: ${moodSummary || 'Tidak ada data'}
-- Nafsu makan: ${appetiteSummary || 'Tidak ada data'}
-- Partisipasi aktivitas:
-${activitySummary || 'Tidak ada data'}
-
-NARASI HARIAN:
-${narrativesText}
-
-${deltaContext}
-
-Buatlah laporan dengan TIGA bagian dalam Bahasa Indonesia:
-
-1. **Perubahan** — Apa yang berubah pada Ananda ${kidName} selama trivulan ini? Bandingkan dengan trivulan sebelumnya jika ada data. Fokus pada perkembangan perilaku, kebiasaan, dan interaksi sosial. (2-3 paragraf)
-
-2. **Peningkatan** — Apa yang meningkat pada Ananda ${kidName}? Sebutkan area-area di mana Ananda menunjukkan kemajuan signifikan, seperti partisipasi aktivitas, suasana hati, atau keterampilan sosial. (2-3 paragraf)
-
-3. **Rekomendasi** — Saran untuk wali murid dan guru untuk mendukung perkembangan Ananda ${kidName} ke depannya. Berikan rekomendasi yang spesifik dan actionable. (2-3 paragraf)
-
-Format output:
-===PERUBAHAN===
-[Konten bagian Perubahan]
-
-===PENINGKATAN===
-[Konten bagian Peningkatan]
-
-===REKOMENDASI===
-[Konten bagian Rekomendasi]`;
+  return { statsText, narrativesText, deltaText };
 }
 
 /**
- * Parse AI output into three sections.
+ * Calls generateNarrative 3 times, once per quarterly section.
+ * Each section gets a focused prompt with quarterly-section reportType.
+ * Individual section failures are handled gracefully (empty string returned).
  */
-function parseAiSections(aiOutput: string): IQuarterlySections | null {
-  if (!aiOutput) return null;
+async function generateAllQuarterlySections(
+  kidName: string,
+  stats: IQuarterlyStats,
+  combinedNotes: string
+): Promise<{
+  section1: string;
+  section2: string;
+  section3: string;
+}> {
+  const sectionTypes: TQuarterlySectionType[] = [
+    'changes',
+    'improvements',
+    'recommendations',
+  ];
 
-  const changesMatch = aiOutput.match(
-    /===PERUBAHAN===\n?([\s\S]*?)(?====PENINGKATAN===|$)/
-  );
-  const improvementsMatch = aiOutput.match(
-    /===PENINGKATAN===\n?([\s\S]*?)(?====REKOMENDASI===|$)/
-  );
-  const recommendationsMatch = aiOutput.match(/===REKOMENDASI===\n?([\s\S]*)$/);
+  const baseContext = {
+    kidName,
+    mood: 3 as const,
+    appetite: 'good' as const,
+    activities: Object.keys(stats.activityParticipation),
+    notes: combinedNotes,
+    presence: 'present_full' as const,
+    reportType: 'quarterly-section' as const,
+  };
 
-  const changes = changesMatch?.[1]?.trim() ?? '';
-  const improvements = improvementsMatch?.[1]?.trim() ?? '';
-  const recommendations = recommendationsMatch?.[1]?.trim() ?? '';
+  const results: string[] = [];
 
-  // If parsing failed, try treating the whole output as content
-  if (!changes && !improvements && !recommendations) {
-    // Split by double newlines roughly into 3 parts
-    const parts = aiOutput.split('\n\n').filter(Boolean);
-    return {
-      changes: parts[0] ?? aiOutput,
-      improvements: parts[1] ?? '',
-      recommendations: parts[2] ?? '',
-    };
+  for (const sectionType of sectionTypes) {
+    try {
+      const content = await generateNarrative({
+        ...baseContext,
+        sectionType,
+      });
+      results.push(content || '');
+    } catch {
+      // Individual section failure — leave empty, continue to next section
+      results.push('');
+    }
   }
 
-  return { changes, improvements, recommendations };
+  return {
+    section1: results[0],
+    section2: results[1],
+    section3: results[2],
+  };
 }
 
 // ─────────────── Read Operations ───────────────
@@ -580,69 +573,47 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
     },
   });
 
-  // Generate AI narrative sections
+  // Generate AI narrative sections — 3 separate calls, one per section
+  // VAL-QUARTERLY-004: Split into 3 focused prompts to avoid truncation on long prompts
   let sectionsJson: IQuarterlySections | null = null;
   let narrativeAiDraft = '';
 
-  try {
-    // Build the quarterly-specific prompt with delta context
-    const prompt = buildQuarterlyPrompt(
-      kidInfo.name,
-      stats,
-      dailyNarratives,
-      previousSnapshot
-        ? {
-            sections:
-              previousSnapshot.sectionsJson as unknown as IQuarterlySections,
-            termName: previousSnapshot.term?.name ?? '',
-          }
-        : null
-    );
+  // Build the context payload for each section call (stats + narratives + delta)
+  const { statsText, narrativesText, deltaText } = buildNotesForSections(
+    kidInfo.name,
+    stats,
+    dailyNarratives,
+    previousSnapshot
+      ? {
+          sections:
+            previousSnapshot.sectionsJson as unknown as IQuarterlySections,
+          termName: previousSnapshot.term?.name ?? '',
+        }
+      : null
+  );
 
-    // Use generateNarrative for the AI call (with the full prompt embedded in notes)
-    const aiOutput = await generateNarrative({
-      kidName: kidInfo.name,
-      mood: 3, // Default mood for term-level narrative
-      appetite: 'good',
-      activities: Object.keys(stats.activityParticipation),
-      notes: prompt,
-      presence: 'present_full',
-    });
+  // Combined notes in a structured format parseable by buildUserPrompt for quarterly-section
+  const combinedNotes = `STATS:\n${statsText}\n\nNARRATIVES:\n${narrativesText}\n\nDELTA:\n${deltaText}`;
 
-    // If AI returned something meaningful, use it to build sections
-    if (aiOutput) {
-      // We use the AI output as the narrative draft and then try to parse sections
-      narrativeAiDraft = aiOutput;
-      sectionsJson = parseAiSections(aiOutput);
+  // Call all 3 sections — each section failure is handled independently
+  const { section1, section2, section3 } = await generateAllQuarterlySections(
+    kidInfo.name,
+    stats,
+    combinedNotes
+  );
 
-      // If parsing didn't work well, create a basic structure
-      if (
-        !sectionsJson ||
-        (!sectionsJson.changes &&
-          !sectionsJson.improvements &&
-          !sectionsJson.recommendations)
-      ) {
-        // Fallback: use AI output as the changes section
-        sectionsJson = {
-          changes: aiOutput,
-          improvements: `Ananda ${kidInfo.name} menunjukkan kehadiran ${stats.attendancePercent}% selama trivulan ini dengan partisipasi aktif dalam berbagai kegiatan.`,
-          recommendations: `Terus dukung Ananda ${kidInfo.name} untuk mengikuti kegiatan dengan antusias. Konsistensi kehadiran sangat membantu perkembangan Ananda.`,
-        };
-      }
-    }
-  } catch {
-    // VAL-QUARTERLY-008: AI failure — structured-only fallback
-    narrativeAiDraft = '';
-    sectionsJson = null;
-  }
+  // Build sections from results (individual failure = empty string)
+  sectionsJson = {
+    changes: section1,
+    improvements: section2,
+    recommendations: section3,
+  };
 
-  // If AI failed or sections are empty, provide placeholder sections
-  if (!sectionsJson) {
-    sectionsJson = {
-      changes: '',
-      improvements: '',
-      recommendations: '',
-    };
+  // If all 3 failed, keep narrativeAiDraft empty (structured-only fallback)
+  if (section1 || section2 || section3) {
+    narrativeAiDraft = [section1, section2, section3]
+      .filter(Boolean)
+      .join('\n\n');
   }
 
   // Reference to previous snapshot

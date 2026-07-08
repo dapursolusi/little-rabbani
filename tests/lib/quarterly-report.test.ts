@@ -242,9 +242,20 @@ describe('Quarterly Report - Server Actions', () => {
     });
 
     it('generates quarterly report with stats and AI sections for first term', async () => {
-      // Mock AI generation returning parsed sections
-      mockGenerateNarrative.mockResolvedValue(
-        '===PERUBAHAN===\nAnanda Ahmad menunjukkan perubahan positif dalam partisipasi kegiatan.\n\n===PENINGKATAN===\nKehadiran Ahmad sangat baik dengan partisipasi aktif dalam mewarnai dan menggambar.\n\n===REKOMENDASI===\nDisarankan untuk terus mendukung minat Ahmad dalam kegiatan seni.'
+      // Mock AI generation — 3 separate calls, one per section
+      mockGenerateNarrative.mockImplementation(
+        (context: { sectionType?: string }) => {
+          if (context.sectionType === 'changes') {
+            return 'Ananda Ahmad menunjukkan perubahan positif dalam partisipasi kegiatan.';
+          }
+          if (context.sectionType === 'improvements') {
+            return 'Kehadiran Ahmad sangat baik dengan partisipasi aktif dalam mewarnai dan menggambar.';
+          }
+          if (context.sectionType === 'recommendations') {
+            return 'Disarankan untuk terus mendukung minat Ahmad dalam kegiatan seni.';
+          }
+          return '';
+        }
       );
 
       // Mock insert result
@@ -275,13 +286,25 @@ describe('Quarterly Report - Server Actions', () => {
         expect(stats.appetiteDistribution.good).toBe(2);
         expect(stats.appetiteDistribution.moderate).toBe(1);
 
-        // Verify sections were parsed
+        // Verify sections — each comes from a separate AI call
         expect(result.data.sections.changes).toContain('perubahan positif');
         expect(result.data.sections.improvements).toContain('Kehadiran');
         expect(result.data.sections.recommendations).toContain('Disarankan');
 
         // First term — no previousSnapshotId
         expect(result.data.previousSnapshotId).toBeNull();
+
+        // Verify 3 separate AI calls with correct sectionTypes
+        expect(mockGenerateNarrative).toHaveBeenCalledTimes(3);
+        expect(mockGenerateNarrative.mock.calls[0][0].sectionType).toBe(
+          'changes'
+        );
+        expect(mockGenerateNarrative.mock.calls[1][0].sectionType).toBe(
+          'improvements'
+        );
+        expect(mockGenerateNarrative.mock.calls[2][0].sectionType).toBe(
+          'recommendations'
+        );
       }
     });
 
@@ -303,7 +326,7 @@ describe('Quarterly Report - Server Actions', () => {
     });
 
     it('handles AI failure with structured-only fallback', async () => {
-      // Mock AI generation failure
+      // Mock AI generation failure — all 3 calls fail
       mockGenerateNarrative.mockRejectedValue(new Error('AI service down'));
 
       // Mock insert result
@@ -373,9 +396,20 @@ describe('Quarterly Report - Server Actions', () => {
         endDate: '2025-12-31',
       });
 
-      // Mock AI generation
-      mockGenerateNarrative.mockResolvedValue(
-        '===PERUBAHAN===\nDibandingkan semester lalu, Ahmad menunjukkan peningkatan dalam fokus.\n\n===PENINGKATAN===\nPartisipasi Ahmad meningkat signifikan.\n\n===REKOMENDASI===\nLanjutkan dukungan yang sudah diberikan.'
+      // Mock AI generation — 3 separate calls
+      mockGenerateNarrative.mockImplementation(
+        (context: { sectionType?: string }) => {
+          if (context.sectionType === 'changes') {
+            return 'Dibandingkan semester lalu, Ahmad menunjukkan peningkatan dalam fokus.';
+          }
+          if (context.sectionType === 'improvements') {
+            return 'Partisipasi Ahmad meningkat signifikan.';
+          }
+          if (context.sectionType === 'recommendations') {
+            return 'Lanjutkan dukungan yang sudah diberikan.';
+          }
+          return '';
+        }
       );
 
       mockDb.insert.mockReturnValue({
@@ -391,9 +425,17 @@ describe('Quarterly Report - Server Actions', () => {
         // Should have reference to previous snapshot
         expect(result.data.previousSnapshotId).toBe(previousReportId);
 
-        // AI should have been called with the prompt containing delta context
-        const aiCallArgs = mockGenerateNarrative.mock.calls[0][0];
-        expect(aiCallArgs.notes).toContain('trivulanan');
+        // Verify 3 separate AI calls
+        expect(mockGenerateNarrative).toHaveBeenCalledTimes(3);
+
+        // Each AI call should have the combined notes with stats/narratives/delta
+        for (const call of mockGenerateNarrative.mock.calls) {
+          const args = call[0];
+          expect(args.notes).toContain('STATS:');
+          expect(args.notes).toContain('NARRATIVES:');
+          expect(args.notes).toContain('DELTA:');
+          expect(args.notes).toContain('LAPORAN TRIVULAN SEBELUMNYA');
+        }
       }
     });
 
@@ -426,8 +468,20 @@ describe('Quarterly Report - Server Actions', () => {
         mockSession3,
       ]);
 
-      mockGenerateNarrative.mockResolvedValue(
-        '===PERUBAHAN===\nPerubahan selama periode ini.\n\n===PENINGKATAN===\nPeningkatan selama periode ini.\n\n===REKOMENDASI===\nRekomendasi untuk ke depannya.'
+      // Mock AI generation — 3 separate calls, each returning empty (no narratives)
+      mockGenerateNarrative.mockImplementation(
+        (context: { sectionType?: string }) => {
+          if (context.sectionType === 'changes') {
+            return 'Perubahan selama periode ini.';
+          }
+          if (context.sectionType === 'improvements') {
+            return 'Peningkatan selama periode ini.';
+          }
+          if (context.sectionType === 'recommendations') {
+            return 'Rekomendasi untuk ke depannya.';
+          }
+          return '';
+        }
       );
 
       mockDb.query.observationActivity.findMany.mockResolvedValue([]);
@@ -445,6 +499,9 @@ describe('Quarterly Report - Server Actions', () => {
       if (result.success) {
         expect(result.data.stats.totalSchoolDays).toBe(2); // Only 2 sessions with data
         expect(result.data.stats.daysPresent).toBe(2);
+
+        // Verify 3 separate AI calls
+        expect(mockGenerateNarrative).toHaveBeenCalledTimes(3);
       }
     });
   });

@@ -22,7 +22,12 @@ const FALLBACK_MODELS = [
 ];
 
 /** Report type — affects the prompt context used by the AI. */
-export type TReportType = 'daily' | 'monthly' | 'quarterly';
+export type TReportType =
+  'daily' | 'monthly' | 'quarterly' | 'quarterly-section';
+
+/** Section type for quarterly-section report generation. */
+export type TQuarterlySectionType =
+  'changes' | 'improvements' | 'recommendations';
 
 export interface TNarrativeContext {
   /** Kid's full name. */
@@ -41,6 +46,8 @@ export interface TNarrativeContext {
   absenceReason?: 'sick' | 'family' | 'permission' | 'other' | string;
   /** Report type for prompt context (defaults to 'daily'). */
   reportType?: TReportType;
+  /** Section type for quarterly-section report generation. */
+  sectionType?: TQuarterlySectionType;
 }
 
 /**
@@ -85,7 +92,10 @@ function translateAbsenceReason(value: string): string {
  * Builds the system prompt that instructs the AI model to
  * generate a warm narrative in Bahasa Indonesia addressing the guardian.
  */
-function buildSystemPrompt(reportType?: TReportType): string {
+function buildSystemPrompt(
+  reportType?: TReportType,
+  sectionType?: TQuarterlySectionType
+): string {
   if (reportType === 'monthly') {
     return `Anda adalah asisten guru PAUD yang membantu membuat laporan bulanan untuk wali murid.
 
@@ -99,6 +109,26 @@ Tugas Anda:
 - Jangan menambahkan informasi yang tidak ada dalam data yang diberikan.
 - Jangan gunakan tanda bintang (*) atau markdown. Gunakan paragraf biasa.
 - Jangan gunakan frasa "hari ini" — ini adalah laporan bulanan.`;
+  }
+
+  if (reportType === 'quarterly-section') {
+    const sectionLabels: Record<TQuarterlySectionType, string> = {
+      changes: 'Perubahan',
+      improvements: 'Peningkatan',
+      recommendations: 'Rekomendasi',
+    };
+    const label = sectionLabels[sectionType ?? 'changes'];
+    return `Anda adalah asisten guru PAUD yang membantu membuat laporan trivulanan untuk wali murid.
+
+Tugas Anda:
+- Buat SATU bagian dari laporan trivulanan dalam Bahasa Indonesia yang ditujukan langsung kepada wali murid.
+- Gunakan sapaan "Bu/Pak" dan panggilan "Ananda" diikuti nama anak.
+- Bagian ini adalah "${label}" — ${getSectionDescription(sectionType ?? 'changes')}
+- Gunakan bahasa yang hangat, positif, dan mendukung.
+- Tulis 2-3 paragraf yang informatif dan personal.
+- Jangan menambahkan informasi yang tidak ada dalam data yang diberikan.
+- Jangan gunakan tanda bintang (*) atau markdown. Gunakan paragraf biasa.
+- JANGAN menuliskan label atau judul bagian. Langsung tulis konten paragraf.`;
   }
 
   return `Anda adalah asisten guru PAUD yang membantu membuat laporan harian untuk wali murid.
@@ -118,6 +148,20 @@ Contoh gaya:
 Nafsu makan Ananda [nama] hari ini [baik/cukup/kurang]. Beliau [menghabiskan/menikmati] bekalnya dengan lahap.
 
 Kami bersyukur melihat perkembangan positif pada Ananda [nama]. Semoga Ananda [nama] tetap sehat dan bersemangat belajar."`;
+}
+
+/**
+ * Returns a description prompt for a given quarterly section type.
+ */
+function getSectionDescription(sectionType: TQuarterlySectionType): string {
+  switch (sectionType) {
+    case 'changes':
+      return 'Jelaskan apa yang berubah pada Ananda selama trivulan ini. Bandingkan dengan trivulan sebelumnya jika ada data delta. Fokus pada perubahan perilaku, kebiasaan, interaksi sosial, dan pola kehadiran.';
+    case 'improvements':
+      return 'Jelaskan apa yang meningkat pada Ananda selama trivulan ini. Sebutkan area-area kemajuan signifikan seperti partisipasi aktivitas, stabilitas suasana hati, nafsu makan, atau keterampilan sosial.';
+    case 'recommendations':
+      return 'Berikan saran spesifik dan actionable untuk wali murid dan guru dalam mendukung perkembangan Ananda ke depannya. Rekomendasi harus praktis dan disesuaikan dengan data yang ada.';
+  }
 }
 
 /**
@@ -152,6 +196,70 @@ ${activitiesList}
 ${dailyNarrativesSection}
 
 Tulis narasi ringkasan bulanan yang hangat sebanyak 3-4 paragraf dalam Bahasa Indonesia yang ditujukan kepada wali murid. Ini adalah laporan bulanan, jangan gunakan frasa "hari ini".`;
+  }
+
+  // For quarterly-section, build a focused prompt for each section
+  if (reportType === 'quarterly-section') {
+    const sectionType = context.sectionType ?? 'changes';
+    const sectionLabels: Record<TQuarterlySectionType, string> = {
+      changes: 'Perubahan',
+      improvements: 'Peningkatan',
+      recommendations: 'Rekomendasi',
+    };
+    const label = sectionLabels[sectionType];
+
+    // Parse stats and daily narratives from the notes field
+    // notes format: "STATS:...\n\nNARRATIVES:...\n\nDELTA:..."
+    const statsNote = notes?.match(/STATS:\n([\s\S]*?)(?:\n\nNARRATIVES:|$)/);
+    const narrativesNote = notes?.match(
+      /NARRATIVES:\n([\s\S]*?)(?:\n\nDELTA:|$)/
+    );
+    const deltaNote = notes?.match(/DELTA:\n([\s\S]*)$/);
+
+    const statsText = statsNote?.[1]?.trim() ?? 'Tidak ada data statistik.';
+    const narrativesText =
+      narrativesNote?.[1]?.trim() ?? 'Tidak ada data narasi harian.';
+    const deltaText = deltaNote?.[1]?.trim();
+
+    // Build section-specific prompt
+    const promptParts: string[] = [
+      `Buatkan bagian "${label}" dari laporan trivulanan untuk wali murid Ananda ${kidName}.`,
+    ];
+
+    if (sectionType === 'changes') {
+      promptParts.push(
+        `Fokus pada: Apa yang berubah pada Ananda ${kidName} selama trivulan ini? Perubahan perilaku, kebiasaan, interaksi sosial, dan pola kehadiran.`
+      );
+    } else if (sectionType === 'improvements') {
+      promptParts.push(
+        `Fokus pada: Apa yang meningkat pada Ananda ${kidName}? Kemajuan dalam partisipasi aktivitas, stabilitas suasana hati, nafsu makan, atau keterampilan sosial.`
+      );
+    } else if (sectionType === 'recommendations') {
+      promptParts.push(
+        `Fokus pada: Saran spesifik dan praktis untuk wali murid dan guru dalam mendukung perkembangan Ananda ${kidName} ke depannya.`
+      );
+    }
+
+    promptParts.push(``);
+    promptParts.push(`DATA STATISTIK TRIVULAN INI:`);
+    promptParts.push(statsText);
+
+    promptParts.push(``);
+    promptParts.push(`NARASI HARIAN:`);
+    promptParts.push(narrativesText);
+
+    if (deltaText) {
+      promptParts.push(``);
+      promptParts.push(`LAPORAN TRIVULAN SEBELUMNYA:`);
+      promptParts.push(deltaText);
+    }
+
+    promptParts.push(``);
+    promptParts.push(
+      `Tulis 2-3 paragraf dalam Bahasa Indonesia yang hangat dan personal. Jangan gunakan markdown. Jangan tulis judul atau label bagian — langsung tulis konten paragraf.`
+    );
+
+    return promptParts.join('\n');
   }
 
   const {
@@ -258,7 +366,8 @@ export async function generateNarrative(
   context: TNarrativeContext
 ): Promise<string> {
   const reportType = context.reportType ?? 'daily';
-  const systemPrompt = buildSystemPrompt(reportType);
+  const sectionType = context.sectionType;
+  const systemPrompt = buildSystemPrompt(reportType, sectionType);
   const userPrompt = buildUserPrompt(context);
   const messages = [
     { role: 'system', content: systemPrompt },
