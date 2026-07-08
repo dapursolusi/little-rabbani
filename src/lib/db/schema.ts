@@ -411,6 +411,67 @@ export const reportTemplate = pgTable('report_template', {
     .$onUpdateFn(() => new Date()),
 });
 
+// ─────────────── Monthly Report Snapshots Table ───────────────
+// Stores generated monthly reports for each kid per month.
+// Stats are computed via SQL aggregation (attendance %, mood/appetite
+// distribution, activity participation counts). AI narrative sourced
+// from daily report narratives. Observations are locked on generation.
+
+export const monthlyReportStatusEnum = pgEnum('monthly_report_status', [
+  'draft',
+  'final',
+  'stale',
+]);
+
+export const monthlyReportSnapshot = pgTable(
+  'monthly_report_snapshot',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    kidId: uuid('kid_id')
+      .notNull()
+      .references(() => kid.id, { onDelete: 'cascade' }),
+    termId: uuid('term_id')
+      .notNull()
+      .references(() => term.id, { onDelete: 'cascade' }),
+    month: text('month').notNull(), // Format: "2025-06" (ISO year-month)
+    statsJson: jsonb('stats_json').notNull(), // JSONB of computed stats
+    narrativeAiDraft: text('narrative_ai_draft'),
+    narrativeFinal: text('narrative_final'),
+    lockedObservationIds: jsonb('locked_observation_ids'), // JSONB array of observation IDs
+    status: monthlyReportStatusEnum('status').notNull().default('draft'),
+    editedBy: text('edited_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    generatedAt: timestamp('generated_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+  },
+  (table) => ({
+    uniqueKidMonth: unique().on(table.kidId, table.month),
+  })
+);
+
+export const monthlyReportSnapshotRelations = relations(
+  monthlyReportSnapshot,
+  ({ one }) => ({
+    kid: one(kid, {
+      fields: [monthlyReportSnapshot.kidId],
+      references: [kid.id],
+    }),
+    term: one(term, {
+      fields: [monthlyReportSnapshot.termId],
+      references: [term.id],
+    }),
+    editor: one(user, {
+      fields: [monthlyReportSnapshot.editedBy],
+      references: [user.id],
+    }),
+  })
+);
+
 // ─────────────── Daily Report Snapshots Table ───────────────
 // Stores generated daily parent reports for each kid per session.
 // One snapshot per (kid_id, session_id) — re-generation upserts.

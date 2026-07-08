@@ -78,6 +78,20 @@
       "when": 1783466194612,
       "tag": "0010_broken_yellowjacket",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1783473099309,
+      "tag": "0011_remarkable_victor_mancha",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1783473315862,
+      "tag": "0012_good_cobalt_man",
+      "breakpoints": true
     }
   ]
 }

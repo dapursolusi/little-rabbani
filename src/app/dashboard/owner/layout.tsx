@@ -32,7 +32,10 @@ export default function OwnerLayout({
           <NavLink href="/dashboard/owner/schedule">Jadwal</NavLink>
           <NavLink href="/dashboard/owner/dcr">Laporan Harian</NavLink>
           <NavLink href="/dashboard/owner/reports/daily">
-            Laporan Wali Murid
+            Laporan Harian
+          </NavLink>
+          <NavLink href="/dashboard/owner/reports/monthly">
+            Laporan Bulanan
           </NavLink>
         </nav>
       </header>

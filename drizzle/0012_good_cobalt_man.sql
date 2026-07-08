@@ -1,0 +1,1 @@
+ALTER TABLE "monthly_report_snapshot" ALTER COLUMN "edited_by" SET DATA TYPE text;
