@@ -92,7 +92,7 @@ export default async function SessionListPage({
             href={`/dashboard/owner/session/generate?termId=${termId}`}
             className={cn(buttonVariants({ variant: 'secondary' }))}
           >
-            Generate Berulang
+            Buat Berulang
           </Link>
         </div>
       </div>
@@ -113,7 +113,7 @@ export default async function SessionListPage({
                 href={`/dashboard/owner/session/generate?termId=${termId}`}
                 className={cn(buttonVariants({ variant: 'outline' }))}
               >
-                Generate Berulang
+                Buat Berulang
               </Link>
             </div>
           </CardContent>

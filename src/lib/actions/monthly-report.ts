@@ -342,6 +342,42 @@ export async function getKidMonthlyReports(kidId: string) {
 }
 
 /**
+ * Batch fetch monthly reports for multiple kid IDs.
+ * Uses a single inArray query instead of N+1 sequential awaits.
+ */
+export async function getKidMonthlyReportsBatch(kidIds: string[]) {
+  const auth = await requireOwner();
+  if (!auth.authorized) {
+    return { success: false as const, error: auth.error };
+  }
+
+  if (kidIds.length === 0) {
+    return {
+      success: true as const,
+      data: [] as Array<{
+        kidId: string;
+        id: string;
+        month: string;
+        status: string;
+      }>,
+    };
+  }
+
+  const reports = await db.query.monthlyReportSnapshot.findMany({
+    where: inArray(monthlyReportSnapshot.kidId, kidIds),
+    orderBy: [desc(monthlyReportSnapshot.month)],
+    columns: {
+      id: true,
+      kidId: true,
+      month: true,
+      status: true,
+    },
+  });
+
+  return { success: true as const, data: reports };
+}
+
+/**
  * Get a single monthly report by ID.
  */
 export async function getMonthlyReport(reportId: string) {

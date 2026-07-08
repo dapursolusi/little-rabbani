@@ -222,7 +222,7 @@ export function DailyReportClient({
       const report = reports.find((r) => r.kidId === kidId);
       if (!report) {
         toast.info(
-          `Belum ada laporan untuk ${kidName}. Generate laporan terlebih dahulu.`
+          `Belum ada laporan untuk ${kidName}. Buat laporan terlebih dahulu.`
         );
         return;
       }
@@ -425,7 +425,7 @@ export function DailyReportClient({
               Membuat Laporan...
             </span>
           ) : (
-            'Generate Laporan'
+            'Buat Laporan'
           )}
         </Button>
       </div>

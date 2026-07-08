@@ -1,11 +1,13 @@
 import Link from 'next/link';
 
 import { Badge } from '@/components/ui/badge';
+import { buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 
 import { getSessionsForDcr } from '@/lib/actions/dcr';
 import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
+import { cn } from '@/lib/utils';
 
 export const metadata = { ...baseMetadata, title: 'DCR / Observasi Kelas' };
 
@@ -50,6 +52,12 @@ export default async function DcrPickerPage() {
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-16">
             <p className="text-zinc-500">Belum ada sesi</p>
+            <Link
+              href="/dashboard/owner/session"
+              className={cn(buttonVariants({ variant: 'default' }), 'mt-4')}
+            >
+              Buat Sesi Baru
+            </Link>
           </CardContent>
         </Card>
       ) : (

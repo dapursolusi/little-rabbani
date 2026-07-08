@@ -161,7 +161,7 @@ export function SessionGenerateForm({
           type="submit"
           disabled={isSubmitting || selectedDays.length === 0}
         >
-          {isSubmitting ? 'Membuat...' : 'Generate Sesi'}
+          {isSubmitting ? 'Membuat...' : 'Buat Sesi'}
         </Button>
       </div>
     </form>

@@ -16,6 +16,12 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import { deleteSession, updateSessionHoliday } from '@/lib/actions/term';
 
@@ -72,12 +78,21 @@ export function SessionActions({
   return (
     <>
       <DropdownMenu>
-        <DropdownMenuTrigger>
-          <Button variant="ghost" size="sm">
-            <span className="sr-only">Buka menu</span>
-            <HugeiconsIcon icon={MoreVerticalIcon} className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger>
+              <DropdownMenuTrigger>
+                <Button variant="ghost" size="sm" aria-label="Buka menu sesi">
+                  <span className="sr-only">Buka menu sesi</span>
+                  <HugeiconsIcon icon={MoreVerticalIcon} className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Buka menu</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
             onClick={() =>

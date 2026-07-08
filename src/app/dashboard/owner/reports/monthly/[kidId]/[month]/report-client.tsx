@@ -288,8 +288,8 @@ export function MonthlyReportClient({
           <div>
             <p className="text-sm font-medium text-zinc-700">
               {!report
-                ? 'Generate laporan bulanan untuk melihat ringkasan statistik dan narasi AI'
-                : 'Laporan ini perlu diperbarui — generate ulang untuk membuat laporan baru'}
+                ? 'Buat laporan bulanan untuk melihat ringkasan statistik dan narasi AI'
+                : 'Laporan ini perlu diperbarui — buat ulang untuk membuat laporan baru'}
             </p>
             <p className="mt-0.5 text-xs text-zinc-500">
               {kidName} — {formatMonthLabel(month)}
@@ -311,9 +311,9 @@ export function MonthlyReportClient({
                 Membuat Laporan...
               </span>
             ) : report?.status === 'stale' ? (
-              'Generate Ulang'
+              'Buat Ulang'
             ) : (
-              'Generate Laporan'
+              'Buat Laporan'
             )}
           </Button>
         </div>
@@ -491,7 +491,7 @@ export function MonthlyReportClient({
       {!report && !isGenerating && (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
           <p className="text-zinc-500">
-            Klik &ldquo;Generate Laporan&rdquo; untuk membuat laporan bulanan{' '}
+            Klik &ldquo;Buat Laporan&rdquo; untuk membuat laporan bulanan{' '}
             {kidName}
           </p>
           <p className="mt-1 text-xs text-zinc-400">
@@ -547,7 +547,7 @@ export function MonthlyReportClient({
               Nanti
             </Button>
             <Button variant="default" onClick={handleReGenerate}>
-              Generate Ulang Sekarang
+              Buat Ulang Sekarang
             </Button>
           </DialogFooter>
         </DialogContent>

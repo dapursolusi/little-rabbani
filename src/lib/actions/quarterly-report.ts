@@ -438,6 +438,41 @@ export async function getKidQuarterlyReports(kidId: string) {
   return { success: true as const, data: reports };
 }
 
+/**
+ * Batch fetch quarterly reports for multiple kid IDs.
+ * Uses a single inArray query instead of N+1 sequential awaits.
+ */
+export async function getKidQuarterlyReportsBatch(kidIds: string[]) {
+  const auth = await requireOwner();
+  if (!auth.authorized) {
+    return { success: false as const, error: auth.error };
+  }
+
+  if (kidIds.length === 0) {
+    return {
+      success: true as const,
+      data: [] as Array<{
+        kidId: string;
+        id: string;
+        termId: string;
+        status: string;
+      }>,
+    };
+  }
+
+  const reports = await db.query.quarterlyReportSnapshot.findMany({
+    where: inArray(quarterlyReportSnapshot.kidId, kidIds),
+    columns: {
+      id: true,
+      kidId: true,
+      termId: true,
+      status: true,
+    },
+  });
+
+  return { success: true as const, data: reports };
+}
+
 // ─────────────── Quarterly Report Generation ───────────────
 
 /**

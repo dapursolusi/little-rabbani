@@ -86,8 +86,7 @@ export async function GET(
   if (!report) {
     return NextResponse.json(
       {
-        error:
-          'Laporan trivulan belum dibuat. Generate laporan terlebih dahulu.',
+        error: 'Laporan triwulan belum dibuat. Buat laporan terlebih dahulu.',
       },
       { status: 404 }
     );

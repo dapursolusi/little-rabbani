@@ -3,7 +3,7 @@ import Link from 'next/link';
 import {
   getActiveTerm,
   getEnrolledKids,
-  getKidMonthlyReports,
+  getKidMonthlyReportsBatch,
   getMonthOptions,
 } from '@/lib/actions/monthly-report';
 import { baseMetadata } from '@/lib/metadata';
@@ -92,21 +92,21 @@ export default async function MonthlyReportPickerPage() {
   const kids = kidsResult.data;
   const months = monthsResult.data;
 
-  // Get existing monthly reports for all kids to show status
+  // Get existing monthly reports for all kids (batch query, no N+1)
   const existingReportsMap = new Map<
     string,
     { id: string; month: string; status: string }
   >();
-  for (const kidData of kids) {
-    const reportsResult = await getKidMonthlyReports(kidData.id);
-    if (reportsResult.success) {
-      for (const report of reportsResult.data) {
-        existingReportsMap.set(`${kidData.id}:${report.month}`, {
-          id: report.id,
-          month: report.month,
-          status: report.status,
-        });
-      }
+  const batchReportsResult = await getKidMonthlyReportsBatch(
+    kids.map((k) => k.id)
+  );
+  if (batchReportsResult.success) {
+    for (const report of batchReportsResult.data) {
+      existingReportsMap.set(`${report.kidId}:${report.month}`, {
+        id: report.id,
+        month: report.month,
+        status: report.status,
+      });
     }
   }
 
@@ -179,7 +179,7 @@ export default async function MonthlyReportPickerPage() {
                       <p className="text-sm font-medium text-zinc-600">
                         {formatMonthLabel(monthData.value)}
                       </p>
-                      <p className="mt-1 text-xs text-primary">Generate</p>
+                      <p className="mt-1 text-xs text-primary">Buat</p>
                     </Link>
                   );
                 })}

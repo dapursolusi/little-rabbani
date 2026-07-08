@@ -2,7 +2,7 @@ import Link from 'next/link';
 
 import {
   getEnrolledKidsForTerm,
-  getKidQuarterlyReports,
+  getKidQuarterlyReportsBatch,
   getTerms,
 } from '@/lib/actions/quarterly-report';
 import { baseMetadata } from '@/lib/metadata';
@@ -66,6 +66,39 @@ export default async function QuarterlyReportPickerPage() {
     );
   }
 
+  // Fetch enrolled kids + batch report queries for all terms in parallel
+  const termDataList = await Promise.all(
+    terms.map(async (termData) => {
+      const kidsResult = await getEnrolledKidsForTerm(termData.id);
+      const kids = kidsResult.success ? kidsResult.data : [];
+
+      if (kids.length === 0) {
+        return { termData, kids: [], existingReportsMap: new Map() };
+      }
+
+      // Batch query: single inArray for all kids in this term
+      const batchReportsResult = await getKidQuarterlyReportsBatch(
+        kids.map((k: { id: string }) => k.id)
+      );
+      const existingReportsMap = new Map<
+        string,
+        { id: string; status: string }
+      >();
+      if (batchReportsResult.success) {
+        for (const report of batchReportsResult.data) {
+          if (report.termId === termData.id) {
+            existingReportsMap.set(report.kidId, {
+              id: report.id,
+              status: report.status,
+            });
+          }
+        }
+      }
+
+      return { termData, kids, existingReportsMap };
+    })
+  );
+
   return (
     <div className="p-4 sm:p-6">
       {/* Header */}
@@ -74,37 +107,14 @@ export default async function QuarterlyReportPickerPage() {
           Laporan Triwulanan
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Pilih term dan murid untuk generate laporan triwulanan
+          Pilih term dan murid untuk buat laporan triwulanan
         </p>
       </div>
 
       {/* Term list */}
       <div className="space-y-6">
-        {terms.map(async (termData) => {
-          const kidsResult = await getEnrolledKidsForTerm(termData.id);
-          const kids = kidsResult.success ? kidsResult.data : [];
-
+        {termDataList.map(({ termData, kids, existingReportsMap }) => {
           if (kids.length === 0) return null;
-
-          // Get existing reports for all kids in this term
-          const existingReportsMap = new Map<
-            string,
-            { id: string; status: string }
-          >();
-          for (const kidData of kids) {
-            const reportsResult = await getKidQuarterlyReports(kidData.id);
-            if (reportsResult.success) {
-              const termReport = reportsResult.data.find(
-                (r: { termId: string }) => r.termId === termData.id
-              );
-              if (termReport) {
-                existingReportsMap.set(kidData.id, {
-                  id: termReport.id,
-                  status: termReport.status,
-                });
-              }
-            }
-          }
 
           return (
             <div
@@ -126,43 +136,49 @@ export default async function QuarterlyReportPickerPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 lg:grid-cols-4">
-                {kids.map((kidData) => {
-                  const report = existingReportsMap.get(kidData.id);
+                {kids.map(
+                  (kidData: {
+                    id: string;
+                    name: string;
+                    guardian?: { name: string } | null;
+                  }) => {
+                    const report = existingReportsMap.get(kidData.id);
 
-                  return (
-                    <Link
-                      key={kidData.id}
-                      href={`/dashboard/owner/reports/quarterly/${kidData.id}?termId=${termData.id}`}
-                      className={`rounded-lg border p-3 text-left transition-colors hover:shadow-sm ${
-                        report
-                          ? report.status === 'final'
-                            ? 'border-green-200 bg-green-50/30'
-                            : report.status === 'stale'
-                              ? 'border-purple-200 bg-purple-50/30'
-                              : 'border-amber-200 bg-amber-50/30'
-                          : 'border-dashed border-zinc-300 hover:border-primary'
-                      }`}
-                    >
-                      <p className="text-sm font-medium text-zinc-800">
-                        {kidData.name}
-                      </p>
-                      {kidData.guardian && (
-                        <p className="mt-0.5 text-xs text-zinc-500">
-                          {kidData.guardian.name}
+                    return (
+                      <Link
+                        key={kidData.id}
+                        href={`/dashboard/owner/reports/quarterly/${kidData.id}?termId=${termData.id}`}
+                        className={`rounded-lg border p-3 text-left transition-colors hover:shadow-sm ${
+                          report
+                            ? report.status === 'final'
+                              ? 'border-green-200 bg-green-50/30'
+                              : report.status === 'stale'
+                                ? 'border-purple-200 bg-purple-50/30'
+                                : 'border-amber-200 bg-amber-50/30'
+                            : 'border-dashed border-zinc-300 hover:border-primary'
+                        }`}
+                      >
+                        <p className="text-sm font-medium text-zinc-800">
+                          {kidData.name}
                         </p>
-                      )}
-                      <div className="mt-1">
-                        {report ? (
-                          getStatusBadge(report.status)
-                        ) : (
-                          <span className="text-xs text-primary">
-                            Generate Laporan
-                          </span>
+                        {kidData.guardian && (
+                          <p className="mt-0.5 text-xs text-zinc-500">
+                            {kidData.guardian.name}
+                          </p>
                         )}
-                      </div>
-                    </Link>
-                  );
-                })}
+                        <div className="mt-1">
+                          {report ? (
+                            getStatusBadge(report.status)
+                          ) : (
+                            <span className="text-xs text-primary">
+                              Buat Laporan
+                            </span>
+                          )}
+                        </div>
+                      </Link>
+                    );
+                  }
+                )}
               </div>
 
               {kids.length === 0 && (

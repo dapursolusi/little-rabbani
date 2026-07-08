@@ -7,15 +7,15 @@ import { getTerm } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';
 
-export const metadata = { ...baseMetadata, title: 'Generate Sesi' };
+export const metadata = { ...baseMetadata, title: 'Buat Sesi Berulang' };
 
-interface IGenerateSessionPageProps {
+interface IBuatSessionPageProps {
   searchParams: Promise<{ termId?: string }>;
 }
 
-export default async function GenerateSessionPage({
+export default async function BuatSessionPage({
   searchParams,
-}: IGenerateSessionPageProps) {
+}: IBuatSessionPageProps) {
   const { termId } = await searchParams;
 
   if (!termId) {
@@ -54,7 +54,7 @@ export default async function GenerateSessionPage({
           </Link>
         </div>
         <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
-          Generate Sesi Berulang
+          Buat Sesi Berulang
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
           Buat sesi otomatis untuk term &ldquo;{termData.name}&rdquo;

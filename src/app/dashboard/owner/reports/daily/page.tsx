@@ -101,7 +101,7 @@ export default async function DailyReportPickerPage() {
                             variant="outline"
                             className="text-amber-600 border-amber-300"
                           >
-                            Generate
+                            Buat
                           </Badge>
                         ) : (
                           <Badge variant="outline">Akan Datang</Badge>
@@ -114,7 +114,7 @@ export default async function DailyReportPickerPage() {
                       )}
                       {!session.isHoliday && isPast && reportCount === 0 && (
                         <p className="mt-2 text-xs text-amber-600">
-                          Klik untuk generate laporan
+                          Klik untuk buat laporan
                         </p>
                       )}
                       {!session.isHoliday && reportCount > 0 && (
