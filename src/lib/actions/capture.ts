@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, inArray } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { auth } from '@/lib/auth';
@@ -574,4 +574,71 @@ export async function savePass2Observation(formData: FormData) {
       error: 'Gagal menyimpan partisipasi',
     };
   }
+}
+
+// ─────────────── Teacher Pending Capture ───────────────
+
+/**
+ * Get the total count of kids with pending (uncaptured) observations
+ * across today's sessions for the Teacher dashboard banner.
+ * Only considers non-holiday sessions from the active term.
+ *
+ * VAL-REMIN-005: Teacher sees pending capture count on dashboard.
+ * VAL-REMIN-007: Count decreases as captures complete.
+ */
+export async function getTeacherPendingCaptureCount() {
+  const auth = await requireTeacher();
+  if (!auth.authorized) {
+    return { success: false as const, error: auth.error };
+  }
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const activeTerm = await db.query.term.findFirst({
+    where: (term, { eq }) => eq(term.isActive, true),
+  });
+
+  if (!activeTerm) return { success: true as const, data: 0 };
+
+  // Get today's non-holiday sessions from the active term
+  const todaySessions = await db.query.termSession.findMany({
+    where: (session, { eq, and }) =>
+      and(
+        eq(session.date, today),
+        eq(session.termId, activeTerm.id),
+        eq(session.isHoliday, false)
+      ),
+  });
+
+  if (todaySessions.length === 0) return { success: true as const, data: 0 };
+
+  // Get enrolled kids for the active term
+  const enrolledKids = await db.query.kid.findMany({
+    where: (kid, { eq, and }) =>
+      and(eq(kid.enrolledTermId, activeTerm.id), eq(kid.status, 'enrolled')),
+  });
+
+  if (enrolledKids.length === 0) return { success: true as const, data: 0 };
+
+  const enrolledKidIds = enrolledKids.map((k) => k.id);
+
+  let totalPending = 0;
+
+  for (const session of todaySessions) {
+    // Count how many enrolled kids already have observations for this session
+    const observedKids = await db
+      .select({ kidId: observation.kidId })
+      .from(observation)
+      .where(
+        and(
+          eq(observation.sessionId, session.id),
+          inArray(observation.kidId, enrolledKidIds)
+        )
+      );
+
+    const observedCount = observedKids.length;
+    totalPending += Math.max(0, enrolledKids.length - observedCount);
+  }
+
+  return { success: true as const, data: totalPending };
 }

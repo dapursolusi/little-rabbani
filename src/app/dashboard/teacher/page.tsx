@@ -2,6 +2,7 @@ import Link from 'next/link';
 
 import { LogoutButtonClient } from '@/components/layout/logout-button';
 import { OfflineIndicator } from '@/components/sections/offline-indicator';
+import { TeacherPendingCaptureBanner } from '@/components/sections/teacher-pending-capture-banner';
 import { TeacherScheduleView } from '@/components/sections/teacher-schedule-view';
 
 import { baseMetadata } from '@/lib/metadata';
@@ -35,6 +36,9 @@ export default function TeacherDashboardPage() {
           Observasi
         </Link>
       </nav>
+
+      {/* Pending capture banner */}
+      <TeacherPendingCaptureBanner />
 
       {/* Schedule */}
       <main className="flex-1 px-4 py-4">
