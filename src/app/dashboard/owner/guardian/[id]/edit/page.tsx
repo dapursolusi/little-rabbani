@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { GuardianForm } from '@/components/sections/guardian-form';
+import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
 
 import { getGuardian } from '@/lib/actions/guardian';
 import { baseMetadata } from '@/lib/metadata';
@@ -25,6 +26,13 @@ export default async function EditGuardianPage({
 
   return (
     <div className="p-4 sm:p-6">
+      <PageBreadcrumbs
+        segments={[
+          { label: 'Dashboard', href: '/dashboard/owner' },
+          { label: 'Wali Murid', href: '/dashboard/owner/guardian' },
+          { label: guardianData.name },
+        ]}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-900">
           Edit Wali Murid

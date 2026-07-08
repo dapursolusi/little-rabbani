@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { getSessionsForDailyReports } from '@/lib/actions/daily-report';
 import { baseMetadata } from '@/lib/metadata';
 
-export const metadata = { ...baseMetadata, title: 'Laporan Harian' };
+export const metadata = { ...baseMetadata, title: 'Laporan Wali Murid' };
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00');
@@ -54,7 +54,7 @@ export default async function DailyReportPickerPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-900">
-          Laporan Harian Orang Tua
+          Laporan Wali Murid
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
           Pilih sesi untuk membuat laporan harian wali murid

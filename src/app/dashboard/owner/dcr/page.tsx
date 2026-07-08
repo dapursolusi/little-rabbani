@@ -5,7 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { getSessionsForDcr } from '@/lib/actions/dcr';
 import { baseMetadata } from '@/lib/metadata';
 
-export const metadata = { ...baseMetadata, title: 'Laporan Harian Kelas' };
+export const metadata = { ...baseMetadata, title: 'DCR / Observasi Kelas' };
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00');
@@ -56,7 +56,7 @@ export default async function DcrPickerPage() {
       {/* Header */}
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-900">
-          Laporan Harian Kelas
+          DCR / Observasi Kelas
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
           Buat atau edit laporan harian untuk setiap sesi

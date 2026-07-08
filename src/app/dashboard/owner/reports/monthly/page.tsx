@@ -114,14 +114,6 @@ export default async function MonthlyReportPickerPage() {
     <div className="p-4 sm:p-6">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <Link
-            href="/dashboard/owner/reports"
-            className="text-sm text-primary hover:underline"
-          >
-            &larr; Kembali
-          </Link>
-        </div>
         <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
           Laporan Bulanan
         </h1>

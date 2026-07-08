@@ -9,7 +9,7 @@ import { baseMetadata } from '@/lib/metadata';
 
 import { QuarterlyReportClient } from './report-client';
 
-export const metadata = { ...baseMetadata, title: 'Laporan Trivulanan' };
+export const metadata = { ...baseMetadata, title: 'Laporan Triwulanan' };
 
 interface IQuarterlyReportPageProps {
   params: Promise<{ kidId: string }>;
@@ -78,7 +78,7 @@ export default async function QuarterlyReportDetailPage({
           </Link>
         </div>
         <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
-          Laporan Trivulanan — {kidData.name}
+          Laporan Triwulanan — {kidData.name}
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
           {termData.name} ({termData.startDate} — {termData.endDate})

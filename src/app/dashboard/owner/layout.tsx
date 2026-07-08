@@ -1,7 +1,7 @@
-import Link from 'next/link';
-
 import { LogoutButtonClient } from '@/components/layout/logout-button';
-import { PushNotificationSetup } from '@/components/sections/push-notification-setup';
+import { MobileNavSheet } from '@/components/layout/mobile-nav-sheet';
+import { OwnerSidebar } from '@/components/layout/owner-sidebar';
+import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function OwnerLayout({
   children,
@@ -9,64 +9,20 @@ export default function OwnerLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50">
-      {/* Header */}
-      <header className="sticky top-0 z-10 border-b border-zinc-200 bg-white">
-        <div className="flex items-center justify-between px-4 py-3">
-          <Link
-            href="/dashboard/owner"
-            className="text-lg font-semibold text-zinc-900"
-          >
-            Little Rabbani
-          </Link>
-          <div className="flex items-center gap-2">
-            <PushNotificationSetup />
+    <>
+      <OwnerSidebar />
+      <SidebarInset>
+        {/* Top bar */}
+        <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-zinc-200 bg-white px-4 py-2">
+          <SidebarTrigger className="hidden md:flex" />
+          <MobileNavSheet />
+          <div className="ml-auto flex items-center gap-2">
             <LogoutButtonClient />
           </div>
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex gap-1 overflow-x-auto border-t border-zinc-100 px-4 pb-1 pt-2 text-sm">
-          <NavLink href="/dashboard/owner">Dashboard</NavLink>
-          <NavLink href="/dashboard/owner/kid">Murid</NavLink>
-          <NavLink href="/dashboard/owner/guardian">Wali Murid</NavLink>
-          <NavLink href="/dashboard/owner/term">Term</NavLink>
-          <NavLink href="/dashboard/owner/session">Sesi</NavLink>
-          <NavLink href="/dashboard/owner/activity">Aktivitas</NavLink>
-          <NavLink href="/dashboard/owner/schedule">Jadwal</NavLink>
-          <NavLink href="/dashboard/owner/dcr">Laporan Harian</NavLink>
-          <NavLink href="/dashboard/owner/reports/daily">
-            Laporan Harian
-          </NavLink>
-          <NavLink href="/dashboard/owner/reports/monthly">
-            Laporan Bulanan
-          </NavLink>
-          <NavLink href="/dashboard/owner/reports/quarterly">
-            Laporan Trivulanan
-          </NavLink>
-          <NavLink href="/dashboard/owner/settings">Pengaturan</NavLink>
-        </nav>
-      </header>
-
-      {/* Content */}
-      <main className="flex-1">{children}</main>
-    </div>
-  );
-}
-
-function NavLink({
-  href,
-  children,
-}: {
-  href: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <Link
-      href={href}
-      className="whitespace-nowrap rounded-md px-3 py-1.5 text-zinc-600 transition-colors hover:bg-zinc-100 hover:text-zinc-900"
-    >
-      {children}
-    </Link>
+        </header>
+        {/* Page content */}
+        <main className="flex-1 bg-[#FAF5F2]">{children}</main>
+      </SidebarInset>
+    </>
   );
 }

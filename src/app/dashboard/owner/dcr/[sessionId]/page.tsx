@@ -1,5 +1,4 @@
-import Link from 'next/link';
-
+import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
 import { Badge } from '@/components/ui/badge';
 
 import {
@@ -10,7 +9,7 @@ import { baseMetadata } from '@/lib/metadata';
 
 import { DcrForm } from './dcr-form';
 
-export const metadata = { ...baseMetadata, title: 'Laporan Harian Kelas' };
+export const metadata = { ...baseMetadata, title: 'DCR / Observasi Kelas' };
 
 function formatDate(dateStr: string): string {
   const date = new Date(dateStr + 'T00:00:00');
@@ -88,20 +87,21 @@ export default async function DcrCapturePage({ params }: IDcrCapturePageProps) {
         wasPlanned: true,
       }));
 
+  const sessionLabel = session ? formatDate(session.date) : 'Sesi';
+
   return (
     <div className="p-4 sm:p-6">
+      <PageBreadcrumbs
+        segments={[
+          { label: 'Dashboard', href: '/dashboard/owner' },
+          { label: 'DCR / Observasi Kelas', href: '/dashboard/owner/dcr' },
+          { label: sessionLabel },
+        ]}
+      />
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <Link
-            href="/dashboard/owner/dcr"
-            className="text-sm text-primary hover:underline"
-          >
-            &larr; Kembali
-          </Link>
-        </div>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
-          {existingDcr ? 'Edit Laporan Harian' : 'Laporan Harian Kelas'}
+        <h1 className="text-2xl font-semibold text-zinc-900">
+          {existingDcr ? 'Edit Laporan Harian' : 'DCR / Observasi Kelas'}
         </h1>
         {session && (
           <p className="mt-1 text-sm text-zinc-500">

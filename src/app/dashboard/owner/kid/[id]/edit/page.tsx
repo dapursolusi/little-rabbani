@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { KidForm } from '@/components/sections/kid-form';
+import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
 
 import { getGuardians } from '@/lib/actions/guardian';
 import { getKid } from '@/lib/actions/kid';
@@ -32,6 +33,13 @@ export default async function EditKidPage({ params }: IEditKidPageProps) {
 
   return (
     <div className="p-4 sm:p-6">
+      <PageBreadcrumbs
+        segments={[
+          { label: 'Dashboard', href: '/dashboard/owner' },
+          { label: 'Murid', href: '/dashboard/owner/kid' },
+          { label: kidData.name },
+        ]}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-zinc-900">Edit Murid</h1>
         <p className="mt-1 text-sm text-zinc-500">Perbarui data murid</p>

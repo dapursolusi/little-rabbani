@@ -7,7 +7,7 @@ import {
 } from '@/lib/actions/quarterly-report';
 import { baseMetadata } from '@/lib/metadata';
 
-export const metadata = { ...baseMetadata, title: 'Laporan Trivulanan' };
+export const metadata = { ...baseMetadata, title: 'Laporan Triwulanan' };
 
 function getStatusBadge(status: string) {
   const styles: Record<string, string> = {
@@ -40,7 +40,7 @@ export default async function QuarterlyReportPickerPage() {
     return (
       <div className="p-4 sm:p-6">
         <h1 className="mb-2 text-2xl font-semibold text-zinc-900">
-          Laporan Trivulanan
+          Laporan Triwulanan
         </h1>
         <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center">
           <p className="text-zinc-500">{termsResult.error}</p>
@@ -55,7 +55,7 @@ export default async function QuarterlyReportPickerPage() {
     return (
       <div className="p-4 sm:p-6">
         <h1 className="mb-2 text-2xl font-semibold text-zinc-900">
-          Laporan Trivulanan
+          Laporan Triwulanan
         </h1>
         <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center">
           <p className="text-zinc-500">
@@ -70,19 +70,11 @@ export default async function QuarterlyReportPickerPage() {
     <div className="p-4 sm:p-6">
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <Link
-            href="/dashboard/owner/reports"
-            className="text-sm text-primary hover:underline"
-          >
-            &larr; Kembali
-          </Link>
-        </div>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
-          Laporan Trivulanan
+        <h1 className="text-2xl font-semibold text-zinc-900">
+          Laporan Triwulanan
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
-          Pilih term dan murid untuk generate laporan trivulanan
+          Pilih term dan murid untuk generate laporan triwulanan
         </p>
       </div>
 

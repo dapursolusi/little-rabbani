@@ -1,5 +1,4 @@
-import Link from 'next/link';
-
+import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
 import { Badge } from '@/components/ui/badge';
 
 import { getDailyReportsForSession } from '@/lib/actions/daily-report';
@@ -9,7 +8,7 @@ import { DailyReportClient } from './report-client';
 
 export const metadata = {
   ...baseMetadata,
-  title: 'Laporan Harian',
+  title: 'Laporan Wali Murid',
 };
 
 function formatDate(dateStr: string): string {
@@ -52,18 +51,20 @@ export default async function DailyReportSessionPage({
 
   return (
     <div className="p-4 sm:p-6">
+      <PageBreadcrumbs
+        segments={[
+          { label: 'Dashboard', href: '/dashboard/owner' },
+          {
+            label: 'Laporan Wali Murid',
+            href: '/dashboard/owner/reports/daily',
+          },
+          { label: session ? formatDate(session.date) : 'Sesi' },
+        ]}
+      />
       {/* Header */}
       <div className="mb-6">
-        <div className="flex items-center gap-2">
-          <Link
-            href="/dashboard/owner/reports/daily"
-            className="text-sm text-primary hover:underline"
-          >
-            &larr; Kembali
-          </Link>
-        </div>
         <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
-          Laporan Harian Orang Tua
+          Laporan Wali Murid
         </h1>
         <p className="mt-1 text-sm text-zinc-500">
           {session && (

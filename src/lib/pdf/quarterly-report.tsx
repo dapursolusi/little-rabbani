@@ -147,7 +147,7 @@ export function QuarterlyReportDocument({
       <Page size="A4" style={styles.page}>
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>Laporan Trivulanan</Text>
+          <Text style={styles.title}>Laporan Triwulanan</Text>
           <Text style={styles.kidName}>{kidName}</Text>
           <Text style={styles.subtitle}>{termName}</Text>
           <Text style={styles.subtitle}>Periode: {termPeriod}</Text>
@@ -267,7 +267,7 @@ export function QuarterlyReportDocument({
         {/* Footer */}
         <View style={styles.footer}>
           <Text>
-            Laporan Trivulanan — Little Rabbani Preschool — Dihasilkan pada{' '}
+            Laporan Triwulanan — Little Rabbani Preschool — Dihasilkan pada{' '}
             {new Date().toLocaleDateString('id-ID', {
               year: 'numeric',
               month: 'long',
