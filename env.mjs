@@ -11,6 +11,8 @@ export const env = createEnv({
     DEV_AUTH_BYPASS: z.enum(['0', '1', 'true', 'false']).optional(),
     OPENROUTER_API_KEY: z.string().min(1),
     OPENROUTER_MODEL: z.string().min(1).default('deepseek/deepseek-v4-flash'),
+    VAPID_PUBLIC_KEY: z.string().min(1),
+    VAPID_PRIVATE_KEY: z.string().min(1),
     FF_NEW_DASHBOARD: z.enum(['0', '1', 'true', 'false']).optional(),
     FF_NEW_AUTH_FLOW: z.enum(['0', '1', 'true', 'false']).optional(),
     FF_NEW_ONBOARDING: z.enum(['0', '1', 'true', 'false']).optional(),
@@ -19,6 +21,7 @@ export const env = createEnv({
   client: {
     NEXT_PUBLIC_APP_URL: z.string().url(),
     NEXT_PUBLIC_BETTER_AUTH_URL: z.string().url(),
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: z.string().min(1),
   },
   runtimeEnv: {
     DATABASE_URL: process.env.DATABASE_URL,
@@ -30,11 +33,14 @@ export const env = createEnv({
     OPENROUTER_API_KEY: process.env.OPENROUTER_API_KEY,
     OPENROUTER_MODEL:
       process.env.OPENROUTER_MODEL ?? 'deepseek/deepseek-v4-flash',
+    VAPID_PUBLIC_KEY: process.env.VAPID_PUBLIC_KEY,
+    VAPID_PRIVATE_KEY: process.env.VAPID_PRIVATE_KEY,
     FF_NEW_DASHBOARD: process.env.FF_NEW_DASHBOARD,
     FF_NEW_AUTH_FLOW: process.env.FF_NEW_AUTH_FLOW,
     FF_NEW_ONBOARDING: process.env.FF_NEW_ONBOARDING,
     FF_EXPERIMENTAL_SEARCH: process.env.FF_EXPERIMENTAL_SEARCH,
     NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
     NEXT_PUBLIC_BETTER_AUTH_URL: process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
+    NEXT_PUBLIC_VAPID_PUBLIC_KEY: process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY,
   },
 });

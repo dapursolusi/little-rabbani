@@ -1,6 +1,7 @@
 import Link from 'next/link';
 
 import { LogoutButtonClient } from '@/components/layout/logout-button';
+import { PushNotificationSetup } from '@/components/sections/push-notification-setup';
 
 export default function OwnerLayout({
   children,
@@ -18,7 +19,10 @@ export default function OwnerLayout({
           >
             Little Rabbani
           </Link>
-          <LogoutButtonClient />
+          <div className="flex items-center gap-2">
+            <PushNotificationSetup />
+            <LogoutButtonClient />
+          </div>
         </div>
 
         {/* Navigation */}
@@ -40,6 +44,7 @@ export default function OwnerLayout({
           <NavLink href="/dashboard/owner/reports/quarterly">
             Laporan Trivulanan
           </NavLink>
+          <NavLink href="/dashboard/owner/settings">Pengaturan</NavLink>
         </nav>
       </header>
 

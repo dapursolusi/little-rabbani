@@ -638,3 +638,97 @@ export const observationActivityRelations = relations(
     }),
   })
 );
+
+// ─────────────── Reminders Layer (M6) ───────────────
+// Push notifications subscription store.
+// One subscription per user (upsert on re-subscribe).
+
+export const pushSubscription = pgTable('push_subscription', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  endpoint: text('endpoint').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  isActive: boolean('is_active').notNull().default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const pushSubscriptionRelations = relations(
+  pushSubscription,
+  ({ one }) => ({
+    user: one(user, {
+      fields: [pushSubscription.userId],
+      references: [user.id],
+    }),
+  })
+);
+
+// Reminder configuration per user (Owner).
+// One row per user. Toggles for capture-pending and schedule-entry reminders.
+
+export const reminderConfig = pgTable('reminder_config', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .unique()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  captureReminderEnabled: boolean('capture_reminder_enabled')
+    .notNull()
+    .default(true),
+  scheduleReminderEnabled: boolean('schedule_reminder_enabled')
+    .notNull()
+    .default(true),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+});
+
+export const reminderConfigRelations = relations(reminderConfig, ({ one }) => ({
+  user: one(user, {
+    fields: [reminderConfig.userId],
+    references: [user.id],
+  }),
+}));
+
+// Reminder log — tracks when reminders fire for audit/cleanup.
+// VAL-REMIN-014: Log entries created when reminders fire.
+// VAL-CROSS-019: Log cleanup for entries >30 days old.
+
+export const reminderTypeEnum = pgEnum('reminder_type', [
+  'capture_pending',
+  'schedule_entry',
+]);
+
+export const reminderLog = pgTable('reminder_log', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  userId: text('user_id')
+    .notNull()
+    .references(() => user.id, { onDelete: 'cascade' }),
+  type: reminderTypeEnum('type').notNull(),
+  sessionId: uuid('session_id').references(() => termSession.id, {
+    onDelete: 'set null',
+  }),
+  scheduledAt: timestamp('scheduled_at').notNull(),
+  sentAt: timestamp('sent_at').notNull().defaultNow(),
+  acknowledgedAt: timestamp('acknowledged_at'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+});
+
+export const reminderLogRelations = relations(reminderLog, ({ one }) => ({
+  user: one(user, {
+    fields: [reminderLog.userId],
+    references: [user.id],
+  }),
+  session: one(termSession, {
+    fields: [reminderLog.sessionId],
+    references: [termSession.id],
+  }),
+}));
