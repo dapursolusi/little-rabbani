@@ -9,9 +9,6 @@ import {
   toggleCaptureReminder,
   toggleScheduleReminder,
 } from '@/lib/actions/reminder-settings';
-import { baseMetadata } from '@/lib/metadata';
-
-export const metadata = { ...baseMetadata, title: 'Pengaturan - Owner' };
 
 // VAPID public key from build-time env
 const VAPID_PUBLIC_KEY =

@@ -42,11 +42,16 @@ export async function findPendingCaptureSessions(): Promise<IPendingSession[]> {
   // Get sessions that ended at least 15 minutes ago
   const today = now.toISOString().split('T')[0];
 
-  // Find sessions where end_time is <= 15 min ago but session hasn't been checked yet
-  // We need non-holiday sessions with end time <= fifteenMinAgo
+  // Find sessions that ended at least 15 min ago
+  // Constrain to recent sessions (yesterday onwards) to prevent stale reminders
+  const yesterday = new Date(now);
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = yesterday.toISOString().split('T')[0];
+
   const sessions = await db.query.termSession.findMany({
     where: and(
       eq(termSession.isHoliday, false),
+      gte(termSession.date, yesterdayStr),
       lte(termSession.date, today)
       // end_time is a text field like "10:00", compare lexicographically
       // We'll do the comparison in code

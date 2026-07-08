@@ -2,9 +2,11 @@
 // Sends push notifications via VAPID keys using the web-push library
 import webpush from 'web-push';
 
+import { env } from '../../../env.mjs';
+
 // VAPID keys are configured from environment
-const vapidPublicKey = process.env.VAPID_PUBLIC_KEY || '';
-const vapidPrivateKey = process.env.VAPID_PRIVATE_KEY || '';
+const vapidPublicKey = env.VAPID_PUBLIC_KEY;
+const vapidPrivateKey = env.VAPID_PRIVATE_KEY;
 
 // Configure web-push with VAPID details
 webpush.setVapidDetails(
