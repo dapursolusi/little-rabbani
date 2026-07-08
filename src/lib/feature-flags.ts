@@ -15,10 +15,7 @@
  */
 
 export type FeatureFlag =
-  | 'new-dashboard'
-  | 'new-auth-flow'
-  | 'new-onboarding'
-  | 'experimental-search';
+  'new-dashboard' | 'new-auth-flow' | 'new-onboarding' | 'experimental-search';
 
 const FLAG_ENV_MAP: Record<FeatureFlag, string> = {
   'new-dashboard': 'FF_NEW_DASHBOARD',

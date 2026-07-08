@@ -50,7 +50,7 @@ export type PIIFieldType =
  */
 export function detectPiiField(fieldName: string): PIIFieldType | null {
   const match = PII_PATTERNS.find(
-    (p) => p.field.toLowerCase() === fieldName.toLowerCase(),
+    (p) => p.field.toLowerCase() === fieldName.toLowerCase()
   );
   return match ? (match.type as PIIFieldType) : null;
 }
@@ -70,9 +70,7 @@ export function maskPiiValue(value: string, type: PIIFieldType): string {
 
   switch (type) {
     case 'person_name':
-      return value.length > 1
-        ? value[0] + '*'.repeat(value.length - 1)
-        : value;
+      return value.length > 1 ? value[0] + '*'.repeat(value.length - 1) : value;
     case 'email': {
       const [local, domain] = value.split('@');
       if (!domain) return '***';
@@ -104,7 +102,7 @@ export function maskPiiValue(value: string, type: PIIFieldType): string {
  */
 export function maskPiiFields<T extends Record<string, unknown>>(
   data: T,
-  options?: { maskValues?: boolean },
+  options?: { maskValues?: boolean }
 ): Partial<T> {
   const result: Partial<T> = {};
   const shouldMask = options?.maskValues ?? true;

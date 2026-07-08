@@ -44,34 +44,34 @@ Repository achieves **Level 4**. All 15 previously flagged "needs user action" s
 
 ## What Was Fixed (15 signals in this batch)
 
-| Criterion                     | What Changed                                                                                |
-| ----------------------------- | ------------------------------------------------------------------------------------------- |
-| unit_tests_exist              | 28 Vitest tests across 5 files: cn(), logger, metadata, feature-flags, pii                  |
-| integration_tests_exist       | playwright.config.ts + e2e/homepage.spec.ts with 3 Playwright smoke tests                   |
-| gitignore_comprehensive       | .env files confirmed gitignored and not tracked; .env.example has placeholder vars          |
-| secrets_management            | .env.* gitignored, no tracked secrets; .env.example documented all vars                     |
-| codeowners                    | .github/CODEOWNERS set to @narasena                                                         |
-| issue_labeling_system         | 12 GitHub labels (priority:4, type:4, area:4)                                               |
-| automated_pr_review           | .factory/review.yml for droid review                                                        |
-| runbooks_documented           | docs/runbooks/incident-response.md with SEV levels, triage flow, escalation contacts        |
-| release_notes_automation      | .changeset/config.json for automated changelog generation                                   |
-| release_automation            | release-please workflow (.github/workflows/release-please.yml)                              |
-| build_performance_tracking    | turbo.json with build caching and task dependency ordering                                  |
-| deployment_frequency          | deploy.yml workflow for Vercel deployment on push to main                                   |
-| feature_flag_infrastructure   | src/lib/feature-flags.ts + env vars in env.mjs + 5 unit tests                               |
-| deployment_observability      | Vercel dashboard links in AGENTS.md and runbook                                             |
-| pii_handling                  | src/lib/pii.ts with detect/mask/scan utilities + 11 unit tests for kid/guardian PII         |
+| Criterion                   | What Changed                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------ |
+| unit_tests_exist            | 28 Vitest tests across 5 files: cn(), logger, metadata, feature-flags, pii           |
+| integration_tests_exist     | playwright.config.ts + e2e/homepage.spec.ts with 3 Playwright smoke tests            |
+| gitignore_comprehensive     | .env files confirmed gitignored and not tracked; .env.example has placeholder vars   |
+| secrets_management          | .env.* gitignored, no tracked secrets; .env.example documented all vars              |
+| codeowners                  | .github/CODEOWNERS set to @narasena                                                  |
+| issue_labeling_system       | 12 GitHub labels (priority:4, type:4, area:4)                                        |
+| automated_pr_review         | .factory/review.yml for droid review                                                 |
+| runbooks_documented         | docs/runbooks/incident-response.md with SEV levels, triage flow, escalation contacts |
+| release_notes_automation    | .changeset/config.json for automated changelog generation                            |
+| release_automation          | release-please workflow (.github/workflows/release-please.yml)                       |
+| build_performance_tracking  | turbo.json with build caching and task dependency ordering                           |
+| deployment_frequency        | deploy.yml workflow for Vercel deployment on push to main                            |
+| feature_flag_infrastructure | src/lib/feature-flags.ts + env vars in env.mjs + 5 unit tests                        |
+| deployment_observability    | Vercel dashboard links in AGENTS.md and runbook                                      |
+| pii_handling                | src/lib/pii.ts with detect/mask/scan utilities + 11 unit tests for kid/guardian PII  |
 
 ## Still Needs User Action (6 signals — all require external accounts/decisions)
 
-| Criterion                     | What's Needed                                |
-| ----------------------------- | -------------------------------------------- |
-| database_schema               | Write Drizzle schema files                   |
-| error_tracking_contextualized | Set up Sentry account + @sentry/nextjs       |
-| metrics_collection            | Set up Datadog/Prometheus/OpenTelemetry      |
-| alerting_configured           | Set up PagerDuty/OpsGenie rules              |
-| product_analytics_instrumentation | Set up Mixpanel/Amplitude/PostHog        |
-| error_to_insight_pipeline     | Set up Sentry + GitHub integration           |
+| Criterion                         | What's Needed                           |
+| --------------------------------- | --------------------------------------- |
+| database_schema                   | Write Drizzle schema files              |
+| error_tracking_contextualized     | Set up Sentry account + @sentry/nextjs  |
+| metrics_collection                | Set up Datadog/Prometheus/OpenTelemetry |
+| alerting_configured               | Set up PagerDuty/OpsGenie rules         |
+| product_analytics_instrumentation | Set up Mixpanel/Amplitude/PostHog       |
+| error_to_insight_pipeline         | Set up Sentry + GitHub integration      |
 
 ---
 

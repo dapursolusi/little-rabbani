@@ -104,7 +104,7 @@ async function getSessionsInMonth(termId: string, year: number, month: number) {
   const sessions = await db.query.termSession.findMany({
     where: and(
       eq(termSession.termId, termId),
-      sql`${termSession.date} LIKE ${prefix + '%'}`,
+      sql`${termSession.date}::text LIKE ${prefix + '%'}`,
       eq(termSession.isHoliday, false)
     ),
     columns: { id: true, date: true },

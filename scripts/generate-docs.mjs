@@ -11,8 +11,14 @@
  *   bun run scripts/generate-docs.mjs          # Generate docs to docs/generated/
  *   bun run scripts/generate-docs.mjs --check   # Check existing docs are up-to-date
  */
-import { readFileSync, writeFileSync, statSync, readdirSync, mkdirSync } from 'node:fs';
-import { resolve, join } from 'node:path';
+import {
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const OUTPUT_DIR = resolve(ROOT, 'docs', 'generated');
@@ -100,13 +106,17 @@ for (const gen of generators) {
     try {
       const existing = readFileSync(filePath, 'utf-8');
       if (existing !== content) {
-        console.error(`❌ ${gen.filename} is stale — re-run scripts/generate-docs.mjs`);
+        console.error(
+          `❌ ${gen.filename} is stale — re-run scripts/generate-docs.mjs`
+        );
         changed = true;
       } else {
         console.log(`✅ ${gen.filename} is up-to-date`);
       }
     } catch {
-      console.error(`❌ ${gen.filename} is missing — re-run scripts/generate-docs.mjs`);
+      console.error(
+        `❌ ${gen.filename} is missing — re-run scripts/generate-docs.mjs`
+      );
       changed = true;
     }
   } else {

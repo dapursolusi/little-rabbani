@@ -14,7 +14,10 @@ describe('baseMetadata', () => {
 
   it('has robots indexing enabled', () => {
     expect(baseMetadata.robots).toBeDefined();
-    if (typeof baseMetadata.robots === 'object' && baseMetadata.robots !== null) {
+    if (
+      typeof baseMetadata.robots === 'object' &&
+      baseMetadata.robots !== null
+    ) {
       expect(baseMetadata.robots.index).toBe(true);
       expect(baseMetadata.robots.follow).toBe(true);
     }

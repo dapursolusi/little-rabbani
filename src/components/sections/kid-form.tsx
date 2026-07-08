@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -51,13 +51,6 @@ export function KidForm({
 
   const isEdit = mode === 'edit';
   const activeTerms = terms.filter((t) => t.isActive);
-
-  // If status is not enrolled, clear term selection
-  useEffect(() => {
-    if (selectedStatus !== 'enrolled') {
-      setSelectedTermId('');
-    }
-  }, [selectedStatus]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -162,9 +155,14 @@ export function KidForm({
         <Label htmlFor="status-select">Status</Label>
         <Select
           value={selectedStatus}
-          onValueChange={(v: string | null) =>
-            v && setSelectedStatus(v as 'waiting' | 'enrolled' | 'alumni')
-          }
+          onValueChange={(v: string | null) => {
+            if (v) {
+              setSelectedStatus(v as 'waiting' | 'enrolled' | 'alumni');
+              if (v !== 'enrolled') {
+                setSelectedTermId('');
+              }
+            }
+          }}
         >
           <SelectTrigger>
             <SelectValue placeholder="Pilih status" />

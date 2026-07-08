@@ -35,7 +35,13 @@ describe('cn', () => {
   });
 
   it('filters out falsy values', () => {
-    const result = cn('visible', false && 'hidden', null, undefined, 0 as unknown as string);
+    const result = cn(
+      'visible',
+      false && 'hidden',
+      null,
+      undefined,
+      0 as unknown as string
+    );
     expect(result).toBe('visible');
   });
 });

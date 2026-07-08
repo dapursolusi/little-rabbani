@@ -11,11 +11,16 @@
       "args": ["--bun", "-y", "@playwright/mcp@latest"],
       "disabled": false
     },
-    "shadcn-ui": {
+    "shadcn": {
       "type": "stdio",
       "command": "bunx",
-      "args": ["--bun", "-y", "@shadcn-ui/mcp@latest"],
+      "args": ["--bun", "-y", "shadcn@latest", "mcp"],
       "disabled": false
+    },
+    "neon": {
+      "url": "https://mcp.neon.tech/mcp",
+      "disabled": false,
+      "type": "http"
     }
   }
 }

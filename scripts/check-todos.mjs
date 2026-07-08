@@ -10,14 +10,21 @@
  *   bun run scripts/check-todos.mjs
  *   bun run scripts/check-todos.mjs --require-ticket  # Enforce TODO(TICKET-123) format
  */
-import { readFileSync, statSync, readdirSync } from 'node:fs';
-import { resolve, join, extname } from 'node:path';
+import { readFileSync, readdirSync, statSync } from 'node:fs';
+import { extname, join, resolve } from 'node:path';
 
 const ROOT = resolve(import.meta.dirname, '..');
 const REQUIRE_TICKET = process.argv.includes('--require-ticket');
 
 const SOURCE_DIRS = ['src', 'e2e', 'tests', 'scripts'];
-const IGNORE_PATTERNS = ['node_modules', '.next', 'dist', 'coverage', 'src/components/ui', 'scripts/check-todos.mjs'];
+const IGNORE_PATTERNS = [
+  'node_modules',
+  '.next',
+  'dist',
+  'coverage',
+  'src/components/ui',
+  'scripts/check-todos.mjs',
+];
 
 const TODO_PATTERN = /\b(TODO|FIXME|HACK|XXX|WORKAROUND|TEMPORARY)\b/;
 const TICKET_PATTERN = /TODO\(\S+\)/;
@@ -117,10 +124,14 @@ for (const f of findings) {
   else noTicketCount++;
 }
 
-console.log(`\n  Total: ${findings.length} markers (${noTicketCount} without ticket, ${withTicketCount} with ticket)\n`);
+console.log(
+  `\n  Total: ${findings.length} markers (${noTicketCount} without ticket, ${withTicketCount} with ticket)\n`
+);
 
 if (REQUIRE_TICKET && noTicketCount > 0) {
-  console.log('  FAIL: All TODOs must reference a ticket (TODO(TICKET-123)).\n');
+  console.log(
+    '  FAIL: All TODOs must reference a ticket (TODO(TICKET-123)).\n'
+  );
   process.exit(1);
 }
 
