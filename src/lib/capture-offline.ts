@@ -22,6 +22,11 @@ export interface IConflictData {
     appetite: string;
     presence: string;
   };
+  localFields: {
+    mood: number;
+    appetite: string;
+    presence: string;
+  };
   serverNotes: string[];
   localNotes: string[];
   serverVersion: number;
@@ -177,6 +182,11 @@ export async function flushOfflineQueue(): Promise<{
                   appetite: serverObs.data.appetite,
                   presence: serverObs.data.presence,
                 },
+                localFields: {
+                  mood: item.mood,
+                  appetite: item.appetite,
+                  presence: item.presence,
+                },
                 serverNotes: (serverObs.data.notes ?? []).map(
                   (n: { text: string }) => n.text
                 ),
@@ -274,6 +284,34 @@ export async function checkStorageQuota(): Promise<{
       message: null,
     };
   }
+}
+
+/**
+ * Build the payload for "keep local values" conflict resolution.
+ * Returns the local mood/appetite/presence with merged notes (append-only).
+ */
+export function buildKeepLocalPayload(conflict: IConflictData): {
+  kidId: string;
+  sessionId: string;
+  mood: string;
+  appetite: string;
+  presence: string;
+  version: string;
+  notes: string;
+} {
+  const allNotes = [...conflict.serverNotes, ...conflict.localNotes]
+    .filter(Boolean)
+    .join('\n---\n');
+
+  return {
+    kidId: conflict.kidId,
+    sessionId: conflict.sessionId,
+    mood: String(conflict.localFields.mood),
+    appetite: conflict.localFields.appetite,
+    presence: conflict.localFields.presence,
+    version: String(conflict.serverVersion),
+    notes: allNotes,
+  };
 }
 
 /**
