@@ -138,6 +138,20 @@ This is a one-time setup per clone. Skip if already indexed.
 - **PII handling:** `src/lib/pii.ts` provides detection (`detectPiiField`) and masking (`maskPiiFields`, `maskPiiValue`) for kid/guardian personal data
 - **Automated PR review:** Factory Droid review configured in `.factory/review.yml` — triggers on PRs
 
+## Agent skills
+
+### Issue tracker
+
+Issues live as GitHub issues in `narasena/little-rabbani` via the `gh` CLI. External PRs are not a triage surface. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Five canonical roles, each role's string equals its name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
 ---
 
 > **Make every line count — or delete it.**
