@@ -66,6 +66,15 @@ export function KidForm({
     formData.set('status', selectedStatus);
     // Set guardian from our controlled state
     formData.set('guardianId', selectedGuardianId);
+    if (!selectedGuardianId) {
+      setErrors((prev) => ({
+        ...prev,
+        guardianId: 'Wali murid wajib dipilih',
+      }));
+      setIsSubmitting(false);
+      return;
+    }
+
     if (selectedStatus === 'enrolled' && selectedTermId) {
       formData.set('enrolledTermId', selectedTermId);
     } else {
@@ -132,29 +141,29 @@ export function KidForm({
         <Label htmlFor="guardianId-select">
           Wali Murid <span className="text-destructive">*</span>
         </Label>
-        <Select
-          value={selectedGuardianId}
-          onValueChange={(v: string | null) => {
-            if (v) setSelectedGuardianId(v);
-          }}
-        >
-          <SelectTrigger id="guardianId" name="guardianId">
-            <SelectValue placeholder="Pilih wali murid" />
-          </SelectTrigger>
-          <SelectContent>
-            {guardians.length === 0 ? (
-              <p className="px-2 py-4 text-center text-xs text-amber-600">
-                Belum ada wali murid. Tambah wali murid terlebih dahulu.
-              </p>
-            ) : (
-              guardians.map((g) => (
+        {guardians.length === 0 ? (
+          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+            Belum ada wali murid. Tambah wali murid terlebih dahulu.
+          </div>
+        ) : (
+          <Select
+            value={selectedGuardianId}
+            onValueChange={(v: string | null) => {
+              if (v) setSelectedGuardianId(v);
+            }}
+          >
+            <SelectTrigger id="guardianId">
+              <SelectValue placeholder="Pilih wali murid" />
+            </SelectTrigger>
+            <SelectContent>
+              {guardians.map((g) => (
                 <SelectItem key={g.id} value={g.id}>
                   {g.name}
                 </SelectItem>
-              ))
-            )}
-          </SelectContent>
-        </Select>
+              ))}
+            </SelectContent>
+          </Select>
+        )}
       </div>
 
       {/* Status */}
