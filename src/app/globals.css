@@ -121,10 +121,10 @@
   --muted-foreground: rgba(255, 255, 255, 0.6);
   --accent: oklch(0.62 0.16 150);
   --accent-foreground: #ffffff;
-  --success: #2d6a4f;
-  --success-foreground: #0e9f5a;
+  --success: #8fdfb8;
+  --success-foreground: #ffffff;
   --warning: #a16207;
-  --warning-foreground: rgba(255, 255, 255, 0.9);
+  --warning-foreground: #ffffffe6;
   --destructive: #dc2626;
   --border: rgba(255, 255, 255, 0.15);
   --input: rgba(255, 255, 255, 0.15);
@@ -162,6 +162,6 @@
 
 @layer components {
   button[data-slot='button'] {
-    border-radius: 9999px;
+    border-radius: var(--radius-button);
   }
 }
