@@ -36,11 +36,11 @@ UI Component (Server Component) → Server Action → Service → ORM → DB
 
 ## Rules
 
-1. Mobile-first at all times. Test at 375px before 1440px.
-2. Toast feedback (sonner) required on all user-facing mutations.
-3. Check `env.mjs` before adding env vars. Add only when needed — don't pre-add "just in case".
-4. Every page must export a `metadata` object. Use `baseMetadata` from `@/lib/metadata`.
-5. Must use shadcn components at all times. Prefer custom registries first then the standard shadcn.
+1. Responsive design is non-negotiable, shadcn already support this. Focus on mobile and desktop.
+2. Must use shadcn components at all times. Prefer components from custom registries first then the standard shadcn.
+3. Toast feedback (sonner) required on all user-facing mutations.
+4. Check `env.mjs` before adding env vars. Add only when needed — don't pre-add "just in case".
+5. Every page must export a `metadata` object. Use `baseMetadata` from `@/lib/metadata`.
 
 ## Forbidden
 
@@ -85,6 +85,31 @@ bunx shadcn@latest add <component>   # Add base-nova component (NOT in package.j
 bunx playwright install              # First-time browser binary setup
 ```
 
+## CodeGraph
+
+This project uses CodeGraph (`.codegraph/`) for code intelligence. Agents must ensure it's available before performing code exploration.
+
+```bash
+# 1. Check installation
+which codegraph || echo "codegraph not installed"
+
+# Install via pip:
+# pip install codegraph
+
+# 2. Check if index exists
+ls .codegraph/codegraph.db 2>/dev/null && echo "indexed" || echo "not indexed"
+
+# 3. Init if missing
+codegraph init
+```
+
+**Agent auto-setup:** Before any code exploration or edit, silently run:
+
+1. `which codegraph` — if missing, suggest install and stop
+2. `ls .codegraph/codegraph.db 2>/dev/null` — if missing, run `codegraph init`
+
+This is a one-time setup per clone. Skip if already indexed.
+
 ## Gotchas
 
 - ⚠️ Vitest uses native `resolve.tsconfigPaths` — reads `tsconfig.json` paths automatically, no plugin needed.
@@ -104,6 +129,7 @@ bunx playwright install              # First-time browser binary setup
 
 - **Forward intent / backlog:** GitHub Issues per-project
 - **Agent protocols:** See `CLAUDE.md` (AGENT_PROTOCOL.md rules)
+- **UI:** See `DESIGN.md` at project root for any UI work.
 - **Preflight checklist:** `/webapp-preflight` skill
 - **Known issues:** See `docs/known-issues.md` (create when you hit one)
 - **Runbooks:** `docs/runbooks/incident-response.md` — incident severity levels, triage flow, and escalation contacts

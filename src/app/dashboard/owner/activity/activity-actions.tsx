@@ -102,10 +102,10 @@ export function ActivityActions({
 
   return (
     <>
-      <DropdownMenu>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
+      <TooltipProvider>
+        <Tooltip>
+          <DropdownMenu>
+            <TooltipTrigger asChild>
               <DropdownMenuTrigger>
                 <Button
                   variant="ghost"
@@ -117,24 +117,24 @@ export function ActivityActions({
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
-            <TooltipContent>
-              <p>Buka menu</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem
-            onClick={() =>
-              router.push(`/dashboard/owner/activity/${activityId}/edit`)
-            }
-          >
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowArchiveConfirm(true)}>
-            Arsipkan
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem
+                onClick={() =>
+                  router.push(`/dashboard/owner/activity/${activityId}/edit`)
+                }
+              >
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowArchiveConfirm(true)}>
+                Arsipkan
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <TooltipContent>
+            <p>Buka menu</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
 
       <ConfirmDialog
         open={showArchiveConfirm}

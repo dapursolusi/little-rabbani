@@ -66,7 +66,6 @@ export async function getOwnerDashboardStats(): Promise<DashboardStats> {
   // Pending DCRs (past sessions in active term with no DCR)
   let pendingDcrsCount = 0;
   if (activeTerm) {
-    const nowISO = new Date().toISOString();
     const pendingDcrsResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(termSession)
@@ -74,7 +73,7 @@ export async function getOwnerDashboardStats(): Promise<DashboardStats> {
         and(
           eq(termSession.termId, activeTerm.id),
           eq(termSession.isHoliday, false),
-          sql`${termSession.date} || 'T' || ${termSession.endTime} || ':00' < ${nowISO}::timestamp`,
+          sql`${termSession.date} + ${termSession.endTime}::time < NOW()`,
           sql`NOT EXISTS (SELECT 1 FROM ${dailyClassReport} WHERE ${dailyClassReport.sessionId} = ${termSession.id})`
         )
       );
@@ -84,7 +83,6 @@ export async function getOwnerDashboardStats(): Promise<DashboardStats> {
   // Pending daily reports (past sessions with DCR but no daily report snapshots for enrolled kids)
   let pendingReportsCount = 0;
   if (activeTerm) {
-    const nowISO = new Date().toISOString();
     const pendingReportsResult = await db
       .select({ count: sql<number>`count(*)` })
       .from(termSession)
@@ -92,7 +90,7 @@ export async function getOwnerDashboardStats(): Promise<DashboardStats> {
         and(
           eq(termSession.termId, activeTerm.id),
           eq(termSession.isHoliday, false),
-          sql`${termSession.date} || 'T' || ${termSession.endTime} || ':00' < ${nowISO}::timestamp`,
+          sql`${termSession.date} + ${termSession.endTime}::time < NOW()`,
           sql`EXISTS (SELECT 1 FROM ${dailyClassReport} WHERE ${dailyClassReport.sessionId} = ${termSession.id})`,
           sql`NOT EXISTS (SELECT 1 FROM ${dailyReportSnapshot} WHERE ${dailyReportSnapshot.sessionId} = ${termSession.id})`
         )

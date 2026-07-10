@@ -61,3 +61,6 @@ next-env.d.ts
 
 # Claude
 .claude/
+
+# CodeGraph
+.codegraph/
