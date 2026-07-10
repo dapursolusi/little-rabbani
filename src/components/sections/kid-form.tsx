@@ -48,6 +48,9 @@ export function KidForm({
   const [selectedTermId, setSelectedTermId] = useState(
     initialData?.enrolledTermId ?? ''
   );
+  const [selectedGuardianId, setSelectedGuardianId] = useState(
+    initialData?.guardianId ?? ''
+  );
 
   const isEdit = mode === 'edit';
   const activeTerms = terms.filter((t) => t.isActive);
@@ -61,6 +64,8 @@ export function KidForm({
 
     // Set status from our controlled state
     formData.set('status', selectedStatus);
+    // Set guardian from our controlled state
+    formData.set('guardianId', selectedGuardianId);
     if (selectedStatus === 'enrolled' && selectedTermId) {
       formData.set('enrolledTermId', selectedTermId);
     } else {
@@ -124,30 +129,32 @@ export function KidForm({
 
       {/* Wali Murid */}
       <div className="space-y-2">
-        <Label htmlFor="guardianId">
+        <Label htmlFor="guardianId-select">
           Wali Murid <span className="text-destructive">*</span>
         </Label>
-        <select
-          id="guardianId"
-          name="guardianId"
-          defaultValue={initialData?.guardianId ?? ''}
-          required
-          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+        <Select
+          value={selectedGuardianId}
+          onValueChange={(v: string | null) => {
+            if (v) setSelectedGuardianId(v);
+          }}
         >
-          <option value="" disabled>
-            Pilih wali murid
-          </option>
-          {guardians.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name}
-            </option>
-          ))}
-        </select>
-        {guardians.length === 0 && (
-          <p className="text-xs text-amber-600">
-            Belum ada wali murid. Tambah wali murid terlebih dahulu.
-          </p>
-        )}
+          <SelectTrigger id="guardianId" name="guardianId">
+            <SelectValue placeholder="Pilih wali murid" />
+          </SelectTrigger>
+          <SelectContent>
+            {guardians.length === 0 ? (
+              <p className="px-2 py-4 text-center text-xs text-amber-600">
+                Belum ada wali murid. Tambah wali murid terlebih dahulu.
+              </p>
+            ) : (
+              guardians.map((g) => (
+                <SelectItem key={g.id} value={g.id}>
+                  {g.name}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Status */}
