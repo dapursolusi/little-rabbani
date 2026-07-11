@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { Delete04Icon } from '@hugeicons/core-free-icons';
+import { Alert01Icon, Delete04Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
@@ -218,7 +218,7 @@ export function SessionScheduleEditor({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-4">
-        <div className="text-sm text-zinc-400">Memuat jadwal...</div>
+        <div className="text-sm text-muted-foreground">Memuat jadwal...</div>
       </div>
     );
   }
@@ -227,7 +227,7 @@ export function SessionScheduleEditor({
     <div className="space-y-3">
       {/* No items state */}
       {items.length === 0 && (
-        <div className="rounded-md border border-dashed border-zinc-300 p-4 text-center text-sm text-zinc-400">
+        <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
           Belum ada aktivitas atau outing untuk sesi ini
         </div>
       )}
@@ -238,7 +238,7 @@ export function SessionScheduleEditor({
           {items.map((item) => (
             <div
               key={item.id}
-              className="flex items-center justify-between rounded-md border border-zinc-200 bg-white px-3 py-2"
+              className="flex items-center justify-between rounded-md border bg-background px-3 py-2"
             >
               <div className="flex-1">
                 {item.type === 'outing' ? (
@@ -247,31 +247,32 @@ export function SessionScheduleEditor({
                       <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs font-medium text-blue-700">
                         Outing
                       </span>
-                      <span className="font-medium text-zinc-800">
+                      <span className="font-medium text-foreground">
                         {item.outingLocation || 'Lokasi tidak ditentukan'}
                       </span>
                     </div>
                     {item.outingBringItems && (
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted-foreground">
                         Bawaan: {item.outingBringItems}
                       </p>
                     )}
                     {item.outingPermissionRequired && (
-                      <p className="text-xs text-amber-600">
-                        ⚠️ Izin orang tua diperlukan
+                      <p className="text-xs text-warning flex items-center gap-1">
+                        <HugeiconsIcon icon={Alert01Icon} className="size-3" />
+                        Izin orang tua diperlukan
                       </p>
                     )}
                   </div>
                 ) : (
                   <div className="flex items-center gap-2">
-                    <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs font-medium text-green-700">
+                    <span className="rounded bg-success/10 px-1.5 py-0.5 text-xs font-medium text-success">
                       Aktivitas
                     </span>
-                    <span className="font-medium text-zinc-800">
+                    <span className="font-medium text-foreground">
                       {item.activity?.name || 'Aktivitas tidak tersedia'}
                     </span>
                     {item.activity && (
-                      <span className="text-xs text-zinc-400">
+                      <span className="text-xs text-muted-foreground">
                         {getCategoryLabel(item.activity.category)}
                       </span>
                     )}
@@ -284,10 +285,10 @@ export function SessionScheduleEditor({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-zinc-400 hover:text-destructive"
+                  className="text-muted-foreground hover:text-destructive"
                   onClick={() => setShowDeleteConfirm(item.id)}
                 >
-                  <HugeiconsIcon icon={Delete04Icon} className="h-4 w-4" />
+                  <HugeiconsIcon icon={Delete04Icon} data-icon="inline-start" />
                 </Button>
               )}
             </div>
@@ -425,7 +426,7 @@ export function SessionScheduleEditor({
 
       {/* Locked message */}
       {isLocked && (
-        <p className="text-xs text-zinc-400">
+        <p className="text-xs text-muted-foreground">
           Jadwal sudah tidak bisa diubah — sesi sudah dimulai
         </p>
       )}

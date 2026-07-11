@@ -13,6 +13,7 @@ interface IEmptyStateProps {
   actionLabel?: string;
   actionHref?: string;
   onAction?: () => void;
+  actionVariant?: 'default' | 'outline';
 }
 
 export function EmptyState({
@@ -22,11 +23,12 @@ export function EmptyState({
   actionLabel,
   actionHref,
   onAction,
+  actionVariant = 'default',
 }: IEmptyStateProps) {
   const actionButton = actionHref ? (
     <Link
       href={actionHref}
-      className={cn(buttonVariants({ variant: 'default' }), 'mt-4')}
+      className={cn(buttonVariants({ variant: actionVariant }), 'mt-4')}
     >
       {actionLabel}
     </Link>
@@ -37,7 +39,7 @@ export function EmptyState({
   ) : null;
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border bg-muted py-16">
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted py-16">
       {icon && <div className="mb-2 text-muted-foreground">{icon}</div>}
       <p className="text-muted-foreground">{title}</p>
       {description && (

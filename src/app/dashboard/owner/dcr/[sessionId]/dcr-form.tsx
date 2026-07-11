@@ -46,9 +46,9 @@ const DEVIATION_OPTIONS: Array<{
   value: IDcrActivity['deviation'];
   label: string;
 }> = [
-  { value: 'done', label: 'Done ✓' },
-  { value: 'skipped', label: 'Skipped ✗' },
-  { value: 'modified', label: 'Modified ~' },
+  { value: 'done', label: 'Done' },
+  { value: 'skipped', label: 'Skipped' },
+  { value: 'modified', label: 'Modified' },
 ];
 
 export function DcrForm({
@@ -193,12 +193,12 @@ export function DcrForm({
     <div className="space-y-6">
       {/* Activities List */}
       <div className="space-y-3">
-        <h2 className="text-base font-medium text-zinc-800">
+        <h2 className="text-base font-medium text-foreground">
           Aktivitas ({activities.length})
         </h2>
 
         {activities.length === 0 && (
-          <div className="rounded-md border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-400">
+          <div className="rounded-md border border-dashed p-6 text-center text-sm text-muted-foreground">
             Belum ada aktivitas. Tambahkan aktivitas di bawah.
           </div>
         )}
@@ -207,14 +207,14 @@ export function DcrForm({
         {activities.map((activity, index) => (
           <div
             key={activity.id}
-            className="flex flex-col gap-2 rounded-lg border border-zinc-200 bg-white p-3 sm:flex-row sm:items-center sm:justify-between"
+            className="flex flex-col gap-2 rounded-lg border bg-background p-3 sm:flex-row sm:items-center sm:justify-between"
           >
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <span className="text-xs font-medium text-zinc-400">
+                <span className="text-xs font-medium text-muted-foreground">
                   #{index + 1}
                 </span>
-                <span className="font-medium text-zinc-800">
+                <span className="font-medium text-foreground">
                   {activity.activityName}
                 </span>
                 {!activity.wasPlanned && (
@@ -257,10 +257,10 @@ export function DcrForm({
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="text-zinc-400 hover:text-destructive"
+                  className="text-muted-foreground hover:text-destructive"
                   onClick={() => handleRemoveActivity(activity.id)}
                 >
-                  <HugeiconsIcon icon={Delete04Icon} className="h-4 w-4" />
+                  <HugeiconsIcon icon={Delete04Icon} data-icon="inline-start" />
                 </Button>
               )}
             </div>
@@ -271,7 +271,7 @@ export function DcrForm({
       {/* Add Unplanned Activity button */}
       <div>
         {showAddUnplanned ? (
-          <div className="flex flex-col gap-3 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-4">
+          <div className="flex flex-col gap-3 rounded-lg border border-dashed bg-muted p-4">
             <div className="space-y-2">
               <Label htmlFor="unplanned-name">
                 Nama Aktivitas Tidak Terencana{' '}

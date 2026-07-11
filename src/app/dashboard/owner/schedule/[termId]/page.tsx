@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+import { Alert01Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -52,15 +55,16 @@ export default async function ScheduleTermPage({
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/owner/schedule"
-            className="text-sm text-primary hover:underline"
+            className="flex items-center gap-1 text-sm text-primary hover:underline"
           >
-            &larr; Pilih Term
+            <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
+            Pilih Term
           </Link>
         </div>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Jadwal - {termData.name}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           {formatDate(termData.startDate)} — {formatDate(termData.endDate)}
           {termData.isActive && (
             <Badge variant="default" className="ml-2">
@@ -72,8 +76,8 @@ export default async function ScheduleTermPage({
 
       {/* Sessions */}
       {sessions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-          <p className="text-zinc-500">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted py-16">
+          <p className="text-muted-foreground">
             Belum ada sesi untuk term ini. Buat sesi terlebih dahulu.
           </p>
           <Link
@@ -93,20 +97,20 @@ export default async function ScheduleTermPage({
             return (
               <div
                 key={session.id}
-                className={`rounded-lg border bg-white ${
+                className={`rounded-lg border bg-background ${
                   session.isHoliday
-                    ? 'border-red-200 bg-red-50'
+                    ? 'border-destructive/30 bg-destructive/10'
                     : isLocked
-                      ? 'border-zinc-200 opacity-70'
-                      : 'border-zinc-200'
+                      ? 'border opacity-70'
+                      : 'border'
                 }`}
               >
-                <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-3">
+                <div className="flex items-center justify-between border-b px-4 py-3">
                   <div>
-                    <h3 className="font-medium text-zinc-900">
+                    <h3 className="font-medium text-foreground">
                       {formatDate(session.date)}
                     </h3>
-                    <p className="text-xs text-zinc-500">
+                    <p className="text-xs text-muted-foreground">
                       {session.startTime} — {session.endTime}
                       {session.label && ` • ${session.label}`}
                     </p>
@@ -133,8 +137,11 @@ export default async function ScheduleTermPage({
                 </div>
                 <div className="px-4 py-3">
                   {session.isHoliday ? (
-                    <div className="rounded-md bg-red-50 p-3 text-sm text-red-700">
-                      <p className="font-medium">⚠️ Hari Libur</p>
+                    <div className="rounded-md bg-destructive/10 p-3 text-sm text-destructive">
+                      <p className="font-medium flex items-center gap-1">
+                        <HugeiconsIcon icon={Alert01Icon} className="size-4" />
+                        Hari Libur
+                      </p>
                       <p className="mt-1 text-xs">
                         {session.holidayReason
                           ? `Alasan: ${session.holidayReason}`
