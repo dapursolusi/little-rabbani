@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+import { EmptyState } from '@/components/shared/empty-state';
+import { getStatusBadge } from '@/components/shared/get-status-badge';
+
 import {
   getActiveTerm,
   getEnrolledKids,
@@ -29,43 +32,17 @@ function formatMonthLabel(value: string): string {
   return `${months[monthStr - 1] ?? ''} ${yearStr}`;
 }
 
-function getStatusBadge(status: string, hasContent: boolean) {
-  if (!hasContent) return null;
-
-  const styles: Record<string, string> = {
-    draft: 'border-amber-300 text-amber-700 bg-amber-50',
-    final: 'bg-green-100 text-green-700',
-    stale: 'bg-purple-100 text-purple-700',
-  };
-  const labels: Record<string, string> = {
-    draft: 'Draft',
-    final: '✓ Final',
-    stale: '⚠️ Perlu Diperbarui',
-  };
-
-  const className =
-    styles[status] ?? 'border-zinc-200 text-zinc-600 bg-zinc-50';
-
-  return (
-    <span
-      className={`inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${className}`}
-    >
-      {labels[status] ?? status}
-    </span>
-  );
-}
-
 export default async function MonthlyReportPickerPage() {
   const termResult = await getActiveTerm();
 
   if (!termResult.success) {
     return (
       <div className="p-4 sm:p-6">
-        <h1 className="mb-2 text-2xl font-semibold text-zinc-900">
+        <h1 className="mb-2 text-2xl font-semibold text-foreground">
           Laporan Bulanan
         </h1>
-        <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center">
-          <p className="text-zinc-500">{termResult.error}</p>
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border bg-muted p-8 text-center">
+          <p className="text-muted-foreground">{termResult.error}</p>
         </div>
       </div>
     );
@@ -114,31 +91,26 @@ export default async function MonthlyReportPickerPage() {
     <div className="p-4 sm:p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Laporan Bulanan
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Term aktif: {term.name} ({term.startDate} — {term.endDate})
         </p>
       </div>
 
       {/* No kids enrolled */}
       {kids.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-          <p className="text-zinc-500">Belum ada murid terdaftar</p>
-        </div>
+        <EmptyState title="Belum ada murid terdaftar" />
       ) : (
         <div className="space-y-4">
           {/* Kid list with month options */}
           {kids.map((kidData) => (
-            <div
-              key={kidData.id}
-              className="rounded-lg border border-zinc-200 bg-white"
-            >
-              <div className="border-b border-zinc-100 px-4 py-3">
-                <h3 className="font-medium text-zinc-900">{kidData.name}</h3>
+            <div key={kidData.id} className="rounded-lg border bg-background">
+              <div className="border-b px-4 py-3">
+                <h3 className="font-medium text-foreground">{kidData.name}</h3>
                 {kidData.guardian && (
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-muted-foreground">
                     Wali: {kidData.guardian.name}
                   </p>
                 )}
@@ -151,32 +123,32 @@ export default async function MonthlyReportPickerPage() {
                   );
                   const hasReport = !!report;
 
+                  const status = report?.status ?? '';
+
                   return hasReport ? (
                     <Link
                       key={monthData.value}
                       href={`/dashboard/owner/reports/monthly/${kidData.id}/${monthData.value}`}
                       className={`rounded-lg border p-3 text-left transition-colors hover:shadow-sm ${
-                        report?.status === 'final'
-                          ? 'border-green-200 bg-green-50/30'
-                          : report?.status === 'stale'
-                            ? 'border-purple-200 bg-purple-50/30'
-                            : 'border-amber-200 bg-amber-50/30'
+                        status === 'final'
+                          ? 'border-success/30 bg-success/5'
+                          : status === 'stale'
+                            ? 'border-warning/30 bg-warning/5'
+                            : 'border-warning/30 bg-warning/5'
                       }`}
                     >
-                      <p className="text-sm font-medium text-zinc-800">
+                      <p className="text-sm font-medium text-foreground">
                         {formatMonthLabel(monthData.value)}
                       </p>
-                      <div className="mt-1">
-                        {getStatusBadge(report?.status ?? '', true)}
-                      </div>
+                      <div className="mt-1">{getStatusBadge(status)}</div>
                     </Link>
                   ) : (
                     <Link
                       key={monthData.value}
                       href={`/dashboard/owner/reports/monthly/${kidData.id}/${monthData.value}`}
-                      className="rounded-lg border border-dashed border-zinc-300 p-3 text-left transition-colors hover:border-primary hover:shadow-sm"
+                      className="rounded-lg border border-dashed border p-3 text-left transition-colors hover:border-primary hover:shadow-sm"
                     >
-                      <p className="text-sm font-medium text-zinc-600">
+                      <p className="text-sm font-medium text-muted-foreground">
                         {formatMonthLabel(monthData.value)}
                       </p>
                       <p className="mt-1 text-xs text-primary">Buat</p>

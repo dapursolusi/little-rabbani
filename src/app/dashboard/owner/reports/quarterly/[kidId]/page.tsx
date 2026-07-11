@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { eq } from 'drizzle-orm';
 
 import { getQuarterlyReport } from '@/lib/actions/quarterly-report';
@@ -72,15 +74,16 @@ export default async function QuarterlyReportDetailPage({
         <div className="flex items-center gap-2">
           <Link
             href="/dashboard/owner/reports/quarterly"
-            className="text-sm text-primary hover:underline"
+            className="flex items-center gap-1 text-sm text-primary hover:underline"
           >
-            &larr; Kembali
+            <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
+            Kembali
           </Link>
         </div>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Laporan Triwulanan — {kidData.name}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           {termData.name} ({termData.startDate} — {termData.endDate})
         </p>
       </div>

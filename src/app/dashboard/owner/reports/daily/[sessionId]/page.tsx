@@ -44,10 +44,10 @@ export default async function DailyReportSessionPage({
       />
       {/* Header */}
       <div className="mb-6">
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Laporan Wali Murid
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           {session && (
             <>
               {formatDate(session.date)} — {session.startTime} —{' '}
@@ -65,8 +65,8 @@ export default async function DailyReportSessionPage({
 
       {/* Holiday session */}
       {session?.isHoliday && (
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <p className="font-medium text-red-700">
+        <div className="rounded-lg border-destructive/30 bg-destructive/10 p-6 text-center">
+          <p className="font-medium text-destructive">
             Sesi ini adalah hari libur — tidak dapat membuat laporan
           </p>
         </div>
