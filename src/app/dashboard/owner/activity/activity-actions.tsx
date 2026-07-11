@@ -16,12 +16,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 
 import { restoreActivity, softDeleteActivity } from '@/lib/actions/activity';
 
@@ -102,39 +96,26 @@ export function ActivityActions({
 
   return (
     <>
-      <TooltipProvider>
-        <Tooltip>
-          <DropdownMenu>
-            <TooltipTrigger asChild>
-              <DropdownMenuTrigger>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Buka menu aktivitas"
-                >
-                  <span className="sr-only">Buka menu aktivitas</span>
-                  <HugeiconsIcon icon={MoreVerticalIcon} className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem
-                onClick={() =>
-                  router.push(`/dashboard/owner/activity/${activityId}/edit`)
-                }
-              >
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowArchiveConfirm(true)}>
-                Arsipkan
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-          <TooltipContent>
-            <p>Buka menu</p>
-          </TooltipContent>
-        </Tooltip>
-      </TooltipProvider>
+      <DropdownMenu>
+        <DropdownMenuTrigger>
+          <Button variant="ghost" size="sm" aria-label="Buka menu aktivitas">
+            <span className="sr-only">Buka menu aktivitas</span>
+            <HugeiconsIcon icon={MoreVerticalIcon} className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuItem
+            onClick={() =>
+              router.push(`/dashboard/owner/activity/${activityId}/edit`)
+            }
+          >
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => setShowArchiveConfirm(true)}>
+            Arsipkan
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
 
       <ConfirmDialog
         open={showArchiveConfirm}
