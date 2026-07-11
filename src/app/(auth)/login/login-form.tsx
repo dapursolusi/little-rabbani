@@ -44,40 +44,43 @@ export function LoginForm({ error, redirect: redirectUrl }: ILoginFormProps) {
   const accessDenied = error === 'access_denied';
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 px-4">
-      <div className="w-full max-w-sm rounded-lg border border-zinc-200 bg-white p-8 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-muted px-4">
+      <div className="w-full max-w-sm rounded-lg border bg-card p-8 shadow-sm">
         <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold text-zinc-900">
+          <h1 className="text-2xl font-semibold text-foreground">
             Little Rabbani
           </h1>
-          <p className="mt-2 text-sm text-zinc-500">Masuk untuk melanjutkan</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Masuk untuk melanjutkan
+          </p>
         </div>
 
         {accessDenied && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-center">
-            <p className="text-sm font-medium text-red-800">
+          <div className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-center">
+            <p className="text-sm font-medium text-destructive">
               Akun Anda tidak terdaftar
             </p>
-            <p className="mt-1 text-xs text-red-600">
+            <p className="mt-1 text-xs text-destructive/80">
               Hubungi Owner untuk akses
             </p>
           </div>
         )}
 
         {oauthError && (
-          <div className="mb-6 rounded-lg border border-red-200 bg-red-50 p-4 text-center">
-            <p className="text-sm font-medium text-red-800">{oauthError}</p>
+          <div className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-center">
+            <p className="text-sm font-medium text-destructive">{oauthError}</p>
             <Button
               onClick={handleRetry}
               disabled={isLoading}
               variant="secondary"
               size="sm"
+              data-icon="inline-start"
             >
               {isLoading ? (
                 <>
                   <HugeiconsIcon
                     icon={Loading03Icon}
-                    className="h-4 w-4 animate-spin"
+                    className="animate-spin"
                   />
                   Memproses...
                 </>
@@ -93,12 +96,10 @@ export function LoginForm({ error, redirect: redirectUrl }: ILoginFormProps) {
           disabled={isLoading}
           variant="outline"
           className="flex w-full items-center justify-center gap-3"
+          data-icon="inline-start"
         >
           {isLoading ? (
-            <HugeiconsIcon
-              icon={Loading03Icon}
-              className="h-5 w-5 animate-spin"
-            />
+            <HugeiconsIcon icon={Loading03Icon} className="animate-spin" />
           ) : (
             <svg className="h-5 w-5" viewBox="0 0 24 24" aria-hidden="true">
               <path

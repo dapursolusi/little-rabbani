@@ -1,7 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+
 import { TermCohortForm } from '@/components/sections/term-cohort-form';
+import { EmptyState } from '@/components/shared/empty-state';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -47,13 +51,14 @@ export default async function CohortPage({ params }: ICohortPageProps) {
             href="/dashboard/owner/term"
             className="text-sm text-primary hover:underline"
           >
-            &larr; Kembali
+            <HugeiconsIcon icon={ArrowLeft01Icon} />
+            Kembali
           </Link>
         </div>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Kelola Murid - {termData.name}
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           {termData.startDate} — {termData.endDate}
           {termData.isActive && (
             <Badge variant="default" className="ml-2">
@@ -65,17 +70,13 @@ export default async function CohortPage({ params }: ICohortPageProps) {
 
       {/* Enrolled Kids */}
       <div className="mb-8">
-        <h2 className="mb-3 text-lg font-medium text-zinc-900">
+        <h2 className="mb-3 text-lg font-medium text-foreground">
           Murid Terdaftar ({cohort.length})
         </h2>
         {cohort.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-10">
-            <p className="text-zinc-500">
-              Belum ada murid terdaftar di term ini
-            </p>
-          </div>
+          <EmptyState title="Belum ada murid terdaftar di term ini" />
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-zinc-200">
+          <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -102,10 +103,10 @@ export default async function CohortPage({ params }: ICohortPageProps) {
 
       {/* Bulk Enroll Section */}
       <div>
-        <h2 className="mb-3 text-lg font-medium text-zinc-900">
+        <h2 className="mb-3 text-lg font-medium text-foreground">
           Daftarkan dari Waiting List
         </h2>
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
+        <div className="rounded-lg border bg-card p-4 sm:p-6">
           <TermCohortForm
             termId={id}
             termName={termData.name}
