@@ -93,6 +93,7 @@ export default function MonthlyReportPickerPage() {
   // Fetch paginated kids + batch reports when search/page changes
   useEffect(() => {
     if (!term) return;
+    const currentTerm = term;
 
     let cancelled = false;
 
@@ -102,7 +103,7 @@ export default function MonthlyReportPickerPage() {
       setError(null);
 
       const kidsResult = await getEnrolledKidsPaginated(
-        term.id,
+        currentTerm.id,
         search,
         page,
         PAGE_SIZE
