@@ -77,10 +77,10 @@ export function PushNotificationSetup() {
     return (
       <Link
         href="/dashboard/owner/dcr"
-        className="relative inline-flex items-center gap-1 rounded-full bg-amber-100 px-3 py-1 text-xs font-medium text-amber-800 transition-colors hover:bg-amber-200"
+        className="relative inline-flex items-center gap-1 rounded-full bg-warning/10 px-3 py-1 text-xs font-medium text-warning transition-colors hover:bg-warning/20"
         title={`${pendingCount} capture tertunda`}
       >
-        <span className="flex h-2 w-2 rounded-full bg-amber-500" />
+        <span className="flex h-2 w-2 rounded-full bg-warning" />
         {pendingCount} tertunda
       </Link>
     );

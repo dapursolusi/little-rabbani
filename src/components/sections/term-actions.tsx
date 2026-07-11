@@ -76,7 +76,7 @@ export function TermActions({
         <DropdownMenuTrigger>
           <Button variant="ghost" size="sm">
             <span className="sr-only">Buka menu</span>
-            <HugeiconsIcon icon={MoreVerticalIcon} className="h-4 w-4" />
+            <HugeiconsIcon icon={MoreVerticalIcon} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

@@ -2,9 +2,10 @@
 
 import { useEffect, useRef, useState } from 'react';
 
-import { Calendar05Icon, SecurityIcon } from '@hugeicons/core-free-icons';
+import { SecurityIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
+import { EmptyState } from '@/components/shared/empty-state';
 import { Badge } from '@/components/ui/badge';
 
 import { getCategoryLabel } from '@/lib/activity-utils';
@@ -80,29 +81,19 @@ export function TeacherScheduleView() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="text-sm text-zinc-400">Memuat jadwal...</div>
+        <div className="text-sm text-muted-foreground">Memuat jadwal...</div>
       </div>
     );
   }
 
   if (sessions.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 p-8 text-center">
-        <HugeiconsIcon
-          icon={Calendar05Icon}
-          className="mx-auto h-10 w-10 text-zinc-300"
-        />
-        <p className="mt-3 text-sm text-zinc-500">
-          Tidak ada jadwal untuk hari ini
-        </p>
-      </div>
-    );
+    return <EmptyState title="Tidak ada jadwal untuk hari ini" />;
   }
 
   return (
     <div className="space-y-4">
       {/* Today's date heading */}
-      <p className="text-sm text-zinc-500">
+      <p className="text-sm text-muted-foreground">
         {new Date().toLocaleDateString('id-ID', {
           weekday: 'long',
           day: 'numeric',
@@ -112,15 +103,14 @@ export function TeacherScheduleView() {
       </p>
 
       {sessions.map((session) => (
-        <div
-          key={session.id}
-          className="rounded-lg border border-zinc-200 bg-white"
-        >
+        <div key={session.id} className="rounded-lg border bg-card">
           {/* Session header */}
-          <div className="flex items-center justify-between border-b border-zinc-100 px-4 py-2">
+          <div className="flex items-center justify-between border-b px-4 py-2">
             <div>
-              <span className="font-medium text-zinc-800">{session.label}</span>
-              <span className="ml-2 text-sm text-zinc-500">
+              <span className="font-medium text-foreground">
+                {session.label}
+              </span>
+              <span className="ml-2 text-sm text-muted-foreground">
                 {formatTime(session.startTime)} — {formatTime(session.endTime)}
               </span>
             </div>
@@ -130,32 +120,29 @@ export function TeacherScheduleView() {
           </div>
 
           {/* Schedule items */}
-          <div className="divide-y divide-zinc-100">
+          <div className="divide-y">
             {session.scheduleItems.map((item) => (
               <div key={item.id} className="px-4 py-2.5">
                 {item.type === 'outing' ? (
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      <Badge
-                        variant="secondary"
-                        className="bg-blue-100 text-blue-700 text-xs"
-                      >
+                      <Badge variant="secondary" className="text-xs">
                         Outing
                       </Badge>
-                      <span className="font-medium text-zinc-800">
+                      <span className="font-medium text-foreground">
                         {item.outingLocation || 'Lokasi tidak ditentukan'}
                       </span>
                     </div>
                     {item.outingBringItems && (
-                      <p className="text-xs text-zinc-500">
+                      <p className="text-xs text-muted-foreground">
                         Bawaan: {item.outingBringItems}
                       </p>
                     )}
                     {item.outingPermissionRequired && (
-                      <div className="flex items-center gap-1 text-xs text-amber-600">
+                      <div className="flex items-center gap-1 text-xs text-warning">
                         <HugeiconsIcon
                           icon={SecurityIcon}
-                          className="h-3.5 w-3.5 text-amber-600"
+                          className="h-3.5 w-3.5 text-warning"
                         />
                         Izin orang tua diperlukan
                       </div>
@@ -165,15 +152,15 @@ export function TeacherScheduleView() {
                   <div className="flex items-center gap-2">
                     <Badge
                       variant="secondary"
-                      className="bg-green-100 text-green-700 text-xs"
+                      className="bg-success/10 text-success text-xs"
                     >
                       Aktivitas
                     </Badge>
-                    <span className="font-medium text-zinc-800">
+                    <span className="font-medium text-foreground">
                       {item.activity?.name || 'Aktivitas tidak tersedia'}
                     </span>
                     {item.activity && (
-                      <span className="text-xs text-zinc-400">
+                      <span className="text-xs text-muted-foreground">
                         {getCategoryLabel(item.activity.category)}
                       </span>
                     )}

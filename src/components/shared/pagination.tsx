@@ -23,8 +23,8 @@ export function Pagination({
   const endItem = Math.min(currentPage * pageSize, totalItems);
 
   return (
-    <div className="flex items-center justify-between border-t border-zinc-200 px-4 py-3">
-      <p className="text-sm text-zinc-500">
+    <div className="flex items-center justify-between border-t border px-4 py-3">
+      <p className="text-sm text-muted-foreground">
         Menampilkan {startItem}–{endItem} dari {totalItems}
       </p>
       <div className="flex gap-2">

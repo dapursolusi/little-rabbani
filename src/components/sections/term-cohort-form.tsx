@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { toast } from 'sonner';
 
+import { EmptyState } from '@/components/shared/empty-state';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
@@ -81,7 +82,7 @@ export function TermCohortForm({
 
   if (!termIsActive) {
     return (
-      <div className="rounded-md border border-amber-200 bg-amber-50 px-4 py-6 text-center text-sm text-amber-700">
+      <div className="rounded-md border border-warning/20 bg-warning/10 px-4 py-6 text-center text-sm text-warning">
         Term &ldquo;{termName}&rdquo; belum aktif. Aktifkan term terlebih dahulu
         untuk mendaftarkan murid.
       </div>
@@ -89,11 +90,7 @@ export function TermCohortForm({
   }
 
   if (waitingKids.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-        <p className="text-zinc-500">Tidak ada murid dalam daftar tunggu</p>
-      </div>
-    );
+    return <EmptyState title="Tidak ada murid dalam daftar tunggu" />;
   }
 
   return (
@@ -118,20 +115,20 @@ export function TermCohortForm({
         </Button>
       </div>
 
-      <div className="divide-y rounded-lg border border-zinc-200">
+      <div className="divide-y rounded-lg border">
         {waitingKids.map((kid) => (
           <label
             key={kid.id}
-            className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-zinc-50"
+            className="flex cursor-pointer items-center gap-3 px-4 py-3 hover:bg-muted"
           >
             <Checkbox
               checked={selectedIds.has(kid.id)}
               onCheckedChange={() => toggleKid(kid.id)}
             />
             <div>
-              <p className="text-sm font-medium text-zinc-900">{kid.name}</p>
+              <p className="text-sm font-medium text-foreground">{kid.name}</p>
               {kid.guardian && (
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground">
                   Wali: {kid.guardian.name}
                 </p>
               )}
