@@ -8,13 +8,15 @@ export default function TeacherLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-screen flex-col bg-[#FAF5F2]">
+    <div className="flex min-h-screen flex-col bg-brand-canvas">
       {/* Offline indicator */}
       <OfflineIndicator />
 
       {/* Header */}
-      <header className="flex items-center justify-between border-b border-zinc-200 bg-white px-4 py-3">
-        <h1 className="text-lg font-semibold text-zinc-900">Dashboard Guru</h1>
+      <header className="flex items-center justify-between border-b border bg-background px-4 py-3">
+        <h1 className="text-lg font-semibold text-foreground">
+          Dashboard Guru
+        </h1>
         <LogoutButtonClient />
       </header>
 

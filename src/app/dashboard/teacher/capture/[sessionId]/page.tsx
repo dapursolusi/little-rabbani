@@ -1,7 +1,13 @@
 import Link from 'next/link';
 
-import { UserGroupIcon } from '@hugeicons/core-free-icons';
+import {
+  Alert01Icon,
+  ArrowLeft01Icon,
+  UserGroupIcon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
+
+import { EmptyState } from '@/components/shared/empty-state';
 
 import { getSessionWithKids } from '@/lib/actions/capture';
 import { formatDate } from '@/lib/format';
@@ -27,12 +33,17 @@ export default async function CaptureSessionPage({
       <div className="p-4 sm:p-6">
         <Link
           href="/dashboard/teacher/capture"
-          className="mb-4 inline-block text-sm text-primary hover:underline"
+          className="mb-4 inline-flex items-center gap-1 text-sm text-primary hover:underline"
         >
-          &larr; Kembali
+          <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" />
+          Kembali
         </Link>
-        <div className="rounded-lg border border-red-200 bg-red-50 p-6 text-center">
-          <p className="font-medium text-red-700">⚠️ {result.error}</p>
+        <div className="rounded-lg border border-destructive/20 bg-destructive/10 p-6 text-center">
+          <HugeiconsIcon
+            icon={Alert01Icon}
+            className="mx-auto mb-2 h-6 w-6 text-destructive"
+          />
+          <p className="font-medium text-destructive">{result.error}</p>
         </div>
       </div>
     );
@@ -41,26 +52,27 @@ export default async function CaptureSessionPage({
   const { session, kids } = result.data;
 
   return (
-    <div className="flex min-h-screen flex-col bg-zinc-50">
+    <div className="flex min-h-screen flex-col bg-muted">
       {/* Sticky header */}
-      <div className="sticky top-0 z-10 border-b border-zinc-200 bg-white">
+      <div className="sticky top-0 z-10 border-b border bg-background">
         <div className="flex items-center gap-2 px-4 py-3">
           <Link
             href="/dashboard/teacher/capture"
-            className="text-sm text-primary hover:underline"
+            className="flex items-center gap-1 text-sm text-primary hover:underline"
           >
-            &larr; Kembali
+            <HugeiconsIcon icon={ArrowLeft01Icon} className="h-4 w-4" />
+            Kembali
           </Link>
         </div>
         <div className="px-4 pb-3">
-          <h1 className="text-lg font-semibold text-zinc-900">
+          <h1 className="text-lg font-semibold text-foreground">
             Observasi Murid
           </h1>
-          <p className="text-sm text-zinc-500">
+          <p className="text-sm text-muted-foreground">
             {formatDate(session.date)} — {session.startTime} — {session.endTime}
             {session.label && ` • ${session.label}`}
           </p>
-          <p className="mt-1 text-xs text-zinc-400">
+          <p className="mt-1 text-xs text-muted-foreground">
             {kids.length} murid terdaftar
           </p>
         </div>
@@ -96,14 +108,11 @@ export default async function CaptureSessionPage({
 
       {/* No kids - empty roster (VAL-CAPTURE-027) */}
       {kids.length === 0 && (
-        <div className="flex flex-col items-center justify-center px-4 py-16">
-          <HugeiconsIcon
-            icon={UserGroupIcon}
-            className="h-12 w-12 text-zinc-300"
+        <div className="px-4 py-16">
+          <EmptyState
+            icon={<HugeiconsIcon icon={UserGroupIcon} className="h-12 w-12" />}
+            title="Tidak ada anak di sesi ini"
           />
-          <p className="mt-4 text-sm text-zinc-500">
-            Tidak ada anak di sesi ini
-          </p>
         </div>
       )}
     </div>
