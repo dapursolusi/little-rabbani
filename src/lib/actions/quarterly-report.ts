@@ -1,6 +1,6 @@
 'use server';
 
-import { and, asc, desc, eq, inArray, not } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, not, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -336,29 +336,6 @@ export async function getTerms() {
 }
 
 /**
- * Get enrolled kids for a specific term.
- */
-export async function getEnrolledKidsForTerm(termId: string) {
-  const auth = await requireOwner();
-  if (!auth.authorized) {
-    return { success: false as const, error: auth.error };
-  }
-
-  const kidsList = await db.query.kid.findMany({
-    where: and(eq(kid.enrolledTermId, termId), eq(kid.status, 'enrolled')),
-    columns: { id: true, name: true, guardianId: true },
-    with: {
-      guardian: {
-        columns: { name: true },
-      },
-    },
-    orderBy: [asc(kid.name)],
-  });
-
-  return { success: true as const, data: kidsList };
-}
-
-/**
  * Get a quarterly report for a specific kid and term.
  */
 export async function getQuarterlyReport(kidId: string, termId: string) {
@@ -439,10 +416,61 @@ export async function getKidQuarterlyReports(kidId: string) {
 }
 
 /**
- * Batch fetch quarterly reports for multiple kid IDs.
- * Uses a single inArray query instead of N+1 sequential awaits.
+ * Paginated and searchable query for enrolled kids in a specific term.
  */
-export async function getKidQuarterlyReportsBatch(kidIds: string[]) {
+export async function getEnrolledKidsForTermPaginated(
+  termId: string,
+  search: string,
+  page: number,
+  pageSize: number
+) {
+  const auth = await requireOwner();
+  if (!auth.authorized) {
+    return { success: false as const, error: auth.error };
+  }
+
+  const conditions = [
+    eq(kid.enrolledTermId, termId),
+    eq(kid.status, 'enrolled'),
+  ];
+  if (search) {
+    conditions.push(ilike(kid.name, `%${search}%`));
+  }
+  const where = and(...conditions);
+
+  const offset = (page - 1) * pageSize;
+
+  const [kidsList, totalResult] = await Promise.all([
+    db.query.kid.findMany({
+      where,
+      columns: { id: true, name: true, guardianId: true },
+      with: {
+        guardian: {
+          columns: { name: true },
+        },
+      },
+      orderBy: [asc(kid.name)],
+      limit: pageSize,
+      offset,
+    }),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(kid)
+      .where(where),
+  ]);
+
+  const total = totalResult?.[0]?.count ?? 0;
+
+  return { success: true as const, data: kidsList, total };
+}
+
+/**
+ * Batch fetch quarterly reports for multiple kid IDs, restricted to a single term.
+ */
+export async function getKidQuarterlyReportsBatchForTerm(
+  termId: string,
+  kidIds: string[]
+) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
@@ -461,7 +489,10 @@ export async function getKidQuarterlyReportsBatch(kidIds: string[]) {
   }
 
   const reports = await db.query.quarterlyReportSnapshot.findMany({
-    where: inArray(quarterlyReportSnapshot.kidId, kidIds),
+    where: and(
+      eq(quarterlyReportSnapshot.termId, termId),
+      inArray(quarterlyReportSnapshot.kidId, kidIds)
+    ),
     columns: {
       id: true,
       kidId: true,
