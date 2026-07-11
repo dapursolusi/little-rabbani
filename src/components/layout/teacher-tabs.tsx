@@ -39,7 +39,7 @@ export function TeacherTabs() {
       <Tabs
         value={activeTab}
         onValueChange={handleTabChange}
-        className="hidden md:block border-b border-zinc-200 bg-white"
+        className="hidden md:block border-b border"
       >
         <div className="px-4">
           <TabsList variant="line" className="h-12 w-auto bg-transparent">
@@ -62,7 +62,7 @@ export function TeacherTabs() {
       </Tabs>
 
       {/* Mobile: bottom tab bar */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-zinc-200 bg-white md:hidden">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border md:hidden">
         <div className="flex">
           {tabs.map((tab) => {
             const isActive = pathname.startsWith(tab.href);
@@ -71,7 +71,7 @@ export function TeacherTabs() {
                 key={tab.href}
                 href={tab.href}
                 className={`flex flex-1 flex-col items-center gap-1 py-2 text-xs font-medium transition-colors ${
-                  isActive ? 'text-primary' : 'text-zinc-500'
+                  isActive ? 'text-primary' : 'text-muted-foreground'
                 }`}
               >
                 <HugeiconsIcon

@@ -10,7 +10,7 @@ export function getStatusBadge(status: string) {
       return (
         <Badge
           variant="outline"
-          className="border-amber-300 text-amber-700 bg-amber-50"
+          className="border-warning/30 text-warning bg-warning/10"
         >
           Draft
         </Badge>
@@ -19,27 +19,27 @@ export function getStatusBadge(status: string) {
       return (
         <Badge
           variant="default"
-          className="bg-green-100 text-green-700 hover:bg-green-100"
+          className="bg-success/10 text-success hover:bg-success/10"
         >
-          ✓ Terkirim
+          Terkirim
         </Badge>
       );
     case 'final':
       return (
         <Badge
           variant="default"
-          className="bg-green-100 text-green-700 hover:bg-green-100"
+          className="bg-success/10 text-success hover:bg-success/10"
         >
-          ✓ Final
+          Final
         </Badge>
       );
     case 'stale':
       return (
         <Badge
           variant="default"
-          className="bg-purple-100 text-purple-700 hover:bg-purple-100"
+          className="bg-warning/10 text-warning hover:bg-warning/10"
         >
-          ⚠️ Perlu Diperbarui
+          Perlu Diperbarui
         </Badge>
       );
     default:

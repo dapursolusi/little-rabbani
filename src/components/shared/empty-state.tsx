@@ -37,11 +37,11 @@ export function EmptyState({
   ) : null;
 
   return (
-    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-      {icon && <div className="mb-2 text-zinc-300">{icon}</div>}
-      <p className="text-zinc-500">{title}</p>
+    <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border bg-muted py-16">
+      {icon && <div className="mb-2 text-muted-foreground">{icon}</div>}
+      <p className="text-muted-foreground">{title}</p>
       {description && (
-        <p className="mt-1 text-sm text-zinc-400">{description}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{description}</p>
       )}
       {actionButton}
     </div>

@@ -54,18 +54,18 @@ export function TeacherPendingCaptureBanner() {
   return (
     <Link
       href="/dashboard/teacher/capture"
-      className="mx-4 mt-2 block rounded-lg bg-amber-50 border border-amber-200 px-4 py-3 transition-colors hover:bg-amber-100 active:bg-amber-200"
+      className="mx-4 mt-2 block rounded-lg bg-warning/10 border border-warning/20 px-4 py-3 transition-colors hover:bg-warning/20 active:bg-warning/30"
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="flex h-2.5 w-2.5 rounded-full bg-amber-500" />
-          <p className="text-sm font-medium text-amber-800">
+          <span className="flex h-2.5 w-2.5 rounded-full bg-warning" />
+          <p className="text-sm font-medium text-warning">
             {pendingCount} capture tertunda
           </p>
         </div>
         <HugeiconsIcon
           icon={ChevronRightIcon}
-          className="h-4 w-4 text-amber-600"
+          className="h-4 w-4 text-warning"
         />
       </div>
     </Link>

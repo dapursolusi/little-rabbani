@@ -46,7 +46,7 @@ export function QuickActions() {
             <HugeiconsIcon
               icon={action.icon}
               strokeWidth={2}
-              className="h-4 w-4"
+              data-icon="inline-start"
             />
             {action.label}
           </Button>

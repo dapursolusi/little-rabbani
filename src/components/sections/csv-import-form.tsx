@@ -230,8 +230,8 @@ export function CsvImportForm() {
                   handleReset();
                 }}
               >
-                <div className="font-medium text-zinc-900">{type.title}</div>
-                <div className="mt-1 text-xs text-zinc-500 line-clamp-2">
+                <div className="font-medium text-foreground">{type.title}</div>
+                <div className="mt-1 text-xs text-muted-foreground line-clamp-2">
                   {type.description}
                 </div>
               </Button>
@@ -274,7 +274,7 @@ export function CsvImportForm() {
           <div className="space-y-2">
             <label
               htmlFor="csv-file"
-              className="block text-sm font-medium text-zinc-700"
+              className="block text-sm font-medium text-foreground"
             >
               Pilih File CSV
             </label>
@@ -284,10 +284,10 @@ export function CsvImportForm() {
               type="file"
               accept=".csv"
               onChange={handleFileSelect}
-              className="block w-full text-sm text-zinc-500 file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
+              className="block w-full text-sm text-muted-foreground file:mr-4 file:rounded-md file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-primary-foreground hover:file:bg-primary/90"
             />
             {selectedFile && (
-              <p className="text-sm text-zinc-500">
+              <p className="text-sm text-muted-foreground">
                 File: {selectedFile.name} (
                 {(selectedFile.size / 1024).toFixed(1)} KB)
               </p>
@@ -317,29 +317,27 @@ export function CsvImportForm() {
         <Card>
           <CardHeader>
             <CardTitle
-              className={result.success ? 'text-green-700' : 'text-destructive'}
+              className={result.success ? 'text-success' : 'text-destructive'}
             >
-              {result.success ? '✅ Import Berhasil' : '❌ Import Gagal'}
+              {result.success ? 'Import Berhasil' : 'Import Gagal'}
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <p
-              className={result.success ? 'text-green-600' : 'text-destructive'}
-            >
+            <p className={result.success ? 'text-success' : 'text-destructive'}>
               {result.message}
             </p>
 
             {/* Warnings */}
             {result.warnings.length > 0 && (
               <div>
-                <h4 className="mb-1 text-sm font-medium text-amber-700">
+                <h4 className="mb-1 text-sm font-medium text-warning">
                   Peringatan ({result.warnings.length})
                 </h4>
                 <div className="space-y-1">
                   {result.warnings.map((w, i) => (
                     <div
                       key={i}
-                      className="rounded-md bg-amber-50 px-3 py-1.5 text-sm text-amber-700"
+                      className="rounded-md bg-warning/10 px-3 py-1.5 text-sm text-warning"
                     >
                       <span className="font-medium">Baris {w.line}:</span>{' '}
                       {w.message}
@@ -359,7 +357,7 @@ export function CsvImportForm() {
                   {result.errors.map((e, i) => (
                     <div
                       key={i}
-                      className="rounded-md bg-red-50 px-3 py-1.5 text-sm text-destructive"
+                      className="rounded-md bg-destructive/10 px-3 py-1.5 text-sm text-destructive"
                     >
                       <span className="font-medium">Baris {e.line}:</span>{' '}
                       {e.message}

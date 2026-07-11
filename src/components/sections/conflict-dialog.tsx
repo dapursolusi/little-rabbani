@@ -160,30 +160,30 @@ export function ConflictDialog({
         {/* VAL-CAPTURE-032: Single-value fields shown with server values */}
         <div className="space-y-4">
           <div>
-            <h4 className="mb-2 text-sm font-medium text-zinc-700">
+            <h4 className="mb-2 text-sm font-medium text-foreground">
               Nilai dari Server:
             </h4>
             <div className="rounded-lg border border-blue-200 bg-blue-50 p-3">
               <div className="grid grid-cols-3 gap-2 text-sm">
                 <div className="text-center">
-                  <p className="text-xs text-zinc-500">Mood</p>
+                  <p className="text-xs text-muted-foreground">Mood</p>
                   <p className="mt-1 text-xl">
                     {MOOD_EMOJIS[conflict.serverFields.mood] ?? '😐'}
                   </p>
-                  <p className="text-xs text-zinc-600">
+                  <p className="text-xs text-muted-foreground">
                     Level {conflict.serverFields.mood}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-zinc-500">Nafsu Makan</p>
-                  <p className="mt-1 text-sm font-medium text-zinc-800">
+                  <p className="text-xs text-muted-foreground">Nafsu Makan</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">
                     {APPETITE_LABELS[conflict.serverFields.appetite] ??
                       conflict.serverFields.appetite}
                   </p>
                 </div>
                 <div className="text-center">
-                  <p className="text-xs text-zinc-500">Kehadiran</p>
-                  <p className="mt-1 text-sm font-medium text-zinc-800">
+                  <p className="text-xs text-muted-foreground">Kehadiran</p>
+                  <p className="mt-1 text-sm font-medium text-foreground">
                     {PRESENCE_LABELS[conflict.serverFields.presence] ??
                       conflict.serverFields.presence}
                   </p>
@@ -194,10 +194,10 @@ export function ConflictDialog({
 
           {/* VAL-CAPTURE-033: Notes - append-only, both preserved */}
           <div>
-            <h4 className="mb-2 text-sm font-medium text-zinc-700">
+            <h4 className="mb-2 text-sm font-medium text-foreground">
               Catatan (kedua catatan akan digabung):
             </h4>
-            <div className="max-h-32 space-y-1.5 overflow-y-auto rounded-lg bg-zinc-50 p-3">
+            <div className="max-h-32 space-y-1.5 overflow-y-auto rounded-lg bg-muted p-3">
               {conflict.serverNotes.length > 0 && (
                 <div className="border-l-2 border-blue-400 pl-2">
                   <p className="text-[10px] font-medium text-blue-600">
@@ -216,21 +216,21 @@ export function ConflictDialog({
                     Dari Anda (lokal):
                   </p>
                   {conflict.localNotes.map((note, i) => (
-                    <p key={`local-${i}`} className="text-sm text-zinc-700">
+                    <p key={`local-${i}`} className="text-sm text-foreground">
                       {note}
                     </p>
                   ))}
                 </div>
               )}
             </div>
-            <p className="mt-1 text-[10px] text-zinc-400">
+            <p className="mt-1 text-[10px] text-muted-foreground">
               Catatan bersifat kumulatif — tidak ada catatan yang hilang
             </p>
           </div>
 
           {isResolved && (
-            <div className="rounded-lg bg-green-50 p-3 text-center text-sm font-medium text-green-700">
-              ✓ Konflik berhasil diselesaikan
+            <div className="rounded-lg bg-success/10 p-3 text-center text-sm font-medium text-success">
+              Konflik berhasil diselesaikan
             </div>
           )}
         </div>
