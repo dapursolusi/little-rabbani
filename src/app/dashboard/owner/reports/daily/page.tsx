@@ -1,7 +1,7 @@
 import Link from 'next/link';
 
+import { EmptyState } from '@/components/shared/empty-state';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
 
 import { getSessionsForDailyReports } from '@/lib/actions/daily-report';
 import { formatDate } from '@/lib/format';
@@ -35,26 +35,22 @@ export default async function DailyReportPickerPage() {
     <div className="p-4 sm:p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-zinc-900">
+        <h1 className="text-2xl font-semibold text-foreground">
           Laporan Wali Murid
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Pilih sesi untuk membuat laporan harian wali murid
         </p>
       </div>
 
       {/* No sessions */}
       {sessions.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-16">
-            <p className="text-zinc-500">Belum ada sesi</p>
-          </CardContent>
-        </Card>
+        <EmptyState title="Belum ada sesi" />
       ) : (
         <div className="space-y-8">
           {Object.entries(sessionsByTerm).map(([termName, termSessions]) => (
             <div key={termName}>
-              <h2 className="mb-3 text-lg font-medium text-zinc-800">
+              <h2 className="mb-3 text-lg font-medium text-foreground">
                 {termName}
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -67,22 +63,22 @@ export default async function DailyReportPickerPage() {
                     <Link
                       key={session.id}
                       href={`/dashboard/owner/reports/daily/${session.id}`}
-                      className={`rounded-lg border bg-white p-4 transition-colors hover:shadow-sm ${
+                      className={`rounded-lg border bg-background p-4 transition-colors hover:shadow-sm ${
                         session.isHoliday
-                          ? 'border-red-200 bg-red-50'
+                          ? 'border-destructive/30 bg-destructive/10'
                           : reportCount > 0
-                            ? 'border-green-200'
+                            ? 'border-success/30'
                             : isPast
-                              ? 'border-amber-200'
-                              : 'border-zinc-200'
+                              ? 'border-warning/30'
+                              : 'border'
                       }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-medium text-zinc-900">
+                          <p className="font-medium text-foreground">
                             {formatDate(session.date)}
                           </p>
-                          <p className="mt-0.5 text-xs text-zinc-500">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             {session.startTime} — {session.endTime}
                             {session.label && ` • ${session.label}`}
                           </p>
@@ -92,14 +88,14 @@ export default async function DailyReportPickerPage() {
                         ) : reportCount > 0 ? (
                           <Badge
                             variant="default"
-                            className="bg-green-100 text-green-700 hover:bg-green-100"
+                            className="bg-success/10 text-success hover:bg-success/10"
                           >
                             {reportCount} Laporan
                           </Badge>
                         ) : isPast ? (
                           <Badge
                             variant="outline"
-                            className="text-amber-600 border-amber-300"
+                            className="text-warning border-warning/30"
                           >
                             Buat
                           </Badge>
@@ -108,17 +104,17 @@ export default async function DailyReportPickerPage() {
                         )}
                       </div>
                       {!session.isHoliday && !isPast && (
-                        <p className="mt-2 text-xs text-zinc-400">
+                        <p className="mt-2 text-xs text-muted-foreground">
                           Sesi akan datang
                         </p>
                       )}
                       {!session.isHoliday && isPast && reportCount === 0 && (
-                        <p className="mt-2 text-xs text-amber-600">
+                        <p className="mt-2 text-xs text-warning">
                           Klik untuk buat laporan
                         </p>
                       )}
                       {!session.isHoliday && reportCount > 0 && (
-                        <p className="mt-2 text-xs text-green-600">
+                        <p className="mt-2 text-xs text-success">
                           {reportCount} laporan tersimpan, klik untuk review
                         </p>
                       )}

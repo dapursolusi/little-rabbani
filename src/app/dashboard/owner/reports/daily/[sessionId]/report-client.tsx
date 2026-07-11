@@ -4,10 +4,16 @@ import { useCallback, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { ChevronDownIcon, Loading03Icon } from '@hugeicons/core-free-icons';
+import {
+  CheckmarkCircle01Icon,
+  ChevronDownIcon,
+  Copy01Icon,
+  Loading03Icon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
+import { getStatusBadge } from '@/components/shared/get-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -91,40 +97,6 @@ function translateAbsenceReason(value: string | null): string {
     other: 'Alasan Lain',
   };
   return value ? (map[value] ?? value) : '';
-}
-
-function getStatusBadge(status: string) {
-  switch (status) {
-    case 'draft':
-      return (
-        <Badge
-          variant="outline"
-          className="border-amber-300 text-amber-700 bg-amber-50"
-        >
-          Draft
-        </Badge>
-      );
-    case 'sent':
-      return (
-        <Badge
-          variant="default"
-          className="bg-green-100 text-green-700 hover:bg-green-100"
-        >
-          ✓ Terkirim
-        </Badge>
-      );
-    case 'stale':
-      return (
-        <Badge
-          variant="default"
-          className="bg-purple-100 text-purple-700 hover:bg-purple-100"
-        >
-          ⚠️ Perlu Diperbarui
-        </Badge>
-      );
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
 }
 
 // ─────────────── Component ───────────────
@@ -408,7 +380,7 @@ export function DailyReportClient({
     <div className="space-y-6">
       {/* Generate Button */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-zinc-500">
+        <p className="text-sm text-muted-foreground">
           {kids.length} murid terdaftar • {reports.length} laporan tersimpan
         </p>
         <Button
@@ -420,7 +392,8 @@ export function DailyReportClient({
             <span className="flex items-center gap-2">
               <HugeiconsIcon
                 icon={Loading03Icon}
-                className="h-4 w-4 animate-spin"
+                className="animate-spin"
+                data-icon="inline-start"
               />
               Membuat Laporan...
             </span>
@@ -445,25 +418,27 @@ export function DailyReportClient({
                 onClick={() => handleExpandReport(kid.id, kid.name)}
                 className={`flex w-full items-center justify-between rounded-lg border px-4 py-3 text-left transition-colors hover:shadow-sm h-auto ${
                   isExpanded
-                    ? 'border-primary bg-blue-50'
+                    ? 'border-primary bg-muted'
                     : report
-                      ? 'border-zinc-200 bg-white'
-                      : 'border-dashed border-zinc-300 bg-zinc-50'
+                      ? 'border bg-background'
+                      : 'border-dashed border bg-muted'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <span className="font-medium text-zinc-900">{kid.name}</span>
+                  <span className="font-medium text-foreground">
+                    {kid.name}
+                  </span>
                   {report ? (
                     getStatusBadge(report.status)
                   ) : (
-                    <span className="text-xs text-zinc-400">
+                    <span className="text-xs text-muted-foreground">
                       Belum ada laporan
                     </span>
                   )}
                 </div>
                 <HugeiconsIcon
                   icon={ChevronDownIcon}
-                  className={`h-5 w-5 text-zinc-400 transition-transform ${
+                  className={`text-muted-foreground transition-transform ${
                     isExpanded ? 'rotate-180' : ''
                   }`}
                 />
@@ -471,7 +446,7 @@ export function DailyReportClient({
 
               {/* Expanded report detail */}
               {isExpanded && expandedReportDetail && (
-                <div className="mt-2 rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
+                <div className="mt-2 rounded-lg border bg-background p-4 sm:p-6">
                   {/* Status */}
                   <div className="mb-4 flex items-center gap-2">
                     {getStatusBadge(expandedReportDetail.status)}
@@ -479,37 +454,37 @@ export function DailyReportClient({
 
                   {/* Structured data (read-only) */}
                   {expandedReportDetail.structuredData && (
-                    <div className="mb-6 space-y-3 rounded-lg bg-zinc-50 p-4">
-                      <h3 className="text-sm font-medium text-zinc-700">
+                    <div className="mb-6 space-y-3 rounded-lg bg-muted p-4">
+                      <h3 className="text-sm font-medium text-foreground">
                         Data Observasi
                       </h3>
 
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                          <span className="text-xs text-zinc-500">
+                          <span className="text-xs text-muted-foreground">
                             Suasana Hati
                           </span>
-                          <p className="text-sm font-medium text-zinc-800">
+                          <p className="text-sm font-medium text-foreground">
                             {getMoodLabel(
                               expandedReportDetail.structuredData.mood
                             )}
                           </p>
                         </div>
                         <div>
-                          <span className="text-xs text-zinc-500">
+                          <span className="text-xs text-muted-foreground">
                             Nafsu Makan
                           </span>
-                          <p className="text-sm font-medium text-zinc-800">
+                          <p className="text-sm font-medium text-foreground">
                             {translateAppetite(
                               expandedReportDetail.structuredData.appetite
                             )}
                           </p>
                         </div>
                         <div>
-                          <span className="text-xs text-zinc-500">
+                          <span className="text-xs text-muted-foreground">
                             Kehadiran
                           </span>
-                          <p className="text-sm font-medium text-zinc-800">
+                          <p className="text-sm font-medium text-foreground">
                             {translatePresence(
                               expandedReportDetail.structuredData.presence
                             )}
@@ -517,10 +492,10 @@ export function DailyReportClient({
                         </div>
                         {expandedReportDetail.structuredData.absenceReason && (
                           <div>
-                            <span className="text-xs text-zinc-500">
+                            <span className="text-xs text-muted-foreground">
                               Alasan Tidak Hadir
                             </span>
-                            <p className="text-sm font-medium text-zinc-800">
+                            <p className="text-sm font-medium text-foreground">
                               {translateAbsenceReason(
                                 expandedReportDetail.structuredData
                                   .absenceReason
@@ -532,24 +507,22 @@ export function DailyReportClient({
 
                       {/* Activities */}
                       <div>
-                        <span className="text-xs text-zinc-500">Aktivitas</span>
+                        <span className="text-xs text-muted-foreground">
+                          Aktivitas
+                        </span>
                         {expandedReportDetail.structuredData.activities.length >
                         0 ? (
                           <div className="mt-1 flex flex-wrap gap-1">
                             {expandedReportDetail.structuredData.activities.map(
                               (activity, idx) => (
-                                <Badge
-                                  key={idx}
-                                  variant="secondary"
-                                  className="bg-blue-100 text-blue-700"
-                                >
+                                <Badge key={idx} variant="secondary">
                                   {activity}
                                 </Badge>
                               )
                             )}
                           </div>
                         ) : (
-                          <p className="mt-1 text-sm text-zinc-500 italic">
+                          <p className="mt-1 text-sm text-muted-foreground italic">
                             Tidak ada aktivitas tercatat
                           </p>
                         )}
@@ -558,10 +531,10 @@ export function DailyReportClient({
                       {/* Notes */}
                       {expandedReportDetail.structuredData.notes.length > 0 && (
                         <div>
-                          <span className="text-xs text-zinc-500">
+                          <span className="text-xs text-muted-foreground">
                             Catatan Guru
                           </span>
-                          <ul className="mt-1 list-inside list-disc text-sm text-zinc-700">
+                          <ul className="mt-1 list-inside list-disc text-sm text-foreground">
                             {expandedReportDetail.structuredData.notes.map(
                               (note, idx) => (
                                 <li key={idx}>{note}</li>
@@ -577,7 +550,7 @@ export function DailyReportClient({
                   <div className="mb-4 space-y-2">
                     <label
                       htmlFor={`narrative-${expandedReportDetail.kidId}`}
-                      className="text-sm font-medium text-zinc-700"
+                      className="text-sm font-medium text-foreground"
                     >
                       Narasi (dapat diedit)
                     </label>
@@ -609,13 +582,17 @@ export function DailyReportClient({
                   </div>
 
                   {/* Actions */}
-                  <div className="flex flex-wrap gap-2 border-t border-zinc-100 pt-4">
+                  <div className="flex flex-wrap gap-2 border-t pt-4">
                     <Button
                       variant="outline"
                       size="sm"
                       onClick={handleCopyToClipboard}
                     >
-                      📋 Salin Laporan
+                      <HugeiconsIcon
+                        icon={Copy01Icon}
+                        data-icon="inline-start"
+                      />
+                      Salin Laporan
                     </Button>
 
                     {expandedReportDetail.status === 'draft' && (
@@ -623,16 +600,22 @@ export function DailyReportClient({
                         variant="default"
                         size="sm"
                         onClick={handleMarkSent}
-                        className="bg-green-600 hover:bg-green-700"
                       >
-                        ✓ Tandai Terkirim
+                        <HugeiconsIcon
+                          icon={CheckmarkCircle01Icon}
+                          data-icon="inline-start"
+                        />
+                        Tandai Terkirim
                       </Button>
                     )}
 
                     {expandedReportDetail.status === 'stale' && (
-                      <span className="flex items-center text-xs text-purple-600">
-                        ⚠️ Laporan perlu ditandai terkirim kembali setelah
-                        diedit
+                      <span className="flex items-center gap-1 text-xs text-muted-foreground">
+                        <HugeiconsIcon
+                          icon={CheckmarkCircle01Icon}
+                          className="size-3 text-warning"
+                        />
+                        Laporan perlu ditandai terkirim kembali setelah diedit
                       </span>
                     )}
                   </div>
@@ -653,7 +636,7 @@ export function DailyReportClient({
               tersedia)
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[400px] overflow-y-auto whitespace-pre-wrap rounded-md border bg-zinc-50 p-4 text-sm text-zinc-800">
+          <div className="max-h-[400px] overflow-y-auto whitespace-pre-wrap rounded-md border bg-muted p-4 text-sm text-foreground">
             {clipboardText}
           </div>
           <DialogFooter>

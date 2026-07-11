@@ -4,10 +4,15 @@ import { useCallback, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { Loading03Icon } from '@hugeicons/core-free-icons';
+import {
+  CheckmarkCircle01Icon,
+  Download03Icon,
+  Loading03Icon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
+import { getStatusBadge } from '@/components/shared/get-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -51,40 +56,6 @@ interface IQuarterlyReportClientProps {
 }
 
 // ─────────────── Helpers ───────────────
-
-function getStatusBadge(status: string) {
-  switch (status) {
-    case 'draft':
-      return (
-        <Badge
-          variant="outline"
-          className="border-amber-300 text-amber-700 bg-amber-50"
-        >
-          Draft
-        </Badge>
-      );
-    case 'final':
-      return (
-        <Badge
-          variant="default"
-          className="bg-green-100 text-green-700 hover:bg-green-100"
-        >
-          ✓ Final
-        </Badge>
-      );
-    case 'stale':
-      return (
-        <Badge
-          variant="default"
-          className="bg-purple-100 text-purple-700 hover:bg-purple-100"
-        >
-          ⚠️ Perlu Diperbarui
-        </Badge>
-      );
-    default:
-      return <Badge variant="outline">{status}</Badge>;
-  }
-}
 
 function getMoodLabel(mood: number): string {
   const labels: Record<number, string> = {
@@ -311,14 +282,14 @@ export function QuarterlyReportClient({
     <div className="space-y-6">
       {/* Generate Button (shown when no report or stale) */}
       {(!report || report.status === 'stale') && (
-        <div className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-4">
+        <div className="flex items-center justify-between rounded-lg border bg-background p-4">
           <div>
-            <p className="text-sm font-medium text-zinc-700">
+            <p className="text-sm font-medium text-foreground">
               {!report
                 ? 'Buat laporan triwulanan untuk melihat ringkasan statistik dan narasi AI'
                 : 'Laporan ini perlu diperbarui — buat ulang untuk membuat laporan baru'}
             </p>
-            <p className="mt-0.5 text-xs text-zinc-500">
+            <p className="mt-0.5 text-xs text-muted-foreground">
               {kidName} — {termName}
             </p>
           </div>
@@ -331,7 +302,8 @@ export function QuarterlyReportClient({
               <span className="flex items-center gap-2">
                 <HugeiconsIcon
                   icon={Loading03Icon}
-                  className="h-4 w-4 animate-spin"
+                  className="animate-spin"
+                  data-icon="inline-start"
                 />
                 Membuat Laporan...
               </span>
@@ -346,13 +318,13 @@ export function QuarterlyReportClient({
 
       {/* Report content */}
       {report && (
-        <div className="rounded-lg border border-zinc-200 bg-white p-4 sm:p-6">
+        <div className="rounded-lg border bg-background p-4 sm:p-6">
           {/* Status + Download */}
           <div className="mb-4 flex items-center justify-between">
             <div className="flex items-center gap-2">
               {getStatusBadge(report.status)}
               {report.previousSnapshotId && (
-                <span className="text-xs text-zinc-400">
+                <span className="text-xs text-muted-foreground">
                   Term sebelumnya digunakan sebagai perbandingan
                 </span>
               )}
@@ -369,12 +341,19 @@ export function QuarterlyReportClient({
                   <span className="flex items-center gap-1">
                     <HugeiconsIcon
                       icon={Loading03Icon}
-                      className="h-3 w-3 animate-spin"
+                      className="animate-spin"
+                      data-icon="inline-start"
                     />
                     Mengunduh...
                   </span>
                 ) : (
-                  '⬇ Download PDF'
+                  <>
+                    <HugeiconsIcon
+                      icon={Download03Icon}
+                      data-icon="inline-start"
+                    />
+                    Download PDF
+                  </>
                 )}
               </Button>
             )}
@@ -382,25 +361,25 @@ export function QuarterlyReportClient({
 
           {/* Stats Section */}
           {stats && (
-            <div className="mb-6 space-y-4 rounded-lg bg-zinc-50 p-4">
-              <h3 className="text-sm font-medium text-zinc-700">
+            <div className="mb-6 space-y-4 rounded-lg bg-muted p-4">
+              <h3 className="text-sm font-medium text-foreground">
                 Ringkasan Statistik Trivulan
               </h3>
 
               {/* Attendance */}
-              <div className="rounded-lg border border-zinc-200 bg-white p-3">
-                <p className="text-xs text-zinc-500">Kehadiran</p>
-                <p className="mt-1 text-lg font-semibold text-zinc-900">
+              <div className="rounded-lg border bg-background p-3">
+                <p className="text-xs text-muted-foreground">Kehadiran</p>
+                <p className="mt-1 text-lg font-semibold text-foreground">
                   {stats.attendancePercent}%
                 </p>
-                <p className="text-xs text-zinc-500">
+                <p className="text-xs text-muted-foreground">
                   {stats.daysPresent} dari {stats.totalSchoolDays} hari sekolah
                 </p>
               </div>
 
               {/* Mood Distribution */}
               <div>
-                <p className="mb-2 text-xs font-medium text-zinc-500">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
                   Distribusi Suasana Hati
                 </p>
                 <div className="space-y-1">
@@ -409,16 +388,16 @@ export function QuarterlyReportClient({
                     .map(([level, count]) => (
                       <div
                         key={level}
-                        className="flex items-center justify-between rounded bg-white px-3 py-1.5 text-sm"
+                        className="flex items-center justify-between rounded bg-background px-3 py-1.5 text-sm"
                       >
                         <span>{getMoodLabel(Number(level))}</span>
-                        <span className="font-medium text-zinc-700">
+                        <span className="font-medium text-foreground">
                           {count}x
                         </span>
                       </div>
                     ))}
                   {Object.keys(stats.moodDistribution).length === 0 && (
-                    <p className="text-sm italic text-zinc-400">
+                    <p className="text-sm italic text-muted-foreground">
                       Tidak ada data
                     </p>
                   )}
@@ -427,7 +406,7 @@ export function QuarterlyReportClient({
 
               {/* Appetite Distribution */}
               <div>
-                <p className="mb-2 text-xs font-medium text-zinc-500">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
                   Distribusi Nafsu Makan
                 </p>
                 <div className="space-y-1">
@@ -435,17 +414,17 @@ export function QuarterlyReportClient({
                     ([appetite, count]) => (
                       <div
                         key={appetite}
-                        className="flex items-center justify-between rounded bg-white px-3 py-1.5 text-sm"
+                        className="flex items-center justify-between rounded bg-background px-3 py-1.5 text-sm"
                       >
                         <span>{translateAppetite(appetite)}</span>
-                        <span className="font-medium text-zinc-700">
+                        <span className="font-medium text-foreground">
                           {count}x
                         </span>
                       </div>
                     )
                   )}
                   {Object.keys(stats.appetiteDistribution).length === 0 && (
-                    <p className="text-sm italic text-zinc-400">
+                    <p className="text-sm italic text-muted-foreground">
                       Tidak ada data
                     </p>
                   )}
@@ -454,7 +433,7 @@ export function QuarterlyReportClient({
 
               {/* Activity Participation */}
               <div>
-                <p className="mb-2 text-xs font-medium text-zinc-500">
+                <p className="mb-2 text-xs font-medium text-muted-foreground">
                   Partisipasi Aktivitas Teratas
                 </p>
                 <div className="flex flex-wrap gap-1">
@@ -462,16 +441,12 @@ export function QuarterlyReportClient({
                     .sort(([, a], [, b]) => b - a)
                     .slice(0, 5)
                     .map(([activity, count]) => (
-                      <Badge
-                        key={activity}
-                        variant="secondary"
-                        className="bg-blue-100 text-blue-700"
-                      >
+                      <Badge key={activity} variant="secondary">
                         {activity}: {count}x
                       </Badge>
                     ))}
                   {Object.keys(stats.activityParticipation).length === 0 && (
-                    <p className="text-sm italic text-zinc-400">
+                    <p className="text-sm italic text-muted-foreground">
                       Tidak ada data partisipasi
                     </p>
                   )}
@@ -484,7 +459,7 @@ export function QuarterlyReportClient({
           <div className="mb-4 space-y-2">
             <label
               htmlFor="section-changes"
-              className="text-sm font-medium text-zinc-700"
+              className="text-sm font-medium text-foreground"
             >
               1. Perubahan
             </label>
@@ -508,7 +483,7 @@ export function QuarterlyReportClient({
           <div className="mb-4 space-y-2">
             <label
               htmlFor="section-improvements"
-              className="text-sm font-medium text-zinc-700"
+              className="text-sm font-medium text-foreground"
             >
               2. Peningkatan
             </label>
@@ -535,7 +510,7 @@ export function QuarterlyReportClient({
           <div className="mb-4 space-y-2">
             <label
               htmlFor="section-recommendations"
-              className="text-sm font-medium text-zinc-700"
+              className="text-sm font-medium text-foreground"
             >
               3. Rekomendasi
             </label>
@@ -559,7 +534,7 @@ export function QuarterlyReportClient({
           </div>
 
           {/* Action Buttons */}
-          <div className="flex flex-wrap gap-2 border-t border-zinc-100 pt-4">
+          <div className="flex flex-wrap gap-2 border-t pt-4">
             <Button
               variant="outline"
               size="sm"
@@ -570,13 +545,12 @@ export function QuarterlyReportClient({
             </Button>
 
             {report.status === 'draft' && (
-              <Button
-                variant="default"
-                size="sm"
-                onClick={handleMarkFinal}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                ✓ Finalisasi Laporan
+              <Button variant="default" size="sm" onClick={handleMarkFinal}>
+                <HugeiconsIcon
+                  icon={CheckmarkCircle01Icon}
+                  data-icon="inline-start"
+                />
+                Finalisasi Laporan
               </Button>
             )}
           </div>
@@ -585,12 +559,12 @@ export function QuarterlyReportClient({
 
       {/* Empty state when no report */}
       {!report && !isGenerating && (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-          <p className="text-zinc-500">
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted py-16">
+          <p className="text-muted-foreground">
             Klik &ldquo;Buat Laporan&rdquo; untuk membuat laporan triwulanan{' '}
             {kidName}
           </p>
-          <p className="mt-1 text-xs text-zinc-400">
+          <p className="mt-1 text-xs text-muted-foreground">
             Pastikan data observasi dan laporan harian sudah tersedia untuk term{' '}
             {termName}
           </p>
@@ -599,44 +573,44 @@ export function QuarterlyReportClient({
 
       {/* PDF Fallback View */}
       {pdfFallback && (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4">
+        <div className="rounded-lg border border-warning/30 bg-warning/10 p-4">
           <div className="mb-2 flex items-center gap-2">
-            <span className="text-amber-600 text-sm font-medium">
-              ⚠️ Tampilan HTML (PDF gagal dibuat)
+            <span className="text-sm font-medium text-warning">
+              Tampilan HTML (PDF gagal dibuat)
             </span>
           </div>
-          <div className="space-y-4 rounded-lg bg-white p-4">
+          <div className="space-y-4 rounded-lg bg-background p-4">
             <div>
-              <h3 className="text-sm font-bold text-zinc-900">
+              <h3 className="text-sm font-bold text-foreground">
                 {pdfFallback.data.kidName}
               </h3>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 {pdfFallback.data.termName} — {pdfFallback.data.termPeriod}
               </p>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-zinc-700">
+              <h4 className="text-sm font-semibold text-foreground">
                 1. Perubahan
               </h4>
-              <p className="mt-1 text-sm text-zinc-600 whitespace-pre-wrap">
+              <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">
                 {pdfFallback.data.sections.changes ||
                   'Bagian ini tidak dapat dihasilkan.'}
               </p>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-zinc-700">
+              <h4 className="text-sm font-semibold text-foreground">
                 2. Peningkatan
               </h4>
-              <p className="mt-1 text-sm text-zinc-600 whitespace-pre-wrap">
+              <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">
                 {pdfFallback.data.sections.improvements ||
                   'Bagian ini tidak dapat dihasilkan.'}
               </p>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-zinc-700">
+              <h4 className="text-sm font-semibold text-foreground">
                 3. Rekomendasi
               </h4>
-              <p className="mt-1 text-sm text-zinc-600 whitespace-pre-wrap">
+              <p className="mt-1 text-sm text-muted-foreground whitespace-pre-wrap">
                 {pdfFallback.data.sections.recommendations ||
                   'Bagian ini tidak dapat dihasilkan.'}
               </p>
