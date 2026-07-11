@@ -1,17 +1,23 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+
 import Link from 'next/link';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { getStatusBadge } from '@/components/shared/get-status-badge';
+import { Pagination } from '@/components/shared/pagination';
+import { SearchInput } from '@/components/shared/search-input';
 
 import {
   getActiveTerm,
-  getEnrolledKids,
+  getEnrolledKidsPaginated,
   getKidMonthlyReportsBatch,
   getMonthOptions,
 } from '@/lib/actions/monthly-report';
-import { baseMetadata } from '@/lib/metadata';
+import type { IMonthOption } from '@/lib/actions/monthly-report';
 
-export const metadata = { ...baseMetadata, title: 'Laporan Bulanan' };
+const PAGE_SIZE = 10;
 
 function formatMonthLabel(value: string): string {
   const [yearStr, monthStr] = value.split('-').map(Number);
@@ -32,59 +38,155 @@ function formatMonthLabel(value: string): string {
   return `${months[monthStr - 1] ?? ''} ${yearStr}`;
 }
 
-export default async function MonthlyReportPickerPage() {
-  const termResult = await getActiveTerm();
+interface ITermData {
+  id: string;
+  name: string;
+  startDate: string;
+  endDate: string;
+}
 
-  if (!termResult.success) {
+interface IKidData {
+  id: string;
+  name: string;
+  guardian: { name: string } | null;
+}
+
+export default function MonthlyReportPickerPage() {
+  const [term, setTerm] = useState<ITermData | null>(null);
+  const [termError, setTermError] = useState<string | null>(null);
+  const [loadingTerm, setLoadingTerm] = useState(true);
+
+  const [months, setMonths] = useState<IMonthOption[]>([]);
+  const [existingReportsMap, setExistingReportsMap] = useState<
+    Map<string, { id: string; month: string; status: string }>
+  >(new Map());
+
+  const [kids, setKids] = useState<IKidData[]>([]);
+  const [total, setTotal] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [loadingKids, setLoadingKids] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+
+  // Fetch active term and month options once on mount
+  useEffect(() => {
+    async function init() {
+      const termResult = await getActiveTerm();
+      if (!termResult.success) {
+        setTermError(termResult.error);
+        setLoadingTerm(false);
+        return;
+      }
+      setTerm(termResult.data);
+      setLoadingTerm(false);
+
+      const monthsResult = await getMonthOptions(termResult.data.id);
+      if (monthsResult.success) {
+        setMonths(monthsResult.data);
+      }
+    }
+    init();
+  }, []);
+
+  // Fetch paginated kids + batch reports when search/page changes
+  useEffect(() => {
+    if (!term) return;
+
+    let cancelled = false;
+
+    async function fetch() {
+      if (cancelled) return;
+      setLoadingKids(true);
+      setError(null);
+
+      const kidsResult = await getEnrolledKidsPaginated(
+        term.id,
+        search,
+        page,
+        PAGE_SIZE
+      );
+      if (cancelled) return;
+      if (!kidsResult.success) {
+        setError(kidsResult.error);
+        setLoadingKids(false);
+        return;
+      }
+
+      const {
+        kids: kidsData,
+        total: totalData,
+        totalPages: totalPagesData,
+      } = kidsResult.data;
+      setKids(kidsData);
+      setTotal(totalData);
+      setTotalPages(totalPagesData);
+
+      // Fetch batch reports for the current page of kids
+      if (kidsData.length > 0) {
+        const batchResult = await getKidMonthlyReportsBatch(
+          kidsData.map((k: IKidData) => k.id)
+        );
+        if (cancelled) return;
+        if (batchResult.success) {
+          const map = new Map<
+            string,
+            { id: string; month: string; status: string }
+          >();
+          for (const report of batchResult.data) {
+            map.set(`${report.kidId}:${report.month}`, {
+              id: report.id,
+              month: report.month,
+              status: report.status,
+            });
+          }
+          setExistingReportsMap(map);
+        }
+      } else {
+        setExistingReportsMap(new Map());
+      }
+
+      setLoadingKids(false);
+    }
+
+    fetch();
+    return () => {
+      cancelled = true;
+    };
+  }, [term, search, page]);
+
+  const handleSearchChange = useCallback((value: string) => {
+    setSearch(value);
+    setPage(1);
+  }, []);
+
+  // Loading state
+  if (loadingTerm) {
+    return (
+      <div className="p-4 sm:p-6">
+        <h1 className="mb-2 text-2xl font-semibold text-foreground">
+          Laporan Bulanan
+        </h1>
+        <div className="flex items-center justify-center rounded-lg border bg-muted p-8 text-center">
+          <p className="text-muted-foreground">Memuat...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // No active term
+  if (termError) {
     return (
       <div className="p-4 sm:p-6">
         <h1 className="mb-2 text-2xl font-semibold text-foreground">
           Laporan Bulanan
         </h1>
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border bg-muted p-8 text-center">
-          <p className="text-muted-foreground">{termResult.error}</p>
+          <p className="text-muted-foreground">{termError}</p>
         </div>
       </div>
     );
-  }
-
-  const term = termResult.data;
-  const kidsResult = await getEnrolledKids(term.id);
-  const monthsResult = await getMonthOptions(term.id);
-
-  if (!kidsResult.success) {
-    return (
-      <div className="p-4 text-center text-destructive">{kidsResult.error}</div>
-    );
-  }
-
-  if (!monthsResult.success) {
-    return (
-      <div className="p-4 text-center text-destructive">
-        {monthsResult.error}
-      </div>
-    );
-  }
-
-  const kids = kidsResult.data;
-  const months = monthsResult.data;
-
-  // Get existing monthly reports for all kids (batch query, no N+1)
-  const existingReportsMap = new Map<
-    string,
-    { id: string; month: string; status: string }
-  >();
-  const batchReportsResult = await getKidMonthlyReportsBatch(
-    kids.map((k) => k.id)
-  );
-  if (batchReportsResult.success) {
-    for (const report of batchReportsResult.data) {
-      existingReportsMap.set(`${report.kidId}:${report.month}`, {
-        id: report.id,
-        month: report.month,
-        status: report.status,
-      });
-    }
   }
 
   return (
@@ -95,16 +197,43 @@ export default async function MonthlyReportPickerPage() {
           Laporan Bulanan
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Term aktif: {term.name} ({term.startDate} — {term.endDate})
+          Term aktif: {term!.name} ({term!.startDate} — {term!.endDate})
         </p>
       </div>
 
-      {/* No kids enrolled */}
-      {kids.length === 0 ? (
-        <EmptyState title="Belum ada murid terdaftar" />
-      ) : (
+      {/* Search */}
+      <div className="mb-4">
+        <SearchInput
+          placeholder="Cari nama murid..."
+          value={search}
+          onChange={handleSearchChange}
+        />
+      </div>
+
+      {/* Error state */}
+      {error && (
+        <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center text-destructive">
+          {error}
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loadingKids && (
+        <div className="flex items-center justify-center rounded-lg border bg-muted p-8 text-center">
+          <p className="text-muted-foreground">Memuat data...</p>
+        </div>
+      )}
+
+      {/* No kids matching search */}
+      {!loadingKids && !error && kids.length === 0 && (
+        <EmptyState
+          title={search ? 'Murid tidak ditemukan' : 'Belum ada murid terdaftar'}
+        />
+      )}
+
+      {/* Kid list with month options */}
+      {!loadingKids && !error && kids.length > 0 && (
         <div className="space-y-4">
-          {/* Kid list with month options */}
           {kids.map((kidData) => (
             <div key={kidData.id} className="rounded-lg border bg-background">
               <div className="border-b px-4 py-3">
@@ -122,7 +251,6 @@ export default async function MonthlyReportPickerPage() {
                     `${kidData.id}:${monthData.value}`
                   );
                   const hasReport = !!report;
-
                   const status = report?.status ?? '';
 
                   return hasReport ? (
@@ -146,7 +274,7 @@ export default async function MonthlyReportPickerPage() {
                     <Link
                       key={monthData.value}
                       href={`/dashboard/owner/reports/monthly/${kidData.id}/${monthData.value}`}
-                      className="rounded-lg border border-dashed border p-3 text-left transition-colors hover:border-primary hover:shadow-sm"
+                      className="rounded-lg border border-dashed p-3 text-left transition-colors hover:border-primary hover:shadow-sm"
                     >
                       <p className="text-sm font-medium text-muted-foreground">
                         {formatMonthLabel(monthData.value)}
@@ -158,6 +286,15 @@ export default async function MonthlyReportPickerPage() {
               </div>
             </div>
           ))}
+
+          {/* Pagination */}
+          <Pagination
+            currentPage={page}
+            totalPages={totalPages}
+            totalItems={total}
+            pageSize={PAGE_SIZE}
+            onPageChange={setPage}
+          />
         </div>
       )}
     </div>

@@ -1,6 +1,6 @@
 'use server';
 
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -294,6 +294,66 @@ export async function getEnrolledKids(termId: string) {
   });
 
   return { success: true as const, data: kidsList };
+}
+
+/**
+ * Get enrolled kids with pagination and search.
+ * Supports case-insensitive ILIKE search on kid name, LIMIT/OFFSET pagination.
+ */
+export async function getEnrolledKidsPaginated(
+  termId: string,
+  search: string,
+  page: number,
+  pageSize: number
+) {
+  const auth = await requireOwner();
+  if (!auth.authorized) {
+    return { success: false as const, error: auth.error };
+  }
+
+  const conditions = [
+    eq(kid.enrolledTermId, termId),
+    eq(kid.status, 'enrolled'),
+  ];
+  if (search) {
+    conditions.push(ilike(kid.name, `%${search}%`));
+  }
+
+  const where = and(...conditions);
+  const offset = (page - 1) * pageSize;
+
+  const [kidsList, totalResult] = await Promise.all([
+    db.query.kid.findMany({
+      where,
+      columns: { id: true, name: true, guardianId: true },
+      with: {
+        guardian: {
+          columns: { name: true },
+        },
+      },
+      orderBy: [asc(kid.name)],
+      limit: pageSize,
+      offset,
+    }),
+    db
+      .select({ count: sql<number>`count(*)` })
+      .from(kid)
+      .where(where),
+  ]);
+
+  const total = totalResult?.[0]?.count ?? 0;
+  const totalPages = Math.ceil(total / pageSize);
+
+  return {
+    success: true as const,
+    data: {
+      kids: kidsList,
+      total,
+      page,
+      totalPages,
+      pageSize,
+    },
+  };
 }
 
 /**

@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -14,6 +14,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
 import { getStatusBadge } from '@/components/shared/get-status-badge';
+import { Pagination } from '@/components/shared/pagination';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import {
@@ -122,6 +123,40 @@ export function DailyReportClient({
   const [isSaving, setIsSaving] = useState(false);
   const [showClipboardModal, setShowClipboardModal] = useState(false);
   const [clipboardText, setClipboardText] = useState('');
+
+  // ────────────────── Pagination + Filter ──────────────────
+
+  const [statusFilter, setStatusFilter] = useState<
+    'all' | 'draft' | 'sent' | 'stale'
+  >('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const PAGE_SIZE = 20;
+
+  const filteredKids = useMemo(() => {
+    if (statusFilter === 'all') return kids;
+    return kids.filter((kid) => {
+      const report = reports.find((r) => r.kidId === kid.id);
+      return report?.status === statusFilter;
+    });
+  }, [kids, reports, statusFilter]);
+
+  const totalPages = Math.ceil(filteredKids.length / PAGE_SIZE);
+  const paginatedKids = filteredKids.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  );
+
+  const handleFilterChange = useCallback((filter: typeof statusFilter) => {
+    setStatusFilter(filter);
+    setCurrentPage(1);
+  }, []);
+
+  const FILTER_OPTIONS: { value: typeof statusFilter; label: string }[] = [
+    { value: 'all', label: 'Semua' },
+    { value: 'draft', label: 'Draft' },
+    { value: 'sent', label: 'Terkirim' },
+    { value: 'stale', label: 'Perlu Diperbarui' },
+  ];
 
   // ────────────────── Generation ──────────────────
 
@@ -340,7 +375,7 @@ export function DailyReportClient({
       setClipboardText(text);
       setShowClipboardModal(true);
     }
-  }, [expandedReportDetail, editNarrative, buildFullReportText]);
+  }, [expandedReportDetail, buildFullReportText]);
 
   // ────────────────── Mark Sent ──────────────────
 
@@ -403,9 +438,23 @@ export function DailyReportClient({
         </Button>
       </div>
 
+      {/* Status Filter */}
+      <div className="flex flex-wrap gap-2">
+        {FILTER_OPTIONS.map((opt) => (
+          <Button
+            key={opt.value}
+            variant={statusFilter === opt.value ? 'default' : 'outline'}
+            size="sm"
+            onClick={() => handleFilterChange(opt.value)}
+          >
+            {opt.label}
+          </Button>
+        ))}
+      </div>
+
       {/* Kid List */}
       <div className="space-y-2">
-        {kids.map((kid) => {
+        {paginatedKids.map((kid) => {
           const report = reports.find((r) => r.kidId === kid.id);
           const isExpanded = expandedKidId === kid.id;
 
@@ -625,6 +674,15 @@ export function DailyReportClient({
           );
         })}
       </div>
+
+      {/* Pagination */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={filteredKids.length}
+        pageSize={PAGE_SIZE}
+        onPageChange={setCurrentPage}
+      />
 
       {/* Clipboard Fallback Modal */}
       <Dialog open={showClipboardModal} onOpenChange={setShowClipboardModal}>
