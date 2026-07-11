@@ -56,7 +56,7 @@ export function LoginForm({ error, redirect: redirectUrl }: ILoginFormProps) {
         </div>
 
         {accessDenied && (
-          <div className="mb-6 rounded-lg bg-destructive/10 p-4 text-center">
+          <div className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-center">
             <p className="text-sm font-medium text-destructive">
               Akun Anda tidak terdaftar
             </p>
@@ -67,7 +67,7 @@ export function LoginForm({ error, redirect: redirectUrl }: ILoginFormProps) {
         )}
 
         {oauthError && (
-          <div className="mb-6 rounded-lg bg-destructive/10 p-4 text-center">
+          <div className="mb-6 rounded-lg border border-destructive/20 bg-destructive/10 p-4 text-center">
             <p className="text-sm font-medium text-destructive">{oauthError}</p>
             <Button
               onClick={handleRetry}

@@ -5,6 +5,7 @@ import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
 import { TermCohortForm } from '@/components/sections/term-cohort-form';
+import { EmptyState } from '@/components/shared/empty-state';
 import { Badge } from '@/components/ui/badge';
 import {
   Table,
@@ -49,7 +50,6 @@ export default async function CohortPage({ params }: ICohortPageProps) {
           <Link
             href="/dashboard/owner/term"
             className="text-sm text-primary hover:underline"
-            data-icon="inline-start"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} />
             Kembali
@@ -74,11 +74,7 @@ export default async function CohortPage({ params }: ICohortPageProps) {
           Murid Terdaftar ({cohort.length})
         </h2>
         {cohort.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border bg-muted py-10">
-            <p className="text-muted-foreground">
-              Belum ada murid terdaftar di term ini
-            </p>
-          </div>
+          <EmptyState title="Belum ada murid terdaftar di term ini" />
         ) : (
           <div className="overflow-x-auto rounded-lg border">
             <Table>
