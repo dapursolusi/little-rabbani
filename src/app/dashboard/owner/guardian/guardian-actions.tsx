@@ -69,7 +69,7 @@ export function GuardianActions({
                   aria-label="Buka menu wali murid"
                 >
                   <span className="sr-only">Buka menu wali murid</span>
-                  <HugeiconsIcon icon={MoreVerticalIcon} className="h-4 w-4" />
+                  <HugeiconsIcon icon={MoreVerticalIcon} />
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>

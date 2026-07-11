@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { EmptyState } from '@/components/shared/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
@@ -57,8 +58,10 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">Murid</h1>
-          <p className="mt-1 text-sm text-zinc-500">Kelola data murid</p>
+          <h1 className="text-2xl font-semibold text-foreground">Murid</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kelola data murid
+          </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <form
@@ -71,7 +74,7 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
               name="search"
               defaultValue={search ?? ''}
               placeholder="Cari murid..."
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm"
+              className="rounded-md border px-3 py-1.5 text-sm"
             />
             <Button type="submit" variant="default" size="sm">
               Cari
@@ -89,23 +92,18 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
       {/* Mobile card list */}
       <div className="space-y-3 md:hidden">
         {kids.length === 0 ? (
-          <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-8">
-            <p className="text-zinc-500">
-              {search ? 'Murid tidak ditemukan' : 'Belum ada data murid'}
-            </p>
-          </div>
+          <EmptyState
+            title={search ? 'Murid tidak ditemukan' : 'Belum ada data murid'}
+          />
         ) : (
           kids.map((k) => {
             const badge = STATUS_BADGE[k.status] ?? STATUS_BADGE.waiting;
             return (
-              <div
-                key={k.id}
-                className="rounded-lg border border-zinc-200 bg-white p-4"
-              >
+              <div key={k.id} className="rounded-lg border bg-card p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-zinc-900">{k.name}</p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="font-medium text-foreground">{k.name}</p>
+                    <p className="text-xs text-muted-foreground">
                       {k.guardian?.name ?? '-'} • {formatDate(k.dob)}
                     </p>
                   </div>
@@ -118,7 +116,7 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
                   </Badge>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-zinc-400">
+                  <span className="text-xs text-muted-foreground">
                     {k.enrolledTerm?.name ?? '-'}
                   </span>
                   <KidActions kidId={k.id} />
@@ -130,21 +128,13 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 md:block">
+      <div className="hidden overflow-x-auto rounded-lg border md:block">
         {kids.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-16">
-            <p className="text-zinc-500">
-              {search ? 'Murid tidak ditemukan' : 'Belum ada data murid'}
-            </p>
-            {!search && (
-              <Link
-                href="/dashboard/owner/kid/create"
-                className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
-              >
-                Tambah Murid
-              </Link>
-            )}
-          </div>
+          <EmptyState
+            title={search ? 'Murid tidak ditemukan' : 'Belum ada data murid'}
+            actionLabel={!search ? 'Tambah Murid' : undefined}
+            actionHref={!search ? '/dashboard/owner/kid/create' : undefined}
+          />
         ) : (
           <Table>
             <TableHeader>
@@ -188,8 +178,8 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between border-t border-zinc-200 px-4 py-3">
-          <p className="text-sm text-zinc-500">
+        <div className="mt-4 flex items-center justify-between border-t border px-4 py-3">
+          <p className="text-sm text-muted-foreground">
             Menampilkan {offset + 1}–{Math.min(offset + PAGE_SIZE, totalItems)}{' '}
             dari {totalItems}
           </p>

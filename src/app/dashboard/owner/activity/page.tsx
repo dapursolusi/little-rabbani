@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { EmptyState } from '@/components/shared/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -56,10 +57,12 @@ export default async function ActivityListPage({
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">
+          <h1 className="text-2xl font-semibold text-foreground">
             Katalog Aktivitas
           </h1>
-          <p className="mt-1 text-sm text-zinc-500">Kelola daftar aktivitas</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kelola daftar aktivitas
+          </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <form
@@ -72,7 +75,7 @@ export default async function ActivityListPage({
               name="search"
               defaultValue={search ?? ''}
               placeholder="Cari aktivitas..."
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm min-h-[44px]"
+              className="rounded-md border px-3 py-1.5 text-sm"
             />
             <Button type="submit" variant="default" size="sm">
               Cari
@@ -95,29 +98,27 @@ export default async function ActivityListPage({
 
       {/* Active Activities */}
       <section className="mb-8">
-        <h2 className="mb-3 text-lg font-medium text-zinc-800">
+        <h2 className="mb-3 text-lg font-medium text-foreground">
           Aktivitas Aktif ({activeActivities.length})
         </h2>
         {activeActivities.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16">
-              <p className="text-zinc-500">
-                {search
-                  ? 'Aktivitas tidak ditemukan'
-                  : 'Belum ada data aktivitas'}
-              </p>
-              {!search && (
-                <Link
-                  href="/dashboard/owner/activity/create"
-                  className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
-                >
-                  Tambah Aktivitas
-                </Link>
-              )}
+              <EmptyState
+                title={
+                  search
+                    ? 'Aktivitas tidak ditemukan'
+                    : 'Belum ada data aktivitas'
+                }
+                actionLabel={!search ? 'Tambah Aktivitas' : undefined}
+                actionHref={
+                  !search ? '/dashboard/owner/activity/create' : undefined
+                }
+              />
             </CardContent>
           </Card>
         ) : (
-          <div className="overflow-x-auto rounded-lg border border-zinc-200">
+          <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -156,10 +157,10 @@ export default async function ActivityListPage({
       {/* Archived Activities */}
       {archivedActivities.length > 0 && (
         <section>
-          <h2 className="mb-3 text-lg font-medium text-zinc-800">
+          <h2 className="mb-3 text-lg font-medium text-foreground">
             Diarsipkan ({archivedActivities.length})
           </h2>
-          <div className="overflow-x-auto rounded-lg border border-zinc-200">
+          <div className="overflow-x-auto rounded-lg border">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -171,10 +172,13 @@ export default async function ActivityListPage({
               </TableHeader>
               <TableBody>
                 {archivedActivities.map((a) => (
-                  <TableRow key={a.id} className="bg-zinc-50 text-zinc-500">
+                  <TableRow
+                    key={a.id}
+                    className="bg-muted text-muted-foreground"
+                  >
                     <TableCell className="font-medium">
                       {a.name}{' '}
-                      <span className="text-xs text-zinc-400">
+                      <span className="text-xs text-muted-foreground">
                         (diarsipkan)
                       </span>
                     </TableCell>
@@ -202,8 +206,8 @@ export default async function ActivityListPage({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <nav className="mt-4 flex items-center justify-between border-t border-zinc-200 px-4 py-3">
-          <p className="text-sm text-zinc-500">
+        <nav className="mt-4 flex items-center justify-between border-t border px-4 py-3">
+          <p className="text-sm text-muted-foreground">
             Menampilkan {offset + 1}–{Math.min(offset + PAGE_SIZE, totalItems)}{' '}
             dari {totalItems}
           </p>

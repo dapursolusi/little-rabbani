@@ -1,5 +1,6 @@
 import Link from 'next/link';
 
+import { EmptyState } from '@/components/shared/empty-state';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -49,8 +50,10 @@ export default async function GuardianListPage({
       {/* Header */}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-zinc-900">Wali Murid</h1>
-          <p className="mt-1 text-sm text-zinc-500">Kelola data wali murid</p>
+          <h1 className="text-2xl font-semibold text-foreground">Wali Murid</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Kelola data wali murid
+          </p>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <form
@@ -63,7 +66,7 @@ export default async function GuardianListPage({
               name="search"
               defaultValue={search ?? ''}
               placeholder="Cari wali murid..."
-              className="rounded-md border border-zinc-300 px-3 py-1.5 text-sm min-h-[44px]"
+              className="rounded-md border px-3 py-1.5 text-sm"
             />
             <Button type="submit" variant="default" size="sm">
               Cari
@@ -83,19 +86,17 @@ export default async function GuardianListPage({
         {guardians.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16">
-              <p className="text-zinc-500">
-                {search
-                  ? 'Wali murid tidak ditemukan'
-                  : 'Belum ada data wali murid'}
-              </p>
-              {!search && (
-                <Link
-                  href="/dashboard/owner/guardian/create"
-                  className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
-                >
-                  Tambah Wali Murid
-                </Link>
-              )}
+              <EmptyState
+                title={
+                  search
+                    ? 'Wali murid tidak ditemukan'
+                    : 'Belum ada data wali murid'
+                }
+                actionLabel={!search ? 'Tambah Wali Murid' : undefined}
+                actionHref={
+                  !search ? '/dashboard/owner/guardian/create' : undefined
+                }
+              />
             </CardContent>
           </Card>
         ) : (
@@ -104,18 +105,15 @@ export default async function GuardianListPage({
               (k) => k.status === 'enrolled'
             ).length;
             return (
-              <div
-                key={g.id}
-                className="rounded-lg border border-zinc-200 bg-white p-4"
-              >
+              <div key={g.id} className="rounded-lg border bg-card p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="font-medium text-zinc-900">{g.name}</p>
-                    <p className="text-xs text-zinc-500">
+                    <p className="font-medium text-foreground">{g.name}</p>
+                    <p className="text-xs text-muted-foreground">
                       {g.phone} • {g.email ?? '-'}
                     </p>
                   </div>
-                  <div className="text-xs text-zinc-400">
+                  <div className="text-xs text-muted-foreground">
                     {g.kids.length} murid
                     {enrolledCount > 0 && ` (${enrolledCount} aktif)`}
                   </div>
@@ -133,23 +131,21 @@ export default async function GuardianListPage({
       </div>
 
       {/* Desktop table */}
-      <div className="hidden overflow-x-auto rounded-lg border border-zinc-200 md:block">
+      <div className="hidden overflow-x-auto rounded-lg border md:block">
         {guardians.length === 0 ? (
           <Card className="border-dashed">
             <CardContent className="flex flex-col items-center justify-center py-16">
-              <p className="text-zinc-500">
-                {search
-                  ? 'Wali murid tidak ditemukan'
-                  : 'Belum ada data wali murid'}
-              </p>
-              {!search && (
-                <Link
-                  href="/dashboard/owner/guardian/create"
-                  className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
-                >
-                  Tambah Wali Murid
-                </Link>
-              )}
+              <EmptyState
+                title={
+                  search
+                    ? 'Wali murid tidak ditemukan'
+                    : 'Belum ada data wali murid'
+                }
+                actionLabel={!search ? 'Tambah Wali Murid' : undefined}
+                actionHref={
+                  !search ? '/dashboard/owner/guardian/create' : undefined
+                }
+              />
             </CardContent>
           </Card>
         ) : (
@@ -178,13 +174,13 @@ export default async function GuardianListPage({
                         <span className="inline-flex items-center gap-1">
                           {g.kids.length}
                           {enrolledCount > 0 && (
-                            <span className="text-xs text-zinc-400">
+                            <span className="text-xs text-muted-foreground">
                               ({enrolledCount} aktif)
                             </span>
                           )}
                         </span>
                       ) : (
-                        <span className="text-zinc-400">0</span>
+                        <span className="text-muted-foreground">0</span>
                       )}
                     </TableCell>
                     <TableCell className="text-right">
@@ -203,8 +199,8 @@ export default async function GuardianListPage({
 
       {/* Pagination */}
       {totalPages > 1 && (
-        <nav className="mt-4 flex items-center justify-between border-t border-zinc-200 px-4 py-3">
-          <p className="text-sm text-zinc-500">
+        <nav className="mt-4 flex items-center justify-between border-t border px-4 py-3">
+          <p className="text-sm text-muted-foreground">
             Menampilkan {offset + 1}–{Math.min(offset + PAGE_SIZE, totalItems)}{' '}
             dari {totalItems}
           </p>

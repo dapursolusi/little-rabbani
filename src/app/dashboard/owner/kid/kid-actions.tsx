@@ -61,7 +61,7 @@ export function KidActions({ kidId }: IKidActionsProps) {
               <DropdownMenuTrigger>
                 <Button variant="ghost" size="sm" aria-label="Buka menu murid">
                   <span className="sr-only">Buka menu murid</span>
-                  <HugeiconsIcon icon={MoreVerticalIcon} className="h-4 w-4" />
+                  <HugeiconsIcon icon={MoreVerticalIcon} />
                 </Button>
               </DropdownMenuTrigger>
             </TooltipTrigger>
