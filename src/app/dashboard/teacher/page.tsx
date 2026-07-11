@@ -13,7 +13,7 @@ export default function TeacherDashboardPage() {
 
       {/* Schedule */}
       <main className="flex-1 px-4 py-4">
-        <h2 className="mb-4 text-base font-medium text-zinc-700">
+        <h2 className="mb-4 text-base font-medium text-muted-foreground">
           Jadwal Hari Ini
         </h2>
         <TeacherScheduleView />

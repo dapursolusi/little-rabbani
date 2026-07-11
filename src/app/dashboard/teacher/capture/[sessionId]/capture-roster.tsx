@@ -3,8 +3,13 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import {
+  ArrowLeft01Icon,
+  BoltIcon,
+  Cancel01Icon,
+  CheckmarkCircle01Icon,
   CheckmarkCircle02Icon,
   ChevronRightIcon,
+  CircleLock01Icon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
@@ -598,21 +603,24 @@ export function CaptureRosterClient({
       <>
         <div className="flex flex-col">
           {/* Kid header */}
-          <div className="border-b border-zinc-200 bg-white px-4 py-3">
+          <div className="border-b border bg-background px-4 py-3">
             <Button
               variant="link"
               size="sm"
               onClick={handleBackToRoster}
               className="mb-1 px-0"
+              data-icon="inline-start"
             >
-              &larr; Kembali ke daftar
+              <HugeiconsIcon icon={ArrowLeft01Icon} />
+              Kembali ke daftar
             </Button>
-            <h2 className="text-lg font-semibold text-zinc-900">
+            <h2 className="text-lg font-semibold text-foreground">
               {selectedKid.name}
             </h2>
             {selectedKid.captureState === 'captured' && (
-              <p className="text-xs text-green-600">
-                ✓ Sudah diobservasi{' '}
+              <p className="flex items-center gap-1 text-xs text-success">
+                <HugeiconsIcon icon={CheckmarkCircle01Icon} />
+                Sudah diobservasi{' '}
                 {selectedKid.observation?.version &&
                   `(v${selectedKid.observation.version})`}
               </p>
@@ -626,7 +634,7 @@ export function CaptureRosterClient({
               if (value === 'pass2' && !isPass2Unlocked) return;
               setActiveTab(value as 'pass1' | 'pass2');
             }}
-            className="border-b border-zinc-200 bg-white"
+            className="border-b border bg-background"
           >
             <TabsList
               className="w-full rounded-none bg-transparent"
@@ -640,14 +648,19 @@ export function CaptureRosterClient({
                 className="flex-1"
                 disabled={!isPass2Unlocked}
               >
-                Pass 2{!isPass2Unlocked && <span className="ml-1">🔒</span>}
+                <span className="flex items-center gap-1">
+                  Pass 2
+                  {!isPass2Unlocked && (
+                    <HugeiconsIcon icon={CircleLock01Icon} />
+                  )}
+                </span>
               </TabsTrigger>
             </TabsList>
           </Tabs>
 
           {/* VAL-CAPTURE-023: Pass 2 locked - banner */}
           {!isPass2Unlocked && activeTab === 'pass2' && (
-            <div className="bg-amber-50 px-4 py-3 text-center text-sm font-medium text-amber-700">
+            <div className="bg-warning/10 px-4 py-3 text-center text-sm font-medium text-warning">
               Menunggu laporan kelas
             </div>
           )}
@@ -661,7 +674,7 @@ export function CaptureRosterClient({
 
           {/* Validation error */}
           {validationError && (
-            <div className="bg-red-50 px-4 py-2 text-center text-sm text-red-600">
+            <div className="bg-destructive/10 px-4 py-2 text-center text-sm text-destructive">
               {validationError}
             </div>
           )}
@@ -673,7 +686,7 @@ export function CaptureRosterClient({
               <div className="space-y-6">
                 {/* Mood selector - VAL-CAPTURE-019: 5-level emoji */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  <label className="mb-2 block text-sm font-medium text-muted-foreground">
                     Mood
                   </label>
                   <ToggleGroup
@@ -691,7 +704,7 @@ export function CaptureRosterClient({
                         aria-label={opt.label}
                       >
                         <span className="text-2xl">{opt.emoji}</span>
-                        <span className="text-[10px] text-zinc-500">
+                        <span className="text-[10px] text-muted-foreground">
                           {opt.label}
                         </span>
                       </ToggleGroupItem>
@@ -701,7 +714,7 @@ export function CaptureRosterClient({
 
                 {/* Appetite selector - VAL-CAPTURE-020: 3-level */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  <label className="mb-2 block text-sm font-medium text-muted-foreground">
                     Nafsu Makan
                   </label>
                   <RadioGroup
@@ -721,7 +734,7 @@ export function CaptureRosterClient({
                         />
                         <Label
                           htmlFor={`appetite-${opt.value}`}
-                          className={`flex cursor-pointer items-center justify-center rounded-lg py-2.5 text-sm font-medium transition-all peer-data-[checked]:ring-2 ${opt.value === 'good' ? 'peer-data-[checked]:bg-green-100 peer-data-[checked]:text-green-700 peer-data-[checked]:ring-green-400' : opt.value === 'moderate' ? 'peer-data-[checked]:bg-amber-100 peer-data-[checked]:text-amber-700 peer-data-[checked]:ring-amber-400' : 'peer-data-[checked]:bg-red-100 peer-data-[checked]:text-red-700 peer-data-[checked]:ring-red-400'} bg-zinc-50 text-zinc-500 hover:bg-zinc-100`}
+                          className={`flex cursor-pointer items-center justify-center rounded-lg py-2.5 text-sm font-medium transition-all peer-data-[checked]:ring-2 ${opt.value === 'good' ? 'peer-data-[checked]:bg-success/10 peer-data-[checked]:text-success peer-data-[checked]:ring-success/40' : opt.value === 'moderate' ? 'peer-data-[checked]:bg-warning/10 peer-data-[checked]:text-warning peer-data-[checked]:ring-warning/40' : 'peer-data-[checked]:bg-destructive/10 peer-data-[checked]:text-destructive peer-data-[checked]:ring-destructive/40'} bg-muted text-muted-foreground hover:bg-muted`}
                         >
                           {opt.label}
                         </Label>
@@ -732,7 +745,7 @@ export function CaptureRosterClient({
 
                 {/* Presence selector - VAL-CAPTURE-018 */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  <label className="mb-2 block text-sm font-medium text-muted-foreground">
                     Kehadiran
                   </label>
                   <RadioGroup
@@ -751,7 +764,7 @@ export function CaptureRosterClient({
                         />
                         <Label
                           htmlFor={`presence-${opt.value}`}
-                          className={`flex cursor-pointer items-center justify-center rounded-lg py-2.5 text-sm font-medium transition-all peer-data-[checked]:ring-2 ${opt.value === 'absent' ? 'peer-data-[checked]:bg-red-100 peer-data-[checked]:text-red-700 peer-data-[checked]:ring-red-400' : opt.value === 'late' ? 'peer-data-[checked]:bg-amber-100 peer-data-[checked]:text-amber-700 peer-data-[checked]:ring-amber-400' : opt.value === 'early_pickup' ? 'peer-data-[checked]:bg-blue-100 peer-data-[checked]:text-blue-700 peer-data-[checked]:ring-blue-400' : 'peer-data-[checked]:bg-green-100 peer-data-[checked]:text-green-700 peer-data-[checked]:ring-green-400'} bg-zinc-50 text-zinc-500 hover:bg-zinc-100`}
+                          className={`flex cursor-pointer items-center justify-center rounded-lg py-2.5 text-sm font-medium transition-all peer-data-[checked]:ring-2 ${opt.value === 'absent' ? 'peer-data-[checked]:bg-destructive/10 peer-data-[checked]:text-destructive peer-data-[checked]:ring-destructive/40' : opt.value === 'late' ? 'peer-data-[checked]:bg-warning/10 peer-data-[checked]:text-warning peer-data-[checked]:ring-warning/40' : opt.value === 'early_pickup' ? 'peer-data-[checked]:bg-blue-100 peer-data-[checked]:text-blue-700 peer-data-[checked]:ring-blue-400' : 'peer-data-[checked]:bg-success/10 peer-data-[checked]:text-success peer-data-[checked]:ring-success/40'} bg-muted text-muted-foreground hover:bg-muted`}
                         >
                           {opt.label}
                         </Label>
@@ -763,7 +776,7 @@ export function CaptureRosterClient({
                 {/* Absence reason (only shown when absent) - VAL-CAPTURE-021 */}
                 {presence === 'absent' && (
                   <div>
-                    <label className="mb-2 block text-sm font-medium text-zinc-700">
+                    <label className="mb-2 block text-sm font-medium text-muted-foreground">
                       Alasan Ketidakhadiran{' '}
                       <span className="text-destructive">*</span>
                     </label>
@@ -783,7 +796,7 @@ export function CaptureRosterClient({
                           />
                           <Label
                             htmlFor={`absence-${opt.value}`}
-                            className="flex cursor-pointer items-center justify-center rounded-lg py-2.5 text-sm font-medium transition-all peer-data-[checked]:bg-red-100 peer-data-[checked]:text-red-700 peer-data-[checked]:ring-2 peer-data-[checked]:ring-red-400 bg-zinc-50 text-zinc-500 hover:bg-zinc-100"
+                            className="flex cursor-pointer items-center justify-center rounded-lg py-2.5 text-sm font-medium transition-all peer-data-[checked]:bg-destructive/10 peer-data-[checked]:text-destructive peer-data-[checked]:ring-2 peer-data-[checked]:ring-destructive/40 bg-muted text-muted-foreground hover:bg-muted"
                           >
                             {opt.label}
                           </Label>
@@ -805,7 +818,7 @@ export function CaptureRosterClient({
 
                 {/* Notes - optional, append-only (VAL-CAPTURE-053) */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-zinc-700">
+                  <label className="mb-2 block text-sm font-medium text-muted-foreground">
                     Catatan
                   </label>
 
@@ -815,10 +828,10 @@ export function CaptureRosterClient({
                       {existingNotes.map((note) => (
                         <div
                           key={note.id}
-                          className="rounded-lg bg-zinc-50 p-2.5 text-sm text-zinc-700"
+                          className="rounded-lg bg-muted p-2.5 text-sm text-muted-foreground"
                         >
                           <p>{note.text}</p>
-                          <p className="mt-0.5 text-[10px] text-zinc-400">
+                          <p className="mt-0.5 text-[10px] text-muted-foreground">
                             {new Date(note.createdAt).toLocaleString('id-ID')}
                           </p>
                         </div>
@@ -833,7 +846,7 @@ export function CaptureRosterClient({
                     rows={2}
                     disabled={isSaving}
                   />
-                  <p className="mt-1 text-[10px] text-zinc-400">
+                  <p className="mt-1 text-[10px] text-muted-foreground">
                     Catatan bersifat kumulatif — tidak akan menghapus catatan
                     sebelumnya
                   </p>
@@ -859,7 +872,7 @@ export function CaptureRosterClient({
               <div className="space-y-4">
                 {/* VAL-CAPTURE-025: Yes/no per activity */}
                 {dcrActivities.length === 0 ? (
-                  <div className="rounded-lg border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-400">
+                  <div className="rounded-lg border border-dashed border p-6 text-center text-sm text-muted-foreground">
                     Belum ada aktivitas untuk sesi ini
                   </div>
                 ) : (
@@ -875,10 +888,10 @@ export function CaptureRosterClient({
                       return (
                         <div
                           key={dcaId}
-                          className="flex items-center justify-between rounded-lg border border-zinc-200 bg-white p-3"
+                          className="flex items-center justify-between rounded-lg border bg-background p-3"
                         >
                           <div className="flex-1">
-                            <span className="text-sm font-medium text-zinc-800">
+                            <span className="text-sm font-medium text-foreground">
                               {activityName}
                             </span>
                             {!act.wasPlanned && (
@@ -903,14 +916,14 @@ export function CaptureRosterClient({
                             <ToggleGroupItem
                               value="yes"
                               size="sm"
-                              className="text-xs aria-pressed:bg-green-100 aria-pressed:text-green-700 aria-pressed:ring-2 aria-pressed:ring-green-400"
+                              className="text-xs aria-pressed:bg-success/10 aria-pressed:text-success aria-pressed:ring-2 aria-pressed:ring-success/40"
                             >
-                              Ya 👍
+                              Ya
                             </ToggleGroupItem>
                             <ToggleGroupItem
                               value="no"
                               size="sm"
-                              className="text-xs aria-pressed:bg-red-100 aria-pressed:text-red-700 aria-pressed:ring-2 aria-pressed:ring-red-400"
+                              className="text-xs aria-pressed:bg-destructive/10 aria-pressed:text-destructive aria-pressed:ring-2 aria-pressed:ring-destructive/40"
                             >
                               Tidak
                             </ToggleGroupItem>
@@ -965,18 +978,20 @@ export function CaptureRosterClient({
 
   return (
     <>
-      <div className="divide-y divide-zinc-100">
+      <div className="divide-y divide-border">
         {/* VAL-CAPTURE-039: Offline indicator on roster */}
         {isOffline && (
-          <div className="bg-amber-500 px-4 py-1.5 text-center text-xs font-medium text-white">
-            ⚡ Offline — data akan tersimpan secara lokal
+          <div className="flex items-center justify-center gap-1 bg-warning px-4 py-1.5 text-center text-xs font-medium text-warning-foreground">
+            <HugeiconsIcon icon={BoltIcon} />
+            Offline — data akan tersimpan secara lokal
           </div>
         )}
 
         {/* Pass 2 lock banner (shown on roster level) - VAL-CAPTURE-023 */}
         {!isPass2Unlocked && (
-          <div className="bg-amber-50 px-4 py-2.5 text-center text-sm font-medium text-amber-700">
-            🔒 Menunggu laporan kelas — Pass 2 belum tersedia
+          <div className="flex items-center justify-center gap-1.5 bg-warning/10 px-4 py-2.5 text-center text-sm font-medium text-warning">
+            <HugeiconsIcon icon={CircleLock01Icon} />
+            Menunggu laporan kelas — Pass 2 belum tersedia
           </div>
         )}
 
@@ -995,27 +1010,30 @@ export function CaptureRosterClient({
               type="button"
               variant="ghost"
               onClick={() => handleSelectKid(kid)}
-              className="flex w-full items-center gap-3 px-4 py-3.5 text-left h-auto rounded-none transition-colors hover:bg-zinc-50 active:bg-zinc-100"
+              className="flex w-full items-center gap-3 px-4 py-3.5 text-left h-auto rounded-none transition-colors hover:bg-muted active:bg-muted"
+              data-icon="inline-end"
             >
               {/* Capture state indicator */}
               <div
-                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-bold ${
+                className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
                   isCaptured
-                    ? 'bg-green-100 text-green-600'
-                    : 'bg-zinc-100 text-zinc-300'
+                    ? 'bg-success/10 text-success'
+                    : 'bg-muted text-muted-foreground'
                 }`}
               >
-                {isCaptured ? '✓' : '✗'}
+                <HugeiconsIcon
+                  icon={isCaptured ? CheckmarkCircle01Icon : Cancel01Icon}
+                />
               </div>
 
               {/* Kid name */}
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-zinc-900 truncate">
+                <p className="text-sm font-medium text-foreground truncate">
                   {kid.name}
                 </p>
                 {/* Show presence info for captured kids */}
                 {obs && (
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-muted-foreground">
                     {PRESENCE_LABELS[obs.presence as TPresence]}
                   </p>
                 )}
@@ -1031,7 +1049,7 @@ export function CaptureRosterClient({
               {/* Chevron */}
               <HugeiconsIcon
                 icon={ChevronRightIcon}
-                className="h-4 w-4 shrink-0 text-zinc-300"
+                className="shrink-0 text-muted-foreground"
               />
             </Button>
           );

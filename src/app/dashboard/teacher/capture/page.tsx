@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
+import { EmptyState } from '@/components/shared/empty-state';
 import { Badge } from '@/components/ui/badge';
 
 import { formatDate } from '@/lib/format';
@@ -40,25 +41,23 @@ export default async function CaptureSessionPickerPage() {
     <div className="p-4 sm:p-6">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-zinc-900">
+        <h1 className="text-2xl font-semibold text-foreground">
           Observasi Murid
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Pilih sesi untuk melakukan observasi
         </p>
       </div>
 
       {/* No sessions state */}
       {sessions.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed border-zinc-300 bg-zinc-50 py-16">
-          <p className="text-zinc-500">Belum ada sesi</p>
-        </div>
+        <EmptyState title="Belum ada sesi" />
       ) : (
         /* Sessions grouped by term */
         <div className="space-y-8">
           {Object.entries(sessionsByTerm).map(([termName, termSessions]) => (
             <div key={termName}>
-              <h2 className="mb-3 text-lg font-medium text-zinc-800">
+              <h2 className="mb-3 text-lg font-medium text-muted-foreground">
                 {termName}
               </h2>
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
@@ -73,21 +72,21 @@ export default async function CaptureSessionPickerPage() {
                     <Link
                       key={session.id}
                       href={`/dashboard/teacher/capture/${session.id}`}
-                      className="rounded-lg border border-green-200 bg-white p-4 transition-colors hover:border-green-300 hover:shadow-sm"
+                      className="rounded-lg border border-success/30 bg-background p-4 transition-colors hover:border-success/50 hover:shadow-sm"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-medium text-zinc-900">
+                          <p className="font-medium text-foreground">
                             {formatDate(session.date)}
                           </p>
-                          <p className="mt-0.5 text-xs text-zinc-500">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             {session.startTime} — {session.endTime}
                             {session.label && ` • ${session.label}`}
                           </p>
                         </div>
                         <Badge
                           variant="outline"
-                          className="text-green-600 border-green-300"
+                          className="text-success border-success/30"
                         >
                           Buka
                         </Badge>
@@ -96,18 +95,18 @@ export default async function CaptureSessionPickerPage() {
                   ) : (
                     <div
                       key={session.id}
-                      className={`rounded-lg border bg-white p-4 ${
+                      className={`rounded-lg border bg-background p-4 ${
                         session.isHoliday
-                          ? 'border-red-200 bg-red-50'
-                          : 'border-zinc-200 opacity-60'
+                          ? 'border-destructive/20 bg-destructive/10'
+                          : 'border opacity-60'
                       }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
-                          <p className="font-medium text-zinc-900">
+                          <p className="font-medium text-foreground">
                             {formatDate(session.date)}
                           </p>
-                          <p className="mt-0.5 text-xs text-zinc-500">
+                          <p className="mt-0.5 text-xs text-muted-foreground">
                             {session.startTime} — {session.endTime}
                             {session.label && ` • ${session.label}`}
                           </p>
@@ -115,7 +114,10 @@ export default async function CaptureSessionPickerPage() {
                         {session.isHoliday ? (
                           <Badge variant="destructive">Libur</Badge>
                         ) : (
-                          <Badge variant="outline" className="text-zinc-400">
+                          <Badge
+                            variant="outline"
+                            className="text-muted-foreground"
+                          >
                             Akan Datang
                           </Badge>
                         )}
