@@ -41,11 +41,13 @@ export default async function EditKidPage({ params }: IEditKidPageProps) {
         ]}
       />
       <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-zinc-900">Edit Murid</h1>
-        <p className="mt-1 text-sm text-zinc-500">Perbarui data murid</p>
+        <h1 className="text-2xl font-semibold text-foreground">Edit Murid</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Perbarui data murid
+        </p>
       </div>
 
-      <div className="mx-auto max-w-lg rounded-lg border border-zinc-200 bg-white p-6">
+      <div className="mx-auto max-w-lg rounded-lg border bg-card p-6">
         <KidForm
           mode="edit"
           initialData={{

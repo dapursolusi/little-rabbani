@@ -1,6 +1,9 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+
 import { SessionEditForm } from '@/components/sections/session-edit-form';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -37,13 +40,17 @@ export default async function EditSessionPage({
             <Link
               href={`/dashboard/owner/session?termId=${termId}`}
               className="text-sm text-primary hover:underline"
+              data-icon="inline-start"
             >
-              &larr; Kembali
+              <HugeiconsIcon icon={ArrowLeft01Icon} />
+              Kembali
             </Link>
           )}
         </div>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">Edit Sesi</h1>
-        <p className="mt-1 text-sm text-zinc-500">Perbarui data sesi</p>
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">
+          Edit Sesi
+        </h1>
+        <p className="mt-1 text-sm text-muted-foreground">Perbarui data sesi</p>
       </div>
 
       <Card className="mx-auto max-w-lg">

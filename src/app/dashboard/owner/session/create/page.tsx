@@ -1,5 +1,8 @@
 import Link from 'next/link';
 
+import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+
 import { SessionForm } from '@/components/sections/session-form';
 import { buttonVariants } from '@/components/ui/button';
 
@@ -38,19 +41,21 @@ export default async function CreateSessionPage({
           <Link
             href={`/dashboard/owner/session?termId=${termId}`}
             className="text-sm text-primary hover:underline"
+            data-icon="inline-start"
           >
-            &larr; Kembali
+            <HugeiconsIcon icon={ArrowLeft01Icon} />
+            Kembali
           </Link>
         </div>
-        <h1 className="mt-1 text-2xl font-semibold text-zinc-900">
+        <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Tambah Sesi
         </h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <p className="mt-1 text-sm text-muted-foreground">
           Buat sesi baru untuk term ini
         </p>
       </div>
 
-      <div className="mx-auto max-w-lg rounded-lg border border-zinc-200 bg-white p-6">
+      <div className="mx-auto max-w-lg rounded-lg border bg-card p-6">
         <SessionForm termId={termId} />
       </div>
     </div>

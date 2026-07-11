@@ -100,7 +100,7 @@ export function ActivityActions({
         <DropdownMenuTrigger>
           <Button variant="ghost" size="sm" aria-label="Buka menu aktivitas">
             <span className="sr-only">Buka menu aktivitas</span>
-            <HugeiconsIcon icon={MoreVerticalIcon} className="h-4 w-4" />
+            <HugeiconsIcon icon={MoreVerticalIcon} />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
