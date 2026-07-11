@@ -2,6 +2,8 @@
 
 import { useCallback, useState } from 'react';
 
+import { toast } from 'sonner';
+
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -13,7 +15,10 @@ import {
 } from '@/components/ui/dialog';
 
 import { savePass1Observation } from '@/lib/actions/capture';
-import type { IConflictData } from '@/lib/capture-offline';
+import {
+  type IConflictData,
+  buildKeepLocalPayload,
+} from '@/lib/capture-offline';
 
 // ─────────────── Types ───────────────
 
@@ -58,6 +63,7 @@ export function ConflictDialog({
   onResolved,
 }: IConflictDialogProps) {
   const [isApplyingServerValues, setIsApplyingServerValues] = useState(false);
+  const [isResolvingLocal, setIsResolvingLocal] = useState(false);
   const [isResolved, setIsResolved] = useState(false);
 
   const handleUseServerValues = useCallback(async () => {
@@ -90,9 +96,12 @@ export function ConflictDialog({
       if (result.success) {
         setIsResolved(true);
         onResolved();
+        toast.success('Data server berhasil diterapkan');
+      } else {
+        toast.error(result.error ?? 'Gagal menerapkan data server');
       }
     } catch {
-      // Error handled silently
+      toast.error('Terjadi kesalahan sistem saat menerapkan data server');
     } finally {
       setIsApplyingServerValues(false);
     }
@@ -100,33 +109,19 @@ export function ConflictDialog({
 
   const handleKeepLocalValues = useCallback(async () => {
     if (!conflict) return;
-    setIsApplyingServerValues(true);
+    setIsResolvingLocal(true);
 
     try {
-      // Force save with local values (will overwrite with current version handling)
+      const payload = buildKeepLocalPayload(conflict);
       const formData = new FormData();
-      formData.append('kidId', conflict.kidId);
-      formData.append('sessionId', conflict.sessionId);
-      formData.append('mood', String(conflict.serverFields.mood)); // Use server mood as base
-      formData.append('appetite', conflict.serverFields.appetite);
-
-      // Keep the presence from local
-      formData.append(
-        'presence',
-        conflict.localNotes.length > 0
-          ? 'present_full'
-          : conflict.serverFields.presence
-      );
-
-      // Pass the latest server version so the update succeeds
-      formData.append('version', String(conflict.serverVersion));
-
-      // VAL-CAPTURE-033: Notes always persist (append-only)
-      const allNotes = [...conflict.serverNotes, ...conflict.localNotes].filter(
-        Boolean
-      );
-      if (allNotes.length > 0) {
-        formData.append('notes', allNotes.join('\n---\n'));
+      formData.append('kidId', payload.kidId);
+      formData.append('sessionId', payload.sessionId);
+      formData.append('mood', payload.mood);
+      formData.append('appetite', payload.appetite);
+      formData.append('presence', payload.presence);
+      formData.append('version', payload.version);
+      if (payload.notes) {
+        formData.append('notes', payload.notes);
       }
 
       const result = await savePass1Observation(formData);
@@ -134,15 +129,20 @@ export function ConflictDialog({
       if (result.success) {
         setIsResolved(true);
         onResolved();
+        toast.success('Kedua data berhasil disimpan');
+      } else {
+        toast.error(result.error ?? 'Gagal menyimpan data lokal');
       }
     } catch {
-      // Error handled silently
+      toast.error('Terjadi kesalahan sistem saat menyimpan data lokal');
     } finally {
-      setIsApplyingServerValues(false);
+      setIsResolvingLocal(false);
     }
   }, [conflict, onResolved]);
 
   if (!conflict) return null;
+
+  const isLoading = isApplyingServerValues || isResolvingLocal;
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
@@ -242,7 +242,7 @@ export function ConflictDialog({
               <Button
                 variant="default"
                 onClick={handleUseServerValues}
-                disabled={isApplyingServerValues}
+                disabled={isLoading}
                 className="flex-1"
               >
                 {isApplyingServerValues
@@ -253,10 +253,10 @@ export function ConflictDialog({
               <Button
                 variant="outline"
                 onClick={handleKeepLocalValues}
-                disabled={isApplyingServerValues}
+                disabled={isLoading}
                 className="flex-1"
               >
-                Simpan Keduanya
+                {isResolvingLocal ? 'Menyimpan...' : 'Simpan Keduanya'}
               </Button>
             </>
           )}

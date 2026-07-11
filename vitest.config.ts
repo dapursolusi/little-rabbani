@@ -8,6 +8,9 @@ export default defineConfig({
   },
   test: {
     environment: 'jsdom',
+    env: {
+      DATABASE_URL: 'postgres://placeholder@localhost:5432/test',
+    },
     globals: true,
     setupFiles: ['./tests/setup.ts'],
     retry: 2,

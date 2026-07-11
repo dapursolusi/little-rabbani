@@ -497,6 +497,11 @@ export function CaptureRosterClient({
                   appetite: serverObs.data.appetite,
                   presence: serverObs.data.presence,
                 },
+                localFields: {
+                  mood,
+                  appetite,
+                  presence,
+                },
                 serverNotes: (serverObs.data.notes ?? []).map(
                   (n: { text: string }) => n.text
                 ),
