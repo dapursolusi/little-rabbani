@@ -1,16 +1,23 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import Link from 'next/link';
 
 import { getStatusBadge } from '@/components/shared/get-status-badge';
 import { Pagination } from '@/components/shared/pagination';
 import { SearchInput } from '@/components/shared/search-input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 import {
-  getEnrolledKidsForTerm,
-  getKidQuarterlyReportsBatch,
+  getEnrolledKidsForTermPaginated,
+  getKidQuarterlyReportsBatchForTerm,
   getTerms,
 } from '@/lib/actions/quarterly-report';
 
@@ -30,28 +37,22 @@ interface ITermData {
   isActive: boolean;
 }
 
-interface IFlatKidItem {
-  kid: IKidData;
-  term: ITermData;
-  report: { id: string; status: string } | null;
-}
-
 export default function QuarterlyReportPickerPage() {
   const [terms, setTerms] = useState<ITermData[]>([]);
-  const [allKidsMap, setAllKidsMap] = useState<Map<string, IKidData[]>>(
-    new Map()
-  );
+  const [selectedTermId, setSelectedTermId] = useState<string>('');
+  const [kids, setKids] = useState<IKidData[]>([]);
   const [reportsMap, setReportsMap] = useState<
-    Map<string, Map<string, { id: string; status: string }>>
+    Map<string, { id: string; status: string }>
   >(new Map());
+  const [total, setTotal] = useState(0);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
 
+  // Fetch terms on mount
   useEffect(() => {
-    async function load() {
-      setLoading(true);
+    async function init() {
       const termsResult = await getTerms();
       if (!termsResult.success) {
         setError(termsResult.error);
@@ -62,100 +63,85 @@ export default function QuarterlyReportPickerPage() {
       const termsData = termsResult.data;
       setTerms(termsData);
 
-      // Fetch enrolled kids for all terms in parallel
-      const termDataResults = await Promise.all(
-        termsData.map(async (t: ITermData) => {
-          const kidsResult = await getEnrolledKidsForTerm(t.id);
-          const kids = kidsResult.success ? kidsResult.data : [];
-          const kidsList = kids as IKidData[];
-          return { termId: t.id, kids: kidsList };
-        })
-      );
+      // Default to first active term, or first term
+      const active = termsData.find((t: ITermData) => t.isActive);
+      setSelectedTermId(active?.id ?? termsData[0]?.id ?? '');
+      setLoading(false);
+    }
+    init();
+  }, []);
 
-      const kidsMap = new Map<string, IKidData[]>();
-      for (const r of termDataResults) {
-        kidsMap.set(r.termId, r.kids);
+  // Fetch paginated kids + batch reports when term/search/page changes
+  useEffect(() => {
+    if (!selectedTermId || terms.length === 0) return;
+
+    let cancelled = false;
+
+    async function fetch() {
+      if (cancelled) return;
+      setLoading(true);
+      setError('');
+
+      const kidsResult = await getEnrolledKidsForTermPaginated(
+        selectedTermId,
+        search,
+        page,
+        PAGE_SIZE
+      );
+      if (cancelled) return;
+      if (!kidsResult.success) {
+        setError(kidsResult.error);
+        setLoading(false);
+        return;
       }
-      setAllKidsMap(kidsMap);
 
-      // Batch fetch reports for all kids across all terms
-      const allKidIds = termDataResults.flatMap((r) =>
-        r.kids.map((k: IKidData) => k.id)
-      );
-      const reportsResult = await getKidQuarterlyReportsBatch(allKidIds);
+      const kidsData = kidsResult.data;
+      setKids(kidsData);
+      setTotal(kidsResult.total ?? 0);
 
-      const reportsByTerm = new Map<
-        string,
-        Map<string, { id: string; status: string }>
-      >();
-      if (reportsResult.success) {
-        for (const report of reportsResult.data) {
-          let termMap = reportsByTerm.get(report.termId);
-          if (!termMap) {
-            termMap = new Map();
-            reportsByTerm.set(report.termId, termMap);
+      // Fetch batch reports for current page of kids
+      if (kidsData.length > 0) {
+        const reportsResult = await getKidQuarterlyReportsBatchForTerm(
+          selectedTermId,
+          kidsData.map((k: IKidData) => k.id)
+        );
+        if (cancelled) return;
+        if (reportsResult.success) {
+          const map = new Map<string, { id: string; status: string }>();
+          for (const report of reportsResult.data) {
+            map.set(report.kidId, { id: report.id, status: report.status });
           }
-          termMap.set(report.kidId, { id: report.id, status: report.status });
+          setReportsMap(map);
         }
+      } else {
+        setReportsMap(new Map());
       }
-      setReportsMap(reportsByTerm);
 
       setLoading(false);
     }
 
-    load();
-  }, []);
-
-  // Flatten all kids across all terms, apply search filter
-  const flatItems: IFlatKidItem[] = useMemo(() => {
-    const items: IFlatKidItem[] = [];
-    for (const term of terms) {
-      const kids = allKidsMap.get(term.id) ?? [];
-      const termReports = reportsMap.get(term.id) ?? new Map();
-      for (const kid of kids) {
-        if (search && !kid.name.toLowerCase().includes(search.toLowerCase())) {
-          continue;
-        }
-        items.push({
-          kid,
-          term,
-          report: termReports.get(kid.id) ?? null,
-        });
-      }
-    }
-    return items;
-  }, [terms, allKidsMap, reportsMap, search]);
-
-  const totalItems = flatItems.length;
-  const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-
-  // Slice for current page
-  const pagedItems = flatItems.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE
-  );
-
-  // Group paged items by term
-  const grouped = useMemo(() => {
-    const map = new Map<string, IFlatKidItem[]>();
-    for (const item of pagedItems) {
-      const list = map.get(item.term.id);
-      if (list) {
-        list.push(item);
-      } else {
-        map.set(item.term.id, [item]);
-      }
-    }
-    return map;
-  }, [pagedItems]);
+    fetch();
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedTermId, search, page, terms.length]);
 
   const handleSearchChange = useCallback((value: string) => {
     setSearch(value);
     setPage(1);
   }, []);
 
-  if (loading) {
+  const handleTermChange = useCallback((value: string | null) => {
+    if (value) {
+      setSelectedTermId(value);
+      setPage(1);
+    }
+  }, []);
+
+  const selectedTerm = terms.find((t) => t.id === selectedTermId);
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+
+  if (loading && terms.length === 0) {
     return (
       <div className="p-4 sm:p-6">
         <h1 className="mb-2 text-2xl font-semibold text-foreground">
@@ -168,7 +154,7 @@ export default function QuarterlyReportPickerPage() {
     );
   }
 
-  if (error) {
+  if (error && terms.length === 0) {
     return (
       <div className="p-4 sm:p-6">
         <h1 className="mb-2 text-2xl font-semibold text-foreground">
@@ -208,16 +194,54 @@ export default function QuarterlyReportPickerPage() {
         </p>
       </div>
 
-      {/* Search */}
-      <div className="mb-4">
-        <SearchInput
-          value={search}
-          onChange={handleSearchChange}
-          placeholder="Cari murid..."
-        />
+      {/* Term selector + Search */}
+      <div className="mb-4 flex flex-wrap items-end gap-3">
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">
+            Term
+          </label>
+          <Select value={selectedTermId} onValueChange={handleTermChange}>
+            <SelectTrigger className="w-48">
+              <SelectValue placeholder="Pilih term" />
+            </SelectTrigger>
+            <SelectContent>
+              {terms.map((t) => (
+                <SelectItem key={t.id} value={t.id}>
+                  {t.name}
+                  {t.isActive ? ' (Aktif)' : ''}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="mb-1 block text-xs text-muted-foreground">
+            Cari
+          </label>
+          <SearchInput
+            value={search}
+            onChange={handleSearchChange}
+            placeholder="Cari murid..."
+          />
+        </div>
       </div>
 
-      {totalItems === 0 && (
+      {/* Error state */}
+      {error && (
+        <div className="mb-4 rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-center text-destructive">
+          {error}
+        </div>
+      )}
+
+      {/* Loading state */}
+      {loading && (
+        <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted p-8 text-center">
+          <p className="text-muted-foreground">Memuat data...</p>
+        </div>
+      )}
+
+      {/* No kids */}
+      {!loading && !error && kids.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed bg-muted p-8 text-center">
           <p className="text-muted-foreground">
             {search
@@ -227,79 +251,68 @@ export default function QuarterlyReportPickerPage() {
         </div>
       )}
 
-      {/* Term list */}
-      <div className="space-y-6">
-        {terms.map((termData) => {
-          const termKids = grouped.get(termData.id);
-          if (!termKids || termKids.length === 0) return null;
+      {/* Kid grid */}
+      {!loading && !error && kids.length > 0 && (
+        <>
+          <div className="mb-3">
+            <h3 className="font-medium text-foreground">
+              {selectedTerm?.name ?? ''}
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              {selectedTerm?.startDate ?? ''} — {selectedTerm?.endDate ?? ''}
+            </p>
+          </div>
 
-          return (
-            <div key={termData.id} className="rounded-lg border bg-background">
-              <div className="border-b px-4 py-3">
-                <div className="flex items-center gap-2">
-                  <h3 className="font-medium text-foreground">
-                    {termData.name}
-                  </h3>
-                  {termData.isActive && (
-                    <span className="inline-block rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-foreground">
-                      Aktif
-                    </span>
-                  )}
-                </div>
-                <p className="mt-0.5 text-xs text-muted-foreground">
-                  {termData.startDate} — {termData.endDate}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 lg:grid-cols-4">
-                {termKids.map(({ kid, report }) => (
-                  <Link
-                    key={kid.id}
-                    href={`/dashboard/owner/reports/quarterly/${kid.id}?termId=${termData.id}`}
-                    className={`rounded-lg border p-3 text-left transition-colors hover:shadow-sm ${
-                      report
-                        ? report.status === 'final'
-                          ? 'border-success/30 bg-success/5'
-                          : report.status === 'stale'
-                            ? 'border-warning/30 bg-warning/5'
-                            : 'border-warning/30 bg-warning/5'
-                        : 'border-dashed border hover:border-primary'
-                    }`}
-                  >
-                    <p className="text-sm font-medium text-foreground">
-                      {kid.name}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-4">
+            {kids.map((kidData) => {
+              const report = reportsMap.get(kidData.id) ?? null;
+              return (
+                <Link
+                  key={kidData.id}
+                  href={`/dashboard/owner/reports/quarterly/${kidData.id}?termId=${selectedTermId}`}
+                  className={`rounded-lg border p-3 text-left transition-colors hover:shadow-sm ${
+                    report
+                      ? report.status === 'final'
+                        ? 'border-success/30 bg-success/5'
+                        : report.status === 'stale'
+                          ? 'border-warning/30 bg-warning/5'
+                          : 'border-warning/30 bg-warning/5'
+                      : 'border-dashed border hover:border-primary'
+                  }`}
+                >
+                  <p className="text-sm font-medium text-foreground">
+                    {kidData.name}
+                  </p>
+                  {kidData.guardian && (
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {kidData.guardian.name}
                     </p>
-                    {kid.guardian && (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        {kid.guardian.name}
-                      </p>
+                  )}
+                  <div className="mt-1">
+                    {report ? (
+                      getStatusBadge(report.status)
+                    ) : (
+                      <span className="text-xs text-primary">Buat Laporan</span>
                     )}
-                    <div className="mt-1">
-                      {report ? (
-                        getStatusBadge(report.status)
-                      ) : (
-                        <span className="text-xs text-primary">
-                          Buat Laporan
-                        </span>
-                      )}
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+                  </div>
+                </Link>
+              );
+            })}
+          </div>
 
-      {/* Pagination */}
-      {totalItems > PAGE_SIZE && (
-        <Pagination
-          currentPage={safePage}
-          totalPages={totalPages}
-          totalItems={totalItems}
-          pageSize={PAGE_SIZE}
-          onPageChange={setPage}
-        />
+          {/* Pagination */}
+          {total > PAGE_SIZE && (
+            <div className="mt-6">
+              <Pagination
+                currentPage={page}
+                totalPages={totalPages}
+                totalItems={total}
+                pageSize={PAGE_SIZE}
+                onPageChange={setPage}
+              />
+            </div>
+          )}
+        </>
       )}
     </div>
   );

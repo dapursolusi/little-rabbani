@@ -50,13 +50,18 @@ export function CaptureSessionPickerClient() {
       dateTo || undefined,
       page,
       PAGE_SIZE
-    ).then((result) => {
-      if (cancelled) return;
-      if (result.success) {
-        setData({ sessions: result.data, total: result.total ?? 0 });
-      }
-      setLoading(false);
-    });
+    )
+      .then((result) => {
+        if (cancelled) return;
+        if (result.success) {
+          setData({ sessions: result.data, total: result.total ?? 0 });
+        }
+        setLoading(false);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setLoading(false);
+      });
 
     return () => {
       cancelled = true;

@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   generateQuarterlyReport,
-  getEnrolledKidsForTerm,
+  getEnrolledKidsForTermPaginated,
   getQuarterlyReport,
   getQuarterlyReportById,
   getTerms,
@@ -30,6 +30,11 @@ vi.mock('@/lib/ai', () => ({
 vi.mock('@/lib/db', () => {
   return {
     db: {
+      select: vi.fn(() => ({
+        from: vi.fn(() => ({
+          where: vi.fn(),
+        })),
+      })),
       query: {
         term: { findFirst: vi.fn(), findMany: vi.fn() },
         termSession: { findMany: vi.fn(), findFirst: vi.fn() },
@@ -57,6 +62,7 @@ vi.mock('@/lib/db', () => {
 
 const { db } = await import('@/lib/db');
 const mockDb = db as unknown as {
+  select: ReturnType<typeof vi.fn>;
   query: {
     term: {
       findFirst: ReturnType<typeof vi.fn>;
@@ -157,21 +163,27 @@ describe('Quarterly Report - Server Actions', () => {
     });
   });
 
-  describe('getEnrolledKidsForTerm', () => {
-    it('returns enrolled kids for a term', async () => {
+  describe('getEnrolledKidsForTermPaginated', () => {
+    it('returns paginated enrolled kids for a term', async () => {
       mockDb.query.kid.findMany.mockResolvedValue([
         {
           ...mockKid1,
           guardian: { name: 'Ibu Siti' },
         },
       ]);
+      mockDb.select.mockReturnValue({
+        from: () => ({
+          where: vi.fn().mockResolvedValue([{ count: 1 }]),
+        }),
+      });
 
-      const result = await getEnrolledKidsForTerm(termId);
+      const result = await getEnrolledKidsForTermPaginated(termId, '', 1, 24);
 
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toHaveLength(1);
         expect(result.data[0].name).toBe('Ahmad');
+        expect(result.total).toBe(1);
       }
     });
   });

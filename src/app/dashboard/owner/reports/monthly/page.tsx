@@ -102,53 +102,58 @@ export default function MonthlyReportPickerPage() {
       setLoadingKids(true);
       setError(null);
 
-      const kidsResult = await getEnrolledKidsPaginated(
-        currentTerm.id,
-        search,
-        page,
-        PAGE_SIZE
-      );
-      if (cancelled) return;
-      if (!kidsResult.success) {
-        setError(kidsResult.error);
-        setLoadingKids(false);
-        return;
-      }
-
-      const {
-        kids: kidsData,
-        total: totalData,
-        totalPages: totalPagesData,
-      } = kidsResult.data;
-      setKids(kidsData);
-      setTotal(totalData);
-      setTotalPages(totalPagesData);
-
-      // Fetch batch reports for the current page of kids
-      if (kidsData.length > 0) {
-        const batchResult = await getKidMonthlyReportsBatch(
-          kidsData.map((k: IKidData) => k.id)
+      try {
+        const kidsResult = await getEnrolledKidsPaginated(
+          currentTerm.id,
+          search,
+          page,
+          PAGE_SIZE
         );
         if (cancelled) return;
-        if (batchResult.success) {
-          const map = new Map<
-            string,
-            { id: string; month: string; status: string }
-          >();
-          for (const report of batchResult.data) {
-            map.set(`${report.kidId}:${report.month}`, {
-              id: report.id,
-              month: report.month,
-              status: report.status,
-            });
-          }
-          setExistingReportsMap(map);
+        if (!kidsResult.success) {
+          setError(kidsResult.error);
+          setLoadingKids(false);
+          return;
         }
-      } else {
-        setExistingReportsMap(new Map());
-      }
 
-      setLoadingKids(false);
+        const {
+          kids: kidsData,
+          total: totalData,
+          totalPages: totalPagesData,
+        } = kidsResult.data;
+        setKids(kidsData);
+        setTotal(totalData);
+        setTotalPages(totalPagesData);
+
+        // Fetch batch reports for the current page of kids
+        if (kidsData.length > 0) {
+          const batchResult = await getKidMonthlyReportsBatch(
+            kidsData.map((k: IKidData) => k.id)
+          );
+          if (cancelled) return;
+          if (batchResult.success) {
+            const map = new Map<
+              string,
+              { id: string; month: string; status: string }
+            >();
+            for (const report of batchResult.data) {
+              map.set(`${report.kidId}:${report.month}`, {
+                id: report.id,
+                month: report.month,
+                status: report.status,
+              });
+            }
+            setExistingReportsMap(map);
+          }
+        } else {
+          setExistingReportsMap(new Map());
+        }
+
+        setLoadingKids(false);
+      } catch {
+        if (!cancelled) setError('Gagal memuat data');
+        setLoadingKids(false);
+      }
     }
 
     fetch();
@@ -190,6 +195,8 @@ export default function MonthlyReportPickerPage() {
     );
   }
 
+  if (!term) return null;
+
   return (
     <div className="p-4 sm:p-6">
       {/* Header */}
@@ -198,7 +205,7 @@ export default function MonthlyReportPickerPage() {
           Laporan Bulanan
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Term aktif: {term!.name} ({term!.startDate} — {term!.endDate})
+          Term aktif: {term.name} ({term.startDate} — {term.endDate})
         </p>
       </div>
 
