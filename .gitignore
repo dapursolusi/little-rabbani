@@ -64,3 +64,6 @@ next-env.d.ts
 
 # CodeGraph
 .codegraph/
+
+# Superpowers brainstorm mocks
+.superpowers/
