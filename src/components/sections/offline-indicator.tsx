@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { useOnlineStatus } from '@/hooks/use-online-status';
-import { Loading03Icon } from '@hugeicons/core-free-icons';
+import { Alert02Icon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
 import { Button } from '@/components/ui/button';
@@ -107,7 +107,8 @@ export function OfflineIndicator() {
       {/* VAL-CAPTURE-041: Quota warning */}
       {quotaMessage && isOnline && (
         <div className="sticky top-0 z-50 bg-destructive px-4 py-1.5 text-center text-xs font-medium text-white">
-          ⚠️ {quotaMessage}
+          <HugeiconsIcon icon={Alert02Icon} className="h-3.5 w-3.5 inline-block" />{' '}
+          {quotaMessage}
         </div>
       )}
 
