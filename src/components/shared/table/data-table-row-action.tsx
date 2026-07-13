@@ -29,11 +29,26 @@ import {
 
 import { deleteKid } from '@/lib/actions/kid';
 
-interface IKidActionsProps {
-  kidId: string;
+interface TableRowActionsProps {
+  id: string;
+  toastMessage?: {
+    success: {
+      edit: string;
+      delete: string;
+    };
+    failed: {
+      edit: string;
+      delete: string;
+      system: string;
+    };
+  };
+  actions: {
+    edit: (id: string) => Promise<unknown>;
+    delete: (id: string) => Promise<unknown>;
+  };
 }
 
-export function KidActions({ kidId }: IKidActionsProps) {
+export function TableRowActions(props: TableRowActionsProps) {
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -41,15 +56,24 @@ export function KidActions({ kidId }: IKidActionsProps) {
   async function handleDelete() {
     setIsDeleting(true);
     try {
-      const result = await deleteKid(kidId);
-      if (result.success) {
-        toast.success('Murid berhasil dihapus');
+      const result: Promise<{ success: boolean }> = props.actions.delete(
+        props.id
+      );
+      const resolvedResult = await result;
+      if (resolvedResult.success) {
+        toast.success(
+          props.toastMessage?.success?.delete || 'Data berhasil dihapus'
+        );
         router.refresh();
       } else {
-        toast.error(result.error);
+        toast.error(
+          props.toastMessage?.failed?.delete || 'Gagal menghapus data'
+        );
       }
     } catch {
-      toast.error('Terjadi kesalahan sistem');
+      toast.error(
+        props.toastMessage?.failed?.system || 'Terjadi kesalahan sistem'
+      );
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -78,9 +102,7 @@ export function KidActions({ kidId }: IKidActionsProps) {
           align="end"
           className="min-w-max px-1.5 **:hover:font-semibold!"
         >
-          <DropdownMenuItem
-            onClick={() => router.push(`/dashboard/owner/kid/${kidId}/edit`)}
-          >
+          <DropdownMenuItem onClick={() => props.actions.edit(props.id)}>
             <HugeiconsIcon icon={Edit04Icon} />
             Edit
           </DropdownMenuItem>

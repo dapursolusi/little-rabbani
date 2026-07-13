@@ -95,13 +95,21 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
             const badge = STATUS_BADGE[k.status] ?? STATUS_BADGE.waiting;
             return (
               <div key={k.id} className="rounded-lg border bg-card p-4">
-                <div className="flex items-center justify-between">
-                  <div>
+                <div className="flex items-center ">
+                  <div className="w-full">
                     <p className="font-medium text-foreground">{k.name}</p>
                     <p className="text-xs text-muted-foreground">
                       {k.guardian?.name ?? '-'} • {formatDate(k.dob)}
                     </p>
                   </div>
+                  <div className="flex items-baseline">
+                    <KidActions kidId={k.id} />
+                  </div>
+                </div>
+                <div className="mt-2 flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {k.enrolledTerm?.name ?? '-'}
+                  </span>
                   <Badge
                     variant={
                       badge.variant as 'default' | 'secondary' | 'outline'
@@ -109,12 +117,6 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
                   >
                     {badge.label}
                   </Badge>
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    {k.enrolledTerm?.name ?? '-'}
-                  </span>
-                  <KidActions kidId={k.id} />
                 </div>
               </div>
             );
