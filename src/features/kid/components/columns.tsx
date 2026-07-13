@@ -3,6 +3,7 @@
 import { KidActions } from '@/app/dashboard/owner/kid/kid-actions';
 import { ColumnDef } from '@tanstack/react-table';
 
+import { TableRowActions } from '@/components/shared/table/data-table-row-action';
 import { Badge } from '@/components/ui/badge';
 
 import { formatDate } from '@/lib/format';
@@ -99,7 +100,16 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
     id: 'actions',
     header: 'Aksi',
     cell: ({ row }) => {
-      return <KidActions kidId={row.original.id} />;
+      return (
+        <TableRowActions
+          id={row.original.id}
+          actions={{
+            edit: () => {},
+            delete: () => {},
+          }}
+          rowName={row.original.name}
+        />
+      );
     },
   },
 ];

@@ -27,8 +27,6 @@ import {
   TooltipTrigger,
 } from '@/components/ui/tooltip';
 
-import { deleteKid } from '@/lib/actions/kid';
-
 interface TableRowActionsProps {
   id: string;
   toastMessage?: {
@@ -43,9 +41,17 @@ interface TableRowActionsProps {
     };
   };
   actions: {
-    edit: (id: string) => Promise<unknown>;
-    delete: (id: string) => Promise<unknown>;
+    edit: (id: string) => Promise<unknown> | void;
+    delete: (id: string) => Promise<unknown> | void;
   };
+  dialogMessage?: {
+    delete: {
+      title: string;
+      description: string;
+      confirmText: string;
+    };
+  };
+  rowName?: string;
 }
 
 export function TableRowActions(props: TableRowActionsProps) {
@@ -56,11 +62,11 @@ export function TableRowActions(props: TableRowActionsProps) {
   async function handleDelete() {
     setIsDeleting(true);
     try {
-      const result: Promise<{ success: boolean }> = props.actions.delete(
+      const result: Promise<unknown> = props.actions.delete(
         props.id
-      );
+      ) as Promise<unknown>;
       const resolvedResult = await result;
-      if (resolvedResult.success) {
+      if (resolvedResult) {
         toast.success(
           props.toastMessage?.success?.delete || 'Data berhasil dihapus'
         );
@@ -87,8 +93,11 @@ export function TableRowActions(props: TableRowActionsProps) {
           <Tooltip>
             <TooltipTrigger>
               <DropdownMenuTrigger>
-                <Button variant="ghost" size="sm" aria-label="Buka menu murid">
-                  <span className="sr-only">Buka menu murid</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label="Buka menu baris tabel"
+                >
                   <HugeiconsIcon icon={MoreVerticalIcon} />
                 </Button>
               </DropdownMenuTrigger>
@@ -119,9 +128,15 @@ export function TableRowActions(props: TableRowActionsProps) {
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
         onConfirm={handleDelete}
-        title="Hapus Murid?"
-        description="Yakin ingin menghapus murid ini? Tindakan ini tidak bisa dibatalkan."
-        confirmText="Ya, Hapus"
+        title={
+          props.dialogMessage?.delete?.title ||
+          `Menghapus Data ${props.rowName}`
+        }
+        description={
+          props.dialogMessage?.delete?.description ||
+          `Yakin ingin menghapus data ${props.rowName}? Tindakan ini tidak bisa dibatalkan.`
+        }
+        confirmText={props.dialogMessage?.delete?.confirmText || 'Ya, Hapus'}
         variant="destructive"
         loading={isDeleting}
       />
