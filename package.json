@@ -88,8 +88,13 @@
     "prettier": "^3.9.4",
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
+<<<<<<< HEAD
     "tsx": "4.23.1",
     "typescript": "^6",
+=======
+    "tsx": "4.23.0",
+    "typescript": "^7",
+>>>>>>> 1b45bc4 (build(deps-dev): bump typescript from 6.0.3 to 7.0.2)
     "vitest": "4.1.10"
   },
   "ignoreScripts": [
