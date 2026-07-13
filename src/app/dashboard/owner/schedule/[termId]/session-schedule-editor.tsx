@@ -324,7 +324,7 @@ export function SessionScheduleEditor({
                     </SelectTrigger>
                     <SelectContent>
                       {activities.length === 0 ? (
-                        <div className="px-2 py-4 text-center text-sm text-zinc-400">
+                        <div className="px-2 py-4 text-center text-sm text-muted-foreground">
                           Belum ada aktivitas di katalog
                         </div>
                       ) : (

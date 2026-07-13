@@ -1,7 +1,8 @@
 import type { Metadata } from 'next';
 
-const APP_NAME = 'Your App Name';
-const APP_DESCRIPTION = 'Your app description here';
+const APP_NAME = 'Little Rabbani';
+const APP_DESCRIPTION =
+  'Preschool learning management — capture, reports, and roster for teachers and owners.';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 export const baseMetadata: Metadata = {

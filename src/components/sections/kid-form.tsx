@@ -142,7 +142,7 @@ export function KidForm({
           Wali Murid <span className="text-destructive">*</span>
         </Label>
         {guardians.length === 0 ? (
-          <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-700">
+          <div className="rounded-md border border-warning/30 bg-warning/10 px-3 py-2 text-sm text-warning">
             Belum ada wali murid. Tambah wali murid terlebih dahulu.
           </div>
         ) : (

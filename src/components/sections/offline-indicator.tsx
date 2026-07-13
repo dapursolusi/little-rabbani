@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 
 import { useOnlineStatus } from '@/hooks/use-online-status';
-import { Loading03Icon } from '@hugeicons/core-free-icons';
+import { Alert02Icon, Loading03Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
 import { Button } from '@/components/ui/button';
@@ -99,21 +99,22 @@ export function OfflineIndicator() {
 
       {/* Sync toast */}
       {syncToast && (
-        <div className="sticky top-0 z-50 bg-green-500 px-4 py-1.5 text-center text-xs font-medium text-white transition-all">
+        <div className="sticky top-0 z-50 bg-success px-4 py-1.5 text-center text-xs font-medium text-white transition-all">
           {syncToast}
         </div>
       )}
 
       {/* VAL-CAPTURE-041: Quota warning */}
       {quotaMessage && isOnline && (
-        <div className="sticky top-0 z-50 bg-red-500 px-4 py-1.5 text-center text-xs font-medium text-white">
-          ⚠️ {quotaMessage}
+        <div className="sticky top-0 z-50 bg-destructive px-4 py-1.5 text-center text-xs font-medium text-white">
+          <HugeiconsIcon icon={Alert02Icon} className="h-3.5 w-3.5 inline-block" />{' '}
+          {quotaMessage}
         </div>
       )}
 
       {/* Pending count badge (when online with pending items) */}
       {isOnline && pendingCount > 0 && !isSyncing && (
-        <div className="sticky top-0 z-50 bg-blue-600 px-4 py-1.5 text-center text-xs font-medium text-white">
+        <div className="sticky top-0 z-50 bg-primary px-4 py-1.5 text-center text-xs font-medium text-white">
           <Button
             type="button"
             variant="ghost"

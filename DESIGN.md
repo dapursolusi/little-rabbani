@@ -21,7 +21,7 @@ The surfaces breathe through rounded geometry. Every button is a 50px full-pill.
 - Floating "WhatsApp" circular contact button (`56px`, WhatsApp Green `#25D366` fill, layered shadow stack) — the product's signature elevation element, matching littlerabbani.com
 - Decorative blobs (Soft Gold `#FDE68A` and Sky Blue `#7DD3FC`) used as playful background accents — never on functional surfaces
 - 12px card radius + whisper-soft shadows keep content cards flat-plus-hint-of-lift
-- Rem-based spacing scale anchored at 1.6rem (~16px) = `--space-3`, stepping to 6.4rem (~64px)
+- Rem-based spacing uses the standard Tailwind v4 scale (`1rem = 16px`). The app does not use custom `--space-*` tokens; use Tailwind utilities instead. See [Spacing System](#spacing-system).
 
 **Color-block page rhythm:** Cream hero → White content sections → Dark Teal (`#385451`) feature band with white text → Cream utility zone → Dark Teal (`#385451`) footer with gold / white text — a deep-teal bookend around the bright body.
 
@@ -120,7 +120,7 @@ No OpenType stylistic sets explicitly activated at `:root`.
 
 - **Tight negative tracking (`-0.01em`)** is applied almost universally — the entire product reads slightly compressed, which gives Inter its confident presence without feeling squeezed.
 - **Weight shifts carry hierarchy, not size shifts.** H1 and H2 share the same 24px/36px size; only weight (600 vs 400) and color (Little Rabbani Green vs Text Black) separate them.
-- **Size tokens use rem, anchored to `1rem = 10px`** on this site (via a `font-size: 62.5%` root trick). So `1.6rem` = 16px, `2.4rem` = 24px, etc. The scale is semantic (textSize-1 through textSize-10), not arbitrary pixel values.
+- **Size tokens use the standard Tailwind v4 scale** (`1rem = 16px`). The app does **not** apply a `font-size: 62.5%` root trick; `DESIGN.md` earlier assumed one and it was never wired into `globals.css`. Use Tailwind spacing utilities (`p-4` = 16px, `gap-6` = 24px, etc.) rather than bespoke `--space-*` rem tokens — the latter are not implemented.
 - **Context-specific typeface swaps** — serif (Lora) on the marketing page, script (Caveat) on certificate/profile decorations — are deliberate and localized. Never mix them with the primary sans within the same surface.
 - **Body text never goes pure black** — it sits at `#1a1a2e` to match the warm-neutral canvas temperature.
 
@@ -434,27 +434,21 @@ A repeating component cluster used on lesson/student detail pages (e.g., `/lesso
 
 ### Spacing System
 
-Rem-based semantic scale (anchored `1rem = 10px`):
+The app uses the **standard Tailwind v4 spacing scale** (`1rem = 16px`). There is no custom `--space-*` token layer. Use Tailwind utilities directly.
 
-| Token       | Rem      | Pixels | Typical Use                                   |
-| ----------- | -------- | ------ | --------------------------------------------- |
-| `--space-1` | `0.4rem` | 4px    | Tightest inline padding                       |
-| `--space-2` | `0.8rem` | 8px    | Small gap, button vertical padding            |
-| `--space-3` | `1.6rem` | 16px   | Default — card padding, outer gutter xs       |
-| `--space-4` | `2.4rem` | 24px   | Section inner spacing, outer gutter md        |
-| `--space-5` | `3.2rem` | 32px   | Major between-section spacing                 |
-| `--space-6` | `4rem`   | 40px   | Large gaps, outer gutter lg, header crate     |
-| `--space-7` | `4.8rem` | 48px   | Section-to-section spacing                    |
-| `--space-8` | `5.6rem` | 56px   | Very large breathing — WhatsApp button height |
-| `--space-9` | `6.4rem` | 64px   | Widest section padding                        |
+| Tailwind | Pixels | Typical Use                                   |
+| -------- | ------ | --------------------------------------------- |
+| `gap-1`  | 4px    | Tightest inline spacing                       |
+| `gap-2`  | 8px    | Small gap, button vertical padding            |
+| `gap-4`  | 16px   | Default — card padding, outer gutter (mobile) |
+| `gap-6`  | 24px   | Section inner spacing, outer gutter (tablet)  |
+| `gap-8`  | 32px   | Major between-section spacing                 |
+| `gap-10` | 40px   | Large gaps, outer gutter (desktop)            |
+| `gap-12` | 48px   | Section-to-section spacing                    |
 
-**Gutter tokens:**
+**Outer gutter scale:** mobile `px-4` (16px) → tablet `px-6` (24px) → desktop `px-10` (40px).
 
-- `--outerGutter: 1.6rem` (16px, default / mobile)
-- `--outerGutterMedium: 2.4rem` (24px, tablet)
-- `--outerGutterLarge: 4.0rem` (40px, desktop)
-
-**Universal rhythm constant:** `1.6rem` (16px) appears across every page as the default outer gutter, card padding baseline, and text size 3 body — the system's most frequent spacing unit.
+**Universal rhythm constant:** `gap-4` (16px) is the default outer gutter, card padding baseline, and body text size — the system's most frequent spacing unit.
 
 ### Grid & Container
 
@@ -589,7 +583,7 @@ Whitespace carries the feeling of "plenty of space in the classroom." Section pa
 
 1. "Create a primary Little Rabbani CTA pill button with Bright Green (`#0E9F5A`) background, white text 'Save changes', Inter font at 16px weight 600 with `-0.01em` letter-spacing, `50px` border-radius (full pill), `7px 16px` padding. Apply `transform: scale(0.95)` as the active state with a `0.2s ease` transition."
 
-2. "Design a content card with White (`#ffffff`) background at `12px` border-radius, layered shadow `0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24)`. Pad contents `16–24px` (`--space-3` to `--space-4`). Place on a Cream (`#FAF5F2`) page canvas with `16px` gap to siblings."
+2. "Design a content card with White (`#ffffff`) background at `12px` border-radius, layered shadow `0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24)`. Pad contents `16–24px` (`p-4` to `p-6`). Place on a Cream (`#FAF5F2`) page canvas with `gap-4` to siblings."
 
 3. "Build the WhatsApp floating circular contact button — `56px` diameter, WhatsApp Green (`#25D366`) fill, white WhatsApp glyph icon centered. Layered shadow: `0 0 6px rgba(0,0,0,0.24)` + `0 8px 12px rgba(0,0,0,0.14)`. Fixed position bottom-right with `-0.8rem` touch offset. Active state collapses the ambient shadow to `0 8px 12px rgba(0,0,0,0)` with `scale(0.95)`. This matches littlerabbani.com's floating WhatsApp button."
 
