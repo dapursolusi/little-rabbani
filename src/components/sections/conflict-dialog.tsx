@@ -204,7 +204,7 @@ export function ConflictDialog({
                     Dari Server:
                   </p>
                   {conflict.serverNotes.map((note, i) => (
-                    <p key={`server-${i}`} className="text-sm text-zinc-700">
+                    <p key={`server-${i}`} className="text-sm text-foreground">
                       {note}
                     </p>
                   ))}

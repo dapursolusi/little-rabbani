@@ -143,7 +143,7 @@ export function SessionGenerateForm({
         />
       </div>
 
-      <p className="text-xs text-zinc-500">
+      <p className="text-xs text-muted-foreground">
         Rentang tanggal: {startDate} — {endDate}
       </p>
 

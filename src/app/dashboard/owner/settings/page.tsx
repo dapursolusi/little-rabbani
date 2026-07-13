@@ -172,8 +172,8 @@ export default function OwnerSettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-8 p-4">
       <div>
-        <h1 className="text-2xl font-semibold text-zinc-900">Pengaturan</h1>
-        <p className="mt-1 text-sm text-zinc-500">
+        <h1 className="text-2xl font-semibold text-foreground">Pengaturan</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
           Kelola notifikasi dan pengingat
         </p>
       </div>
@@ -185,18 +185,18 @@ export default function OwnerSettingsPage() {
         </CardHeader>
         <CardContent>
           {!swSupported && (
-            <div className="rounded-md bg-amber-50 p-3 text-sm text-amber-800">
+            <div className="rounded-md bg-warning/10 p-3 text-sm text-warning">
               Browser ini tidak mendukung Service Worker. Fitur notifikasi tidak
               tersedia. Pengingat akan ditampilkan di dashboard.
             </div>
           )}
 
-          <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
+          <div className="flex items-center justify-between rounded-md bg-muted p-3">
             <div>
-              <p className="text-sm font-medium text-zinc-900">
+              <p className="text-sm font-medium text-foreground">
                 Notifikasi Browser
               </p>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs text-muted-foreground">
                 {notificationStatus === 'granted'
                   ? 'Notifikasi sudah diizinkan'
                   : notificationStatus === 'denied'
@@ -216,7 +216,7 @@ export default function OwnerSettingsPage() {
                 Berhenti
               </Button>
             ) : notificationStatus === 'denied' ? (
-              <span className="rounded-md bg-zinc-100 px-3 py-1.5 text-sm text-zinc-500">
+              <span className="rounded-md bg-muted px-3 py-1.5 text-sm text-muted-foreground">
                 Ditolak
               </span>
             ) : notificationStatus === 'prompt' ? (
@@ -247,11 +247,11 @@ export default function OwnerSettingsPage() {
         <CardContent>
           {loading ? (
             <div className="space-y-4">
-              <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
+              <div className="flex items-center justify-between rounded-md bg-muted p-3">
                 <Skeleton className="h-4 w-40" />
                 <Skeleton className="h-6 w-12 rounded-full" />
               </div>
-              <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
+              <div className="flex items-center justify-between rounded-md bg-muted p-3">
                 <Skeleton className="h-4 w-40" />
                 <Skeleton className="h-6 w-12 rounded-full" />
               </div>
@@ -259,12 +259,12 @@ export default function OwnerSettingsPage() {
           ) : (
             <div className="space-y-4">
               {/* Capture-pending toggle */}
-              <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
+              <div className="flex items-center justify-between rounded-md bg-muted p-3">
                 <div>
-                  <p className="text-sm font-medium text-zinc-900">
+                  <p className="text-sm font-medium text-foreground">
                     Capture Tertunda
                   </p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-muted-foreground">
                     Kirim pengingat 15 menit setelah sesi berakhir jika ada
                     capture yang tertunda
                   </p>
@@ -276,12 +276,12 @@ export default function OwnerSettingsPage() {
               </div>
 
               {/* Schedule-entry toggle */}
-              <div className="flex items-center justify-between rounded-md bg-zinc-50 p-3">
+              <div className="flex items-center justify-between rounded-md bg-muted p-3">
                 <div>
-                  <p className="text-sm font-medium text-zinc-900">
+                  <p className="text-sm font-medium text-foreground">
                     Jadwal Mingguan
                   </p>
-                  <p className="text-xs text-zinc-500">
+                  <p className="text-xs text-muted-foreground">
                     Kirim pengingat hari Kamis pagi jika jadwal minggu depan
                     belum diisi
                   </p>
@@ -302,7 +302,7 @@ export default function OwnerSettingsPage() {
           <CardTitle>Tentang Pengingat</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-2 text-sm text-zinc-600">
+          <ul className="space-y-2 text-sm text-muted-foreground">
             <li>
               &bull; <strong>Capture Tertunda:</strong> Muncul 15 menit setelah
               sesi berakhir jika masih ada murid yang belum dicapture.
