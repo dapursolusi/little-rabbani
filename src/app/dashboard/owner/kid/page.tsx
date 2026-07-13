@@ -1,16 +1,11 @@
 import Link from 'next/link';
 
+import { kidColumns } from '@/features/kid/components/columns';
+
 import { EmptyState } from '@/components/shared/empty-state';
+import { DataTable } from '@/components/shared/table/data-table';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 
 import { getKids } from '@/lib/actions/kid';
 import { formatDate } from '@/lib/format';
@@ -136,43 +131,15 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
             actionHref={!search ? '/dashboard/owner/kid/create' : undefined}
           />
         ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nama</TableHead>
-                <TableHead>Tanggal Lahir</TableHead>
-                <TableHead>Wali Murid</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Term</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {kids.map((k) => {
-                const badge = STATUS_BADGE[k.status] ?? STATUS_BADGE.waiting;
-                return (
-                  <TableRow key={k.id}>
-                    <TableCell className="font-medium">{k.name}</TableCell>
-                    <TableCell>{formatDate(k.dob)}</TableCell>
-                    <TableCell>{k.guardian?.name ?? '-'}</TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={
-                          badge.variant as 'default' | 'secondary' | 'outline'
-                        }
-                      >
-                        {badge.label}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>{k.enrolledTerm?.name ?? '-'}</TableCell>
-                    <TableCell className="text-right">
-                      <KidActions kidId={k.id} />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+          <DataTable
+            columns={kidColumns}
+            data={kids.map((kid) => ({
+              ...kid,
+              guardianName: kid.guardian?.name ?? '-',
+              enrolledTermName: kid.enrolledTerm?.name ?? '-',
+              enrolledTermId: kid.enrolledTerm?.id ?? undefined,
+            }))}
+          />
         )}
       </div>
 
