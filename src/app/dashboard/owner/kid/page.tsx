@@ -31,7 +31,7 @@ interface IKidListPageProps {
 export default async function KidListPage({ searchParams }: IKidListPageProps) {
   const { search } = await searchParams;
 
-  const result = await getKids(search ? { search } : undefined);
+  const result = await getKids({ ...(search ? { search } : {}), limit: 1000 });
 
   if (!result.success) {
     return (

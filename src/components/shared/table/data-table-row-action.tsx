@@ -13,19 +13,15 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
 import { ConfirmDialog } from '@/components/sections/confirm-dialog';
-import { Button } from '@/components/ui/button';
+import { buttonVariants } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
+
+import { cn } from '@/lib/utils';
 
 interface TableRowActionsProps {
   id: string;
@@ -89,24 +85,15 @@ export function TableRowActions(props: TableRowActionsProps) {
   return (
     <>
       <DropdownMenu>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger>
-              <DropdownMenuTrigger>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-label="Buka menu baris tabel"
-                >
-                  <HugeiconsIcon icon={MoreVerticalIcon} />
-                </Button>
-              </DropdownMenuTrigger>
-            </TooltipTrigger>
-            <TooltipContent>
-              <p>Buka menu</p>
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <DropdownMenuTrigger
+          className={cn(
+            buttonVariants({ variant: 'ghost', size: 'icon-sm' }),
+            'bg-transparent! hover:bg-muted!'
+          )}
+          aria-label="Buka menu baris tabel"
+        >
+          <HugeiconsIcon icon={MoreVerticalIcon} />
+        </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"
           className="min-w-max px-1.5 **:hover:font-semibold!"
