@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import {
   ColumnDef,
   flexRender,
@@ -28,13 +30,22 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
+
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    initialState: { pagination: { pageSize: 10 } },
+    state: { pagination },
+    onPaginationChange: setPagination,
   });
+
+  // React Compiler memoizes JSX reads of the stable-identity `table` getters,
+  // yielding stale pagination values. Derive from React state instead.
+  const pageCount = Math.max(1, Math.ceil(data.length / pagination.pageSize));
+  const canPreviousPage = pagination.pageIndex > 0;
+  const canNextPage = pagination.pageIndex < pageCount - 1;
 
   return (
     <div className="bg-table-body-bg overflow-hidden rounded-md border">
@@ -83,7 +94,14 @@ export function DataTable<TData, TValue>({
           )}
         </TableBody>
       </Table>
-      <DataTablePagination table={table} />
+      <DataTablePagination
+        table={table}
+        pageIndex={pagination.pageIndex}
+        pageSize={pagination.pageSize}
+        pageCount={pageCount}
+        canPreviousPage={canPreviousPage}
+        canNextPage={canNextPage}
+      />
     </div>
   );
 }
