@@ -21,9 +21,9 @@ import { registerBuiltinFilters } from './filters/builtins';
 import { getFilter } from './filters/registry';
 import type { TColumnFilter } from './filters/types';
 
-interface IDataTableFilterBarProps<TData> {
+interface IDataTableFilterBarProps<TData, TValue> {
   table: Table<TData>;
-  columns: ColumnDef<TData, unknown>[];
+  columns: ColumnDef<TData, TValue>[];
   columnFilters: ColumnFiltersState;
   onColumnFiltersChange: (filters: ColumnFiltersState) => void;
 }
@@ -44,7 +44,9 @@ function deriveOptions<TData>(
 }
 
 /** Extract filterable columns from the column definitions. */
-function getFilterableColumns<TData>(columns: ColumnDef<TData, unknown>[]) {
+function getFilterableColumns<TData, TValue>(
+  columns: ColumnDef<TData, TValue>[]
+) {
   return columns
     .filter((col) => {
       const meta = (col as { meta?: { filter?: TColumnFilter } }).meta;
@@ -64,12 +66,12 @@ function getFilterableColumns<TData>(columns: ColumnDef<TData, unknown>[]) {
     });
 }
 
-export default function DataTableFilterBar<TData>({
+export default function DataTableFilterBar<TData, TValue>({
   table,
   columns,
   columnFilters,
   onColumnFiltersChange,
-}: IDataTableFilterBarProps<TData>) {
+}: IDataTableFilterBarProps<TData, TValue>) {
   registerBuiltinFilters();
 
   const filterableColumns = getFilterableColumns(columns);

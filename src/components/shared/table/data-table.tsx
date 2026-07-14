@@ -8,6 +8,7 @@ import { Add02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ColumnDef,
+  ColumnFiltersState,
   SortingState,
   VisibilityState,
   flexRender,
@@ -31,8 +32,11 @@ import {
 import { cn } from '@/lib/utils';
 
 import DataTableColumnVisibility from './data-table-column-visibility';
+import DataTableFilterBar from './data-table-filter-bar';
 import { DataTablePagination } from './data-table-pagination';
 import DataTableSearchBar from './data-table-search-bar';
+import { getFilter } from './filters/registry';
+import type { TColumnFilter } from './filters/types';
 
 // React Compiler memoizes reads on TanStack Table's stable column handle, so
 // column.getIsSorted() goes stale. Mirror sorting into React context and read
@@ -58,6 +62,9 @@ export function DataTable<TData, TValue>({
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
   const [globalFilter, setGlobalFilter] = React.useState<string>('');
+  const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
+    []
+  );
 
   // Scoping to opt-in columns: a column participates in the global filter
   // only when its `meta.enableSearch` is true. Source of truth lives in each
@@ -90,17 +97,36 @@ export function DataTable<TData, TValue>({
     return labels.length > 0 ? `Cari ${labels.join(' atau ')}…` : 'Cari…';
   }, [searchableColumns]);
 
+  // Enrich columns with filterFn from registry or custom meta, plus wire
+  // enableGlobalFilter the same way as before.
   const tableColumns = React.useMemo<ColumnDef<TData, TValue>[]>(
     () =>
-      columns.map((column) => ({
-        ...column,
-        enableGlobalFilter:
-          (
-            column as unknown as {
-              meta?: { enableSearch?: boolean };
+      columns.map((column) => {
+        const meta = (
+          column as unknown as {
+            meta?: { enableSearch?: boolean; filter?: TColumnFilter };
+          }
+        ).meta;
+
+        const enriched: ColumnDef<TData, TValue> = {
+          ...column,
+          enableGlobalFilter: meta?.enableSearch === true,
+        };
+
+        // Wire column-level filterFn from registry or custom meta
+        if (meta?.filter) {
+          if ('type' in meta.filter) {
+            const registration = getFilter(meta.filter.type);
+            if (registration) {
+              enriched.filterFn = registration.filterFn as never;
             }
-          ).meta?.enableSearch === true,
-      })),
+          } else {
+            enriched.filterFn = meta.filter.filterFn as never;
+          }
+        }
+
+        return enriched;
+      }),
     [columns]
   );
 
@@ -120,7 +146,19 @@ export function DataTable<TData, TValue>({
       // empty page beyond the filtered set.
       setPagination((prev) => ({ ...prev, pageIndex: 0 }));
     },
-    state: { pagination, sorting, columnVisibility, globalFilter },
+    onColumnFiltersChange: (updater) => {
+      setColumnFilters(updater);
+      // Reset to first page when a column filter changes — same rationale as
+      // the global-filter guard above.
+      setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    },
+    state: {
+      pagination,
+      sorting,
+      columnVisibility,
+      globalFilter,
+      columnFilters,
+    },
   });
 
   // React Compiler memoizes JSX reads of the stable-identity `table` getters,
@@ -153,6 +191,12 @@ export function DataTable<TData, TValue>({
           <>{createButton}</>
         )}
       </div>
+      <DataTableFilterBar
+        table={table}
+        columns={columns}
+        columnFilters={columnFilters}
+        onColumnFiltersChange={setColumnFilters}
+      />
       <div className="bg-table-body-bg overflow-hidden rounded-xl border-2! border-black/30">
         <Table>
           <TableHeader>
