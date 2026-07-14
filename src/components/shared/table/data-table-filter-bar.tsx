@@ -17,7 +17,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 
-import { registerBuiltinFilters } from './filters/builtins';
 import { getFilter } from './filters/registry';
 import type { TColumnFilter } from './filters/types';
 
@@ -72,8 +71,6 @@ export default function DataTableFilterBar<TData, TValue>({
   columnFilters,
   onColumnFiltersChange,
 }: IDataTableFilterBarProps<TData, TValue>) {
-  registerBuiltinFilters();
-
   const filterableColumns = getFilterableColumns(columns);
 
   if (filterableColumns.length === 0) return null;

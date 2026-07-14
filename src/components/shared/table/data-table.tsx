@@ -35,6 +35,7 @@ import DataTableColumnVisibility from './data-table-column-visibility';
 import DataTableFilterBar from './data-table-filter-bar';
 import { DataTablePagination } from './data-table-pagination';
 import DataTableSearchBar from './data-table-search-bar';
+import { registerBuiltinFilters } from './filters/builtins';
 import { getFilter } from './filters/registry';
 import type { TColumnFilter } from './filters/types';
 
@@ -54,6 +55,9 @@ export function DataTable<TData, TValue>({
   data,
   createButton,
 }: DataTableProps<TData, TValue>) {
+  // Register built-in filter types before tableColumns memo reads them.
+  // Idempotent — safe to call on every render.
+  registerBuiltinFilters();
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
