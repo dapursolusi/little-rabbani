@@ -85,7 +85,17 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
   },
   {
     accessorKey: 'status',
-    meta: { title: 'Status', filter: { type: 'select' } },
+    meta: {
+      title: 'Status',
+      filter: {
+        type: 'select',
+        options: [
+          { label: 'Menunggu', value: 'waiting' },
+          { label: 'Terdaftar', value: 'enrolled' },
+          { label: 'Alumni', value: 'alumni' },
+        ],
+      },
+    },
     header: 'Status',
     cell: ({ row }) => {
       const status = row.getValue('status') as string;
