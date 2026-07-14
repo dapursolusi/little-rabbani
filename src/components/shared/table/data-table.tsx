@@ -166,8 +166,14 @@ export function DataTable<TData, TValue>({
   });
 
   // React Compiler memoizes JSX reads of the stable-identity `table` getters,
-  // yielding stale pagination values. Derive from React state instead.
-  const pageCount = Math.max(1, Math.ceil(data.length / pagination.pageSize));
+  // yielding stale pagination values when state changes but identity doesn't.
+  // The filtered row model's rows array reference changes whenever columnFilters
+  // or globalFilter update and triggers a re-render, so .length is safe here.
+  const filteredRowCount = table.getFilteredRowModel().rows.length;
+  const pageCount = Math.max(
+    1,
+    Math.ceil(filteredRowCount / pagination.pageSize)
+  );
   const canPreviousPage = pagination.pageIndex > 0;
   const canNextPage = pagination.pageIndex < pageCount - 1;
 
@@ -258,6 +264,7 @@ export function DataTable<TData, TValue>({
           pageIndex={pagination.pageIndex}
           pageSize={pagination.pageSize}
           pageCount={pageCount}
+          filteredRowCount={filteredRowCount}
           canPreviousPage={canPreviousPage}
           canNextPage={canNextPage}
         />
