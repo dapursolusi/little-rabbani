@@ -2,7 +2,8 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 
-import { TableRowActions } from '@/components/shared/table/data-table-row-action';
+import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';
+import { DataTableRowActions } from '@/components/shared/table/data-table-row-action';
 import { Badge } from '@/components/ui/badge';
 
 import { formatDate } from '@/lib/format';
@@ -53,7 +54,9 @@ const STATUS_BADGE: Record<
 export const kidColumns: ColumnDef<KidRowData>[] = [
   {
     accessorKey: 'name',
-    header: 'Nama',
+    header: ({ column }) => {
+      return <DataTableColumnHeader column={column} title="Nama" />;
+    },
     cell: ({ row }) => {
       return <span className="font-medium">{row.getValue('name') ?? '-'}</span>;
     },
@@ -100,7 +103,7 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
     header: 'Aksi',
     cell: ({ row }) => {
       return (
-        <TableRowActions
+        <DataTableRowActions
           id={row.original.id}
           actions={{
             edit: () => {},

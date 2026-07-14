@@ -4,7 +4,7 @@ import { kidColumns } from '@/features/kid/components/columns';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { DataTable } from '@/components/shared/table/data-table';
-import { TableRowActions } from '@/components/shared/table/data-table-row-action';
+import { DataTableRowActions } from '@/components/shared/table/data-table-row-action';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 
@@ -96,7 +96,7 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
                     </p>
                   </div>
                   <div className="flex items-baseline">
-                    <TableRowActions id={k.id} />
+                    <DataTableRowActions id={k.id} />
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between">

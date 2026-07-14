@@ -23,7 +23,7 @@ import {
 
 import { cn } from '@/lib/utils';
 
-interface TableRowActionsProps {
+interface DataTableRowActionsProps {
   id: string;
   toastMessage?: {
     success: {
@@ -50,7 +50,7 @@ interface TableRowActionsProps {
   rowName?: string;
 }
 
-export function TableRowActions(props: TableRowActionsProps) {
+export function DataTableRowActions(props: DataTableRowActionsProps) {
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
