@@ -20,6 +20,7 @@ import {
 } from '@tanstack/react-table';
 
 import { buttonVariants } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
 import {
   Table,
   TableBody,
@@ -259,6 +260,7 @@ export function DataTable<TData, TValue>({
             )}
           </TableBody>
         </Table>
+        <Separator />
         <DataTablePagination
           table={table}
           pageIndex={pagination.pageIndex}
