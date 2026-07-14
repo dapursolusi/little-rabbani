@@ -13,6 +13,7 @@ export function SelectFilter({
     <select
       value={(value as string) ?? ''}
       onChange={(e) => onChange(e.target.value || undefined)}
+      aria-label="Filter"
       className="w-full min-w-[120px] rounded border border-input bg-background px-2 py-1 text-sm"
     >
       <option value="">Semua</option>
@@ -26,5 +27,8 @@ export function SelectFilter({
 }
 
 export const selectFilterFn: FilterFn<unknown> = (row, columnId, value) => {
-  return String(row.getValue(columnId)) === String(value);
+  if (value == null) return false;
+  const rowValue = row.getValue(columnId);
+  if (rowValue == null) return false;
+  return String(rowValue) === String(value);
 };

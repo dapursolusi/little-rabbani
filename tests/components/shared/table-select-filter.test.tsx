@@ -74,4 +74,11 @@ describe('selectFilterFn', () => {
       false
     );
   });
+
+  it('returns false for null row value', () => {
+    const row = { getValue: () => null };
+    expect(selectFilterFn(row as never, 'status', 'enrolled', () => {})).toBe(
+      false
+    );
+  });
 });
