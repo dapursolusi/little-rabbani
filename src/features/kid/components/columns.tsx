@@ -6,7 +6,7 @@ import { DataTableColumnHeader } from '@/components/shared/table/data-table-colu
 import { DataTableRowActions } from '@/components/shared/table/data-table-row-action';
 import { Badge } from '@/components/ui/badge';
 
-import { formatDate } from '@/lib/format';
+import { getAge } from '@/lib/age';
 
 type KidRowData = {
   guardianName: string;
@@ -63,15 +63,19 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
   },
   {
     accessorKey: 'dob',
-    header: 'Tanggal Lahir',
+    header: ({ column }) => {
+      return <DataTableColumnHeader column={column} title="Usia" />;
+    },
     cell: ({ row }) => {
-      return <span>{formatDate(row.getValue('dob')) ?? '-'}</span>;
+      return <span>{getAge(row.getValue('dob')) ?? '-'}</span>;
     },
   },
   {
     accessorFn: (row) => row.guardian?.name ?? '-',
     id: 'guardianName',
-    header: 'Wali Murid',
+    header: ({ column }) => {
+      return <DataTableColumnHeader column={column} title="Nama Wali" />;
+    },
     cell: ({ getValue }) => (
       <span className="font-medium">{getValue<string>()}</span>
     ),
