@@ -54,7 +54,7 @@ const STATUS_BADGE: Record<
 export const kidColumns: ColumnDef<KidRowData>[] = [
   {
     accessorKey: 'name',
-    meta: { title: 'Nama' },
+    meta: { title: 'Nama', enableSearch: true },
     header: ({ column }) => {
       return <DataTableColumnHeader column={column} title="Nama" />;
     },
@@ -75,7 +75,7 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
   {
     accessorFn: (row) => row.guardian?.name ?? '-',
     id: 'guardianName',
-    meta: { title: 'Nama Wali' },
+    meta: { title: 'Nama Wali', enableSearch: true },
     header: ({ column }) => {
       return <DataTableColumnHeader column={column} title="Nama Wali" />;
     },

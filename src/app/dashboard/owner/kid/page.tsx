@@ -1,17 +1,13 @@
-import Link from 'next/link';
-
 import { kidColumns } from '@/features/kid/components/columns';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { DataTable } from '@/components/shared/table/data-table';
 import { DataTableRowActions } from '@/components/shared/table/data-table-row-action';
 import { Badge } from '@/components/ui/badge';
-import { Button, buttonVariants } from '@/components/ui/button';
 
 import { getKids } from '@/lib/actions/kid';
 import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
-import { cn } from '@/lib/utils';
 
 export const metadata = { ...baseMetadata, title: 'Murid' };
 
@@ -50,30 +46,6 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
           <p className="mt-1 text-sm text-muted-foreground">
             Kelola data murid
           </p>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <form
-            method="GET"
-            action="/dashboard/owner/kid"
-            className="flex gap-2"
-          >
-            <input
-              type="text"
-              name="search"
-              defaultValue={search ?? ''}
-              placeholder="Cari murid..."
-              className="rounded-md border px-3 py-1.5 text-sm"
-            />
-            <Button type="submit" variant="default" size="sm">
-              Cari
-            </Button>
-          </form>
-          <Link
-            href="/dashboard/owner/kid/create"
-            className={cn(buttonVariants({ variant: 'default' }))}
-          >
-            Tambah Murid
-          </Link>
         </div>
       </div>
 
@@ -134,6 +106,7 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
               enrolledTermName: kid.enrolledTerm?.name ?? '-',
               enrolledTermId: kid.enrolledTerm?.id ?? undefined,
             }))}
+            createButton="/dashboard/owner/kid/create"
           />
         )}
       </div>
