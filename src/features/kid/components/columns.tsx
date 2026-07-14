@@ -85,7 +85,7 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
   },
   {
     accessorKey: 'status',
-    meta: { title: 'Status' },
+    meta: { title: 'Status', filter: { type: 'select' } },
     header: 'Status',
     cell: ({ row }) => {
       const status = row.getValue('status') as string;
@@ -100,7 +100,7 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
   {
     accessorFn: (row) => row.enrolledTerm?.name ?? '-',
     id: 'enrolledTermName',
-    meta: { title: 'Term' },
+    meta: { title: 'Term', filter: { type: 'select' } },
     header: 'Term',
     cell: ({ row }) => {
       return <span>{row.getValue('enrolledTermName') ?? '-'}</span>;
