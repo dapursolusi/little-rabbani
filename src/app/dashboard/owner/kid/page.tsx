@@ -118,7 +118,7 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
       </div>
 
       {/* Desktop table */}
-      <div className="hidden overflow-x-auto rounded-lg border md:block">
+      <div className="hidden overflow-x-auto rounded-lg md:block">
         {kids.length === 0 ? (
           <EmptyState
             title={search ? 'Murid tidak ditemukan' : 'Belum ada data murid'}

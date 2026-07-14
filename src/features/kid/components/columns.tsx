@@ -54,6 +54,7 @@ const STATUS_BADGE: Record<
 export const kidColumns: ColumnDef<KidRowData>[] = [
   {
     accessorKey: 'name',
+    meta: { title: 'Nama' },
     header: ({ column }) => {
       return <DataTableColumnHeader column={column} title="Nama" />;
     },
@@ -63,6 +64,7 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
   },
   {
     accessorKey: 'dob',
+    meta: { title: 'Usia' },
     header: ({ column }) => {
       return <DataTableColumnHeader column={column} title="Usia" />;
     },
@@ -73,6 +75,7 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
   {
     accessorFn: (row) => row.guardian?.name ?? '-',
     id: 'guardianName',
+    meta: { title: 'Nama Wali' },
     header: ({ column }) => {
       return <DataTableColumnHeader column={column} title="Nama Wali" />;
     },
@@ -82,6 +85,7 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
   },
   {
     accessorKey: 'status',
+    meta: { title: 'Status' },
     header: 'Status',
     cell: ({ row }) => {
       const status = row.getValue('status') as string;
@@ -96,6 +100,7 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
   {
     accessorFn: (row) => row.enrolledTerm?.name ?? '-',
     id: 'enrolledTermName',
+    meta: { title: 'Term' },
     header: 'Term',
     cell: ({ row }) => {
       return <span>{row.getValue('enrolledTermName') ?? '-'}</span>;
@@ -105,6 +110,7 @@ export const kidColumns: ColumnDef<KidRowData>[] = [
   {
     id: 'actions',
     header: 'Aksi',
+    enableHiding: false,
     cell: ({ row }) => {
       return (
         <DataTableRowActions

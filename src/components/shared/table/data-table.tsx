@@ -5,6 +5,7 @@ import * as React from 'react';
 import {
   ColumnDef,
   SortingState,
+  VisibilityState,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
@@ -21,6 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+import DataTableColumnVisibility from './data-table-column-visibility';
 import { DataTablePagination } from './data-table-pagination';
 
 // React Compiler memoizes reads on TanStack Table's stable column handle, so
@@ -42,16 +44,19 @@ export function DataTable<TData, TValue>({
     pageSize: 10,
   });
   const [sorting, setSorting] = React.useState<SortingState>([]);
+  const [columnVisibility, setColumnVisibility] =
+    React.useState<VisibilityState>({});
 
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    state: { pagination, sorting },
     onPaginationChange: setPagination,
     onSortingChange: setSorting,
     getSortedRowModel: getSortedRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    state: { pagination, sorting, columnVisibility },
   });
 
   // React Compiler memoizes JSX reads of the stable-identity `table` getters,
@@ -62,7 +67,13 @@ export function DataTable<TData, TValue>({
 
   return (
     <SortingStateContext.Provider value={sorting}>
-      <div className="bg-table-body-bg overflow-hidden rounded-md border">
+      <div className="m-2 flex items-center justify-between">
+        <DataTableColumnVisibility
+          table={table}
+          columnVisibility={columnVisibility}
+        />
+      </div>
+      <div className="bg-table-body-bg overflow-hidden rounded-xl border-2! border-black/30">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (
