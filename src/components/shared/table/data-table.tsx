@@ -4,6 +4,7 @@ import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
+  getPaginationRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 
@@ -16,6 +17,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
+import { DataTablePagination } from './data-table-pagination';
+
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
@@ -25,11 +28,12 @@ export function DataTable<TData, TValue>({
   columns,
   data,
 }: DataTableProps<TData, TValue>) {
-  // eslint-disable-next-line react-hooks/incompatible-library
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 10 } },
   });
 
   return (
@@ -79,6 +83,7 @@ export function DataTable<TData, TValue>({
           )}
         </TableBody>
       </Table>
+      <DataTablePagination table={table} />
     </div>
   );
 }

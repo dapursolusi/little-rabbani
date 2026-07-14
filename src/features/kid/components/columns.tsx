@@ -1,6 +1,5 @@
 'use client';
 
-import { KidActions } from '@/app/dashboard/owner/kid/kid-actions';
 import { ColumnDef } from '@tanstack/react-table';
 
 import { TableRowActions } from '@/components/shared/table/data-table-row-action';

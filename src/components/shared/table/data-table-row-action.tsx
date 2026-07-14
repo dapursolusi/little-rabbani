@@ -40,7 +40,7 @@ interface TableRowActionsProps {
       system: string;
     };
   };
-  actions: {
+  actions?: {
     edit: (id: string) => Promise<unknown> | void;
     delete: (id: string) => Promise<unknown> | void;
   };
@@ -62,9 +62,9 @@ export function TableRowActions(props: TableRowActionsProps) {
   async function handleDelete() {
     setIsDeleting(true);
     try {
-      const result: Promise<unknown> = props.actions.delete(
-        props.id
-      ) as Promise<unknown>;
+      const result: Promise<unknown> = props.actions?.delete
+        ? (props.actions.delete(props.id) as Promise<unknown>)
+        : Promise.resolve(undefined);
       const resolvedResult = await result;
       if (resolvedResult) {
         toast.success(
@@ -111,7 +111,7 @@ export function TableRowActions(props: TableRowActionsProps) {
           align="end"
           className="min-w-max px-1.5 **:hover:font-semibold!"
         >
-          <DropdownMenuItem onClick={() => props.actions.edit(props.id)}>
+          <DropdownMenuItem onClick={() => props.actions?.edit?.(props.id)}>
             <HugeiconsIcon icon={Edit04Icon} />
             Edit
           </DropdownMenuItem>

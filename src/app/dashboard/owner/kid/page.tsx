@@ -4,6 +4,7 @@ import { kidColumns } from '@/features/kid/components/columns';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { DataTable } from '@/components/shared/table/data-table';
+import { TableRowActions } from '@/components/shared/table/data-table-row-action';
 import { Badge } from '@/components/ui/badge';
 import { Button, buttonVariants } from '@/components/ui/button';
 
@@ -12,11 +13,7 @@ import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';
 
-import { KidActions } from './kid-actions';
-
 export const metadata = { ...baseMetadata, title: 'Murid' };
-
-const PAGE_SIZE = 50;
 
 const STATUS_BADGE: Record<
   string,
@@ -28,15 +25,13 @@ const STATUS_BADGE: Record<
 };
 
 interface IKidListPageProps {
-  searchParams: Promise<{ search?: string; page?: string }>;
+  searchParams: Promise<{ search?: string }>;
 }
 
 export default async function KidListPage({ searchParams }: IKidListPageProps) {
-  const { search, page } = await searchParams;
-  const currentPage = Math.max(1, Number(page) || 1);
-  const offset = (currentPage - 1) * PAGE_SIZE;
+  const { search } = await searchParams;
 
-  const result = await getKids({ search, limit: PAGE_SIZE, offset });
+  const result = await getKids(search ? { search } : undefined);
 
   if (!result.success) {
     return (
@@ -45,8 +40,6 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
   }
 
   const kids = result.data;
-  const totalItems = result.total ?? 0;
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
   return (
     <div className="p-4 sm:p-6">
@@ -103,7 +96,7 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
                     </p>
                   </div>
                   <div className="flex items-baseline">
-                    <KidActions kidId={k.id} />
+                    <TableRowActions id={k.id} />
                   </div>
                 </div>
                 <div className="mt-2 flex items-center justify-between">
@@ -144,38 +137,6 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
           />
         )}
       </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <div className="mt-4 flex items-center justify-between border-t border px-4 py-3">
-          <p className="text-sm text-muted-foreground">
-            Menampilkan {offset + 1}–{Math.min(offset + PAGE_SIZE, totalItems)}{' '}
-            dari {totalItems}
-          </p>
-          <div className="flex gap-2">
-            {currentPage > 1 && (
-              <Link
-                href={`/dashboard/owner/kid?page=${currentPage - 1}${search ? `&search=${encodeURIComponent(search)}` : ''}`}
-                className={cn(
-                  buttonVariants({ variant: 'outline', size: 'sm' })
-                )}
-              >
-                Sebelumnya
-              </Link>
-            )}
-            {currentPage < totalPages && (
-              <Link
-                href={`/dashboard/owner/kid?page=${currentPage + 1}${search ? `&search=${encodeURIComponent(search)}` : ''}`}
-                className={cn(
-                  buttonVariants({ variant: 'outline', size: 'sm' })
-                )}
-              >
-                Selanjutnya
-              </Link>
-            )}
-          </div>
-        </div>
-      )}
     </div>
   );
 }
