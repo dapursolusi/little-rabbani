@@ -1,7 +1,13 @@
-// src/components/shared/table/data-table-filter-bar.tsx
+// src/components/shared/table/data-table-filter.tsx
 'use client';
 
-import { FilterAddIcon, FilterRemoveIcon } from '@hugeicons/core-free-icons';
+import * as React from 'react';
+
+import {
+  ArrowDown01Icon,
+  Cancel01Icon,
+  FilterAddIcon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import type {
   ColumnDef,
@@ -19,13 +25,6 @@ import {
 
 import { getFilter } from './filters/registry';
 import type { TColumnFilter } from './filters/types';
-
-interface IDataTableFilterBarProps<TData, TValue> {
-  table: Table<TData>;
-  columns: ColumnDef<TData, TValue>[];
-  columnFilters: ColumnFiltersState;
-  onColumnFiltersChange: (filters: ColumnFiltersState) => void;
-}
 
 /** Derive distinct values for a column from the table's row model. */
 function deriveOptions<TData>(
@@ -65,67 +64,55 @@ function getFilterableColumns<TData, TValue>(
     });
 }
 
-export default function DataTableFilterBar<TData, TValue>({
-  table,
-  columns,
-  columnFilters,
-  onColumnFiltersChange,
-}: IDataTableFilterBarProps<TData, TValue>) {
-  const filterableColumns = getFilterableColumns(columns);
+interface FilterContextValue<TData, TValue> {
+  table: Table<TData>;
+  filterableColumns: ReturnType<typeof getFilterableColumns<TData, TValue>>;
+  inactiveColumns: ReturnType<typeof getFilterableColumns<TData, TValue>>;
+  columnFilters: ColumnFiltersState;
+  onColumnFiltersChange: (filters: ColumnFiltersState) => void;
+  handleSetFilter: (id: string, value: unknown) => void;
+  handleRemoveFilter: (id: string) => void;
+}
 
-  if (filterableColumns.length === 0) return null;
+const FilterContext = React.createContext<FilterContextValue<
+  unknown,
+  unknown
+> | null>(null);
 
-  // Columns not currently active as filters
-  const inactiveColumns = filterableColumns.filter(
-    (col) => !columnFilters.some((f) => f.id === col.columnId)
-  );
+function useFilterContext() {
+  const ctx = React.useContext(FilterContext);
+  if (ctx === null) {
+    throw new Error('useFilterContext must be used within a DataTableFilter');
+  }
+  return ctx;
+}
 
-  // Active filter pills: merge columnFilters with their column metadata
-  const activeFilters = columnFilters
-    .map((f) => {
-      const col = filterableColumns.find((c) => c.columnId === f.id);
-      return col ? { id: f.id, value: f.value, column: col } : null;
-    })
-    .filter(Boolean) as Array<{
-    id: string;
-    value: unknown;
-    column: { columnId: string; title: string; filter: TColumnFilter };
-  }>;
-
-  const handleSetFilter = (id: string, value: unknown) => {
-    const existing = columnFilters.find((f) => f.id === id);
-    if (existing) {
-      onColumnFiltersChange(
-        columnFilters.map((f) => (f.id === id ? { ...f, value } : f))
-      );
-    } else {
-      onColumnFiltersChange([...columnFilters, { id, value }]);
-    }
-  };
-
-  const handleRemoveFilter = (id: string) => {
-    onColumnFiltersChange(columnFilters.filter((f) => f.id !== id));
-  };
-
+function DataTableFilterButton() {
+  const ctx = useFilterContext();
   return (
-    <div className="flex items-center gap-2 flex-wrap px-2 py-1">
-      {inactiveColumns.length > 0 && (
+    <>
+      {ctx.inactiveColumns.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Button variant="outline" size="sm" className="h-8">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 flex items-center gap-1"
+              >
                 <HugeiconsIcon icon={FilterAddIcon} strokeWidth={2} />
                 Filter
+                <HugeiconsIcon icon={ArrowDown01Icon} strokeWidth={2} />
               </Button>
             }
           />
           <DropdownMenuContent align="start">
-            {inactiveColumns.map((col) => (
+            {ctx.inactiveColumns.map((col) => (
               <DropdownMenuItem
                 key={col.columnId}
                 onClick={() =>
-                  onColumnFiltersChange([
-                    ...columnFilters,
+                  ctx.onColumnFiltersChange([
+                    ...ctx.columnFilters,
                     { id: col.columnId, value: undefined },
                   ])
                 }
@@ -136,7 +123,29 @@ export default function DataTableFilterBar<TData, TValue>({
           </DropdownMenuContent>
         </DropdownMenu>
       )}
+    </>
+  );
+}
 
+function DataTableFilterBar() {
+  const ctx = useFilterContext();
+
+  // Active filter pills: merge columnFilters with their column metadata
+  const activeFilters = ctx.columnFilters
+    .map((f) => {
+      const col = ctx.filterableColumns.find((c) => c.columnId === f.id);
+      return col ? { id: f.id, value: f.value, column: col } : null;
+    })
+    .filter(Boolean) as Array<{
+    id: string;
+    value: unknown;
+    column: { columnId: string; title: string; filter: TColumnFilter };
+  }>;
+
+  if (activeFilters.length === 0) return null;
+
+  return (
+    <div className="flex items-center gap-2 flex-wrap p-2 my-2 bg-accent/30 rounded-lg">
       {activeFilters.map((af) => {
         // Resolve the filter component
         let FilterComponent: React.ComponentType<{
@@ -163,7 +172,7 @@ export default function DataTableFilterBar<TData, TValue>({
         ) {
           options =
             af.column.filter.options ??
-            deriveOptions(table, af.column.columnId);
+            deriveOptions(ctx.table, af.column.columnId);
         }
 
         return (
@@ -177,16 +186,16 @@ export default function DataTableFilterBar<TData, TValue>({
             {FilterComponent && (
               <FilterComponent
                 value={af.value}
-                onChange={(v) => handleSetFilter(af.id, v)}
+                onChange={(v) => ctx.handleSetFilter(af.id, v)}
                 options={options}
               />
             )}
             <button
-              onClick={() => handleRemoveFilter(af.id)}
+              onClick={() => ctx.handleRemoveFilter(af.id)}
               className="ml-1 rounded p-0.5 hover:bg-muted"
               aria-label={`Hapus filter ${af.column.title}`}
             >
-              <HugeiconsIcon icon={FilterRemoveIcon} size={14} />
+              <HugeiconsIcon icon={Cancel01Icon} size={14} />
             </button>
           </div>
         );
@@ -194,3 +203,63 @@ export default function DataTableFilterBar<TData, TValue>({
     </div>
   );
 }
+
+interface DataTableFilterProps<TData, TValue> {
+  table: Table<TData>;
+  columns: ColumnDef<TData, TValue>[];
+  columnFilters: ColumnFiltersState;
+  onColumnFiltersChange: (filters: ColumnFiltersState) => void;
+  children: React.ReactNode;
+}
+
+function DataTableFilter<TData, TValue>({
+  table,
+  columns,
+  columnFilters,
+  onColumnFiltersChange,
+  children,
+}: DataTableFilterProps<TData, TValue>) {
+  const filterableColumns = getFilterableColumns(columns);
+  if (filterableColumns.length === 0) return null;
+
+  // Columns not currently active as filters
+  const inactiveColumns = filterableColumns.filter(
+    (col) => !columnFilters.some((f) => f.id === col.columnId)
+  );
+
+  const handleSetFilter = (id: string, value: unknown) => {
+    const existing = columnFilters.find((f) => f.id === id);
+    if (existing) {
+      onColumnFiltersChange(
+        columnFilters.map((f) => (f.id === id ? { ...f, value } : f))
+      );
+    } else {
+      onColumnFiltersChange([...columnFilters, { id, value }]);
+    }
+  };
+
+  const handleRemoveFilter = (id: string) => {
+    onColumnFiltersChange(columnFilters.filter((f) => f.id !== id));
+  };
+
+  return (
+    <FilterContext.Provider
+      value={{
+        table,
+        filterableColumns,
+        columnFilters,
+        inactiveColumns,
+        handleSetFilter,
+        handleRemoveFilter,
+        onColumnFiltersChange,
+      }}
+    >
+      {children}
+    </FilterContext.Provider>
+  );
+}
+
+DataTableFilter.Button = DataTableFilterButton;
+DataTableFilter.Bar = DataTableFilterBar;
+
+export { DataTableFilter };

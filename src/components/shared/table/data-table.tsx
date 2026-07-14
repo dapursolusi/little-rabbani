@@ -33,7 +33,7 @@ import {
 import { cn } from '@/lib/utils';
 
 import DataTableColumnVisibility from './data-table-column-visibility';
-import DataTableFilterBar from './data-table-filter-bar';
+import { DataTableFilter } from './data-table-filter';
 import { DataTablePagination } from './data-table-pagination';
 import DataTableSearchBar from './data-table-search-bar';
 import { registerBuiltinFilters } from './filters/builtins';
@@ -70,7 +70,6 @@ export function DataTable<TData, TValue>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
-
   // Scoping to opt-in columns: a column participates in the global filter
   // only when its `meta.enableSearch` is true. Source of truth lives in each
   // ColumnDef's `meta`, out of the search bar — so the same flag that gates
@@ -180,35 +179,38 @@ export function DataTable<TData, TValue>({
 
   return (
     <SortingStateContext.Provider value={sorting}>
-      <div className="m-2 flex items-center gap-2 justify-between">
-        <DataTableSearchBar
-          table={table}
-          globalFilter={globalFilter}
-          placeholder={searchPlaceholder}
-        />
-        <DataTableColumnVisibility
-          table={table}
-          columnVisibility={columnVisibility}
-        />
-        {createButton && typeof createButton === 'string' ? (
-          <Link
-            href={createButton as string}
-            className={cn(buttonVariants({ variant: 'default' }))}
-          >
-            <HugeiconsIcon icon={Add02Icon} />
-            Tambah Murid
-          </Link>
-        ) : (
-          <>{createButton}</>
-        )}
-      </div>
-      <DataTableFilterBar
+      <DataTableFilter
         table={table}
         columns={columns}
         columnFilters={columnFilters}
         onColumnFiltersChange={setColumnFilters}
-      />
-      <div className="bg-table-body-bg overflow-hidden rounded-xl border-2! border-black/30">
+      >
+        <div className="my-2 flex items-center gap-2 justify-between">
+          <DataTableSearchBar
+            table={table}
+            globalFilter={globalFilter}
+            placeholder={searchPlaceholder}
+          />
+          <DataTableFilter.Button />
+          <DataTableColumnVisibility
+            table={table}
+            columnVisibility={columnVisibility}
+          />
+          {createButton && typeof createButton === 'string' ? (
+            <Link
+              href={createButton as string}
+              className={cn(buttonVariants({ variant: 'default' }))}
+            >
+              <HugeiconsIcon icon={Add02Icon} />
+              Tambah Murid
+            </Link>
+          ) : (
+            <>{createButton}</>
+          )}
+        </div>
+        <DataTableFilter.Bar />
+      </DataTableFilter>
+      <div className="bg-table-body-bg overflow-hidden rounded-lg border-2! border-black/30">
         <Table>
           <TableHeader>
             {table.getHeaderGroups().map((headerGroup) => (

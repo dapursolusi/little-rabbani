@@ -1,13 +1,15 @@
 // tests/components/shared/data-table-filter-bar.test.tsx
 import {
   ColumnDef,
+  ColumnFiltersState,
+  OnChangeFn,
   getCoreRowModel,
   useReactTable,
 } from '@tanstack/react-table';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import DataTableFilterBar from '@/components/shared/table/data-table-filter-bar';
+import { DataTableFilter } from '@/components/shared/table/data-table-filter';
 import { registerBuiltinFilters } from '@/components/shared/table/filters/builtins';
 import { registerFilter } from '@/components/shared/table/filters/registry';
 
@@ -66,8 +68,8 @@ function TestWrapper({
   columnFilters = [],
   onColumnFiltersChange = () => {},
 }: {
-  columnFilters?: { id: string; value: unknown }[];
-  onColumnFiltersChange?: (f: typeof columnFilters) => void;
+  columnFilters?: ColumnFiltersState;
+  onColumnFiltersChange?: OnChangeFn<ColumnFiltersState>;
 }) {
   const table = useReactTable({
     data,
@@ -78,12 +80,15 @@ function TestWrapper({
   });
 
   return (
-    <DataTableFilterBar
+    <DataTableFilter
       table={table}
       columns={columns}
       columnFilters={columnFilters}
       onColumnFiltersChange={onColumnFiltersChange}
-    />
+    >
+      <DataTableFilter.Button />
+      <DataTableFilter.Bar />
+    </DataTableFilter>
   );
 }
 
@@ -94,12 +99,15 @@ describe('DataTableFilterBar', () => {
   });
 
   it('adds a filter pill when a column is selected from dropdown', () => {
-    let filters: { id: string; value: unknown }[] = [];
+    let filters: ColumnFiltersState = [];
     render(
       <TestWrapper
         columnFilters={filters}
-        onColumnFiltersChange={(f) => {
-          filters = f;
+        onColumnFiltersChange={(updaterOrValue) => {
+          filters =
+            typeof updaterOrValue === 'function'
+              ? updaterOrValue(filters)
+              : updaterOrValue;
         }}
       />
     );
@@ -124,14 +132,15 @@ describe('DataTableFilterBar', () => {
   });
 
   it('removes filter when X button is clicked', () => {
-    let filters: { id: string; value: unknown }[] = [
-      { id: 'status', value: 'enrolled' },
-    ];
+    let filters: ColumnFiltersState = [{ id: 'status', value: 'enrolled' }];
     render(
       <TestWrapper
         columnFilters={filters}
-        onColumnFiltersChange={(f) => {
-          filters = f;
+        onColumnFiltersChange={(updaterOrValue) => {
+          filters =
+            typeof updaterOrValue === 'function'
+              ? updaterOrValue(filters)
+              : updaterOrValue;
         }}
       />
     );
@@ -163,12 +172,14 @@ describe('DataTableFilterBar', () => {
         getCoreRowModel: getCoreRowModel(),
       });
       return (
-        <DataTableFilterBar
+        <DataTableFilter
           table={table}
           columns={noFilterCols}
           columnFilters={[]}
           onColumnFiltersChange={() => {}}
-        />
+        >
+          <DataTableFilter.Bar />
+        </DataTableFilter>
       );
     }
 
