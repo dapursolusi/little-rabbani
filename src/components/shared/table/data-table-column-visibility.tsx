@@ -1,3 +1,5 @@
+import { ArrowDown01Icon, Layout03FreeIcons } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { type Table, type VisibilityState } from '@tanstack/react-table';
 
 import { Button } from '@/components/ui/button';
@@ -25,7 +27,9 @@ export default function DataTableColumnVisibility<TData>({
       <DropdownMenuTrigger
         render={
           <Button variant="default" className="ml-auto">
+            <HugeiconsIcon icon={Layout03FreeIcons} strokeWidth={2} />
             Kolom Aktif
+            <HugeiconsIcon icon={ArrowDown01Icon} />
           </Button>
         }
       ></DropdownMenuTrigger>
