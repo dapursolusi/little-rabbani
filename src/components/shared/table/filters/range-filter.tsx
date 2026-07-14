@@ -41,6 +41,7 @@ export function RangeFilter({ value, onChange }: IFilterComponentProps) {
 }
 
 export const rangeFilterFn: FilterFn<unknown> = (row, columnId, value) => {
+  if (value == null) return true;
   const { min, max } = value as IRangeValue;
   const cellValue = Number(row.getValue(columnId));
   if (Number.isNaN(cellValue)) return false;

@@ -17,6 +17,7 @@ export function TextFilter({ value, onChange }: IFilterComponentProps) {
 }
 
 export const textFilterFn: FilterFn<unknown> = (row, columnId, value) => {
+  if (value == null) return true;
   const cellValue = String(row.getValue(columnId) ?? '').toLowerCase();
   return cellValue.includes(String(value).toLowerCase());
 };

@@ -68,10 +68,10 @@ describe('selectFilterFn', () => {
     );
   });
 
-  it('returns false for undefined filter value', () => {
+  it('returns true for undefined filter value (passthrough)', () => {
     const row = { getValue: () => 'enrolled' };
     expect(selectFilterFn(row as never, 'status', undefined, () => {})).toBe(
-      false
+      true
     );
   });
 

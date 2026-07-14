@@ -27,7 +27,7 @@ export function SelectFilter({
 }
 
 export const selectFilterFn: FilterFn<unknown> = (row, columnId, value) => {
-  if (value == null) return false;
+  if (value == null) return true;
   const rowValue = row.getValue(columnId);
   if (rowValue == null) return false;
   return String(rowValue) === String(value);
