@@ -64,20 +64,23 @@ function getFilterableColumns<TData, TValue>(
     });
 }
 
-interface FilterContextValue<TData, TValue> {
-  table: Table<TData>;
-  filterableColumns: ReturnType<typeof getFilterableColumns<TData, TValue>>;
-  inactiveColumns: ReturnType<typeof getFilterableColumns<TData, TValue>>;
+type TFilterableColumn = {
+  columnId: string;
+  title: string;
+  filter: TColumnFilter;
+};
+
+interface FilterContextValue {
+  table: Table<Record<string, unknown>>;
+  filterableColumns: TFilterableColumn[];
+  inactiveColumns: TFilterableColumn[];
   columnFilters: ColumnFiltersState;
   onColumnFiltersChange: (filters: ColumnFiltersState) => void;
   handleSetFilter: (id: string, value: unknown) => void;
   handleRemoveFilter: (id: string) => void;
 }
 
-const FilterContext = React.createContext<FilterContextValue<
-  unknown,
-  unknown
-> | null>(null);
+const FilterContext = React.createContext<FilterContextValue | null>(null);
 
 function useFilterContext() {
   const ctx = React.useContext(FilterContext);
@@ -245,7 +248,7 @@ function DataTableFilter<TData, TValue>({
   return (
     <FilterContext.Provider
       value={{
-        table,
+        table: table as Table<Record<string, unknown>>,
         filterableColumns,
         columnFilters,
         inactiveColumns,
