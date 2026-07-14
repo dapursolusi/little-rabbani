@@ -1,5 +1,7 @@
 // src/components/shared/table/filters/registry.ts
-import type { ComponentType, FilterFn } from '@tanstack/react-table';
+import type { ComponentType } from 'react';
+
+import type { FilterFn } from '@tanstack/react-table';
 
 import type { IFilterComponentProps } from './types';
 
