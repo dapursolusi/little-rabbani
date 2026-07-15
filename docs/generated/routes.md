@@ -39,7 +39,6 @@ dashboard/
           page.tsx
       create/
         page.tsx
-      guardian-actions.tsx
     activity/
       import/
         page.tsx

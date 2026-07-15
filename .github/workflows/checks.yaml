@@ -54,7 +54,6 @@ jobs:
 
   quality-tools:
     runs-on: ubuntu-latest
-    continue-on-error: true
     environment: Preview
 
     steps:

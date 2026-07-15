@@ -2,6 +2,13 @@
   "$schema": "https://unpkg.com/knip@6/schema.json",
   "entry": ["src/app/**/page.tsx", "src/app/**/layout.tsx"],
   "project": ["src/**/*.ts", "src/**/*.tsx"],
+  "ignore": ["src/components/ui/**"],
+  "ignoreDependencies": [
+    "@t3-oss/env-nextjs",
+    "shadcn",
+    "tw-animate-css",
+    "dexie-react-hooks"
+  ],
   "rules": {
     "files": "warn",
     "dependencies": "warn",

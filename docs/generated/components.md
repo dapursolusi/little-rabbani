@@ -52,7 +52,6 @@ csv-import-form.tsx
 term-cohort-form.tsx
 session-edit-form.tsx
 teacher-schedule-view.tsx
-push-notification-setup.tsx
 offline-indicator.tsx
 session-form.tsx
 session-actions.tsx
@@ -65,7 +64,6 @@ term-actions.tsx
 
 ```
 owner-sidebar.tsx
-whatsapp-button.tsx
 teacher-tabs.tsx
 mobile-nav-sheet.tsx
 logout-button.tsx

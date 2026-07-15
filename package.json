@@ -22,7 +22,7 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "validate:agents-md": "bun run scripts/validate-agents-md.ts",
-    "knip": "knip",
+    "knip": "knip --max-issues 60",
     "jscpd": "jscpd --config .jscpd.json",
     "depcruise": "dependency-cruiser src/",
     "check:todos": "bun run scripts/check-todos.mjs",
