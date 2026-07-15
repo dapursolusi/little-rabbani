@@ -9,41 +9,11 @@ import { Badge } from '@/components/ui/badge';
 
 import { getAge } from '@/lib/age';
 
-type KidRowData = {
-  guardianName: string;
-  enrolledTermName: string;
-  id: string;
-  name: string;
-  dob: string;
-  guardianId: string;
-  status: 'waiting' | 'enrolled' | 'alumni';
-  enrolledTermId: string | undefined;
-  createdAt: Date;
-  updatedAt: Date;
-  guardian: {
-    id: string;
-    name: string;
-    email: string | null;
-    createdAt: Date;
-    updatedAt: Date;
-    phone: string;
-    secondContactName: string | null;
-    secondContactPhone: string | null;
-  };
-  enrolledTerm: {
-    id: string;
-    name: string;
-    createdAt: Date;
-    updatedAt: Date;
-    startDate: string;
-    endDate: string;
-    isActive: boolean;
-  } | null;
-};
+import { Kid } from '../types';
 
 // This type is used to define the shape of our data.
 // You can use a Zod schema here if you want.
-export const kidColumns: ColumnDef<KidRowData>[] = [
+export const kidColumns: ColumnDef<Kid>[] = [
   {
     accessorKey: 'name',
     meta: { title: 'Nama', enableSearch: true },

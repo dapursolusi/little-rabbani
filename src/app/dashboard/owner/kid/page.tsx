@@ -38,13 +38,7 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
       <div className="overflow-x-auto rounded-lg">
         <DataTable
           columns={kidColumns}
-          data={[]}
-          // data={kids.map((kid) => ({
-          //   ...kid,
-          //   guardianName: kid.guardian?.name ?? '-',
-          //   enrolledTermName: kid.enrolledTerm?.name ?? '-',
-          //   enrolledTermId: kid.enrolledTerm?.id ?? undefined,
-          // }))}
+          data={kids}
           createButton="/dashboard/owner/kid/create"
         />
       </div>
