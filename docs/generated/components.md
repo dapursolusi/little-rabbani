@@ -3,7 +3,6 @@
 Auto-generated from `src/components/` directory structure.
 
 ## UI Primitives (shadcn base-nova)
-
 ```
 dropdown-menu.tsx
 dialog.tsx
@@ -37,7 +36,6 @@ breadcrumb.tsx
 ```
 
 ## Sections
-
 ```
 confirm-dialog.tsx
 guardian-form.tsx
@@ -61,7 +59,6 @@ term-actions.tsx
 ```
 
 ## Layout
-
 ```
 owner-sidebar.tsx
 teacher-tabs.tsx
