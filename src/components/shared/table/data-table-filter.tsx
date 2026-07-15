@@ -99,7 +99,7 @@ function DataTableFilterButton() {
           <DropdownMenuTrigger
             render={
               <Button
-                variant="outline"
+                variant="default"
                 size="sm"
                 className="h-8 flex items-center gap-1"
               >
@@ -145,64 +145,70 @@ function DataTableFilterBar() {
     column: { columnId: string; title: string; filter: TColumnFilter };
   }>;
 
-  if (activeFilters.length === 0) return null;
-
   return (
-    <div className="flex items-center gap-2 flex-wrap p-2 my-2 bg-accent/30 rounded-lg">
-      {activeFilters.map((af) => {
-        // Resolve the filter component
-        let FilterComponent: React.ComponentType<{
-          value: unknown;
-          onChange: (value: unknown) => void;
-          options?: { label: string; value: string }[];
-        }> | null = null;
+    <div
+      className={`grid transition-all duration-300 ease-in-out ${
+        activeFilters.length > 0 ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+      }`}
+    >
+      <div className="overflow-hidden">
+        <div className="flex items-center gap-2 flex-wrap p-2 bg-accent/30 rounded-lg mb-3">
+          {activeFilters.map((af) => {
+            // Resolve the filter component
+            let FilterComponent: React.ComponentType<{
+              value: unknown;
+              onChange: (value: unknown) => void;
+              options?: { label: string; value: string }[];
+            }> | null = null;
 
-        if ('type' in af.column.filter) {
-          const registration = getFilter(af.column.filter.type);
-          if (registration) {
-            FilterComponent = registration.component;
-          }
-        } else {
-          FilterComponent = af.column.filter.component;
-        }
+            if ('type' in af.column.filter) {
+              const registration = getFilter(af.column.filter.type);
+              if (registration) {
+                FilterComponent = registration.component;
+              }
+            } else {
+              FilterComponent = af.column.filter.component;
+            }
 
-        // For select/multi-select: use explicit options or auto-derive from data
-        let options: { label: string; value: string }[] | undefined;
-        if (
-          'type' in af.column.filter &&
-          (af.column.filter.type === 'select' ||
-            af.column.filter.type === 'multi-select')
-        ) {
-          options =
-            af.column.filter.options ??
-            deriveOptions(ctx.table, af.column.columnId);
-        }
+            // For select/multi-select: use explicit options or auto-derive from data
+            let options: { label: string; value: string }[] | undefined;
+            if (
+              'type' in af.column.filter &&
+              (af.column.filter.type === 'select' ||
+                af.column.filter.type === 'multi-select')
+            ) {
+              options =
+                af.column.filter.options ??
+                deriveOptions(ctx.table, af.column.columnId);
+            }
 
-        return (
-          <div
-            key={af.id}
-            className="flex items-center gap-1 rounded-md border bg-accent/30 px-2 py-1 text-sm"
-          >
-            <span className="font-medium whitespace-nowrap">
-              {af.column.title}
-            </span>
-            {FilterComponent && (
-              <FilterComponent
-                value={af.value}
-                onChange={(v) => ctx.handleSetFilter(af.id, v)}
-                options={options}
-              />
-            )}
-            <button
-              onClick={() => ctx.handleRemoveFilter(af.id)}
-              className="ml-1 rounded p-0.5 hover:bg-muted"
-              aria-label={`Hapus filter ${af.column.title}`}
-            >
-              <HugeiconsIcon icon={Cancel01Icon} size={14} />
-            </button>
-          </div>
-        );
-      })}
+            return (
+              <div
+                key={af.id}
+                className="flex items-center gap-1 rounded-md border bg-accent/30 px-2 py-1 text-sm"
+              >
+                <span className="font-medium whitespace-nowrap">
+                  {af.column.title}
+                </span>
+                {FilterComponent && (
+                  <FilterComponent
+                    value={af.value}
+                    onChange={(v) => ctx.handleSetFilter(af.id, v)}
+                    options={options}
+                  />
+                )}
+                <button
+                  onClick={() => ctx.handleRemoveFilter(af.id)}
+                  className="ml-1 rounded p-0.5 hover:bg-muted"
+                  aria-label={`Hapus filter ${af.column.title}`}
+                >
+                  <HugeiconsIcon icon={Cancel01Icon} size={14} />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }
