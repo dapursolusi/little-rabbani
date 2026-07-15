@@ -30,7 +30,8 @@
     "docs:generate": "bun run scripts/generate-docs.mjs",
     "docs:check": "bun run scripts/generate-docs.mjs --check",
     "analyze:bundle": "ANALYZE=true bun run build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "node scripts/patch-eslint-plugin-react.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -92,9 +93,6 @@
     "tsx": "4.23.1",
     "typescript": "6.0.3",
     "vitest": "4.1.10"
-  },
-  "scripts": {
-    "postinstall": "node scripts/patch-eslint-plugin-react.mjs"
   },
   "ignoreScripts": [
     "sharp",
