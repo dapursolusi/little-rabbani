@@ -1,4 +1,5 @@
 import { kidColumns } from '@/features/kid/components/columns';
+import { STATUS_BADGE } from '@/features/kid/constants';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { DataTable } from '@/components/shared/table/data-table';
@@ -10,15 +11,6 @@ import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Murid' };
-
-const STATUS_BADGE: Record<
-  string,
-  { label: string; variant: 'default' | 'secondary' | 'outline' }
-> = {
-  waiting: { label: 'Menunggu', variant: 'outline' },
-  enrolled: { label: 'Terdaftar', variant: 'default' },
-  alumni: { label: 'Alumni', variant: 'secondary' },
-};
 
 interface IKidListPageProps {
   searchParams: Promise<{ search?: string }>;

@@ -53,15 +53,15 @@ UI Component (Server Component) → Server Action → Service → ORM → DB
 
 ## Naming Conventions
 
-| Entity                     | Convention           | Example           |
-| :------------------------- | :------------------- | :---------------- |
-| Components                 | PascalCase           | `UserProfile.tsx` |
-| Utilities                  | camelCase            | `formatDate.ts`   |
-| Functions                  | camelCase            | `getUserById()`   |
-| Props interfaces           | PascalCase, I-prefix | `IButtonProps`    |
-| Types                      | PascalCase, T-prefix | `TComponentProps` |
-| Constants                  | UPPER_SNAKE          | `MAX_RETRY_COUNT` |
-| File names (non-component) | kebab-case           | `api-endpoint.ts` |
+| Entity                     | Convention  | Example           |
+| :------------------------- | :---------- | :---------------- |
+| Components                 | PascalCase  | `UserProfile.tsx` |
+| Utilities                  | camelCase   | `formatDate.ts`   |
+| Functions                  | camelCase   | `getUserById()`   |
+| Props interfaces           | PascalCase  | `ButtonProps`     |
+| Types                      | PascalCase  | `ComponentProps`  |
+| Constants                  | UPPER_SNAKE | `MAX_RETRY_COUNT` |
+| File names (non-component) | kebab-case  | `api-endpoint.ts` |
 
 ## File Placement
 

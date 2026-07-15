@@ -2,13 +2,13 @@
 
 import type { FilterFn } from '@tanstack/react-table';
 
-import type { IFilterComponentProps } from './types';
+import type { FilterComponentProps } from './types';
 
 export function SelectFilter({
   value,
   onChange,
   options = [],
-}: IFilterComponentProps) {
+}: FilterComponentProps) {
   return (
     <select
       value={(value as string) ?? ''}

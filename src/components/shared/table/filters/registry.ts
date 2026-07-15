@@ -3,23 +3,24 @@ import type { ComponentType } from 'react';
 
 import type { FilterFn } from '@tanstack/react-table';
 
-import type { IFilterComponentProps } from './types';
+import type { FilterComponentProps } from './types';
+import type { RegistryFilterType } from './types';
 
-export interface IFilterRegistration {
-  component: ComponentType<IFilterComponentProps>;
+export interface FilterRegistration {
+  component: ComponentType<FilterComponentProps>;
   filterFn: FilterFn<unknown>;
 }
 
-const registry = new Map<string, IFilterRegistration>();
+const registry = new Map<string, FilterRegistration>();
 
 export function registerFilter(
-  type: string,
-  component: ComponentType<IFilterComponentProps>,
+  type: RegistryFilterType,
+  component: ComponentType<FilterComponentProps>,
   filterFn: FilterFn<unknown>
 ): void {
   registry.set(type, { component, filterFn });
 }
 
-export function getFilter(type: string): IFilterRegistration | undefined {
+export function getFilter(type: string): FilterRegistration | undefined {
   return registry.get(type);
 }

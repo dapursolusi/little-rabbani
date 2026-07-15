@@ -36,9 +36,10 @@ import DataTableColumnVisibility from './data-table-column-visibility';
 import { DataTableFilter } from './data-table-filter';
 import { DataTablePagination } from './data-table-pagination';
 import DataTableSearchBar from './data-table-search-bar';
-import { registerBuiltinFilters } from './filters/builtins';
+// Import-time side-effect: registers built-in filter types in the registry
+import './filters/builtins';
 import { getFilter } from './filters/registry';
-import type { TColumnFilter } from './filters/types';
+import { type TColumnFilter, isRegistryFilter } from './filters/types';
 
 // React Compiler memoizes reads on TanStack Table's stable column handle, so
 // column.getIsSorted() goes stale. Mirror sorting into React context and read
@@ -56,9 +57,6 @@ export function DataTable<TData, TValue>({
   data,
   createButton,
 }: DataTableProps<TData, TValue>) {
-  // Register built-in filter types before tableColumns memo reads them.
-  // Idempotent — safe to call on every render.
-  registerBuiltinFilters();
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
@@ -119,7 +117,7 @@ export function DataTable<TData, TValue>({
 
         // Wire column-level filterFn from registry or custom meta
         if (meta?.filter) {
-          if ('type' in meta.filter) {
+          if (isRegistryFilter(meta.filter)) {
             const registration = getFilter(meta.filter.type);
             if (registration) {
               enriched.filterFn = registration.filterFn as never;
@@ -174,8 +172,15 @@ export function DataTable<TData, TValue>({
     1,
     Math.ceil(filteredRowCount / pagination.pageSize)
   );
-  const canPreviousPage = pagination.pageIndex > 0;
-  const canNextPage = pagination.pageIndex < pageCount - 1;
+
+  const paginationInfo = {
+    pageIndex: pagination.pageIndex,
+    pageSize: pagination.pageSize,
+    pageCount,
+    filteredRowCount,
+    canPreviousPage: pagination.pageIndex > 0,
+    canNextPage: pagination.pageIndex < pageCount - 1,
+  };
 
   return (
     <SortingStateContext.Provider value={sorting}>
@@ -263,15 +268,7 @@ export function DataTable<TData, TValue>({
           </TableBody>
         </Table>
         <Separator />
-        <DataTablePagination
-          table={table}
-          pageIndex={pagination.pageIndex}
-          pageSize={pagination.pageSize}
-          pageCount={pageCount}
-          filteredRowCount={filteredRowCount}
-          canPreviousPage={canPreviousPage}
-          canNextPage={canNextPage}
-        />
+        <DataTablePagination table={table} pagination={paginationInfo} />
       </div>
     </SortingStateContext.Provider>
   );

@@ -2,10 +2,10 @@
 
 import type { FilterFn } from '@tanstack/react-table';
 
-import type { IFilterComponentProps, IRangeValue } from './types';
+import type { FilterComponentProps, RangeValue } from './types';
 
-export function RangeFilter({ value, onChange }: IFilterComponentProps) {
-  const range = (value as IRangeValue) ?? {};
+export function RangeFilter({ value, onChange }: FilterComponentProps) {
+  const range = (value as RangeValue) ?? {};
 
   return (
     <div className="flex items-center gap-1">
@@ -15,7 +15,7 @@ export function RangeFilter({ value, onChange }: IFilterComponentProps) {
         onChange={(e) => {
           const min =
             e.target.value !== '' ? Number(e.target.value) : undefined;
-          const next: IRangeValue = { ...range, min };
+          const next: RangeValue = { ...range, min };
           onChange(Object.keys(next).length > 0 ? next : undefined);
         }}
         placeholder="Min"
@@ -29,7 +29,7 @@ export function RangeFilter({ value, onChange }: IFilterComponentProps) {
         onChange={(e) => {
           const max =
             e.target.value !== '' ? Number(e.target.value) : undefined;
-          const next: IRangeValue = { ...range, max };
+          const next: RangeValue = { ...range, max };
           onChange(Object.keys(next).length > 0 ? next : undefined);
         }}
         placeholder="Max"
@@ -42,7 +42,7 @@ export function RangeFilter({ value, onChange }: IFilterComponentProps) {
 
 export const rangeFilterFn: FilterFn<unknown> = (row, columnId, value) => {
   if (value == null) return true;
-  const { min, max } = value as IRangeValue;
+  const { min, max } = value as RangeValue;
   const cellValue = Number(row.getValue(columnId));
   if (Number.isNaN(cellValue)) return false;
   if (min !== undefined && cellValue < min) return false;

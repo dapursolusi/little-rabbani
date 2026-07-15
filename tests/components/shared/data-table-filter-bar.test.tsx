@@ -10,20 +10,20 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { DataTableFilter } from '@/components/shared/table/data-table-filter';
-import { registerBuiltinFilters } from '@/components/shared/table/filters/builtins';
+// Import-time side-effect: registers built-in filter types
+import '@/components/shared/table/filters/builtins';
 import { registerFilter } from '@/components/shared/table/filters/registry';
 
-// Register builtins first so the component's registerBuiltinFilters() is a no-op,
-// then override with FakeSelect for test predictability.
-registerBuiltinFilters();
+// Override built-in select with FakeSelect for test predictability.
 const FakeSelect = ({
   value,
   onChange,
-  options,
+  options = [],
 }: {
   value: unknown;
   onChange: (v: unknown) => void;
   options?: { label: string; value: string }[];
+  column?: unknown;
 }) => (
   <select
     data-testid="fake-select"
@@ -31,7 +31,7 @@ const FakeSelect = ({
     onChange={(e) => onChange(e.target.value || undefined)}
   >
     <option value="">--</option>
-    {(options ?? []).map((o) => (
+    {options.map((o) => (
       <option key={o.value} value={o.value}>
         {o.label}
       </option>
@@ -112,9 +112,7 @@ describe('DataTableFilterBar', () => {
       />
     );
 
-    // Open dropdown
     fireEvent.click(screen.getByText('Filter'));
-    // Click "Status" to add filter
     fireEvent.click(screen.getByText('Status'));
 
     expect(filters).toHaveLength(1);
@@ -126,7 +124,6 @@ describe('DataTableFilterBar', () => {
     render(
       <TestWrapper columnFilters={[{ id: 'status', value: 'enrolled' }]} />
     );
-    // The select component renders, pill label is "Status"
     expect(screen.getByText('Status')).toBeDefined();
     expect(screen.getByTestId('fake-select')).toBeDefined();
   });
@@ -153,13 +150,11 @@ describe('DataTableFilterBar', () => {
     render(
       <TestWrapper columnFilters={[{ id: 'customCol', value: 'test' }]} />
     );
-    // The custom column's pill label
     expect(screen.getByText('Custom')).toBeDefined();
-    // FakeSelect renders
     expect(screen.getByTestId('fake-select')).toBeDefined();
   });
 
-  it('returns null when no columns declare meta.filter', () => {
+  it('returns empty grid when no columns declare meta.filter', () => {
     const noFilterCols: ColumnDef<TRow>[] = [
       { accessorKey: 'name', meta: { title: 'Nama' } },
       { accessorKey: 'status', meta: { title: 'Status' } },
@@ -183,7 +178,8 @@ describe('DataTableFilterBar', () => {
       );
     }
 
-    const { container } = render(<EmptyTable />);
-    expect(container.innerHTML).toBe('');
+    render(<EmptyTable />);
+    // Filter bar is always in the DOM with grid-rows-[0fr] — no visible content
+    expect(screen.queryByText('Filter')).toBeNull();
   });
 });

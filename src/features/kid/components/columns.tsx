@@ -1,5 +1,6 @@
 'use client';
 
+import { STATUS_BADGE } from '@/features/kid/constants';
 import { ColumnDef } from '@tanstack/react-table';
 
 import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';
@@ -38,15 +39,6 @@ type KidRowData = {
     endDate: string;
     isActive: boolean;
   } | null;
-};
-
-const STATUS_BADGE: Record<
-  string,
-  { label: string; variant: 'default' | 'secondary' | 'outline' }
-> = {
-  waiting: { label: 'Menunggu', variant: 'outline' },
-  enrolled: { label: 'Terdaftar', variant: 'default' },
-  alumni: { label: 'Alumni', variant: 'secondary' },
 };
 
 // This type is used to define the shape of our data.

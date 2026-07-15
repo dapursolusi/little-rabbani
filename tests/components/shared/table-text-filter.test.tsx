@@ -1,59 +1,62 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   TextFilter,
   textFilterFn,
 } from '@/components/shared/table/filters/text-filter';
 
+const stubColumn = {} as never;
+
 describe('TextFilter component', () => {
   it('renders an input with current value', () => {
-    render(<TextFilter value="Ahmad" onChange={() => {}} />);
+    render(
+      <TextFilter column={stubColumn} value="Ahmad" onChange={() => {}} />
+    );
     const input = screen.getByRole('textbox') as HTMLInputElement;
     expect(input.value).toBe('Ahmad');
   });
 
-  it('calls onChange on input', () => {
-    let value: unknown = undefined;
+  it('debounces onChange (300ms)', async () => {
+    vi.useFakeTimers();
+    const onChange = vi.fn();
     render(
-      <TextFilter
-        value={undefined}
-        onChange={(v) => {
-          value = v;
-        }}
-      />
+      <TextFilter column={stubColumn} value={undefined} onChange={onChange} />
     );
     fireEvent.change(screen.getByRole('textbox'), {
       target: { value: 'test' },
     });
-    expect(value).toBe('test');
+    expect(onChange).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(300);
+    expect(onChange).toHaveBeenCalledWith('test');
+    vi.useRealTimers();
   });
 
-  it('calls onChange with undefined for empty input', () => {
-    let value: unknown = 'something';
+  it('calls onChange with undefined for empty input', async () => {
+    vi.useFakeTimers();
+    const onChange = vi.fn();
     render(
-      <TextFilter
-        value="something"
-        onChange={(v) => {
-          value = v;
-        }}
-      />
+      <TextFilter column={stubColumn} value="something" onChange={onChange} />
     );
-    fireEvent.change(screen.getByRole('textbox'), { target: { value: '' } });
-    expect(value).toBeUndefined();
+    fireEvent.change(screen.getByRole('textbox'), {
+      target: { value: '' },
+    });
+    vi.advanceTimersByTime(300);
+    expect(onChange).toHaveBeenCalledWith(undefined);
+    vi.useRealTimers();
   });
 });
 
 describe('textFilterFn', () => {
   it('matches case-insensitive substring', () => {
     const row = { getValue: () => 'Ahmad Fauzi' };
-    expect(textFilterFn(row as never, 'name', 'ahmad')).toBe(true);
-    expect(textFilterFn(row as never, 'name', 'FAUZI')).toBe(true);
-    expect(textFilterFn(row as never, 'name', 'Budi')).toBe(false);
+    expect(textFilterFn(row as never, 'name', 'ahmad', () => {})).toBe(true);
+    expect(textFilterFn(row as never, 'name', 'FAUZI', () => {})).toBe(true);
+    expect(textFilterFn(row as never, 'name', 'Budi', () => {})).toBe(false);
   });
 
   it('handles null cell value', () => {
     const row = { getValue: () => null };
-    expect(textFilterFn(row as never, 'name', 'test')).toBe(false);
+    expect(textFilterFn(row as never, 'name', 'test', () => {})).toBe(false);
   });
 });

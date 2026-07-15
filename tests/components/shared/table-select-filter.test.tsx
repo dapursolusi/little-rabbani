@@ -12,10 +12,17 @@ const OPTIONS = [
   { label: 'Alumni', value: 'alumni' },
 ];
 
+const stubColumn = {} as never;
+
 describe('SelectFilter component', () => {
   it('renders options with "Semua" default', () => {
     render(
-      <SelectFilter value={undefined} onChange={() => {}} options={OPTIONS} />
+      <SelectFilter
+        column={stubColumn}
+        value={undefined}
+        onChange={() => {}}
+        options={OPTIONS}
+      />
     );
     expect(screen.getByRole('combobox')).toBeDefined();
     expect(screen.getByText('Semua')).toBeDefined();
@@ -26,6 +33,7 @@ describe('SelectFilter component', () => {
     let value: unknown = undefined;
     render(
       <SelectFilter
+        column={stubColumn}
         value={undefined}
         onChange={(v) => {
           value = v;
@@ -43,6 +51,7 @@ describe('SelectFilter component', () => {
     let value: unknown = 'enrolled';
     render(
       <SelectFilter
+        column={stubColumn}
         value="enrolled"
         onChange={(v) => {
           value = v;

@@ -4,13 +4,7 @@ import { registerFilter } from './registry';
 import { SelectFilter, selectFilterFn } from './select-filter';
 import { TextFilter, textFilterFn } from './text-filter';
 
-let registered = false;
-
-/** Idempotent — safe to call multiple times (e.g. in DataTable render body). */
-export function registerBuiltinFilters(): void {
-  if (registered) return;
-  registerFilter('select', SelectFilter, selectFilterFn);
-  registerFilter('text', TextFilter, textFilterFn);
-  registerFilter('range', RangeFilter, rangeFilterFn);
-  registered = true;
-}
+// Run at import time — idempotent, the registry overwrites on duplicate keys.
+registerFilter('select', SelectFilter, selectFilterFn);
+registerFilter('text', TextFilter, textFilterFn);
+registerFilter('range', RangeFilter, rangeFilterFn);

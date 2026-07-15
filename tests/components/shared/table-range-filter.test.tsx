@@ -6,9 +6,13 @@ import {
   rangeFilterFn,
 } from '@/components/shared/table/filters/range-filter';
 
+const stubColumn = {} as never;
+
 describe('RangeFilter component', () => {
   it('renders min and max inputs', () => {
-    render(<RangeFilter value={undefined} onChange={() => {}} />);
+    render(
+      <RangeFilter column={stubColumn} value={undefined} onChange={() => {}} />
+    );
     expect(screen.getByLabelText('Nilai minimum')).toBeDefined();
     expect(screen.getByLabelText('Nilai maksimum')).toBeDefined();
   });
@@ -17,6 +21,7 @@ describe('RangeFilter component', () => {
     let value: unknown = undefined;
     render(
       <RangeFilter
+        column={stubColumn}
         value={undefined}
         onChange={(v) => {
           value = v;
@@ -33,6 +38,7 @@ describe('RangeFilter component', () => {
     let value: unknown = undefined;
     render(
       <RangeFilter
+        column={stubColumn}
         value={undefined}
         onChange={(v) => {
           value = v;
@@ -49,14 +55,20 @@ describe('RangeFilter component', () => {
 describe('rangeFilterFn', () => {
   it('filters rows within range', () => {
     const row = { getValue: () => 5 };
-    expect(rangeFilterFn(row as never, 'age', { min: 3, max: 7 })).toBe(true);
-    expect(rangeFilterFn(row as never, 'age', { min: 6, max: 10 })).toBe(false);
-    expect(rangeFilterFn(row as never, 'age', { min: 3 })).toBe(true);
-    expect(rangeFilterFn(row as never, 'age', { max: 7 })).toBe(true);
+    expect(
+      rangeFilterFn(row as never, 'age', { min: 3, max: 7 }, () => {})
+    ).toBe(true);
+    expect(
+      rangeFilterFn(row as never, 'age', { min: 6, max: 10 }, () => {})
+    ).toBe(false);
+    expect(rangeFilterFn(row as never, 'age', { min: 3 }, () => {})).toBe(true);
+    expect(rangeFilterFn(row as never, 'age', { max: 7 }, () => {})).toBe(true);
   });
 
   it('returns false for NaN cell value', () => {
     const row = { getValue: () => 'not a number' };
-    expect(rangeFilterFn(row as never, 'name', { min: 3 })).toBe(false);
+    expect(rangeFilterFn(row as never, 'name', { min: 3 }, () => {})).toBe(
+      false
+    );
   });
 });

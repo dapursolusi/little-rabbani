@@ -1,4 +1,3 @@
-// tests/components/shared/table-filters-registry.test.ts
 import { describe, expect, it } from 'vitest';
 
 import {

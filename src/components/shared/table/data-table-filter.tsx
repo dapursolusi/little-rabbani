@@ -24,7 +24,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 
 import { getFilter } from './filters/registry';
-import type { TColumnFilter } from './filters/types';
+import {
+  type FilterComponentProps,
+  type TColumnFilter,
+  isRegistryFilter,
+} from './filters/types';
 
 /** Derive distinct values for a column from the table's row model. */
 function deriveOptions<TData>(
@@ -155,13 +159,12 @@ function DataTableFilterBar() {
         <div className="flex items-center gap-2 flex-wrap p-2 bg-accent/30 rounded-lg mb-3">
           {activeFilters.map((af) => {
             // Resolve the filter component
-            let FilterComponent: React.ComponentType<{
-              value: unknown;
-              onChange: (value: unknown) => void;
-              options?: { label: string; value: string }[];
-            }> | null = null;
+            const column = ctx.table.getColumn(af.column.columnId)!;
 
-            if ('type' in af.column.filter) {
+            let FilterComponent: React.ComponentType<FilterComponentProps> | null =
+              null;
+
+            if (isRegistryFilter(af.column.filter)) {
               const registration = getFilter(af.column.filter.type);
               if (registration) {
                 FilterComponent = registration.component;
@@ -170,12 +173,11 @@ function DataTableFilterBar() {
               FilterComponent = af.column.filter.component;
             }
 
-            // For select/multi-select: use explicit options or auto-derive from data
+            // For select: use explicit options or auto-derive from data
             let options: { label: string; value: string }[] | undefined;
             if (
-              'type' in af.column.filter &&
-              (af.column.filter.type === 'select' ||
-                af.column.filter.type === 'multi-select')
+              isRegistryFilter(af.column.filter) &&
+              af.column.filter.type === 'select'
             ) {
               options =
                 af.column.filter.options ??
@@ -192,6 +194,7 @@ function DataTableFilterBar() {
                 </span>
                 {FilterComponent && (
                   <FilterComponent
+                    column={column as never}
                     value={af.value}
                     onChange={(v) => ctx.handleSetFilter(af.id, v)}
                     options={options}
