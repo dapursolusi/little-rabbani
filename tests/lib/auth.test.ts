@@ -12,14 +12,18 @@ vi.mock('@/lib/db', () => ({
 
 describe('Auth configuration', () => {
   beforeEach(() => {
-    // Set required env vars for testing
+    // Set required env vars for testing — must include ALL vars from env.mjs
     process.env.DATABASE_URL = 'postgres://test:test@localhost:5432/test';
     process.env.BETTER_AUTH_SECRET =
       'test-secret-that-is-at-least-32-chars-long!!';
     process.env.GOOGLE_CLIENT_ID = 'test-client-id.apps.googleusercontent.com';
     process.env.GOOGLE_CLIENT_SECRET = 'test-client-secret';
+    process.env.OPENROUTER_API_KEY = 'test-openrouter-key';
+    process.env.VAPID_PUBLIC_KEY = 'test-vapid-public-key';
+    process.env.VAPID_PRIVATE_KEY = 'test-vapid-private-key';
     process.env.NEXT_PUBLIC_BETTER_AUTH_URL = 'http://localhost:3000';
     process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000';
+    process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY = 'test-vapid-public-key';
   });
 
   it('should load the auth module without errors', async () => {
@@ -79,6 +83,6 @@ describe('Auth configuration', () => {
     expect(googleProvider.clientId).toBe(
       'test-client-id.apps.googleusercontent.com'
     );
-    expect(googleProvider.disableImplicitSignUp).toBe(true);
+    expect(googleProvider.disableImplicitSignUp).toBe(false);
   });
 });

@@ -21,7 +21,9 @@ import { session, user } from '@/lib/db/schema';
  */
 export async function POST(request: Request) {
   // --- Guards ---
-  if (process.env.NODE_ENV === 'production') {
+  // Block only on real Vercel production. Allow local dev, CI, and Vercel preview.
+  const isVercelProduction = process.env.VERCEL_ENV === 'production';
+  if (isVercelProduction) {
     return NextResponse.json(
       { error: 'Not available in production' },
       { status: 403 }

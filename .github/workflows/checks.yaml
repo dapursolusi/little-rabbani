@@ -4,9 +4,23 @@ on:
   pull_request:
     branches: [main]
 
+env:
+  DATABASE_URL: ${{ secrets.DATABASE_URL || 'postgres://placeholder:placeholder@localhost:5432/placeholder' }}
+  BETTER_AUTH_SECRET: ${{ secrets.BETTER_AUTH_SECRET || 'insecure-ci-secret-that-is-long-enough-32chars' }}
+  GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID || 'placeholder.apps.googleusercontent.com' }}
+  GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET || 'placeholder' }}
+  OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY || 'placeholder' }}
+  OPENROUTER_MODEL: deepseek/deepseek-v4-flash
+  VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY || 'placeholder' }}
+  VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY || 'placeholder' }}
+  NEXT_PUBLIC_APP_URL: http://localhost:3000
+  NEXT_PUBLIC_BETTER_AUTH_URL: http://localhost:3000
+  NEXT_PUBLIC_VAPID_PUBLIC_KEY: ${{ secrets.NEXT_PUBLIC_VAPID_PUBLIC_KEY || 'placeholder' }}
+
 jobs:
   quality-gate:
     runs-on: ubuntu-latest
+    environment: Preview
 
     steps:
       - name: Checkout Code
@@ -41,6 +55,7 @@ jobs:
   quality-tools:
     runs-on: ubuntu-latest
     continue-on-error: true
+    environment: Preview
 
     steps:
       - name: Checkout Code

@@ -123,6 +123,9 @@ This is a one-time setup per clone. Skip if already indexed.
   - **Diagnostic:** if you suspect this, add a `console.warn` in the render body reading the same value the JSX reads. If they disagree within one render, it's React Compiler memoization.
   - **Escape hatch:** the `"use no memo"` directive opts a single component out of React Compiler. Use sparingly — the state-mirror pattern is preferred.
   - **Generalize:** any "stale UI that should update" bug under `reactCompiler: true` → first ask: _is this value read through a stable handle hiding mutable state?_ (zustand stores, TanStack Query client refs, singleton service objects, etc. are all candidates.)
+- ⚠️ **TypeScript `^6` resolution in CI** — `^6` in `package.json` can resolve to TypeScript 7.x (e.g. `7.0.2`) in CI, but `@typescript-eslint/typescript-estree@8.x` doesn't support TypeScript 7's new `Extension` enum. Linter crashes with `TypeError: Cannot read properties of undefined (reading 'Cjs')`. **Pin to an exact version** (`"typescript": "6.0.3"`) instead of a range — don't use `^`.
+- ⚠️ **ESLint 10 + eslint-plugin-react 7.x incompatibility** — ESLint 10 removed `context.getFilename()`, but `eslint-plugin-react@7.x` still calls it in `lib/util/version.js`. Linter crashes on `.tsx` files with `TypeError: contextOrFilename.getFilename is not a function`. **Fix:** a postinstall patch (`scripts/patch-eslint-plugin-react.mjs`) replaces `contextOrFilename.getFilename()` → `contextOrFilename.filename`. Remove the patch when eslint-plugin-react ships 8.x.
+- ⚠️ **`env.mjs` env vars required in CI** — `@t3-oss/env-nextjs` validates ALL env vars at import time. Tests importing `@/lib/auth` (which imports `env.mjs`) must set every variable in `beforeEach`, including `OPENROUTER_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`. CI workflows running `next dev` (E2E, Preview) need a full `.env` or injected secrets — missing vars crash startup.
 
 ## When to Ask
 
