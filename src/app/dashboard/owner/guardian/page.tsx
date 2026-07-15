@@ -1,8 +1,8 @@
+import { getGuardians } from '@/features/guardian/actions';
 import { guardianColumns } from '@/features/guardian/components/columns';
 
 import { DataTable } from '@/components/shared/table/data-table';
 
-import { getGuardians } from '@/lib/actions/guardian';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Wali Murid' };

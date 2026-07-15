@@ -20,7 +20,7 @@ export const guardianColumns: ColumnDef<Guardian>[] = [
   },
   {
     accessorKey: 'phone',
-    meta: { title: 'Nomor Telepon' },
+    meta: { title: 'Nomor Telepon', enableSearch: true },
     header: ({ column }) => {
       return <DataTableColumnHeader column={column} title="Nomor Telepon" />;
     },
@@ -42,7 +42,9 @@ export const guardianColumns: ColumnDef<Guardian>[] = [
     accessorFn: (row) => row.kids?.length ?? '-',
     id: 'kidsCount',
     meta: { title: 'Jumlah Anak', filter: { type: 'select' } },
-    header: 'Jumlah Anak',
+    header: ({ column }) => {
+      return <DataTableColumnHeader column={column} title="Jumlah Anak" />;
+    },
     cell: ({ row }) => {
       return <span>{row.getValue('kidsCount') ?? '-'}</span>;
     },

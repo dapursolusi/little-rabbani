@@ -1,6 +1,7 @@
+import { getGuardians } from '@/features/guardian/actions';
+
 import { KidForm } from '@/components/sections/kid-form';
 
-import { getGuardians } from '@/lib/actions/guardian';
 import { getTerms } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 

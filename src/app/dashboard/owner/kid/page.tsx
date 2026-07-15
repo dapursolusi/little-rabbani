@@ -1,8 +1,8 @@
+import { getKids } from '@/features/kid/actions';
 import { kidColumns } from '@/features/kid/components/columns';
 
 import { DataTable } from '@/components/shared/table/data-table';
 
-import { getKids } from '@/lib/actions/kid';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Murid' };

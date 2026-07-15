@@ -4,6 +4,7 @@ import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { deleteGuardian } from '@/features/guardian/actions';
 import { MoreVerticalIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
@@ -22,8 +23,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-
-import { deleteGuardian } from '@/lib/actions/guardian';
 
 interface IGuardianActionsProps {
   guardianId: string;

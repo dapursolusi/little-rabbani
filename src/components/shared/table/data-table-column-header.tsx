@@ -3,7 +3,8 @@ import * as React from 'react';
 import {
   ArrowDown01Icon,
   ArrowUp01Icon,
-  EyeOff,
+  SortByDown02Icon,
+  SortByUp02Icon,
   UnfoldMoreIcon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -68,17 +69,13 @@ export function DataTableColumnHeader<TData, TValue>({
         ></DropdownMenuTrigger>
         <DropdownMenuContent align="start">
           <DropdownMenuItem onClick={() => column.toggleSorting(false)}>
-            <HugeiconsIcon icon={ArrowUp01Icon} />
+            <HugeiconsIcon icon={SortByUp02Icon} />
             Asc
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
-            <HugeiconsIcon icon={ArrowDown01Icon} />
-            Desc
-          </DropdownMenuItem>
           <DropdownMenuSeparator />
-          <DropdownMenuItem onClick={() => column.toggleVisibility(false)}>
-            <HugeiconsIcon icon={EyeOff} />
-            Hide
+          <DropdownMenuItem onClick={() => column.toggleSorting(true)}>
+            <HugeiconsIcon icon={SortByDown02Icon} />
+            Desc
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>

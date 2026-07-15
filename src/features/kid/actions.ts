@@ -6,7 +6,7 @@ import { and, eq, ilike, sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { kid, term } from '@/lib/db/schema';
 
-import { requireOwner } from './utils';
+import { requireOwner } from '../../lib/actions/utils';
 
 const STATUS_TRANSITIONS: Record<string, string[]> = {
   waiting: ['enrolled'],
