@@ -40,49 +40,7 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
           </p>
         </div>
       </div>
-
-      {/* Mobile card list */}
-      <div className="space-y-3 md:hidden">
-        {kids.length === 0 ? (
-          <EmptyState
-            title={search ? 'Murid tidak ditemukan' : 'Belum ada data murid'}
-          />
-        ) : (
-          kids.map((k) => {
-            const badge = STATUS_BADGE[k.status] ?? STATUS_BADGE.waiting;
-            return (
-              <div key={k.id} className="rounded-lg border bg-card p-4">
-                <div className="flex items-center ">
-                  <div className="w-full">
-                    <p className="font-medium text-foreground">{k.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {k.guardian?.name ?? '-'} • {formatDate(k.dob)}
-                    </p>
-                  </div>
-                  <div className="flex items-baseline">
-                    <DataTableRowActions id={k.id} />
-                  </div>
-                </div>
-                <div className="mt-2 flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground">
-                    {k.enrolledTerm?.name ?? '-'}
-                  </span>
-                  <Badge
-                    variant={
-                      badge.variant as 'default' | 'secondary' | 'outline'
-                    }
-                  >
-                    {badge.label}
-                  </Badge>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-
-      {/* Desktop table */}
-      <div className="hidden overflow-x-auto rounded-lg md:block">
+      <div className="overflow-x-auto rounded-lg">
         {kids.length === 0 ? (
           <EmptyState
             title={search ? 'Murid tidak ditemukan' : 'Belum ada data murid'}
