@@ -6,8 +6,10 @@
     ".next/**",
     "dist/**",
     "coverage/**",
-    "src/components/ui/**"
+    "src/components/ui/**",
+    ".factory/**"
   ],
+  "gitignore": true,
   "tsx": {
     "code": "tsx",
     "extensions": ["tsx"]

@@ -3,10 +3,138 @@
 Auto-generated from `src/app/` directory structure.
 
 ```
+(auth)/
+  login/
+    page.tsx
+    login-form.tsx
 globals.css
 page.tsx
 sitemap.ts
 favicon.ico
+dashboard/
+  teacher/
+    page.tsx
+    layout.tsx
+    capture/
+      page.tsx
+      [sessionId]/
+        page.tsx
+        capture-roster.tsx
+      _client.tsx
+      actions.ts
+  owner/
+    kid/
+      page.tsx
+      loading.tsx
+      [id]/
+        edit/
+          page.tsx
+      create/
+        page.tsx
+    guardian/
+      page.tsx
+      loading.tsx
+      [id]/
+        edit/
+          page.tsx
+      create/
+        page.tsx
+      guardian-actions.tsx
+    activity/
+      import/
+        page.tsx
+      page.tsx
+      loading.tsx
+      activity-actions.tsx
+      [id]/
+        edit/
+          page.tsx
+      create/
+        page.tsx
+    term/
+      page.tsx
+      loading.tsx
+      [id]/
+        cohort/
+          page.tsx
+        edit/
+          page.tsx
+      create/
+        page.tsx
+    session/
+      page.tsx
+      loading.tsx
+      [id]/
+        edit/
+          page.tsx
+      generate/
+        page.tsx
+      create/
+        page.tsx
+    page.tsx
+    loading.tsx
+    schedule/
+      [termId]/
+        page.tsx
+        session-schedule-editor.tsx
+      page.tsx
+      loading.tsx
+    reports/
+      monthly/
+        page.tsx
+        loading.tsx
+        [kidId]/
+          [month]/
+            page.tsx
+            report-client.tsx
+      quarterly/
+        page.tsx
+        loading.tsx
+        [kidId]/
+          page.tsx
+          report-client.tsx
+      daily/
+        page.tsx
+        loading.tsx
+        [sessionId]/
+          page.tsx
+          report-client.tsx
+    settings/
+      page.tsx
+      loading.tsx
+      layout.tsx
+    dcr/
+      page.tsx
+      loading.tsx
+      [sessionId]/
+        page.tsx
+        dcr-form.tsx
+    layout.tsx
+  layout.tsx
+api/
+  schedule/
+    today/
+      route.ts
+  push/
+    unsubscribe/
+      route.ts
+    subscribe/
+      route.ts
+  reports/
+    quarterly/
+      [kidId]/
+        route.ts
+  auth/
+    [...all]/
+      route.ts
+    dev-session/
+      route.ts
+  capture/
+    participation/
+      route.ts
+  cron/
+    reminders/
+      route.ts
 layout.tsx
 robots.ts
 ```

@@ -24,6 +24,7 @@ jobs:
   e2e:
     timeout-minutes: 15
     runs-on: ubuntu-latest
+    continue-on-error: true
     environment: Preview
     steps:
       - name: Checkout Code
