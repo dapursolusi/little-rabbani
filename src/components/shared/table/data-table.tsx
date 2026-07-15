@@ -285,7 +285,7 @@ export function DataTable<TData, TValue>({
             </TableBody>
           </Table>
         </div>
-        <DataTableMobileView table={table} />
+        <DataTableMobileView rows={table.getRowModel().rows} />
         <Separator />
         <DataTablePagination table={table} pagination={paginationInfo} />
       </div>

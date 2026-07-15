@@ -1,6 +1,6 @@
 import { ChildIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { type Cell, type Table, flexRender } from '@tanstack/react-table';
+import { type Cell, type Row, flexRender } from '@tanstack/react-table';
 
 import {
   Item,
@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/item';
 
 interface DataTableMobileViewProps<TData> {
-  table: Table<TData>;
+  rows: Row<TData>[];
 }
 
 /** Derive a label from the column header: string header → as-is, otherwise → meta.title → column.id */
@@ -24,13 +24,13 @@ function getHeaderLabel<TData>(cell: Cell<TData, unknown>): string {
 }
 
 export function DataTableMobileView<TData>({
-  table,
+  rows,
 }: DataTableMobileViewProps<TData>) {
   return (
     <div className="flex w-full flex-col gap-6 md:hidden">
-      {table.getRowModel().rows.length > 0 ? (
+      {rows.length > 0 ? (
         <>
-          {table.getRowModel().rows.map((row) => {
+          {rows.map((row) => {
             const cells = row.getVisibleCells();
             const dataCells = cells.filter(
               (cell) => cell.column.id !== 'actions'

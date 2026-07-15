@@ -34,15 +34,27 @@ export function DataTablePagination<TData>({
   table,
   pagination,
 }: DataTablePaginationProps<TData>) {
+  const startItem = pagination.pageIndex * pagination.pageSize + 1;
+  const endItem = Math.min(
+    startItem + pagination.pageSize - 1,
+    pagination.filteredRowCount
+  );
+  const total = pagination.filteredRowCount;
+
   return (
-    <div className="my-3 flex items-center justify-between px-2">
-      <div className="flex-1 text-sm text-muted-foreground">
-        {table.getFilteredSelectedRowModel().rows.length} of{' '}
-        {pagination.filteredRowCount} row(s) selected.
-      </div>
-      <div className="flex items-center space-x-6 lg:space-x-8">
-        <div className="flex items-center space-x-2">
-          <p className="text-sm font-medium">Rows per page</p>
+    <div className="my-3 flex flex-col items-center gap-2 px-2 sm:flex-row sm:justify-between">
+      {/* ---- Item range ---- */}
+      <span className="text-sm text-muted-foreground tabular-nums">
+        Menampilkan {startItem}–{endItem} dari {total}
+      </span>
+
+      {/* ---- Controls ---- */}
+      <div className="flex items-center gap-2 md:gap-4">
+        {/* Page size */}
+        <div className="flex items-center gap-1.5">
+          <p className="text-sm font-medium whitespace-nowrap max-sm:sr-only">
+            Baris per halaman
+          </p>
           <Select
             value={`${pagination.pageSize}`}
             onValueChange={(value) => {
@@ -61,48 +73,50 @@ export function DataTablePagination<TData>({
             </SelectContent>
           </Select>
         </div>
-        <div className="flex w-25 items-center justify-center text-sm font-medium">
-          Page {pagination.pageIndex + 1} of {pagination.pageCount}
-        </div>
-        <div className="flex items-center space-x-2">
+
+        {/* Nav */}
+        <div className="flex items-center gap-1">
           <Button
             variant="outline"
             size="icon"
-            className="hidden size-8 lg:flex"
+            className="size-10 md:size-8"
             onClick={() => table.setPageIndex(0)}
             disabled={!pagination.canPreviousPage}
           >
-            <span className="sr-only">Go to first page</span>
+            <span className="sr-only">Ke halaman pertama</span>
             <HugeiconsIcon icon={ChevronFirstIcon} />
           </Button>
           <Button
             variant="outline"
             size="icon"
-            className="size-8"
+            className="size-10 md:size-8"
             onClick={() => table.previousPage()}
             disabled={!pagination.canPreviousPage}
           >
-            <span className="sr-only">Go to previous page</span>
+            <span className="sr-only">Ke halaman sebelumnya</span>
             <HugeiconsIcon icon={ChevronLeftIcon} />
           </Button>
+          <span className="text-sm font-medium tabular-nums text-center min-w-[6ch]">
+            Hal {pagination.pageIndex + 1}/{pagination.pageCount}
+          </span>
           <Button
             variant="outline"
             size="icon"
-            className="size-8"
+            className="size-10 md:size-8"
             onClick={() => table.nextPage()}
             disabled={!pagination.canNextPage}
           >
-            <span className="sr-only">Go to next page</span>
+            <span className="sr-only">Ke halaman berikutnya</span>
             <HugeiconsIcon icon={ChevronRightIcon} />
           </Button>
           <Button
             variant="outline"
             size="icon"
-            className="hidden size-8 lg:flex"
+            className="size-10 md:size-8"
             onClick={() => table.setPageIndex(pagination.pageCount - 1)}
             disabled={!pagination.canNextPage}
           >
-            <span className="sr-only">Go to last page</span>
+            <span className="sr-only">Ke halaman terakhir</span>
             <HugeiconsIcon icon={ChevronLastIcon} />
           </Button>
         </div>
