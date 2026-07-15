@@ -11,7 +11,6 @@
  *   bun run scripts/generate-docs.mjs          # Generate docs to docs/generated/
  *   bun run scripts/generate-docs.mjs --check   # Check existing docs are up-to-date
  */
-import { execSync } from 'node:child_process';
 import {
   mkdirSync,
   readFileSync,
@@ -90,23 +89,6 @@ function generateComponentInventory() {
   return content.join('\n');
 }
 
-function formatFile(filePath) {
-  try {
-    const prettierPath = resolve(
-      import.meta.dirname,
-      '..',
-      'node_modules',
-      'prettier',
-      'bin',
-      'prettier.cjs'
-    );
-    execSync(`"${prettierPath}" --write "${filePath}"`, { stdio: 'pipe' });
-    return readFileSync(filePath, 'utf-8');
-  } catch {
-    return null;
-  }
-}
-
 const generators = [
   { filename: 'routes.md', generate: generateRouteMap },
   { filename: 'components.md', generate: generateComponentInventory },
@@ -123,17 +105,7 @@ for (const gen of generators) {
   if (CHECK_MODE) {
     try {
       const existing = readFileSync(filePath, 'utf-8');
-      // Write to temp .md file, format with prettier, then compare
-      const tmpPath = filePath.replace(/\.md$/, '.check.md');
-      writeFileSync(tmpPath, content, 'utf-8');
-      const formatted = formatFile(tmpPath);
-      const expected = formatted ?? content;
-      try {
-        execSync(`rm "${tmpPath}"`, { stdio: 'pipe' });
-      } catch {
-        /* ignore */
-      }
-      if (existing !== expected) {
+      if (existing !== content) {
         console.error(
           `❌ ${gen.filename} is stale — re-run scripts/generate-docs.mjs`
         );
@@ -149,7 +121,6 @@ for (const gen of generators) {
     }
   } else {
     writeFileSync(filePath, content, 'utf-8');
-    formatFile(filePath);
     console.log(`📝 Generated ${gen.filename}`);
   }
 }

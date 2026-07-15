@@ -27,8 +27,8 @@
     "depcruise": "dependency-cruiser src/",
     "check:todos": "bun run scripts/check-todos.mjs",
     "check:todos:strict": "bun run scripts/check-todos.mjs --require-ticket",
-    "docs:generate": "bun run scripts/generate-docs.mjs",
-    "docs:check": "bun run scripts/generate-docs.mjs --check",
+    "docs:generate": "bun run scripts/generate-docs.mjs && bunx --bun prettier --write docs/generated/",
+    "docs:check": "bun run docs:generate && git diff --exit-code docs/generated/",
     "analyze:bundle": "ANALYZE=true bun run build",
     "prepare": "husky",
     "postinstall": "node scripts/patch-eslint-plugin-react.mjs"
