@@ -30,7 +30,7 @@ export function EmptyState({
     <Empty>
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          {icon ? icon : <HugeiconsIcon icon={DatabaseIcon} size={40} />}
+          {icon ? icon : <HugeiconsIcon icon={DatabaseIcon} size={60} />}
         </EmptyMedia>
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>

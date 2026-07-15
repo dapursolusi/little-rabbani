@@ -11,7 +11,6 @@ export default function DashboardLayout({
     <SidebarProvider defaultOpen={true}>
       <Toaster />
       {children}
-      <WhatsAppButton />
     </SidebarProvider>
   );
 }
