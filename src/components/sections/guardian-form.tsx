@@ -4,8 +4,8 @@ import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import type { GuardianFormData } from '@/features/guardian/actions';
 import { createGuardian, updateGuardian } from '@/features/guardian/actions';
+import type { GuardianFormData } from '@/features/guardian/schema';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';

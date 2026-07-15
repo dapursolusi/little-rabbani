@@ -14,7 +14,7 @@ import {
 interface EmptyDataProps {
   title: string;
   icon?: React.ReactNode;
-  description: string;
+  description?: string;
   actionLabel?: string;
   actionHref?: string;
 }
@@ -36,8 +36,11 @@ export function EmptyState({
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center gap-2">
-        <Button>Create Project</Button>
-        <Button variant="outline">Import Project</Button>
+        {actionLabel && actionHref ? (
+          <Button render={<a href={actionHref} />}>{actionLabel}</Button>
+        ) : actionLabel ? (
+          <Button>{actionLabel}</Button>
+        ) : null}
       </EmptyContent>
       <Button
         variant="link"

@@ -4,8 +4,8 @@ import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import type { KidFormData } from '@/features/kid/actions';
 import { createKid, updateKid } from '@/features/kid/actions';
+import type { KidFormData } from '@/features/kid/schema';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';

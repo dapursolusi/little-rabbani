@@ -36,7 +36,6 @@ export default async function ScheduleSelectorPage() {
           title="Belum ada term. Buat term terlebih dahulu."
           actionLabel="Tambah Term"
           actionHref="/dashboard/owner/term/create"
-          actionVariant="outline"
         />
       ) : (
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
