@@ -1,31 +1,18 @@
 'use server';
 
+import { KidFormSchema } from '@/features/kid/schema';
 import { and, eq, ilike, sql } from 'drizzle-orm';
-import { z } from 'zod/v4';
 
 import { db } from '@/lib/db';
 import { kid, term } from '@/lib/db/schema';
 
-import { requireOwner } from './utils';
+import { requireOwner } from '../../lib/actions/utils';
 
 const STATUS_TRANSITIONS: Record<string, string[]> = {
   waiting: ['enrolled'],
   enrolled: ['alumni'],
   alumni: ['enrolled'], // Owner override only
 };
-
-const KidFormSchema = z.object({
-  name: z.string().min(1, 'Nama wajib diisi'),
-  dob: z.string().min(1, 'Tanggal lahir wajib diisi'),
-  guardianId: z.string().min(1, 'Wali murid wajib dipilih'),
-  status: z
-    .enum(['waiting', 'enrolled', 'alumni'])
-    .optional()
-    .default('waiting'),
-  enrolledTermId: z.string().optional().or(z.literal('')),
-});
-
-export type KidFormData = z.infer<typeof KidFormSchema>;
 
 export async function getKids(params?: {
   search?: string;

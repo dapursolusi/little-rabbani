@@ -53,15 +53,15 @@ UI Component (Server Component) → Server Action → Service → ORM → DB
 
 ## Naming Conventions
 
-| Entity                     | Convention           | Example           |
-| :------------------------- | :------------------- | :---------------- |
-| Components                 | PascalCase           | `UserProfile.tsx` |
-| Utilities                  | camelCase            | `formatDate.ts`   |
-| Functions                  | camelCase            | `getUserById()`   |
-| Props interfaces           | PascalCase, I-prefix | `IButtonProps`    |
-| Types                      | PascalCase, T-prefix | `TComponentProps` |
-| Constants                  | UPPER_SNAKE          | `MAX_RETRY_COUNT` |
-| File names (non-component) | kebab-case           | `api-endpoint.ts` |
+| Entity                     | Convention  | Example           |
+| :------------------------- | :---------- | :---------------- |
+| Components                 | PascalCase  | `UserProfile.tsx` |
+| Utilities                  | camelCase   | `formatDate.ts`   |
+| Functions                  | camelCase   | `getUserById()`   |
+| Props interfaces           | PascalCase  | `ButtonProps`     |
+| Types                      | PascalCase  | `ComponentProps`  |
+| Constants                  | UPPER_SNAKE | `MAX_RETRY_COUNT` |
+| File names (non-component) | kebab-case  | `api-endpoint.ts` |
 
 ## File Placement
 
@@ -117,6 +117,15 @@ This is a one-time setup per clone. Skip if already indexed.
 - ⚠️ shadcn preset `bI9A` pins style, base color, icon library, and primitives in one shot — no separate flags needed.
 - ⚠️ `env.mjs` uses `@t3-oss/env-nextjs` — all env vars MUST be registered there, not read directly from `process.env`.
 - ⚠️ Port 3000 must be free. Kill stale Next.js procs first.
+- ⚠️ **React Compiler is ON** (`reactCompiler: true` in `next.config`, React 19). It auto-memoizes every component and sub-expression, treating a referentially-stable value as a **constant**. This breaks any library that keeps live, mutable state behind a stable handle — most importantly **TanStack Table's `table` instance**: `useReactTable` returns the _same object identity_ every render, so the compiler memoizes `table.getState()…` / `table.getCanNextPage()` reads and serves **stale values** even though the underlying state updated.
+  - **Symptom signature:** "state updates but UI shows the old value." Concretely seen here — clicking "next" fetched the next page (row model updated) but the "Page X of Y" indicator and prev/next `disabled` states stayed stale. Smoking gun: an imperative read in the render body (`console.warn(table.getState().pagination.pageIndex)`) shows the fresh value while JSX reading the same expression shows the stale one, in the same render pass.
+  - **Fix pattern:** mirror the library's state into React `useState` (so its identity changes on update) and read UI-derivable values from that — not from the stable handle's getters. For TanStack Table: use `state: { pagination }` + `onPaginationChange: setPagination`, then derive `pageCount`/`canPreviousPage`/`canNextPage` from the `pagination` React state (not `table.getState()`) and pass as props; the consuming JSX reads the props. Mutations (`table.nextPage()`) still call the table — only the **read path** moves off the stable handle.
+  - **Diagnostic:** if you suspect this, add a `console.warn` in the render body reading the same value the JSX reads. If they disagree within one render, it's React Compiler memoization.
+  - **Escape hatch:** the `"use no memo"` directive opts a single component out of React Compiler. Use sparingly — the state-mirror pattern is preferred.
+  - **Generalize:** any "stale UI that should update" bug under `reactCompiler: true` → first ask: _is this value read through a stable handle hiding mutable state?_ (zustand stores, TanStack Query client refs, singleton service objects, etc. are all candidates.)
+- ⚠️ **TypeScript `^6` resolution in CI** — `^6` in `package.json` can resolve to TypeScript 7.x (e.g. `7.0.2`) in CI, but `@typescript-eslint/typescript-estree@8.x` doesn't support TypeScript 7's new `Extension` enum. Linter crashes with `TypeError: Cannot read properties of undefined (reading 'Cjs')`. **Pin to an exact version** (`"typescript": "6.0.3"`) instead of a range — don't use `^`.
+- ⚠️ **ESLint 10 + eslint-plugin-react 7.x incompatibility** — ESLint 10 removed `context.getFilename()`, but `eslint-plugin-react@7.x` still calls it in `lib/util/version.js`. Linter crashes on `.tsx` files with `TypeError: contextOrFilename.getFilename is not a function`. **Fix:** a postinstall patch (`scripts/patch-eslint-plugin-react.mjs`) replaces `contextOrFilename.getFilename()` → `contextOrFilename.filename`. Remove the patch when eslint-plugin-react ships 8.x.
+- ⚠️ **`env.mjs` env vars required in CI** — `@t3-oss/env-nextjs` validates ALL env vars at import time. Tests importing `@/lib/auth` (which imports `env.mjs`) must set every variable in `beforeEach`, including `OPENROUTER_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`. CI workflows running `next dev` (E2E, Preview) need a full `.env` or injected secrets — missing vars crash startup.
 
 ## When to Ask
 

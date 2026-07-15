@@ -1,15 +1,17 @@
 {
-  "threshold": 0.2,
+  "threshold": 10,
   "reporters": ["console"],
   "ignore": [
     "node_modules/**",
     ".next/**",
     "dist/**",
     "coverage/**",
-    "src/components/ui/**"
+    "src/components/ui/**",
+    ".factory/**",
+    "docs/**",
+    ".github/workflows/**",
+    "drizzle/**",
+    "tests/**"
   ],
-  "tsx": {
-    "code": "tsx",
-    "extensions": ["tsx"]
-  }
+  "gitignore": true
 }

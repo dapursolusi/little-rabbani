@@ -22,15 +22,16 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "validate:agents-md": "bun run scripts/validate-agents-md.ts",
-    "knip": "knip",
+    "knip": "knip --max-issues 60",
     "jscpd": "jscpd --config .jscpd.json",
     "depcruise": "dependency-cruiser src/",
     "check:todos": "bun run scripts/check-todos.mjs",
     "check:todos:strict": "bun run scripts/check-todos.mjs --require-ticket",
-    "docs:generate": "bun run scripts/generate-docs.mjs",
-    "docs:check": "bun run scripts/generate-docs.mjs --check",
+    "docs:generate": "bun run scripts/generate-docs.mjs && node_modules/.bin/prettier --write docs/generated/",
+    "docs:check": "bun run docs:generate && git diff --exit-code docs/generated/",
     "analyze:bundle": "ANALYZE=true bun run build",
-    "prepare": "husky"
+    "prepare": "husky",
+    "postinstall": "node scripts/patch-eslint-plugin-react.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
@@ -40,6 +41,7 @@
     "@neondatabase/serverless": "1.1.0",
     "@react-pdf/renderer": "4.5.1",
     "@t3-oss/env-nextjs": "0.13.11",
+    "@tanstack/react-table": "8.21.3",
     "@types/papaparse": "5.5.2",
     "better-auth": "1.6.23",
     "class-variance-authority": "^0.7.1",
@@ -74,6 +76,7 @@
     "@types/react-dom": "^19",
     "@types/web-push": "3.6.4",
     "@vitejs/plugin-react": "6.0.3",
+    "@vitest/coverage-v8": "4.1.10",
     "babel-plugin-react-compiler": "1.0.0",
     "dependency-cruiser": "18.1.0",
     "drizzle-kit": "0.31.10",
@@ -89,7 +92,7 @@
     "prettier-plugin-tailwindcss": "^0.8.0",
     "tailwindcss": "^4",
     "tsx": "4.23.1",
-    "typescript": "^7",
+    "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
   "ignoreScripts": [

@@ -1,9 +1,10 @@
 import { notFound } from 'next/navigation';
 
+import { getGuardian } from '@/features/guardian/actions';
+
 import { GuardianForm } from '@/components/sections/guardian-form';
 import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
 
-import { getGuardian } from '@/lib/actions/guardian';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Edit Wali Murid' };

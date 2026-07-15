@@ -4,14 +4,13 @@ import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { createGuardian, updateGuardian } from '@/features/guardian/actions';
+import type { GuardianFormData } from '@/features/guardian/schema';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-import { createGuardian, updateGuardian } from '@/lib/actions/guardian';
-import type { GuardianFormData } from '@/lib/actions/guardian';
 
 interface IGuardianFormProps {
   mode: 'create' | 'edit';

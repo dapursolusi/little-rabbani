@@ -4,6 +4,8 @@ import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { createKid, updateKid } from '@/features/kid/actions';
+import type { KidFormData } from '@/features/kid/schema';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
@@ -16,9 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-
-import { createKid, updateKid } from '@/lib/actions/kid';
-import type { KidFormData } from '@/lib/actions/kid';
 
 interface IKidFormProps {
   mode: 'create' | 'edit';

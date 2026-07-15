@@ -107,7 +107,10 @@ export function OfflineIndicator() {
       {/* VAL-CAPTURE-041: Quota warning */}
       {quotaMessage && isOnline && (
         <div className="sticky top-0 z-50 bg-destructive px-4 py-1.5 text-center text-xs font-medium text-white">
-          <HugeiconsIcon icon={Alert02Icon} className="h-3.5 w-3.5 inline-block" />{' '}
+          <HugeiconsIcon
+            icon={Alert02Icon}
+            className="h-3.5 w-3.5 inline-block"
+          />{' '}
           {quotaMessage}
         </div>
       )}

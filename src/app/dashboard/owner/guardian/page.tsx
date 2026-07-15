@@ -1,22 +1,9 @@
-import Link from 'next/link';
+import { getGuardians } from '@/features/guardian/actions';
+import { guardianColumns } from '@/features/guardian/components/columns';
 
-import { EmptyState } from '@/components/shared/empty-state';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+import { DataTable } from '@/components/shared/table/data-table';
 
-import { getGuardians } from '@/lib/actions/guardian';
 import { baseMetadata } from '@/lib/metadata';
-import { cn } from '@/lib/utils';
-
-import { GuardianActions } from './guardian-actions';
 
 export const metadata = { ...baseMetadata, title: 'Wali Murid' };
 
@@ -42,8 +29,6 @@ export default async function GuardianListPage({
   }
 
   const guardians = result.data;
-  const totalItems = result.total ?? 0;
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
 
   return (
     <section className="p-4 sm:p-6">
@@ -55,179 +40,14 @@ export default async function GuardianListPage({
             Kelola data wali murid
           </p>
         </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <form
-            method="GET"
-            action="/dashboard/owner/guardian"
-            className="flex gap-2"
-          >
-            <input
-              type="text"
-              name="search"
-              defaultValue={search ?? ''}
-              placeholder="Cari wali murid..."
-              className="rounded-md border px-3 py-1.5 text-sm"
-            />
-            <Button type="submit" variant="default" size="sm">
-              Cari
-            </Button>
-          </form>
-          <Link
-            href="/dashboard/owner/guardian/create"
-            className={cn(buttonVariants({ variant: 'default' }))}
-          >
-            Tambah Wali Murid
-          </Link>
-        </div>
       </div>
-
-      {/* Mobile card list */}
-      <div className="space-y-3 md:hidden">
-        {guardians.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <EmptyState
-                title={
-                  search
-                    ? 'Wali murid tidak ditemukan'
-                    : 'Belum ada data wali murid'
-                }
-                actionLabel={!search ? 'Tambah Wali Murid' : undefined}
-                actionHref={
-                  !search ? '/dashboard/owner/guardian/create' : undefined
-                }
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          guardians.map((g) => {
-            const enrolledCount = g.kids.filter(
-              (k) => k.status === 'enrolled'
-            ).length;
-            return (
-              <div key={g.id} className="rounded-lg border bg-card p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">{g.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {g.phone} • {g.email ?? '-'}
-                    </p>
-                  </div>
-                  <div className="text-xs text-muted-foreground">
-                    {g.kids.length} murid
-                    {enrolledCount > 0 && ` (${enrolledCount} aktif)`}
-                  </div>
-                </div>
-                <div className="mt-2 flex justify-end">
-                  <GuardianActions
-                    guardianId={g.id}
-                    hasKids={g.kids.length > 0}
-                  />
-                </div>
-              </div>
-            );
-          })
-        )}
+      <div className="overflow-x-auto rounded-lg">
+        <DataTable
+          columns={guardianColumns}
+          data={guardians}
+          createButton="/dashboard/owner/kid/create"
+        />
       </div>
-
-      {/* Desktop table */}
-      <div className="hidden overflow-x-auto rounded-lg border md:block">
-        {guardians.length === 0 ? (
-          <Card className="border-dashed">
-            <CardContent className="flex flex-col items-center justify-center py-16">
-              <EmptyState
-                title={
-                  search
-                    ? 'Wali murid tidak ditemukan'
-                    : 'Belum ada data wali murid'
-                }
-                actionLabel={!search ? 'Tambah Wali Murid' : undefined}
-                actionHref={
-                  !search ? '/dashboard/owner/guardian/create' : undefined
-                }
-              />
-            </CardContent>
-          </Card>
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Nama</TableHead>
-                <TableHead>Telepon</TableHead>
-                <TableHead>Email</TableHead>
-                <TableHead>Jumlah Murid</TableHead>
-                <TableHead className="text-right">Aksi</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {guardians.map((g) => {
-                const enrolledCount = g.kids.filter(
-                  (k) => k.status === 'enrolled'
-                ).length;
-                return (
-                  <TableRow key={g.id}>
-                    <TableCell className="font-medium">{g.name}</TableCell>
-                    <TableCell>{g.phone}</TableCell>
-                    <TableCell>{g.email ?? '-'}</TableCell>
-                    <TableCell>
-                      {g.kids.length > 0 ? (
-                        <span className="inline-flex items-center gap-1">
-                          {g.kids.length}
-                          {enrolledCount > 0 && (
-                            <span className="text-xs text-muted-foreground">
-                              ({enrolledCount} aktif)
-                            </span>
-                          )}
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">0</span>
-                      )}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <GuardianActions
-                        guardianId={g.id}
-                        hasKids={g.kids.length > 0}
-                      />
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
-      </div>
-
-      {/* Pagination */}
-      {totalPages > 1 && (
-        <nav className="mt-4 flex items-center justify-between border-t border px-4 py-3">
-          <p className="text-sm text-muted-foreground">
-            Menampilkan {offset + 1}–{Math.min(offset + PAGE_SIZE, totalItems)}{' '}
-            dari {totalItems}
-          </p>
-          <div className="flex gap-2">
-            {currentPage > 1 && (
-              <Link
-                href={`/dashboard/owner/guardian?page=${currentPage - 1}${search ? `&search=${encodeURIComponent(search)}` : ''}`}
-                className={cn(
-                  buttonVariants({ variant: 'outline', size: 'sm' })
-                )}
-              >
-                Sebelumnya
-              </Link>
-            )}
-            {currentPage < totalPages && (
-              <Link
-                href={`/dashboard/owner/guardian?page=${currentPage + 1}${search ? `&search=${encodeURIComponent(search)}` : ''}`}
-                className={cn(
-                  buttonVariants({ variant: 'outline', size: 'sm' })
-                )}
-              >
-                Selanjutnya
-              </Link>
-            )}
-          </div>
-        </nav>
-      )}
     </section>
   );
 }

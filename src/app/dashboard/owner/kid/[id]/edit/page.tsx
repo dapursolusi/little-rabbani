@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
 
+import { getGuardians } from '@/features/guardian/actions';
+import { getKid } from '@/features/kid/actions';
+
 import { KidForm } from '@/components/sections/kid-form';
 import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
 
-import { getGuardians } from '@/lib/actions/guardian';
-import { getKid } from '@/lib/actions/kid';
 import { getTerms } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 

@@ -1,22 +1,12 @@
 'use server';
 
+import { GuardianFormSchema } from '@/features/guardian/schema';
 import { and, eq, ilike, sql } from 'drizzle-orm';
-import { z } from 'zod/v4';
 
 import { db } from '@/lib/db';
 import { guardian, kid } from '@/lib/db/schema';
 
-import { requireOwner } from './utils';
-
-const GuardianFormSchema = z.object({
-  name: z.string().min(1, 'Nama wajib diisi'),
-  phone: z.string().min(1, 'Nomor telepon wajib diisi'),
-  email: z.string().optional(),
-  secondContactName: z.string().optional(),
-  secondContactPhone: z.string().optional(),
-});
-
-export type GuardianFormData = z.infer<typeof GuardianFormSchema>;
+import { requireOwner } from '../../lib/actions/utils';
 
 export async function getGuardians(params?: {
   search?: string;

@@ -17,7 +17,7 @@ export default defineConfig({
     testTimeout: 10_000,
     reporters: ['default', 'verbose'],
     exclude: ['e2e/', 'node_modules/'],
-    include: ['tests/**/*.test.ts'],
+    include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json', 'html'],

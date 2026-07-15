@@ -1,7 +1,7 @@
+import * as guardianActions from '@/features/guardian/actions';
+import * as kidActions from '@/features/kid/actions';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as guardianActions from '@/lib/actions/guardian';
-import * as kidActions from '@/lib/actions/kid';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 

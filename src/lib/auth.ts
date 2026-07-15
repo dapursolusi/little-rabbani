@@ -6,8 +6,21 @@ import { db } from '@/lib/db';
 import * as schema from '@/lib/db/schema';
 
 export const auth = betterAuth({
-  baseURL:
-    process.env.BETTER_AUTH_URL ?? process.env.NEXT_PUBLIC_BETTER_AUTH_URL,
+  baseURL: {
+    allowedHosts: [
+      'localhost:3000',
+      'lobo:3000',
+      'little-rabbani.vercel.app',
+      '*.vercel.app',
+    ],
+    protocol:
+      process.env.NODE_ENV === 'production' ||
+      !!process.env.VERCEL ||
+      !!process.env.CI
+        ? 'https'
+        : 'http',
+    fallback: process.env.NEXT_PUBLIC_APP_URL,
+  },
   database: drizzleAdapter(db, {
     provider: 'pg',
     schema: {

@@ -5,17 +5,66 @@ Auto-generated from `src/components/` directory structure.
 ## UI Primitives (shadcn base-nova)
 
 ```
-
+alert.tsx
+avatar.tsx
+badge.tsx
+breadcrumb.tsx
+button.tsx
+card.tsx
+checkbox.tsx
+dialog.tsx
+dropdown-menu.tsx
+empty.tsx
+input.tsx
+item.tsx
+label.tsx
+progress.tsx
+radio-group.tsx
+scroll-area.tsx
+select.tsx
+separator.tsx
+sheet.tsx
+sidebar.tsx
+skeleton.tsx
+sonner.tsx
+switch.tsx
+table.tsx
+tabs.tsx
+textarea.tsx
+toggle-group.tsx
+toggle.tsx
+tooltip.tsx
 ```
 
 ## Sections
 
 ```
-
+activity-form.tsx
+confirm-dialog.tsx
+conflict-dialog.tsx
+csv-import-form.tsx
+guardian-form.tsx
+kid-form.tsx
+offline-indicator.tsx
+owner-dashboard/
+  quick-actions.tsx
+  stat-cards.tsx
+session-actions.tsx
+session-edit-form.tsx
+session-form.tsx
+session-generate-form.tsx
+teacher-pending-capture-banner.tsx
+teacher-schedule-view.tsx
+term-actions.tsx
+term-cohort-form.tsx
+term-form.tsx
 ```
 
 ## Layout
 
 ```
-
+logout-button.tsx
+mobile-nav-sheet.tsx
+owner-sidebar.tsx
+teacher-tabs.tsx
 ```

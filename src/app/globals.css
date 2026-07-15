@@ -42,6 +42,9 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
+  --color-table-header-bg: #385451;
+  --color-table-header-fg: #ffffff;
+  --color-table-body-bg: #ffffff;
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
