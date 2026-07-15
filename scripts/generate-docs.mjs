@@ -92,7 +92,15 @@ function generateComponentInventory() {
 
 function formatFile(filePath) {
   try {
-    execSync(`prettier --write "${filePath}"`, { stdio: 'pipe' });
+    const prettierPath = resolve(
+      import.meta.dirname,
+      '..',
+      'node_modules',
+      'prettier',
+      'bin',
+      'prettier.cjs'
+    );
+    execSync(`"${prettierPath}" --write "${filePath}"`, { stdio: 'pipe' });
     return readFileSync(filePath, 'utf-8');
   } catch {
     return null;
