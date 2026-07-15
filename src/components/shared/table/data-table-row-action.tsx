@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import {
   Delete02Icon,
   Edit04Icon,
-  MoreVerticalIcon,
+  More03Icon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
@@ -92,7 +92,7 @@ export function DataTableRowActions(props: DataTableRowActionsProps) {
           )}
           aria-label="Buka menu baris tabel"
         >
-          <HugeiconsIcon icon={MoreVerticalIcon} />
+          <HugeiconsIcon icon={More03Icon} />
         </DropdownMenuTrigger>
         <DropdownMenuContent
           align="end"

@@ -1,13 +1,8 @@
 import { kidColumns } from '@/features/kid/components/columns';
-import { STATUS_BADGE } from '@/features/kid/constants';
 
-import { EmptyState } from '@/components/shared/empty-state';
 import { DataTable } from '@/components/shared/table/data-table';
-import { DataTableRowActions } from '@/components/shared/table/data-table-row-action';
-import { Badge } from '@/components/ui/badge';
 
 import { getKids } from '@/lib/actions/kid';
-import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Murid' };
@@ -41,24 +36,17 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
         </div>
       </div>
       <div className="overflow-x-auto rounded-lg">
-        {kids.length === 0 ? (
-          <EmptyState
-            title={search ? 'Murid tidak ditemukan' : 'Belum ada data murid'}
-            actionLabel={!search ? 'Tambah Murid' : undefined}
-            actionHref={!search ? '/dashboard/owner/kid/create' : undefined}
-          />
-        ) : (
-          <DataTable
-            columns={kidColumns}
-            data={kids.map((kid) => ({
-              ...kid,
-              guardianName: kid.guardian?.name ?? '-',
-              enrolledTermName: kid.enrolledTerm?.name ?? '-',
-              enrolledTermId: kid.enrolledTerm?.id ?? undefined,
-            }))}
-            createButton="/dashboard/owner/kid/create"
-          />
-        )}
+        <DataTable
+          columns={kidColumns}
+          // data={[]}
+          data={kids.map((kid) => ({
+            ...kid,
+            guardianName: kid.guardian?.name ?? '-',
+            enrolledTermName: kid.enrolledTerm?.name ?? '-',
+            enrolledTermId: kid.enrolledTerm?.id ?? undefined,
+          }))}
+          createButton="/dashboard/owner/kid/create"
+        />
       </div>
     </div>
   );

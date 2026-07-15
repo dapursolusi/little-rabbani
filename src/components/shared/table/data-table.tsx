@@ -32,9 +32,10 @@ import {
 
 import { cn } from '@/lib/utils';
 
+// Import-time side-effect: registers built-in filter types in the registry
+import { EmptyState } from '../empty-state';
 import DataTableColumnVisibility from './data-table-column-visibility';
 import { DataTableFilter } from './data-table-filter';
-// Import-time side-effect: registers built-in filter types in the registry
 import { DataTableMobileView } from './data-table-mobile-view';
 import { DataTablePagination } from './data-table-pagination';
 import DataTableSearchBar from './data-table-search-bar';
@@ -62,6 +63,7 @@ export function DataTable<TData, TValue>({
     pageIndex: 0,
     pageSize: 10,
   });
+
   const [sorting, setSorting] = React.useState<SortingState>([]);
   const [columnVisibility, setColumnVisibility] =
     React.useState<VisibilityState>({});
@@ -183,6 +185,17 @@ export function DataTable<TData, TValue>({
     canNextPage: pagination.pageIndex < pageCount - 1,
   };
 
+  if (data.length === 0) {
+    return (
+      <EmptyState
+        title={'Belum ada data'}
+        description={'Mulai dengan menambahkan murid baru.'}
+        actionLabel={'Tambah Murid'}
+        actionHref={'/dashboard/owner/kid/create'}
+      />
+    );
+  }
+
   return (
     <SortingStateContext.Provider value={sorting}>
       <DataTableFilter
@@ -191,32 +204,34 @@ export function DataTable<TData, TValue>({
         columnFilters={columnFilters}
         onColumnFiltersChange={setColumnFilters}
       >
-        <div className="my-2 flex items-center gap-2 justify-between">
+        <div className="my-2 flex max-md:flex-col items-center gap-2 justify-between">
           <DataTableSearchBar
             table={table}
             globalFilter={globalFilter}
             placeholder={searchPlaceholder}
           />
-          <DataTableFilter.Button />
-          <DataTableColumnVisibility
-            table={table}
-            columnVisibility={columnVisibility}
-          />
-          {createButton && typeof createButton === 'string' ? (
-            <Link
-              href={createButton as string}
-              className={cn(buttonVariants({ variant: 'default' }))}
-            >
-              <HugeiconsIcon icon={Add02Icon} />
-              Tambah Murid
-            </Link>
-          ) : (
-            <>{createButton}</>
-          )}
+          <div className="flex items-center gap-2 max-md:w-full max-md:justify-between">
+            <DataTableFilter.Button />
+            <DataTableColumnVisibility
+              table={table}
+              columnVisibility={columnVisibility}
+            />
+            {createButton && typeof createButton === 'string' ? (
+              <Link
+                href={createButton as string}
+                className={cn(buttonVariants({ variant: 'default' }))}
+              >
+                <HugeiconsIcon icon={Add02Icon} />
+                Tambah Murid
+              </Link>
+            ) : (
+              <>{createButton}</>
+            )}
+          </div>
         </div>
         <DataTableFilter.Bar />
       </DataTableFilter>
-      <div className="bg-table-body-bg overflow-hidden rounded-lg border-2! border-black/30">
+      <div className="md:bg-table-body-bg overflow-hidden rounded-lg border-2! border-black/30">
         <div className="hidden overflow-x-auto md:block">
           <Table>
             <TableHeader>
@@ -263,7 +278,7 @@ export function DataTable<TData, TValue>({
                     colSpan={columns.length}
                     className="h-24 text-center"
                   >
-                    No results.
+                    Tidak ada data ditemukan. Coba cari dengan kata kunci lain.
                   </TableCell>
                 </TableRow>
               )}

@@ -41,7 +41,11 @@ export function DataTableMobileView<TData>({
             const [titleCell, ...remainingDataCells] = dataCells;
 
             return (
-              <Item variant="outline" key={row.id} className="w-full">
+              <Item
+                variant="outline"
+                key={row.id}
+                className="w-full bg-accent/20"
+              >
                 <ItemMedia variant="icon">
                   <HugeiconsIcon icon={ChildIcon} size={40} />
                 </ItemMedia>

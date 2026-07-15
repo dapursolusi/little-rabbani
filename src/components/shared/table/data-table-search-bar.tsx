@@ -21,7 +21,7 @@ export default function DataTableSearchBar<TData>({
   globalFilter,
 }: DataTableSearchBarProps<TData>) {
   return (
-    <div className="flex items-center overflow-auto rounded-lg ">
+    <div className="flex items-center overflow-auto rounded-lg max-md:w-full">
       <div className="bg-accent/30 p-2">
         <HugeiconsIcon icon={Search02Icon} size={16} strokeWidth={2} />
       </div>

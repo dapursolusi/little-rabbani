@@ -105,7 +105,7 @@ function DataTableFilterButton() {
               <Button
                 variant="default"
                 size="sm"
-                className="h-8 flex items-center gap-1"
+                className="h-8 flex items-center gap-1 "
               >
                 <HugeiconsIcon icon={FilterAddIcon} strokeWidth={2} />
                 Filter
