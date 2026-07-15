@@ -35,7 +35,8 @@ function ensureDir(dir) {
 function scanDir(dir, prefix = '') {
   const result = [];
   try {
-    for (const entry of readdirSync(dir)) {
+    const entries = readdirSync(dir).sort();
+    for (const entry of entries) {
       if (entry === '.gitkeep' || entry === 'node_modules') continue;
       const full = join(dir, entry);
       if (statSync(full).isDirectory()) {

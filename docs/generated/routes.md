@@ -5,124 +5,9 @@ Auto-generated from `src/app/` directory structure.
 ```
 (auth)/
   login/
-    page.tsx
     login-form.tsx
-globals.css
-page.tsx
-sitemap.ts
-favicon.ico
-dashboard/
-  teacher/
     page.tsx
-    layout.tsx
-    capture/
-      page.tsx
-      [sessionId]/
-        page.tsx
-        capture-roster.tsx
-      _client.tsx
-      actions.ts
-  owner/
-    kid/
-      page.tsx
-      loading.tsx
-      [id]/
-        edit/
-          page.tsx
-      create/
-        page.tsx
-    guardian/
-      page.tsx
-      loading.tsx
-      [id]/
-        edit/
-          page.tsx
-      create/
-        page.tsx
-    activity/
-      import/
-        page.tsx
-      page.tsx
-      loading.tsx
-      activity-actions.tsx
-      [id]/
-        edit/
-          page.tsx
-      create/
-        page.tsx
-    term/
-      page.tsx
-      loading.tsx
-      [id]/
-        cohort/
-          page.tsx
-        edit/
-          page.tsx
-      create/
-        page.tsx
-    session/
-      page.tsx
-      loading.tsx
-      [id]/
-        edit/
-          page.tsx
-      generate/
-        page.tsx
-      create/
-        page.tsx
-    page.tsx
-    loading.tsx
-    schedule/
-      [termId]/
-        page.tsx
-        session-schedule-editor.tsx
-      page.tsx
-      loading.tsx
-    reports/
-      monthly/
-        page.tsx
-        loading.tsx
-        [kidId]/
-          [month]/
-            page.tsx
-            report-client.tsx
-      quarterly/
-        page.tsx
-        loading.tsx
-        [kidId]/
-          page.tsx
-          report-client.tsx
-      daily/
-        page.tsx
-        loading.tsx
-        [sessionId]/
-          page.tsx
-          report-client.tsx
-    settings/
-      page.tsx
-      loading.tsx
-      layout.tsx
-    dcr/
-      page.tsx
-      loading.tsx
-      [sessionId]/
-        page.tsx
-        dcr-form.tsx
-    layout.tsx
-  layout.tsx
 api/
-  schedule/
-    today/
-      route.ts
-  push/
-    unsubscribe/
-      route.ts
-    subscribe/
-      route.ts
-  reports/
-    quarterly/
-      [kidId]/
-        route.ts
   auth/
     [...all]/
       route.ts
@@ -134,6 +19,121 @@ api/
   cron/
     reminders/
       route.ts
+  push/
+    subscribe/
+      route.ts
+    unsubscribe/
+      route.ts
+  reports/
+    quarterly/
+      [kidId]/
+        route.ts
+  schedule/
+    today/
+      route.ts
+dashboard/
+  layout.tsx
+  owner/
+    activity/
+      [id]/
+        edit/
+          page.tsx
+      activity-actions.tsx
+      create/
+        page.tsx
+      import/
+        page.tsx
+      loading.tsx
+      page.tsx
+    dcr/
+      [sessionId]/
+        dcr-form.tsx
+        page.tsx
+      loading.tsx
+      page.tsx
+    guardian/
+      [id]/
+        edit/
+          page.tsx
+      create/
+        page.tsx
+      loading.tsx
+      page.tsx
+    kid/
+      [id]/
+        edit/
+          page.tsx
+      create/
+        page.tsx
+      loading.tsx
+      page.tsx
+    layout.tsx
+    loading.tsx
+    page.tsx
+    reports/
+      daily/
+        [sessionId]/
+          page.tsx
+          report-client.tsx
+        loading.tsx
+        page.tsx
+      monthly/
+        [kidId]/
+          [month]/
+            page.tsx
+            report-client.tsx
+        loading.tsx
+        page.tsx
+      quarterly/
+        [kidId]/
+          page.tsx
+          report-client.tsx
+        loading.tsx
+        page.tsx
+    schedule/
+      [termId]/
+        page.tsx
+        session-schedule-editor.tsx
+      loading.tsx
+      page.tsx
+    session/
+      [id]/
+        edit/
+          page.tsx
+      create/
+        page.tsx
+      generate/
+        page.tsx
+      loading.tsx
+      page.tsx
+    settings/
+      layout.tsx
+      loading.tsx
+      page.tsx
+    term/
+      [id]/
+        cohort/
+          page.tsx
+        edit/
+          page.tsx
+      create/
+        page.tsx
+      loading.tsx
+      page.tsx
+  teacher/
+    capture/
+      [sessionId]/
+        capture-roster.tsx
+        page.tsx
+      _client.tsx
+      actions.ts
+      page.tsx
+    layout.tsx
+    page.tsx
+favicon.ico
+globals.css
 layout.tsx
+page.tsx
 robots.ts
+sitemap.ts
 ```
