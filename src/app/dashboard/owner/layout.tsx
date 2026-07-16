@@ -1,6 +1,5 @@
+import { AppSidebar } from '@/components/layout/app-sidebar';
 import { LogoutButtonClient } from '@/components/layout/logout-button';
-import { MobileNavSheet } from '@/components/layout/mobile-nav-sheet';
-import { OwnerSidebar } from '@/components/layout/owner-sidebar';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function OwnerLayout({
@@ -10,12 +9,11 @@ export default function OwnerLayout({
 }) {
   return (
     <>
-      <OwnerSidebar />
+      <AppSidebar />
       <SidebarInset>
         {/* Top bar */}
         <header className="sticky top-0 z-10 flex items-center gap-2 border-b border bg-card px-4 py-2">
-          <SidebarTrigger className="hidden md:flex" />
-          <MobileNavSheet />
+          <SidebarTrigger />
           <div className="ml-auto flex items-center gap-2">
             <LogoutButtonClient />
           </div>

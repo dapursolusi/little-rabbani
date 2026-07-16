@@ -148,7 +148,7 @@ const navGroups: SidebarNavItem[] = [
   },
 ];
 
-export function OwnerSidebar() {
+export function AppSidebar() {
   const pathname = usePathname();
 
   return (
@@ -163,7 +163,7 @@ export function OwnerSidebar() {
       </SidebarHeader>
       <SidebarContent className="space-y-1 px-2">
         {navGroups.map((group) => (
-          <SidebarGroup key={group.slug} className="p-0">
+          <SidebarGroup key={group.slug} className="md:p-0">
             {group.label && (
               <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
             )}
@@ -176,7 +176,12 @@ export function OwnerSidebar() {
                     render={<SidebarMenuItem />}
                   >
                     <CollapsibleTrigger
-                      render={<SidebarMenuButton tooltip={group.title} />}
+                      render={
+                        <SidebarMenuButton
+                          tooltip={group.title}
+                          className="max-md:h-12"
+                        />
+                      }
                     >
                       {group.icon && (
                         <HugeiconsIcon icon={group.icon as IconSvgElement} />
@@ -197,6 +202,7 @@ export function OwnerSidebar() {
                               <SidebarMenuSubButton
                                 render={<Link href={item.href} />}
                                 isActive={isActive}
+                                className="max-md:h-11"
                               >
                                 <HugeiconsIcon
                                   icon={item.icon as IconSvgElement}
@@ -215,6 +221,7 @@ export function OwnerSidebar() {
                     <SidebarMenuButton
                       render={<Link href={group.href} />}
                       tooltip={group.title}
+                      className="max-md:h-11"
                     >
                       {group.icon && (
                         <HugeiconsIcon icon={group.icon as IconSvgElement} />
