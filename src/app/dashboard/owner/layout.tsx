@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 
+import { AppSidebar } from '@/components/layout/app-sidebar';
 import { LogoutButtonClient } from '@/components/layout/logout-button';
-import { AppSidebar } from '@/components/layout/sidebar/app-sidebar';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 
 import { auth } from '@/lib/auth';

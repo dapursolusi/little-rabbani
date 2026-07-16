@@ -47,7 +47,8 @@ import {
   SidebarSeparator,
 } from '@/components/ui/sidebar';
 
-import { NavUser } from './nav-user';
+import { NavUser } from './sidebar/nav-user';
+import { TeamSwitcher } from './sidebar/team-switcher';
 
 type BaseNavItem = {
   slug: string;
@@ -74,6 +75,13 @@ type ParentNavItem = BaseNavItem & {
 
 export type SidebarNavItem = LeafNavItem | ParentNavItem;
 
+const teams = [
+  {
+    name: 'Little Rabbani',
+    logo: DashboardSquare01Icon,
+    plan: 'Owner',
+  },
+];
 const navGroups: SidebarNavItem[] = [
   {
     slug: 'dashboard',
@@ -162,13 +170,8 @@ export function AppSidebar({
 
   return (
     <Sidebar variant="sidebar" collapsible="icon" side="left">
-      <SidebarHeader className="px-4 py-3">
-        <Link
-          href="/dashboard/owner"
-          className="text-lg font-semibold text-sidebar-foreground"
-        >
-          Little Rabbani
-        </Link>
+      <SidebarHeader>
+        <TeamSwitcher teams={teams} />
       </SidebarHeader>
       <SidebarContent className="space-y-1 px-2">
         {navGroups.map((group) => (
