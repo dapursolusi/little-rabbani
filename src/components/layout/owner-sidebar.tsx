@@ -1,22 +1,28 @@
 'use client';
 
+import React from 'react';
+
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 import {
   Calendar01Icon,
   CalendarCheckIcon,
+  ChevronRightIcon,
   ClipboardIcon,
   Clock01Icon,
   DashboardSquare01Icon,
+  DatabaseSettingIcon,
   File01Icon,
   File02Icon,
   Folder01Icon,
+  NoteIcon,
   Settings01Icon,
   UserGroup02Icon,
   UserMultipleIcon,
+  WorkIcon,
 } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 
 import { LogoutButtonClient } from '@/components/layout/logout-button';
 import {
@@ -29,82 +35,116 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
+  SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 
-const navGroups = [
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '../ui/collapsible';
+
+type BaseNavItem = {
+  slug: string;
+  title: string;
+  label?: string;
+  icon?: React.ReactNode | IconSvgElement;
+};
+
+type LeafNavItem = BaseNavItem & {
+  href: string;
+  isActive?: never;
+  subItems?: never; // Explicitly forbids subItems when href exists
+};
+
+type ParentNavItem = BaseNavItem & {
+  href?: never; // Explicitly forbids href when subItems exist
+  isActive?: boolean;
+  subItems: {
+    title: string;
+    href: string;
+    icon?: React.ReactNode | IconSvgElement;
+  }[];
+};
+
+export type SidebarNavItem = LeafNavItem | ParentNavItem;
+
+const navGroups: SidebarNavItem[] = [
   {
-    label: 'Ringkasan',
-    items: [
-      {
-        label: 'Dashboard',
-        href: '/dashboard/owner',
-        icon: DashboardSquare01Icon,
-      },
-    ],
+    slug: 'dashboard',
+    label: '',
+    title: 'Dashboard',
+    href: '/dashboard/owner',
+    icon: DashboardSquare01Icon,
   },
   {
-    label: 'Data Master',
-    items: [
-      { label: 'Murid', href: '/dashboard/owner/kid', icon: UserMultipleIcon },
+    slug: 'master-data',
+    title: 'Master Data',
+    isActive: true,
+    icon: DatabaseSettingIcon,
+    subItems: [
+      { title: 'Murid', href: '/dashboard/owner/kid', icon: UserMultipleIcon },
       {
-        label: 'Wali Murid',
+        title: 'Wali Murid',
         href: '/dashboard/owner/guardian',
         icon: UserGroup02Icon,
       },
-      { label: 'Term', href: '/dashboard/owner/term', icon: Calendar01Icon },
+      { title: 'Term', href: '/dashboard/owner/term', icon: Calendar01Icon },
       {
-        label: 'Sesi',
+        title: 'Sesi',
         href: '/dashboard/owner/session',
         icon: CalendarCheckIcon,
       },
       {
-        label: 'Aktivitas',
+        title: 'Aktivitas',
         href: '/dashboard/owner/activity',
         icon: Folder01Icon,
       },
     ],
   },
   {
-    label: 'Operasional',
-    items: [
-      { label: 'Jadwal', href: '/dashboard/owner/schedule', icon: Clock01Icon },
+    slug: 'operational',
+    title: 'Operasional',
+    icon: WorkIcon,
+    subItems: [
+      { title: 'Jadwal', href: '/dashboard/owner/schedule', icon: Clock01Icon },
       {
-        label: 'DCR / Observasi Kelas',
+        title: 'DCR / Observasi Kelas',
         href: '/dashboard/owner/dcr',
         icon: ClipboardIcon,
       },
     ],
   },
   {
-    label: 'Laporan',
-    items: [
+    slug: 'reports',
+    title: 'Laporan',
+    icon: NoteIcon,
+    subItems: [
       {
-        label: 'Laporan Wali Murid',
+        title: 'Laporan Wali Murid',
         href: '/dashboard/owner/reports/daily',
         icon: File02Icon,
       },
       {
-        label: 'Laporan Bulanan',
+        title: 'Laporan Bulanan',
         href: '/dashboard/owner/reports/monthly',
         icon: File01Icon,
       },
       {
-        label: 'Laporan Triwulanan',
+        title: 'Laporan Triwulanan',
         href: '/dashboard/owner/reports/quarterly',
         icon: File01Icon,
       },
     ],
   },
   {
+    slug: 'system',
     label: 'Sistem',
-    items: [
-      {
-        label: 'Pengaturan',
-        href: '/dashboard/owner/settings',
-        icon: Settings01Icon,
-      },
-    ],
+    title: 'Pengaturan',
+    href: '/dashboard/owner/settings',
+    icon: Settings01Icon,
   },
 ];
 
@@ -112,7 +152,7 @@ export function OwnerSidebar() {
   const pathname = usePathname();
 
   return (
-    <Sidebar variant="sidebar" collapsible="offcanvas" side="left">
+    <Sidebar variant="sidebar" collapsible="icon" side="left">
       <SidebarHeader className="px-4 py-3">
         <Link
           href="/dashboard/owner"
@@ -121,30 +161,70 @@ export function OwnerSidebar() {
           Little Rabbani
         </Link>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="space-y-1 px-2">
         {navGroups.map((group) => (
-          <SidebarGroup key={group.label}>
-            <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+          <SidebarGroup key={group.slug} className="p-0">
+            {group.label && (
+              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+            )}
             <SidebarGroupContent>
               <SidebarMenu>
-                {group.items.map((item) => {
-                  const isActive = pathname === item.href;
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        render={<Link href={item.href} />}
-                        isActive={isActive}
-                        tooltip={item.label}
-                      >
-                        <HugeiconsIcon icon={item.icon} strokeWidth={2} />
-                        <span>{item.label}</span>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+                {group.subItems ? (
+                  <Collapsible
+                    defaultOpen={group.isActive}
+                    className="group/collapsible"
+                    render={<SidebarMenuItem />}
+                  >
+                    <CollapsibleTrigger
+                      render={<SidebarMenuButton tooltip={group.title} />}
+                    >
+                      {group.icon && (
+                        <HugeiconsIcon icon={group.icon as IconSvgElement} />
+                      )}
+                      <span>{group.title}</span>
+                      <HugeiconsIcon
+                        icon={ChevronRightIcon}
+                        strokeWidth={2}
+                        className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90"
+                      />
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                        {group.subItems?.map((item) => {
+                          const isActive = pathname === item.href;
+                          return (
+                            <SidebarMenuSubItem key={item.href}>
+                              <SidebarMenuSubButton
+                                render={<Link href={item.href} />}
+                                isActive={isActive}
+                              >
+                                <HugeiconsIcon
+                                  icon={item.icon as IconSvgElement}
+                                  strokeWidth={2}
+                                />
+                                <span>{item.title}</span>
+                              </SidebarMenuSubButton>
+                            </SidebarMenuSubItem>
+                          );
+                        })}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuItem>
+                    <SidebarMenuButton
+                      render={<Link href={group.href} />}
+                      tooltip={group.title}
+                    >
+                      {group.icon && (
+                        <HugeiconsIcon icon={group.icon as IconSvgElement} />
+                      )}
+                      <span>{group.title}</span>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                )}
               </SidebarMenu>
             </SidebarGroupContent>
-            <SidebarSeparator />
           </SidebarGroup>
         ))}
       </SidebarContent>
