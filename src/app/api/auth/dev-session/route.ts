@@ -89,30 +89,23 @@ export async function POST(request: Request) {
   }
 
   // --- Set BetterAuth-compatible signed cookie ---
-  // BetterAuth defaults to "better-auth.session_token" cookie name
-  // Hono's setSignedCookie signs value as: value.HMAC_SHA256(value), then URI-encodes
-  // We replicate that here so getSession() can read and verify the cookie.
-  const cookieName = 'better-auth.session_token';
-
-  // HMAC-SHA256 sign the session token (matching Hono's cookie signing)
-  const encoder = new TextEncoder();
-  const secretKey = await crypto.subtle.importKey(
-    'raw',
-    encoder.encode(process.env.BETTER_AUTH_SECRET!),
-    { name: 'HMAC', hash: 'SHA-256' },
-    false,
-    ['sign']
+  // On Vercel (HTTPS), BetterAuth uses __Secure-better-auth.session_token
+  // and sets the Secure flag. We must match that exactly.
+  const isVercel = !!(
+    process.env.VERCEL ||
+    process.env.NEXT_PUBLIC_APP_URL?.startsWith('https://')
   );
-  const signature = await crypto.subtle.sign(
-    'HMAC',
-    secretKey,
-    encoder.encode(sessionToken)
-  );
-  const base64Sig = btoa(String.fromCharCode(...new Uint8Array(signature)));
+  const cookieName = isVercel
+    ? '__Secure-better-auth.session_token'
+    : 'better-auth.session_token';
 
-  // Build the full Set-Cookie header matching Hono's serializeSigned output:
-  //   name=encodeURIComponent(value.signature); Path=/; HttpOnly; SameSite=Lax; Max-Age=...
-  const cookieValue = encodeURIComponent(`${sessionToken}.${base64Sig}`);
+  // HMAC-SHA256 sign the session token (matching better-call's signCookieValue)
+  const hmac = crypto
+    .createHmac('sha256', process.env.BETTER_AUTH_SECRET!)
+    .update(sessionToken)
+    .digest('base64');
+
+  const cookieValue = encodeURIComponent(`${sessionToken}.${hmac}`);
   const maxAgeSeconds = 7 * 24 * 60 * 60;
 
   const response = NextResponse.json({
@@ -131,7 +124,9 @@ export async function POST(request: Request) {
 
   response.headers.append(
     'Set-Cookie',
-    `${cookieName}=${cookieValue}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${maxAgeSeconds}`
+    `${cookieName}=${cookieValue}; Path=/; HttpOnly; ${
+      isVercel ? 'Secure; ' : ''
+    }SameSite=Lax; Max-Age=${maxAgeSeconds}`
   );
 
   return response;
