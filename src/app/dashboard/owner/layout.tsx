@@ -1,15 +1,22 @@
-import { AppSidebar } from '@/components/layout/app-sidebar';
+import { headers } from 'next/headers';
+
 import { LogoutButtonClient } from '@/components/layout/logout-button';
+import { AppSidebar } from '@/components/layout/sidebar/app-sidebar';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
 
-export default function OwnerLayout({
+import { auth } from '@/lib/auth';
+
+export default async function OwnerLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const session = await auth.api.getSession({
+    headers: await headers(),
+  });
   return (
     <>
-      <AppSidebar />
+      <AppSidebar user={session?.user} />
       <SidebarInset>
         {/* Top bar */}
         <header className="sticky top-0 z-10 flex items-center gap-2 border-b border bg-card px-4 py-2">

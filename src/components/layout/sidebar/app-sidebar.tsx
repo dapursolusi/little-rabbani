@@ -5,6 +5,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
+import { User } from '@/features/auth/types';
 import {
   Calendar01Icon,
   CalendarCheckIcon,
@@ -24,10 +25,15 @@ import {
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 
-import { LogoutButtonClient } from '@/components/layout/logout-button';
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from '@/components/ui/collapsible';
 import {
   Sidebar,
   SidebarContent,
+  SidebarFooter,
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
@@ -38,13 +44,10 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarSeparator,
 } from '@/components/ui/sidebar';
 
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from '../ui/collapsible';
+import { NavUser } from './nav-user';
 
 type BaseNavItem = {
   slug: string;
@@ -148,8 +151,14 @@ const navGroups: SidebarNavItem[] = [
   },
 ];
 
-export function AppSidebar() {
+export function AppSidebar({
+  user,
+}: {
+  user: Pick<User, 'name' | 'email' | 'image'> | undefined;
+}) {
   const pathname = usePathname();
+
+  if (!user) return null;
 
   return (
     <Sidebar variant="sidebar" collapsible="icon" side="left">
@@ -235,9 +244,10 @@ export function AppSidebar() {
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <div className="mt-auto border-t border-sidebar-border p-4">
-        <LogoutButtonClient />
-      </div>
+      <SidebarSeparator className="mx-0" />
+      <SidebarFooter>
+        <NavUser user={user} />
+      </SidebarFooter>
     </Sidebar>
   );
 }
