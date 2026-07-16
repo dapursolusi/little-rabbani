@@ -27,10 +27,6 @@ export default async function OwnerLayout({
             <Separator orientation="vertical" />
             <SidebarBreadcrumb />
           </div>
-
-          <div className="ml-auto flex items-center gap-2">
-            <LogoutButtonClient />
-          </div>
         </header>
         {/* Page content */}
         <main className="flex-1 bg-brand-canvas">{children}</main>
