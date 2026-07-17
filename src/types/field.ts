@@ -1,21 +1,49 @@
-import { HTMLInputTypeAttribute } from 'react';
+// import { HTMLInputTypeAttribute } from 'react'; -- kept for reference: if React adds new input types, mirror them here
 
-export interface FormField {
+export type FormFieldBase = {
   name: string;
   label: string;
-  type: CustomHTMLInputType;
   className?: string;
   placeholder?: string;
   required?: boolean;
   description?: string;
-}
+};
 
-export type CustomHTMLInputType = 'select' | StrictHTMLInputType;
+export type FormField = FormFieldBase & CustomHTMLInputType;
 
-export type StrictHTMLInputType = HTMLInputTypeAttribute extends infer T
-  ? T extends string
-    ? string extends T
-      ? never
-      : T
-    : never
-  : never;
+export type CustomHTMLInputType =
+  CustomHTMLInputTypeBasic | CustomHTMLInputTypeSelect;
+
+export type CustomHTMLInputTypeSelect = {
+  type: 'select';
+  selectOptions: { value: string; label: string }[];
+};
+
+export type CustomHTMLInputTypeBasic = {
+  type: StrictHTMLInputType;
+  selectOptions?: never;
+};
+
+export type StrictHTMLInputType =
+  | 'button'
+  | 'checkbox'
+  | 'color'
+  | 'date'
+  | 'datetime-local'
+  | 'email'
+  | 'file'
+  | 'hidden'
+  | 'image'
+  | 'month'
+  | 'number'
+  | 'password'
+  | 'radio'
+  | 'range'
+  | 'reset'
+  | 'search'
+  | 'submit'
+  | 'tel'
+  | 'text'
+  | 'time'
+  | 'url'
+  | 'week';

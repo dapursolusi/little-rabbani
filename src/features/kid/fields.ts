@@ -22,7 +22,12 @@ export const kidFields: FormField[] = [
   {
     name: 'status',
     label: 'Status',
-    type: 'text',
+    type: 'select',
+    selectOptions: [
+      { value: 'waiting', label: 'Menunggu' },
+      { value: 'enrolled', label: 'Terdaftar' },
+      { value: 'alumni', label: 'Alumni' },
+    ],
   },
   {
     name: 'enrolledTermId',

@@ -9,8 +9,8 @@ import {
   FieldError,
   FieldLabel,
 } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
 
+import InputFieldRenderer from './input-field-renderer';
 import { type SchemaKey, getZodSchema } from './schema-registry';
 
 export interface CreateUpdateFormProps {
@@ -52,16 +52,10 @@ export default function DefaultFormFields({
               <FieldLabel htmlFor={formField.name}>
                 {formField.label ?? 'Default Label'}
               </FieldLabel>
-              <Input
-                {...field}
-                id={field.name}
-                type={formField.type}
-                aria-invalid={fieldState.invalid}
-                placeholder="Enter your name"
-                autoComplete="off"
-                value={
-                  field.value as string | number | readonly string[] | undefined
-                }
+              <InputFieldRenderer
+                fieldConfig={formField}
+                field={field}
+                fieldState={fieldState}
               />
               <FieldDescription></FieldDescription>
               {fieldState.error && <FieldError errors={[fieldState.error]} />}
