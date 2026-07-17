@@ -1,36 +1,24 @@
 import { expect, test } from '@playwright/test';
 
 test.describe('Homepage', () => {
-  test('loads successfully and displays branding', async ({ page }) => {
+  test('redirects unauthenticated users to login', async ({ page }) => {
     await page.goto('/');
 
-    // Page loads without errors
-    await expect(page).toHaveTitle(/.*/);
-
-    // Next.js logo is present
-    const logo = page.locator('img[alt="Next.js logo"]');
-    await expect(logo).toBeVisible({ timeout: 15_000 });
+    // Unauthenticated users land on the sign-in page
+    await expect(page).toHaveTitle(/Masuk|Little Rabbani/);
+    await expect(page.locator('h1, h2, [class*=logo]')).toContainText(
+      /Little Rabbani/i,
+      { timeout: 15_000 }
+    );
   });
 
-  test('has navigation links to Vercel and Next.js docs', async ({ page }) => {
+  test('shows sign-in with Google option', async ({ page }) => {
     await page.goto('/');
 
-    // "Deploy Now" link exists — use text content directly
-    const deployLink = page.getByRole('link', { name: 'Deploy Now' });
-    await expect(deployLink).toBeVisible({ timeout: 15_000 });
-    await expect(deployLink).toHaveAttribute('href', /vercel\.com/);
-
-    // "Documentation" link exists
-    const docsLink = page.getByRole('link', { name: 'Documentation' });
-    await expect(docsLink).toBeVisible({ timeout: 15_000 });
-    await expect(docsLink).toHaveAttribute('href', /nextjs\.org/);
-  });
-
-  test('displays the get-started message', async ({ page }) => {
-    await page.goto('/');
-
-    await expect(page.locator('h1')).toContainText('get started', {
-      timeout: 15_000,
+    // Google OAuth sign-in button is visible
+    const signInButton = page.getByRole('button', {
+      name: /masuk dengan google/i,
     });
+    await expect(signInButton).toBeVisible({ timeout: 15_000 });
   });
 });
