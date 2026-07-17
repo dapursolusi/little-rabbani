@@ -12,6 +12,7 @@ breadcrumb.tsx
 button.tsx
 card.tsx
 checkbox.tsx
+collapsible.tsx
 dialog.tsx
 dropdown-menu.tsx
 empty.tsx
@@ -63,8 +64,11 @@ term-form.tsx
 ## Layout
 
 ```
+app-sidebar.tsx
 logout-button.tsx
-mobile-nav-sheet.tsx
-owner-sidebar.tsx
+sidebar/
+  breadcrumb.tsx
+  nav-user.tsx
+  team-switcher.tsx
 teacher-tabs.tsx
 ```

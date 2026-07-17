@@ -1,7 +1,6 @@
 import { headers } from 'next/headers';
 
 import { AppSidebar } from '@/components/layout/app-sidebar';
-import { LogoutButtonClient } from '@/components/layout/logout-button';
 import { SidebarBreadcrumb } from '@/components/layout/sidebar/breadcrumb';
 import { Separator } from '@/components/ui/separator';
 import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
