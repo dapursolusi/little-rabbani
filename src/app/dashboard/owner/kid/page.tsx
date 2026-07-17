@@ -1,5 +1,6 @@
 import { getKids } from '@/features/kid/actions';
 import { kidColumns } from '@/features/kid/components/columns';
+import { kidFields } from '@/features/kid/fields';
 
 import { DataTable } from '@/components/shared/table/data-table';
 
@@ -39,7 +40,20 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
         <DataTable
           columns={kidColumns}
           data={kids}
-          createButton="/dashboard/owner/kid/create"
+          meta={{
+            label: metadata.title,
+          }}
+          form={{
+            schemaKey: 'kid',
+            initialData: {
+              name: '',
+              dob: '',
+              guardianId: '',
+              status: 'enrolled' as const,
+              enrolledTermId: '',
+            },
+            formFields: kidFields,
+          }}
         />
       </div>
     </div>

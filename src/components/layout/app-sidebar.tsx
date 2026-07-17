@@ -96,12 +96,12 @@ const navGroups: SidebarNavItem[] = [
     isActive: true,
     icon: DatabaseSettingIcon,
     subItems: [
-      { title: 'Murid', href: '/dashboard/owner/kid', icon: UserMultipleIcon },
       {
         title: 'Wali Murid',
         href: '/dashboard/owner/guardian',
         icon: UserGroup02Icon,
       },
+      { title: 'Murid', href: '/dashboard/owner/kid', icon: UserMultipleIcon },
       { title: 'Term', href: '/dashboard/owner/term', icon: Calendar01Icon },
       {
         title: 'Sesi',

@@ -2,10 +2,7 @@
 
 import * as React from 'react';
 
-import Link from 'next/link';
-
 import { Add02Icon } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -19,7 +16,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
-import { buttonVariants } from '@/components/ui/button';
+// Import-time side-effect: registers built-in filter types in the registry
+
 import { Separator } from '@/components/ui/separator';
 import {
   Table,
@@ -30,15 +28,14 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { cn } from '@/lib/utils';
-
-// Import-time side-effect: registers built-in filter types in the registry
 import { EmptyState } from '../empty-state';
+import { Modal } from '../modal';
 import DataTableColumnVisibility from './data-table-column-visibility';
 import { DataTableFilter } from './data-table-filter';
 import { DataTableMobileView } from './data-table-mobile-view';
 import { DataTablePagination } from './data-table-pagination';
 import DataTableSearchBar from './data-table-search-bar';
+import DefaultFormFields, { CreateUpdateFormProps } from './default-form-field';
 import './filters/builtins';
 import { getFilter } from './filters/registry';
 import { type TColumnFilter, isRegistryFilter } from './filters/types';
@@ -51,13 +48,18 @@ export const SortingStateContext = React.createContext<SortingState>([]);
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
-  createButton?: React.ReactNode | string;
+  meta: {
+    domain?: string;
+    label: string;
+  };
+  form: CreateUpdateFormProps;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
-  createButton,
+  meta,
+  form,
 }: DataTableProps<TData, TValue>) {
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
@@ -216,17 +218,11 @@ export function DataTable<TData, TValue>({
               table={table}
               columnVisibility={columnVisibility}
             />
-            {createButton && typeof createButton === 'string' ? (
-              <Link
-                href={createButton as string}
-                className={cn(buttonVariants({ variant: 'default' }))}
-              >
-                <HugeiconsIcon icon={Add02Icon} />
-                Tambah Murid
-              </Link>
-            ) : (
-              <>{createButton}</>
-            )}
+            <Modal
+              title="Tambah"
+              trigger={{ icon: Add02Icon, text: `Tambah ${meta.label}` }}
+              content={<DefaultFormFields {...form} />}
+            />
           </div>
         </div>
         <DataTableFilter.Bar />

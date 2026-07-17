@@ -7,8 +7,8 @@ const KidFormSchema = z.object({
   status: z
     .enum(['waiting', 'enrolled', 'alumni'])
     .optional()
-    .default('waiting'),
-  enrolledTermId: z.string().nullable().optional(),
+    .default('enrolled'),
+  enrolledTermId: z.string().nullish(),
 });
 
 export { KidFormSchema };

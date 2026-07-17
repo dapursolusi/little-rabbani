@@ -45,7 +45,7 @@ export default async function GuardianListPage({
         <DataTable
           columns={guardianColumns}
           data={guardians}
-          createButton="/dashboard/owner/kid/create"
+          meta={{ label: metadata.title }}
         />
       </div>
     </section>
