@@ -29,13 +29,15 @@ import {
 } from '@/components/ui/table';
 
 import { EmptyState } from '../empty-state';
+import DefaultFormFields, {
+  CreateUpdateFormProps,
+} from '../form/default-form-field';
 import { Modal } from '../modal';
 import DataTableColumnVisibility from './data-table-column-visibility';
 import { DataTableFilter } from './data-table-filter';
 import { DataTableMobileView } from './data-table-mobile-view';
 import { DataTablePagination } from './data-table-pagination';
 import DataTableSearchBar from './data-table-search-bar';
-import DefaultFormFields, { CreateUpdateFormProps } from './default-form-field';
 import './filters/builtins';
 import { getFilter } from './filters/registry';
 import { type TColumnFilter, isRegistryFilter } from './filters/types';

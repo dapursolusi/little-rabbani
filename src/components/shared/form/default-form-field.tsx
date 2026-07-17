@@ -42,29 +42,29 @@ export default function DefaultFormFields({
 
   return (
     <form onSubmit={form.handleSubmit(onSubmit)}>
-      {formFields.map((field) => (
+      {formFields.map((formField) => (
         <Controller
-          key={field.name}
-          name={field.name as Path<TForm>}
+          key={formField.name}
+          name={formField.name as Path<TForm>}
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={field.name}></FieldLabel>
+              <FieldLabel htmlFor={formField.name}>
+                {formField.label ?? 'Default Label'}
+              </FieldLabel>
               <Input
+                {...field}
                 id={field.name}
-                value={typeof field.value === 'string' ? field.value : ''}
-                onChange={field.onChange}
-                onBlur={field.onBlur}
-                name={field.name}
-                ref={field.ref}
+                type={formField.type}
                 aria-invalid={fieldState.invalid}
                 placeholder="Enter your name"
                 autoComplete="off"
+                value={
+                  field.value as string | number | readonly string[] | undefined
+                }
               />
               <FieldDescription></FieldDescription>
-              {fieldState.error && (
-                <FieldError errors={[fieldState.error]}></FieldError>
-              )}
+              {fieldState.error && <FieldError errors={[fieldState.error]} />}
             </Field>
           )}
         ></Controller>
