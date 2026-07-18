@@ -1,9 +1,12 @@
+import { getGuardians } from '@/features/guardian/actions';
 import { getKids } from '@/features/kid/actions';
 import { kidColumns } from '@/features/kid/components/columns';
 import { kidFields } from '@/features/kid/fields';
+import { Kid } from '@/features/kid/types';
 
 import { DataTable } from '@/components/shared/table/data-table';
 
+import { getTerms } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Murid' };
@@ -23,7 +26,10 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
     );
   }
 
-  const kids = result.data;
+  const kids = result.data as unknown as Kid[];
+  const guardians = await getGuardians();
+
+  const terms = await getTerms();
 
   return (
     <div className="p-4 sm:p-6">
@@ -52,7 +58,10 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
               status: 'enrolled' as const,
               enrolledTermId: '',
             },
-            formFields: kidFields,
+            formFields: kidFields({
+              guardians: guardians?.data || [],
+              enrolledTerms: terms?.data || [],
+            }),
           }}
         />
       </div>

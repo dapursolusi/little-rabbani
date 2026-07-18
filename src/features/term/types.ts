@@ -1,9 +1,11 @@
-export interface Term {
-  id: string;
+import { BaseDataResponse } from '@/types';
+
+import { TermSession } from '../session/types';
+
+export interface Term extends BaseDataResponse {
   name: string;
-  createdAt: Date;
-  updatedAt: Date;
   startDate: string;
   endDate: string;
   isActive: boolean;
+  sessions: TermSession[];
 }
