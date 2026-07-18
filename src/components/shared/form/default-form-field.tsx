@@ -1,8 +1,11 @@
 import { type ReactNode, useState } from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import { FormField } from '@/types/field';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, Path, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import z from 'zod';
 
 import {
@@ -21,6 +24,8 @@ export interface CreateUpdateFormProps {
   formFields: FormField[];
   onSubmit?: (data: Record<string, unknown>) => unknown | Promise<unknown>;
   children?: ReactNode | ((ctx: { isSubmitting: boolean }) => ReactNode);
+  meta?: { label: string; domain?: string };
+  onSuccess?: () => void;
 }
 
 export default function DefaultFormFields({
@@ -29,7 +34,10 @@ export default function DefaultFormFields({
   formFields,
   onSubmit: onSubmitProp,
   children,
+  meta,
+  onSuccess,
 }: CreateUpdateFormProps) {
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const schema = schemaKey ? getZodSchema(schemaKey) : z.object({});
@@ -48,7 +56,19 @@ export default function DefaultFormFields({
     if (onSubmitProp) {
       setIsSubmitting(true);
       try {
-        await onSubmitProp(data);
+        const result = await onSubmitProp(data);
+        if (result) {
+          const r = result as { success: boolean; error?: string };
+          if (r.success) {
+            toast.success(`${meta?.label ?? 'Data'} berhasil ditambahkan`);
+            router.refresh();
+            onSuccess?.();
+          } else {
+            toast.error(r.error ?? 'Gagal menyimpan data');
+          }
+        }
+      } catch {
+        toast.error(`${meta?.label ?? 'Data'} gagal disimpan`);
       } finally {
         setIsSubmitting(false);
       }

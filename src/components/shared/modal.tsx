@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { type Dispatch, type ReactNode, type SetStateAction } from 'react';
 
 import Link from 'next/link';
 
@@ -27,6 +27,8 @@ interface ModalProps {
   };
   content?: ReactNode;
   footer?: ReactNode;
+  open?: boolean;
+  onOpenChange?: Dispatch<SetStateAction<boolean>>;
 }
 
 export function Modal({
@@ -35,9 +37,11 @@ export function Modal({
   trigger,
   content,
   footer,
+  open,
+  onOpenChange,
 }: ModalProps) {
   return (
-    <Dialog>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger
         render={
           trigger?.href ? (

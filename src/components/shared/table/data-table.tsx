@@ -2,8 +2,6 @@
 
 import * as React from 'react';
 
-import { useRouter } from 'next/navigation';
-
 import { Add02Icon } from '@hugeicons/core-free-icons';
 import {
   ColumnDef,
@@ -17,7 +15,6 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
-import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { DialogClose, DialogFooter } from '@/components/ui/dialog';
@@ -39,6 +36,7 @@ import DefaultFormFields, {
 } from '../form/default-form-field';
 import { Modal } from '../modal';
 import DataTableColumnVisibility from './data-table-column-visibility';
+import { EditFormContext } from './data-table-context';
 import { DataTableFilter } from './data-table-filter';
 import { DataTableMobileView } from './data-table-mobile-view';
 import { DataTablePagination } from './data-table-pagination';
@@ -68,7 +66,7 @@ export function DataTable<TData, TValue>({
   meta,
   form,
 }: DataTableProps<TData, TValue>) {
-  const router = useRouter();
+  const [modalOpen, setModalOpen] = React.useState(false);
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
@@ -207,115 +205,113 @@ export function DataTable<TData, TValue>({
   }
 
   return (
-    <SortingStateContext.Provider value={sorting}>
-      <DataTableFilter
-        table={table}
-        columns={columns}
-        columnFilters={columnFilters}
-        onColumnFiltersChange={setColumnFilters}
-      >
-        <div className="my-2 flex max-md:flex-col items-center gap-2 justify-between">
-          <DataTableSearchBar
-            table={table}
-            globalFilter={globalFilter}
-            placeholder={searchPlaceholder}
-          />
-          <div className="flex items-center gap-2 max-md:w-full max-md:justify-between">
-            <DataTableFilter.Button />
-            <DataTableColumnVisibility
+    <EditFormContext.Provider
+      value={{ schemaKey: form.schemaKey, formFields: form.formFields }}
+    >
+      <SortingStateContext.Provider value={sorting}>
+        <DataTableFilter
+          table={table}
+          columns={columns}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={setColumnFilters}
+        >
+          <div className="my-2 flex max-md:flex-col items-center gap-2 justify-between">
+            <DataTableSearchBar
               table={table}
-              columnVisibility={columnVisibility}
+              globalFilter={globalFilter}
+              placeholder={searchPlaceholder}
             />
-            <Modal
-              title={`Tambah ${meta.label}`}
-              trigger={{ icon: Add02Icon, text: `Tambah ${meta.label}` }}
-              content={
-                <DefaultFormFields
-                  {...form}
-                  onSubmit={async (data) => {
-                    const result = await form.onSubmit?.(data);
-                    if (result) {
-                      const r = result as { success: boolean; error?: string };
-                      if (r.success) {
-                        toast.success(`${meta.label} berhasil ditambahkan`);
-                        router.refresh();
-                      } else {
-                        toast.error(r.error ?? 'Gagal menyimpan data');
-                      }
-                    }
-                  }}
-                >
-                  <DialogFooter>
-                    <DialogClose
-                      render={<Button variant="outline">Batal</Button>}
-                    />
-                    <Button type="submit">Simpan</Button>
-                  </DialogFooter>
-                </DefaultFormFields>
-              }
-            />
+            <div className="flex items-center gap-2 max-md:w-full max-md:justify-between">
+              <DataTableFilter.Button />
+              <DataTableColumnVisibility
+                table={table}
+                columnVisibility={columnVisibility}
+              />
+              <Modal
+                title={`Tambah ${meta.label}`}
+                trigger={{ icon: Add02Icon, text: `Tambah ${meta.label}` }}
+                open={modalOpen}
+                onOpenChange={setModalOpen}
+                content={
+                  <DefaultFormFields
+                    {...form}
+                    meta={meta}
+                    onSubmit={(data) => form.onSubmit?.(data)}
+                    onSuccess={() => setModalOpen(false)}
+                  >
+                    <DialogFooter>
+                      <DialogClose
+                        render={<Button variant="outline">Batal</Button>}
+                      />
+                      <Button type="submit">Simpan</Button>
+                    </DialogFooter>
+                  </DefaultFormFields>
+                }
+              />
+            </div>
           </div>
-        </div>
-        <DataTableFilter.Bar />
-      </DataTableFilter>
-      <div className="md:bg-table-body-bg overflow-hidden rounded-lg border-2! border-black/30">
-        <div className="hidden overflow-x-auto md:block">
-          <Table>
-            <TableHeader>
-              {table.getHeaderGroups().map((headerGroup) => (
-                <TableRow key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => {
-                    return (
-                      <TableHead
-                        key={header.id}
-                        className="bg-table-header-bg text-table-header-fg text-sm font-semibold whitespace-nowrap"
-                      >
-                        {header.isPlaceholder
-                          ? null
-                          : flexRender(
-                              header.column.columnDef.header,
-                              header.getContext()
-                            )}
-                      </TableHead>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHeader>
-            <TableBody>
-              {table.getRowModel().rows?.length ? (
-                table.getRowModel().rows.map((row) => (
-                  <TableRow
-                    key={row.id}
-                    data-state={row.getIsSelected() && 'selected'}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <TableCell key={cell.id}>
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext()
-                        )}
-                      </TableCell>
-                    ))}
+          <DataTableFilter.Bar />
+        </DataTableFilter>
+        <div className="md:bg-table-body-bg overflow-hidden rounded-lg border-2! border-black/30">
+          <div className="hidden overflow-x-auto md:block">
+            <Table>
+              <TableHeader>
+                {table.getHeaderGroups().map((headerGroup) => (
+                  <TableRow key={headerGroup.id}>
+                    {headerGroup.headers.map((header) => {
+                      return (
+                        <TableHead
+                          key={header.id}
+                          className="bg-table-header-bg text-table-header-fg text-sm font-semibold whitespace-nowrap"
+                        >
+                          {header.isPlaceholder
+                            ? null
+                            : flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
+                              )}
+                        </TableHead>
+                      );
+                    })}
                   </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell
-                    colSpan={columns.length}
-                    className="h-24 text-center"
-                  >
-                    Tidak ada data ditemukan. Coba cari dengan kata kunci lain.
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
+                ))}
+              </TableHeader>
+              <TableBody>
+                {table.getRowModel().rows?.length ? (
+                  table.getRowModel().rows.map((row) => (
+                    <TableRow
+                      key={row.id}
+                      data-state={row.getIsSelected() && 'selected'}
+                    >
+                      {row.getVisibleCells().map((cell) => (
+                        <TableCell key={cell.id}>
+                          {flexRender(
+                            cell.column.columnDef.cell,
+                            cell.getContext()
+                          )}
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                ) : (
+                  <TableRow>
+                    <TableCell
+                      colSpan={columns.length}
+                      className="h-24 text-center"
+                    >
+                      Tidak ada data ditemukan. Coba cari dengan kata kunci
+                      lain.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          </div>
+          <DataTableMobileView rows={table.getRowModel().rows} />
+          <Separator />
+          <DataTablePagination table={table} pagination={paginationInfo} />
         </div>
-        <DataTableMobileView rows={table.getRowModel().rows} />
-        <Separator />
-        <DataTablePagination table={table} pagination={paginationInfo} />
-      </div>
-    </SortingStateContext.Provider>
+      </SortingStateContext.Provider>
+    </EditFormContext.Provider>
   );
 }
