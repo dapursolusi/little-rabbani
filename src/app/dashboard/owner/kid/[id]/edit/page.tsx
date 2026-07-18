@@ -3,11 +3,11 @@ import { notFound } from 'next/navigation';
 import { getGuardians } from '@/features/guardian/actions';
 import { getKid } from '@/features/kid/actions';
 import { kidFields } from '@/features/kid/fields';
+import { getTerms } from '@/features/term/actions';
 
 import { KidFormWrapper } from '@/components/sections/kid-form-wrapper';
 import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
 
-import { getTerms } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Edit Murid' };

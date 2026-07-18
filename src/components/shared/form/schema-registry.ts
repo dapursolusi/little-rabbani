@@ -1,10 +1,12 @@
 import { GuardianFormSchema } from '@/features/guardian/schema';
 import { KidFormSchema } from '@/features/kid/schema';
+import { TermFormSchema } from '@/features/term/schema';
 import z from 'zod';
 
 const schemas = {
   kid: KidFormSchema,
   guardian: GuardianFormSchema,
+  term: TermFormSchema,
 } as const satisfies Record<string, z.ZodObject<z.ZodRawShape>>;
 
 export type SchemaKey = keyof typeof schemas;

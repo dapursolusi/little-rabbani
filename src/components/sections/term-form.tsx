@@ -4,14 +4,13 @@ import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { createTerm, updateTerm } from '@/features/term/actions';
+import type { TermFormData } from '@/features/term/schema';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-import { createTerm, updateTerm } from '@/lib/actions/term';
-import type { TermFormData } from '@/lib/actions/term';
 
 interface ITermFormProps {
   mode: 'create' | 'edit';

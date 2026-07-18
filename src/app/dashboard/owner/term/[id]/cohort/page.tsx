@@ -1,6 +1,11 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import {
+  getTerm,
+  getTermCohort,
+  getWaitingListKids,
+} from '@/features/term/actions';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
@@ -16,7 +21,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { getTerm, getTermCohort, getWaitingListKids } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Kelola Murid' };

@@ -1,9 +1,9 @@
 import { getGuardians } from '@/features/guardian/actions';
 import { kidFields } from '@/features/kid/fields';
+import { getTerms } from '@/features/term/actions';
 
 import { KidFormWrapper } from '@/components/sections/kid-form-wrapper';
 
-import { getTerms } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Tambah Murid' };

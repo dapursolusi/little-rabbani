@@ -4,14 +4,13 @@ import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { bulkEnrollKids } from '@/features/term/actions';
 import { toast } from 'sonner';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
-
-import { bulkEnrollKids } from '@/lib/actions/term';
 
 interface IWaitingKid {
   id: string;

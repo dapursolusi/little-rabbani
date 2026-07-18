@@ -1,8 +1,10 @@
 import { notFound } from 'next/navigation';
 
-import { TermForm } from '@/components/sections/term-form';
+import { getTerm } from '@/features/term/actions';
 
-import { getTerm } from '@/lib/actions/term';
+import { TermFormWrapper } from '@/components/sections/term-form-wrapper';
+import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
+
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Edit Term' };
@@ -24,13 +26,20 @@ export default async function EditTermPage({ params }: IEditTermPageProps) {
 
   return (
     <div className="p-4 sm:p-6">
+      <PageBreadcrumbs
+        segments={[
+          { label: 'Dashboard', href: '/dashboard/owner' },
+          { label: 'Term', href: '/dashboard/owner/term' },
+          { label: termData.name },
+        ]}
+      />
       <div className="mb-6">
         <h1 className="text-2xl font-semibold text-foreground">Edit Term</h1>
         <p className="mt-1 text-sm text-muted-foreground">Perbarui data term</p>
       </div>
 
       <div className="mx-auto max-w-lg rounded-lg border bg-card p-6">
-        <TermForm
+        <TermFormWrapper
           mode="edit"
           initialData={{
             id: termData.id,

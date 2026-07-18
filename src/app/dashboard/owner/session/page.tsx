@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { getSessions } from '@/features/session/actions';
+import { getTerm } from '@/features/term/actions';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
@@ -17,7 +19,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-import { getSessions, getTerm } from '@/lib/actions/term';
 import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';
@@ -176,7 +177,7 @@ export default async function SessionListPage({
  * Lists all terms so user can pick one to view/edit sessions.
  */
 async function TermSelectorPage() {
-  const { getTerms } = await import('@/lib/actions/term');
+  const { getTerms } = await import('@/features/term/actions');
   const result = await getTerms();
 
   if (!result.success) {

@@ -1,6 +1,6 @@
 'use client';
 
-import { useContext, useState } from 'react';
+import { type ReactNode, useContext, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -25,6 +25,8 @@ interface RowActionsDialogProps {
     data: Record<string, unknown>
   ) => Promise<{ success: boolean; error?: string }>;
   deleteAction: (id: string) => void;
+  /** Extra dropdown menu items rendered between Edit and Hapus. */
+  extendedActions?: ReactNode;
 }
 
 export function RowActionsDialog({
@@ -35,6 +37,7 @@ export function RowActionsDialog({
   initialData,
   updateAction,
   deleteAction,
+  extendedActions,
 }: RowActionsDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -49,6 +52,7 @@ export function RowActionsDialog({
           delete: deleteAction,
         }}
         rowName={rowName}
+        extendedActions={extendedActions}
       />
       <Modal
         title={title}

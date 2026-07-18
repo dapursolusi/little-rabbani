@@ -1,13 +1,13 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 
+import { getSession } from '@/features/session/actions';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
 import { SessionEditForm } from '@/components/sections/session-edit-form';
 import { Card, CardContent } from '@/components/ui/card';
 
-import { getSession } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Edit Sesi' };

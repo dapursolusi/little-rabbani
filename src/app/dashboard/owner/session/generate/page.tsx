@@ -1,12 +1,12 @@
 import Link from 'next/link';
 
+import { getTerm } from '@/features/term/actions';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
 import { SessionGenerateForm } from '@/components/sections/session-generate-form';
 import { buttonVariants } from '@/components/ui/button';
 
-import { getTerm } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';
 
