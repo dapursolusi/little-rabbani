@@ -98,6 +98,14 @@
     "typescript": "6.0.3",
     "vitest": "4.1.10"
   },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "prettier --write"
+    ],
+    "*.{json,md,yaml,yml,css}": [
+      "prettier --write"
+    ]
+  },
   "ignoreScripts": [
     "sharp",
     "unrs-resolver"
