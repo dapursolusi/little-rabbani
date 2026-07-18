@@ -16,6 +16,8 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
+import { Button } from '@/components/ui/button';
+import { DialogClose, DialogFooter } from '@/components/ui/dialog';
 // Import-time side-effect: registers built-in filter types in the registry
 
 import { Separator } from '@/components/ui/separator';
@@ -221,9 +223,18 @@ export function DataTable<TData, TValue>({
               columnVisibility={columnVisibility}
             />
             <Modal
-              title="Tambah"
+              title={`Tambah ${meta.label}`}
               trigger={{ icon: Add02Icon, text: `Tambah ${meta.label}` }}
-              content={<DefaultFormFields {...form} />}
+              content={
+                <DefaultFormFields {...form}>
+                  <DialogFooter>
+                    <DialogClose
+                      render={<Button variant="outline">Batal</Button>}
+                    />
+                    <Button type="submit">Simpan</Button>
+                  </DialogFooter>
+                </DefaultFormFields>
+              }
             />
           </div>
         </div>

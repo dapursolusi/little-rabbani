@@ -1,3 +1,5 @@
+import { type ReactNode, useState } from 'react';
+
 import { FormField } from '@/types/field';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, Path, useForm } from 'react-hook-form';
@@ -17,13 +19,19 @@ export interface CreateUpdateFormProps {
   schemaKey?: SchemaKey;
   initialData: Record<string, unknown>;
   formFields: FormField[];
+  onSubmit?: (data: Record<string, unknown>) => unknown | Promise<unknown>;
+  children?: ReactNode | ((ctx: { isSubmitting: boolean }) => ReactNode);
 }
 
 export default function DefaultFormFields({
   schemaKey,
   initialData,
   formFields,
+  onSubmit: onSubmitProp,
+  children,
 }: CreateUpdateFormProps) {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const schema = schemaKey ? getZodSchema(schemaKey) : z.object({});
   type TForm = z.output<typeof schema>;
 
@@ -36,7 +44,16 @@ export default function DefaultFormFields({
     mode: 'onChange',
   });
 
-  function onSubmit(data: z.output<typeof schema>) {
+  async function onSubmit(data: z.output<typeof schema>) {
+    if (onSubmitProp) {
+      setIsSubmitting(true);
+      try {
+        await onSubmitProp(data);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
     console.warn(data);
   }
 
@@ -63,6 +80,7 @@ export default function DefaultFormFields({
           )}
         ></Controller>
       ))}
+      {typeof children === 'function' ? children({ isSubmitting }) : children}
     </form>
   );
 }
