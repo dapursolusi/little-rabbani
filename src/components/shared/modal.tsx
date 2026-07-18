@@ -15,9 +15,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Field, FieldGroup } from '@/components/ui/field';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 import { cn } from '@/lib/utils';
 
@@ -39,7 +36,7 @@ export function Modal({
   description,
   trigger,
   content,
-  footer,
+  footer: _footer,
 }: ModalProps) {
   return (
     <Dialog>
