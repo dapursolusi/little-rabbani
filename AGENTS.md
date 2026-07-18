@@ -147,6 +147,21 @@ This is a one-time setup per clone. Skip if already indexed.
 - **PII handling:** `src/lib/pii.ts` provides detection (`detectPiiField`) and masking (`maskPiiFields`, `maskPiiValue`) for kid/guardian personal data
 - **Automated PR review:** Factory Droid review configured in `.factory/review.yml` — triggers on PRs
 
+## Form Schema Pattern
+
+Forms use a **schema registry** pattern: each entity's Zod schema is registered in `src/components/shared/form/schema-registry.ts` keyed by name, and `DefaultFormFields` looks it up via `schemaKey` prop. One `as never` cast at the `zodResolver` ↔ `react-hook-form` library seam is accepted — zod v4's internal `$ZodType` variance makes generic passthrough unworkable across 3 library seams. The tradeoff: ~1 cast in a shared component vs. per-entity form components (option 2 if compile-time schema matching matters).
+
+```ts
+// Adding a new form: register schema + key, use schemaKey in page
+// schema-registry.ts
+const schemas = {
+  kid: KidFormSchema,
+  guardian: GuardianFormSchema,
+} as const satisfies Record<string, z.ZodObject<z.ZodRawShape>>;
+```
+
+When to upgrade to per-entity components: when `onSubmit` needs compile-time verification against a server-action param schema.
+
 ## Agent skills
 
 ### Issue tracker
