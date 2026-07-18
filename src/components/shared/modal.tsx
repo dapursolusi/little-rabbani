@@ -42,31 +42,33 @@ export function Modal({
 }: ModalProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger
-        render={
-          trigger?.href ? (
-            <Link
-              href={trigger.href}
-              className={cn(buttonVariants({ variant: 'default' }))}
-            >
-              {trigger.text ?? 'Open Dialog'}
-            </Link>
-          ) : (
-            <Button
-              variant="default"
-              render={
-                typeof trigger?.render === 'function'
-                  ? trigger?.render
-                  : undefined
-              }
-            >
-              {' '}
-              {trigger?.icon && <HugeiconsIcon icon={trigger.icon} />}
-              {trigger?.text ?? 'Open Dialog'}
-            </Button>
-          )
-        }
-      />
+      {trigger && (
+        <DialogTrigger
+          render={
+            trigger.href ? (
+              <Link
+                href={trigger.href}
+                className={cn(buttonVariants({ variant: 'default' }))}
+              >
+                {trigger.text ?? 'Open Dialog'}
+              </Link>
+            ) : (
+              <Button
+                variant="default"
+                render={
+                  typeof trigger.render === 'function'
+                    ? trigger.render
+                    : undefined
+                }
+              >
+                {' '}
+                {trigger.icon && <HugeiconsIcon icon={trigger.icon} />}
+                {trigger.text ?? 'Open Dialog'}
+              </Button>
+            )
+          }
+        />
+      )}
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
           <DialogTitle>{title ?? 'Dialog Title'}</DialogTitle>

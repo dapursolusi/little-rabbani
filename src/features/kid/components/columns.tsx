@@ -1,27 +1,11 @@
 'use client';
 
-import { useContext, useState } from 'react';
-
-import { useRouter } from 'next/navigation';
-
 import { STATUS_BADGE } from '@/features/kid/constants';
 import { ColumnDef } from '@tanstack/react-table';
-import { toast } from 'sonner';
 
-import DefaultFormFields from '@/components/shared/form/default-form-field';
 import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';
-import { EditFormContext } from '@/components/shared/table/data-table-context';
-import { DataTableRowActions } from '@/components/shared/table/data-table-row-action';
+import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 
 import { getAge } from '@/lib/age';
 
@@ -101,33 +85,13 @@ export const kidColumns: ColumnDef<Kid>[] = [
     header: 'Aksi',
     enableHiding: false,
     cell: ({ row }) => {
-      return <EditKidDialog kid={row.original} />;
-    },
-  },
-];
-
-function EditKidDialog({ kid }: { kid: Kid }) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
-  const { schemaKey, formFields } = useContext(EditFormContext);
-
-  return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DataTableRowActions
-        id={kid.id}
-        actions={{
-          edit: () => setOpen(true),
-          delete: () => deleteKid(kid.id),
-        }}
-        rowName={kid.name}
-      />
-      <DialogContent className="sm:max-w-sm">
-        <DialogHeader>
-          <DialogTitle>Edit Murid</DialogTitle>
-          <DialogDescription>Perbarui data murid</DialogDescription>
-        </DialogHeader>
-        <DefaultFormFields
-          schemaKey={schemaKey}
+      const kid = row.original;
+      return (
+        <RowActionsDialog
+          id={kid.id}
+          rowName={kid.name}
+          title="Edit Murid"
+          description="Perbarui data murid"
           initialData={{
             name: kid.name,
             dob: kid.dob,
@@ -135,26 +99,10 @@ function EditKidDialog({ kid }: { kid: Kid }) {
             status: kid.status,
             enrolledTermId: kid.enrolledTermId ?? '',
           }}
-          formFields={formFields}
-          onSubmit={async (data) => {
-            const result = await updateKid(kid.id, data);
-            if (result.success) {
-              toast.success('Murid berhasil diperbarui');
-              setOpen(false);
-              router.refresh();
-            } else {
-              toast.error(result.error);
-            }
-          }}
-        >
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setOpen(false)}>
-              Batal
-            </Button>
-            <Button type="submit">Simpan</Button>
-          </DialogFooter>
-        </DefaultFormFields>
-      </DialogContent>
-    </Dialog>
-  );
-}
+          updateAction={updateKid}
+          deleteAction={() => deleteKid(kid.id)}
+        />
+      );
+    },
+  },
+];

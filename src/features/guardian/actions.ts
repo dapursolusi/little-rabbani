@@ -109,13 +109,16 @@ export async function createGuardian(formData: FormData) {
   }
 }
 
-export async function updateGuardian(id: string, formData: FormData) {
+export async function updateGuardian(
+  id: string,
+  input: FormData | Record<string, unknown>
+) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const rawData = Object.fromEntries(formData);
+  const rawData = input instanceof FormData ? Object.fromEntries(input) : input;
   const parsed = GuardianFormSchema.safeParse(rawData);
 
   if (!parsed.success) {
