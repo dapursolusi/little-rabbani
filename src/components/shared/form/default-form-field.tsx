@@ -14,7 +14,7 @@ import InputFieldRenderer from './input-field-renderer';
 import { type SchemaKey, getZodSchema } from './schema-registry';
 
 export interface CreateUpdateFormProps {
-  schemaKey: SchemaKey;
+  schemaKey?: SchemaKey;
   initialData: Record<string, unknown>;
   formFields: FormField[];
 }
@@ -24,7 +24,7 @@ export default function DefaultFormFields({
   initialData,
   formFields,
 }: CreateUpdateFormProps) {
-  const schema = getZodSchema(schemaKey);
+  const schema = schemaKey ? getZodSchema(schemaKey) : z.object({});
   type TForm = z.output<typeof schema>;
 
   // ponytail: single cast at the zodResolver ↔ react-hook-form library seam.
@@ -32,7 +32,7 @@ export default function DefaultFormFields({
   // identical Resolver — this is a known interop limitation, not unsoundness.
   const form = useForm<TForm>({
     resolver: zodResolver(schema) as never,
-    defaultValues: initialData as unknown as TForm,
+    defaultValues: initialData as TForm,
     mode: 'onChange',
   });
 

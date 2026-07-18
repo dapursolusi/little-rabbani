@@ -1,5 +1,6 @@
 import { getGuardians } from '@/features/guardian/actions';
 import { guardianColumns } from '@/features/guardian/components/columns';
+import { guardianFields } from '@/features/guardian/fields';
 
 import { DataTable } from '@/components/shared/table/data-table';
 
@@ -46,6 +47,17 @@ export default async function GuardianListPage({
           columns={guardianColumns}
           data={guardians}
           meta={{ label: metadata.title }}
+          form={{
+            schemaKey: 'guardian',
+            initialData: {
+              name: '',
+              phone: '',
+              email: '',
+              secondContactName: '',
+              secondContactPhone: '',
+            },
+            formFields: guardianFields(),
+          }}
         />
       </div>
     </section>
