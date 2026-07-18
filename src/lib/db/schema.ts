@@ -121,6 +121,7 @@ export const term = pgTable('term', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const kid = pgTable('kid', {
@@ -158,6 +159,7 @@ export const termSession = pgTable('term_session', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // Relations
@@ -220,6 +222,7 @@ export const scheduleItem = pgTable('schedule_item', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const termSessionRelations = relations(termSession, ({ one, many }) => ({
@@ -265,6 +268,7 @@ export const dailyClassReport = pgTable('daily_class_report', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const dcrActivity = pgTable('dcr_activity', {
@@ -279,6 +283,7 @@ export const dcrActivity = pgTable('dcr_activity', {
   deviation: deviationEnum('deviation').notNull().default('done'),
   wasPlanned: boolean('was_planned').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // ─────────────── DCR Relations ───────────────
@@ -350,6 +355,7 @@ export const observation = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
     uniqueKidSession: unique().on(table.kidId, table.sessionId),
@@ -363,6 +369,7 @@ export const observationNote = pgTable('observation_note', {
     .references(() => observation.id, { onDelete: 'cascade' }),
   text: text('text').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const observationActivity = pgTable(
@@ -411,6 +418,7 @@ export const reportTemplate = pgTable('report_template', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // ─────────────── Monthly Report Snapshots Table ───────────────
@@ -450,6 +458,7 @@ export const monthlyReportSnapshot = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
     uniqueKidMonth: unique().on(table.kidId, table.month),
@@ -508,6 +517,7 @@ export const dailyReportSnapshot = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
     uniqueKidSession: unique().on(table.kidId, table.sessionId),
@@ -570,6 +580,7 @@ export const quarterlyReportSnapshot = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
     uniqueKidTerm: unique().on(table.kidId, table.termId),
@@ -659,6 +670,7 @@ export const pushSubscription = pgTable('push_subscription', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const pushSubscriptionRelations = relations(
@@ -691,6 +703,7 @@ export const reminderConfig = pgTable('reminder_config', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const reminderConfigRelations = relations(reminderConfig, ({ one }) => ({

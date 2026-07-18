@@ -1,6 +1,6 @@
 'use server';
 
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { db } from '@/lib/db';
@@ -27,6 +27,7 @@ export async function getTerms() {
   }
 
   const terms = await db.query.term.findMany({
+    where: isNull(term.deletedAt),
     orderBy: (t, { desc }) => [desc(t.createdAt)],
     with: {
       sessions: true,
@@ -188,7 +189,7 @@ export async function deleteTerm(id: string) {
   }
 
   try {
-    await db.delete(term).where(eq(term.id, id));
+    await db.update(term).set({ deletedAt: new Date() }).where(eq(term.id, id));
     return { success: true as const, data: undefined };
   } catch {
     return { success: false as const, error: 'Gagal menghapus term' };
@@ -222,7 +223,10 @@ export async function getSessions(
 
   const { search, limit = 50, offset = 0 } = params ?? {};
 
-  const conditions = [eq(termSession.termId, termId)];
+  const conditions = [
+    eq(termSession.termId, termId),
+    isNull(termSession.deletedAt),
+  ];
   if (search) {
     conditions.push(
       sql`(${termSession.label}::text ILIKE ${`%${search}%`} OR ${termSession.date}::text ILIKE ${`%${search}%`})`
@@ -383,7 +387,10 @@ export async function deleteSession(id: string) {
   }
 
   try {
-    await db.delete(termSession).where(eq(termSession.id, id));
+    await db
+      .update(termSession)
+      .set({ deletedAt: new Date() })
+      .where(eq(termSession.id, id));
     return { success: true as const, data: undefined };
   } catch {
     return { success: false as const, error: 'Gagal menghapus sesi' };

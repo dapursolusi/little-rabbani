@@ -1,7 +1,7 @@
 'use server';
 
 import { GuardianFormSchema } from '@/features/guardian/schema';
-import { and, eq, ilike, sql } from 'drizzle-orm';
+import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import { guardian, kid } from '@/lib/db/schema';
@@ -20,7 +20,9 @@ export async function getGuardians(params?: {
 
   const { search, limit = 50, offset = 0 } = params ?? {};
 
-  const conditions = search ? [ilike(guardian.name, `%${search}%`)] : [];
+  const conditions = search
+    ? [ilike(guardian.name, `%${search}%`), isNull(guardian.deletedAt)]
+    : [isNull(guardian.deletedAt)];
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [guardians, totalResult] = await Promise.all([
@@ -167,7 +169,10 @@ export async function deleteGuardian(id: string) {
   }
 
   try {
-    await db.delete(guardian).where(eq(guardian.id, id));
+    await db
+      .update(guardian)
+      .set({ deletedAt: new Date() })
+      .where(eq(guardian.id, id));
 
     return { success: true as const, data: undefined };
   } catch {

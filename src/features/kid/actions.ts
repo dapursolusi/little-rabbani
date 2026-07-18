@@ -1,7 +1,7 @@
 'use server';
 
 import { KidFormSchema } from '@/features/kid/schema';
-import { and, eq, ilike, sql } from 'drizzle-orm';
+import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
 import z from 'zod';
 
 import { db } from '@/lib/db';
@@ -27,7 +27,9 @@ export async function getKids(params?: {
 
   const { search, limit = 50, offset = 0 } = params ?? {};
 
-  const conditions = search ? [ilike(kid.name, `%${search}%`)] : [];
+  const conditions = search
+    ? [ilike(kid.name, `%${search}%`), isNull(kid.deletedAt)]
+    : [isNull(kid.deletedAt)];
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -218,7 +220,7 @@ export async function deleteKid(id: string) {
   }
 
   try {
-    await db.delete(kid).where(eq(kid.id, id));
+    await db.update(kid).set({ deletedAt: new Date() }).where(eq(kid.id, id));
     return { success: true as const, data: undefined };
   } catch {
     return { success: false as const, error: 'Gagal menghapus murid' };

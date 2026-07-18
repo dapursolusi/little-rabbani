@@ -230,6 +230,7 @@ describe('findPendingCaptureSessions', () => {
       holidayReason: null,
       createdAt: new Date(),
       updatedAt: new Date(),
+      deletedAt: null,
       term: { id: 'term-1', isActive: true },
     };
 
@@ -263,6 +264,7 @@ describe('findPendingCaptureSessions', () => {
       holidayReason: null,
       createdAt: new Date(),
       updatedAt: new Date(),
+      deletedAt: null,
       term: { id: 'term-1', isActive: true },
     };
 

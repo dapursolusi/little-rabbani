@@ -366,6 +366,7 @@ describe('Session Server Actions', () => {
         isActive: false,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
       vi.mocked(db.insert).mockReturnValue({
         values: vi.fn().mockReturnValue({
@@ -534,6 +535,7 @@ describe('Cohort Assignment', () => {
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
       vi.mocked(db.update).mockReturnValue({
         set: vi
@@ -561,6 +563,7 @@ describe('Cohort Assignment', () => {
         isActive: false,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
 
       const result = await termActions.bulkEnrollKids('term-1', ['kid-1']);
