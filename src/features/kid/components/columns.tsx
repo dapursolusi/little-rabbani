@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 
 import { getAge } from '@/lib/age';
 
+import { deleteKid } from '../actions';
 import { Kid } from '../types';
 
 // This type is used to define the shape of our data.
@@ -89,7 +90,7 @@ export const kidColumns: ColumnDef<Kid>[] = [
           id={row.original.id}
           actions={{
             edit: () => {},
-            delete: () => {},
+            delete: () => deleteKid(row.original.id),
           }}
           rowName={row.original.name}
         />

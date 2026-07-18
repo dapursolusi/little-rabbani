@@ -107,6 +107,7 @@ export const guardian = pgTable('guardian', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const term = pgTable('term', {
@@ -138,6 +139,7 @@ export const kid = pgTable('kid', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const termSession = pgTable('term_session', {

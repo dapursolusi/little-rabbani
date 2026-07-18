@@ -38,7 +38,7 @@ export async function getKids(params?: {
         guardian: true,
         enrolledTerm: true,
       },
-      orderBy: (kid, { asc }) => [asc(kid.name)],
+      orderBy: (kid, { desc }) => [desc(kid.createdAt)],
       limit,
       offset,
     }),

@@ -2,6 +2,8 @@
 
 import * as React from 'react';
 
+import { useRouter } from 'next/navigation';
+
 import { Add02Icon } from '@hugeicons/core-free-icons';
 import {
   ColumnDef,
@@ -15,6 +17,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from '@tanstack/react-table';
+import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { DialogClose, DialogFooter } from '@/components/ui/dialog';
@@ -65,6 +68,7 @@ export function DataTable<TData, TValue>({
   meta,
   form,
 }: DataTableProps<TData, TValue>) {
+  const router = useRouter();
   const [pagination, setPagination] = React.useState({
     pageIndex: 0,
     pageSize: 10,
@@ -226,7 +230,21 @@ export function DataTable<TData, TValue>({
               title={`Tambah ${meta.label}`}
               trigger={{ icon: Add02Icon, text: `Tambah ${meta.label}` }}
               content={
-                <DefaultFormFields {...form}>
+                <DefaultFormFields
+                  {...form}
+                  onSubmit={async (data) => {
+                    const result = await form.onSubmit?.(data);
+                    if (result) {
+                      const r = result as { success: boolean; error?: string };
+                      if (r.success) {
+                        toast.success(`${meta.label} berhasil ditambahkan`);
+                        router.refresh();
+                      } else {
+                        toast.error(r.error ?? 'Gagal menyimpan data');
+                      }
+                    }
+                  }}
+                >
                   <DialogFooter>
                     <DialogClose
                       render={<Button variant="outline">Batal</Button>}
