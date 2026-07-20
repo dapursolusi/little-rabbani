@@ -225,6 +225,50 @@ export const activity = pgTable('activity', {
     .$onUpdateFn(() => new Date()),
 });
 
+// ─────────────── Holiday ───────────────
+
+export const holidaySourceEnum = pgEnum('holiday_source', ['manual', 'synced']);
+export const holidayScopeEnum = pgEnum('holiday_scope', [
+  'national',
+  'custom',
+  'term',
+]);
+
+export const holiday = pgTable(
+  'holiday',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    termId: uuid('term_id').references(() => term.id, { onDelete: 'cascade' }),
+    startDate: date('start_date').notNull(),
+    endDate: date('end_date').notNull(),
+    reason: text('reason').notNull(),
+    source: holidaySourceEnum('source').notNull().default('manual'),
+    scope: holidayScopeEnum('scope').notNull().default('custom'),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => ({
+    uniqueHoliday: unique('holiday_unique').on(
+      table.termId,
+      table.startDate,
+      table.endDate,
+      table.reason,
+      table.source
+    ),
+  })
+);
+
+export const holidayRelations = relations(holiday, ({ one }) => ({
+  term: one(term, {
+    fields: [holiday.termId],
+    references: [term.id],
+  }),
+}));
+
 export const scheduleItemTypeEnum = pgEnum('schedule_item_type', [
   'activity',
   'outing',
