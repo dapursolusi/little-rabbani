@@ -147,7 +147,57 @@ This is a one-time setup per clone. Skip if already indexed.
 - **PII handling:** `src/lib/pii.ts` provides detection (`detectPiiField`) and masking (`maskPiiFields`, `maskPiiValue`) for kid/guardian personal data
 - **Automated PR review:** Factory Droid review configured in `.factory/review.yml` — triggers on PRs
 
-## Form Schema Pattern
+## Code Patterns
+
+The codebase is mid-refactor (`src/lib/actions/` → `src/features/<entity>/`).
+`docs/patterns.md` is the **living extraction** of the patterns actually
+implemented so far — follow it for new and refactored code.
+
+**Why a living doc instead of locking rules now:** the form engine covers 2 of
+~8 entities and the backend vertical (services, logging, middleware) isn't
+refactored yet — locking would freeze a half-built shape. The tradeoff is worth
+it: the extra input tokens to load the patterns are cheaper than the
+mental-battery cost of reviewing code that doesn't match your mental model. For
+agentic work the priority order is **confidence > precision > speed**. A fast,
+precise change you can't trust exhausts you faster than a slower one you can.
+
+**Follow:** `docs/patterns.md` for new and refactored code. When the doc and
+the code disagree, **the code wins** for now — update the doc in the same
+change (or note the divergence in the handoff).
+
+**Extract / create a new pattern** (your call as the agent) after a
+substantial change lands a repeatable shape — e.g. a services/logging/
+middleware layer emerges, or a second entity confirms a convention. Capture it
+in `patterns.md` first; do **not** promote into AGENTS.md until the pattern
+survives 3+ entities unchanged. Premature hardening is the failure mode this
+doc exists to avoid.
+
+**Split `patterns.md` into per-stack files** (`rules/typescript.md`,
+`rules/react.md`, `rules/nextjs.md`, `rules/shadcn.md`, …) when either fires:
+
+- the file grows too large to hold in one read, **or**
+- a single domain's rules get dense enough that mixing them with other domains
+  feels jarring — e.g. naming/type rules and then the next line jumps into
+  component-usage rules. Each split file stays one coherent domain; keep a
+  one-line index in `patterns.md` pointing at the splits.
+
+### Settled hard rules (locked here, not in `patterns.md`)
+
+These are decisions, not in-flux patterns — they live in AGENTS.md:
+
+- **Schema-registry form engine:** each entity's Zod schema is registered
+  in `src/components/shared/form/schema-registry.ts` keyed by name;
+  `DefaultFormFields` looks it up via the `schemaKey` prop. One `as never` cast
+  at the `zodResolver` ↔ `react-hook-form` seam is accepted — zod v4's `$ZodType`
+  variance makes generic passthrough unworkable across 3 library seams. Tradeoff:
+  ~1 cast in a shared component vs. per-entity form components. Upgrade to
+  per-entity components when `onSubmit` needs compile-time verification against
+  a server-action param schema.
+- **`src/components/ui/` is auto-generated** (shadcn base-nova) — never edited
+  by hand. Brand customization happens via tokens in `globals.css` or
+  per-call classNames.
+- **Discriminated-union action results** (`{ success: true, data } | { success:
+false, error }` with `as const`) — clients narrow with `if (!result.success)`.
 
 Forms use a **schema registry** pattern: each entity's Zod schema is registered in `src/components/shared/form/schema-registry.ts` keyed by name, and `DefaultFormFields` looks it up via `schemaKey` prop. One `as never` cast at the `zodResolver` ↔ `react-hook-form` library seam is accepted — zod v4's internal `$ZodType` variance makes generic passthrough unworkable across 3 library seams. The tradeoff: ~1 cast in a shared component vs. per-entity form components (option 2 if compile-time schema matching matters).
 

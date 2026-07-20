@@ -1,8 +1,9 @@
 import { getGuardians } from '@/features/guardian/actions';
+import { kidFields } from '@/features/kid/fields';
+import { getTerms } from '@/features/term/actions';
 
-import { KidForm } from '@/components/sections/kid-form';
+import { KidFormWrapper } from '@/components/sections/kid-form-wrapper';
 
-import { getTerms } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Tambah Murid' };
@@ -24,7 +25,17 @@ export default async function CreateKidPage() {
       </div>
 
       <div className="mx-auto max-w-lg rounded-lg border bg-card p-6">
-        <KidForm mode="create" guardians={guardians} terms={terms} />
+        <KidFormWrapper
+          mode="create"
+          initialData={{
+            name: '',
+            dob: '',
+            guardianId: '',
+            status: 'enrolled' as const,
+            enrolledTermId: '',
+          }}
+          formFields={kidFields({ guardians, enrolledTerms: terms })}
+        />
       </div>
     </div>
   );

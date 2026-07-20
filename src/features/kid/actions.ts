@@ -1,7 +1,8 @@
 'use server';
 
 import { KidFormSchema } from '@/features/kid/schema';
-import { and, eq, ilike, sql } from 'drizzle-orm';
+import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
+import z from 'zod';
 
 import { db } from '@/lib/db';
 import { kid, term } from '@/lib/db/schema';
@@ -26,7 +27,9 @@ export async function getKids(params?: {
 
   const { search, limit = 50, offset = 0 } = params ?? {};
 
-  const conditions = search ? [ilike(kid.name, `%${search}%`)] : [];
+  const conditions = search
+    ? [ilike(kid.name, `%${search}%`), isNull(kid.deletedAt)]
+    : [isNull(kid.deletedAt)];
 
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
@@ -37,7 +40,7 @@ export async function getKids(params?: {
         guardian: true,
         enrolledTerm: true,
       },
-      orderBy: (kid, { asc }) => [asc(kid.name)],
+      orderBy: (kid, { desc }) => [desc(kid.createdAt)],
       limit,
       offset,
     }),
@@ -80,13 +83,13 @@ export async function getActiveTerm() {
   return activeTerm ?? null;
 }
 
-export async function createKid(formData: FormData) {
+export async function createKid(input: FormData | Record<string, unknown>) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const rawData = Object.fromEntries(formData);
+  const rawData = input instanceof FormData ? Object.fromEntries(input) : input;
   const parsed = KidFormSchema.safeParse(rawData);
 
   if (!parsed.success) {
@@ -94,9 +97,12 @@ export async function createKid(formData: FormData) {
     return { success: false as const, error: firstError };
   }
 
-  const { status, enrolledTermId, ...data } = parsed.data;
+  return createKidFromParsed(parsed.data);
+}
 
-  // If enrolling, require active term
+async function createKidFromParsed(parsed: z.output<typeof KidFormSchema>) {
+  const { status, enrolledTermId, ...data } = parsed;
+
   if (status === 'enrolled') {
     const activeTerm = await getActiveTerm();
     if (!activeTerm) {
@@ -124,13 +130,16 @@ export async function createKid(formData: FormData) {
   }
 }
 
-export async function updateKid(id: string, formData: FormData) {
+export async function updateKid(
+  id: string,
+  input: FormData | Record<string, unknown>
+) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const rawData = Object.fromEntries(formData);
+  const rawData = input instanceof FormData ? Object.fromEntries(input) : input;
   const parsed = KidFormSchema.safeParse(rawData);
 
   if (!parsed.success) {
@@ -211,7 +220,7 @@ export async function deleteKid(id: string) {
   }
 
   try {
-    await db.delete(kid).where(eq(kid.id, id));
+    await db.update(kid).set({ deletedAt: new Date() }).where(eq(kid.id, id));
     return { success: true as const, data: undefined };
   } catch {
     return { success: false as const, error: 'Gagal menghapus murid' };

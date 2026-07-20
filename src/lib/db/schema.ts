@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   date,
@@ -9,6 +9,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -107,6 +108,7 @@ export const guardian = pgTable('guardian', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const term = pgTable('term', {
@@ -120,6 +122,7 @@ export const term = pgTable('term', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const kid = pgTable('kid', {
@@ -138,7 +141,35 @@ export const kid = pgTable('kid', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
+
+export const sessionType = pgTable(
+  'session_type',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    start: text('start').notNull(), // HH:mm format
+    end: text('end').notNull(), // HH:mm format
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => ({
+    sessionTypeNameStartEnd: unique('session_type_name_start_end').on(
+      table.name,
+      table.start,
+      table.end
+    ),
+    sessionTypeActiveName: uniqueIndex('session_type_active_name')
+      .on(table.name)
+      .where(sql`active = true`),
+  })
+);
 
 export const termSession = pgTable('term_session', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -156,6 +187,7 @@ export const termSession = pgTable('term_session', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // Relations
@@ -218,7 +250,13 @@ export const scheduleItem = pgTable('schedule_item', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
+
+export const sessionTypeRelations = relations(
+  sessionType,
+  ({ many: _many }) => ({})
+);
 
 export const termSessionRelations = relations(termSession, ({ one, many }) => ({
   term: one(term, {
@@ -263,6 +301,7 @@ export const dailyClassReport = pgTable('daily_class_report', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const dcrActivity = pgTable('dcr_activity', {
@@ -277,6 +316,7 @@ export const dcrActivity = pgTable('dcr_activity', {
   deviation: deviationEnum('deviation').notNull().default('done'),
   wasPlanned: boolean('was_planned').notNull().default(true),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // ─────────────── DCR Relations ───────────────
@@ -348,6 +388,7 @@ export const observation = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
     uniqueKidSession: unique().on(table.kidId, table.sessionId),
@@ -361,6 +402,7 @@ export const observationNote = pgTable('observation_note', {
     .references(() => observation.id, { onDelete: 'cascade' }),
   text: text('text').notNull(),
   createdAt: timestamp('created_at').notNull().defaultNow(),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const observationActivity = pgTable(
@@ -409,6 +451,7 @@ export const reportTemplate = pgTable('report_template', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // ─────────────── Monthly Report Snapshots Table ───────────────
@@ -448,6 +491,7 @@ export const monthlyReportSnapshot = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
     uniqueKidMonth: unique().on(table.kidId, table.month),
@@ -506,6 +550,7 @@ export const dailyReportSnapshot = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
     uniqueKidSession: unique().on(table.kidId, table.sessionId),
@@ -568,6 +613,7 @@ export const quarterlyReportSnapshot = pgTable(
       .notNull()
       .defaultNow()
       .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
     uniqueKidTerm: unique().on(table.kidId, table.termId),
@@ -657,6 +703,7 @@ export const pushSubscription = pgTable('push_subscription', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const pushSubscriptionRelations = relations(
@@ -689,6 +736,7 @@ export const reminderConfig = pgTable('reminder_config', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 export const reminderConfigRelations = relations(reminderConfig, ({ one }) => ({

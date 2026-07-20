@@ -491,6 +491,7 @@ describe('CSV Import (VAL-MASTER-043 to VAL-MASTER-051)', () => {
           enrolledTermId: null,
           createdAt: new Date(),
           updatedAt: new Date(),
+          deletedAt: null,
         });
 
       vi.mocked(db.query.guardian.findFirst).mockResolvedValue(undefined);
@@ -567,6 +568,7 @@ describe('CSV Import (VAL-MASTER-043 to VAL-MASTER-051)', () => {
           secondContactPhone: null,
           createdAt: new Date(),
           updatedAt: new Date(),
+          deletedAt: null,
         });
 
       const result = await csvImportActions.importGuardiansCsv(rows);

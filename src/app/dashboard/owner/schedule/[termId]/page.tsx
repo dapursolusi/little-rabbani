@@ -1,12 +1,13 @@
 import Link from 'next/link';
 
+import { getSessions } from '@/features/session/actions';
+import { getTerm } from '@/features/term/actions';
 import { Alert01Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 
-import { getSessions, getTerm } from '@/lib/actions/term';
 import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';

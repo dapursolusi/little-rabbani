@@ -4,6 +4,10 @@ import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import {
+  deleteSession,
+  updateSessionHoliday,
+} from '@/features/session/actions';
 import { MoreVerticalIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
@@ -22,8 +26,6 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-
-import { deleteSession, updateSessionHoliday } from '@/lib/actions/term';
 
 interface ISessionActionsProps {
   sessionId: string;

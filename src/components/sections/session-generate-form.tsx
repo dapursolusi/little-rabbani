@@ -4,13 +4,12 @@ import { useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { generateRecurringSessions } from '@/features/session/actions';
 import { toast } from 'sonner';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-
-import { generateRecurringSessions } from '@/lib/actions/term';
 
 const DAYS = [
   { value: 'monday', label: 'Senin' },

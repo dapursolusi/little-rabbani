@@ -1,6 +1,11 @@
+import { type ReactNode, useState } from 'react';
+
+import { useRouter } from 'next/navigation';
+
 import { FormField } from '@/types/field';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Controller, Path, useForm } from 'react-hook-form';
+import { toast } from 'sonner';
 import z from 'zod';
 
 import {
@@ -17,13 +22,25 @@ export interface CreateUpdateFormProps {
   schemaKey?: SchemaKey;
   initialData: Record<string, unknown>;
   formFields: FormField[];
+  actionHref?: string;
+  onSubmit?: (data: Record<string, unknown>) => unknown | Promise<unknown>;
+  children?: ReactNode | ((ctx: { isSubmitting: boolean }) => ReactNode);
+  meta?: { label: string; domain?: string };
+  onSuccess?: () => void;
 }
 
 export default function DefaultFormFields({
   schemaKey,
   initialData,
   formFields,
+  onSubmit: onSubmitProp,
+  children,
+  meta,
+  onSuccess,
 }: CreateUpdateFormProps) {
+  const router = useRouter();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const schema = schemaKey ? getZodSchema(schemaKey) : z.object({});
   type TForm = z.output<typeof schema>;
 
@@ -36,7 +53,28 @@ export default function DefaultFormFields({
     mode: 'onChange',
   });
 
-  function onSubmit(data: z.output<typeof schema>) {
+  async function onSubmit(data: z.output<typeof schema>) {
+    if (onSubmitProp) {
+      setIsSubmitting(true);
+      try {
+        const result = await onSubmitProp(data);
+        if (result) {
+          const r = result as { success: boolean; error?: string };
+          if (r.success) {
+            toast.success(`${meta?.label ?? 'Data'} berhasil ditambahkan`);
+            router.refresh();
+            onSuccess?.();
+          } else {
+            toast.error(r.error ?? 'Gagal menyimpan data');
+          }
+        }
+      } catch {
+        toast.error(`${meta?.label ?? 'Data'} gagal disimpan`);
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
     console.warn(data);
   }
 
@@ -63,6 +101,7 @@ export default function DefaultFormFields({
           )}
         ></Controller>
       ))}
+      {typeof children === 'function' ? children({ isSubmitting }) : children}
     </form>
   );
 }

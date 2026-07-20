@@ -1,6 +1,7 @@
+import * as sessionActions from '@/features/session/actions';
+import * as termActions from '@/features/term/actions';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as termActions from '@/lib/actions/term';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
 
@@ -325,7 +326,7 @@ describe('Session Server Actions', () => {
         }),
       } as unknown as ReturnType<typeof db.insert>);
 
-      const result = await termActions.createSession(
+      const result = await sessionActions.createSession(
         toFormData({
           termId: 'term-1',
           date: '2025-01-15',
@@ -342,7 +343,7 @@ describe('Session Server Actions', () => {
     });
 
     it('should reject empty required fields', async () => {
-      const result = await termActions.createSession(
+      const result = await sessionActions.createSession(
         toFormData({
           termId: '',
           date: '',
@@ -366,6 +367,7 @@ describe('Session Server Actions', () => {
         isActive: false,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
       vi.mocked(db.insert).mockReturnValue({
         values: vi.fn().mockReturnValue({
@@ -379,7 +381,7 @@ describe('Session Server Actions', () => {
         }),
       } as unknown as ReturnType<typeof db.insert>);
 
-      const result = await termActions.generateRecurringSessions('term-1', {
+      const result = await sessionActions.generateRecurringSessions('term-1', {
         daysOfWeek: ['monday', 'wednesday', 'friday'],
         startTime: '08:00',
         endTime: '10:00',
@@ -393,7 +395,7 @@ describe('Session Server Actions', () => {
 
     it('should reject if term not found', async () => {
       vi.mocked(db.query.term.findFirst).mockResolvedValue(undefined);
-      const result = await termActions.generateRecurringSessions(
+      const result = await sessionActions.generateRecurringSessions(
         'term-nonexistent',
         {
           daysOfWeek: ['monday'],
@@ -428,7 +430,7 @@ describe('Session Server Actions', () => {
         }),
       } as unknown as ReturnType<typeof db.update>);
 
-      const result = await termActions.updateSession(
+      const result = await sessionActions.updateSession(
         'ts-1',
         toFormData({
           termId: 'term-1',
@@ -451,7 +453,7 @@ describe('Session Server Actions', () => {
       vi.mocked(db.delete).mockReturnValue({
         where: vi.fn().mockResolvedValue(undefined),
       } as unknown as ReturnType<typeof db.delete>);
-      const result = await termActions.deleteSession('ts-1');
+      const result = await sessionActions.deleteSession('ts-1');
       expect(result.success).toBe(true);
     });
   });
@@ -477,7 +479,7 @@ describe('Session Server Actions', () => {
         }),
       } as unknown as ReturnType<typeof db.update>);
 
-      const result = await termActions.updateSessionHoliday('ts-1', {
+      const result = await sessionActions.updateSessionHoliday('ts-1', {
         isHoliday: true,
         holidayReason: 'Hari Libur Nasional',
       });
@@ -504,7 +506,7 @@ describe('Session Server Actions', () => {
         }),
       } as unknown as ReturnType<typeof db.update>);
 
-      const result = await termActions.updateSessionHoliday('ts-1', {
+      const result = await sessionActions.updateSessionHoliday('ts-1', {
         isHoliday: false,
         holidayReason: null,
       });
@@ -534,6 +536,7 @@ describe('Cohort Assignment', () => {
         isActive: true,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
       vi.mocked(db.update).mockReturnValue({
         set: vi
@@ -561,6 +564,7 @@ describe('Cohort Assignment', () => {
         isActive: false,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
 
       const result = await termActions.bulkEnrollKids('term-1', ['kid-1']);

@@ -1,6 +1,6 @@
 // import { HTMLInputTypeAttribute } from 'react'; -- kept for reference: if React adds new input types, mirror them here
 
-export type FormFieldBase = {
+type FormFieldBase = {
   name: string;
   label: string;
   className?: string;

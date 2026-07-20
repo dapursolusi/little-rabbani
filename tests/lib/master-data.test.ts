@@ -178,9 +178,11 @@ describe('Guardian Server Actions', () => {
         }),
       } as unknown as ReturnType<typeof db.select>);
 
-      vi.mocked(db.delete).mockReturnValue({
-        where: vi.fn().mockResolvedValue(undefined),
-      } as unknown as ReturnType<typeof db.delete>);
+      vi.mocked(db.update).mockReturnValue({
+        set: vi.fn().mockReturnValue({
+          where: vi.fn().mockResolvedValue(undefined),
+        }),
+      } as unknown as ReturnType<typeof db.update>);
 
       const result = await guardianActions.deleteGuardian('g1');
 
@@ -227,6 +229,7 @@ describe('Kid Server Actions', () => {
         endDate: '2025-06-30',
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
 
       vi.mocked(db.insert).mockReturnValue({
@@ -284,6 +287,7 @@ describe('Kid Server Actions', () => {
         enrolledTermId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
 
       vi.mocked(db.update).mockReturnValue({
@@ -328,6 +332,7 @@ describe('Kid Server Actions', () => {
         enrolledTermId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
 
       const result = await kidActions.updateKid(
@@ -355,6 +360,7 @@ describe('Kid Server Actions', () => {
         enrolledTermId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
 
       const result = await kidActions.updateKid(
@@ -382,6 +388,7 @@ describe('Kid Server Actions', () => {
         enrolledTermId: null,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
 
       vi.mocked(db.query.term.findFirst).mockResolvedValue({
@@ -392,6 +399,7 @@ describe('Kid Server Actions', () => {
         endDate: '2025-06-30',
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
 
       vi.mocked(db.update).mockReturnValue({

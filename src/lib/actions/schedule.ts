@@ -1,6 +1,6 @@
 'use server';
 
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { db } from '@/lib/db';
@@ -81,7 +81,10 @@ export async function getScheduleItems(sessionId: string) {
   }
 
   const items = await db.query.scheduleItem.findMany({
-    where: eq(scheduleItem.sessionId, sessionId),
+    where: and(
+      eq(scheduleItem.sessionId, sessionId),
+      isNull(scheduleItem.deletedAt)
+    ),
     orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
     with: {
       activity: true,
@@ -335,7 +338,10 @@ export async function deleteScheduleItem(formData: FormData) {
   }
 
   try {
-    await db.delete(scheduleItem).where(eq(scheduleItem.id, id));
+    await db
+      .update(scheduleItem)
+      .set({ deletedAt: new Date() })
+      .where(eq(scheduleItem.id, id));
     return { success: true as const, data: undefined };
   } catch {
     return {

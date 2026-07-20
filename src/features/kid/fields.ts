@@ -30,7 +30,7 @@ export const kidFields = ({
     {
       name: 'dob',
       label: 'Tanggal lahir',
-      type: 'text',
+      type: 'date',
       required: true,
     },
     {

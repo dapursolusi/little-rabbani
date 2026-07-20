@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { type ReactNode } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -48,6 +49,8 @@ interface DataTableRowActionsProps {
     };
   };
   rowName?: string;
+  /** Extra dropdown menu items rendered between Edit and Hapus. */
+  extendedActions?: ReactNode;
 }
 
 export function DataTableRowActions(props: DataTableRowActionsProps) {
@@ -102,6 +105,7 @@ export function DataTableRowActions(props: DataTableRowActionsProps) {
             <HugeiconsIcon icon={Edit04Icon} />
             Edit
           </DropdownMenuItem>
+          {props.extendedActions}
           <DropdownMenuItem
             onClick={() => setShowDeleteConfirm(true)}
             className="text-destructive hover:bg-destructive! hover:text-white!"

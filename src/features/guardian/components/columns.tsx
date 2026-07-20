@@ -3,8 +3,9 @@
 import { ColumnDef } from '@tanstack/react-table';
 
 import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';
-import { DataTableRowActions } from '@/components/shared/table/data-table-row-action';
+import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
 
+import { deleteGuardian, updateGuardian } from '../actions';
 import { Guardian } from '../types';
 
 export const guardianColumns: ColumnDef<Guardian>[] = [
@@ -55,14 +56,22 @@ export const guardianColumns: ColumnDef<Guardian>[] = [
     header: 'Aksi',
     enableHiding: false,
     cell: ({ row }) => {
+      const guardian = row.original;
       return (
-        <DataTableRowActions
-          id={row.original.id}
-          actions={{
-            edit: () => {},
-            delete: () => {},
+        <RowActionsDialog
+          id={guardian.id}
+          rowName={guardian.name}
+          title="Edit Wali Murid"
+          description="Perbarui data wali murid"
+          initialData={{
+            name: guardian.name,
+            phone: guardian.phone,
+            email: guardian.email ?? '',
+            secondContactName: guardian.secondContactName ?? '',
+            secondContactPhone: guardian.secondContactPhone ?? '',
           }}
-          rowName={row.original.name}
+          updateAction={updateGuardian}
+          deleteAction={() => deleteGuardian(guardian.id)}
         />
       );
     },

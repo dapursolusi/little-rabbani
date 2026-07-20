@@ -44,9 +44,13 @@ _Avoid_: Task, exercise, lesson.
 The predefined list of activities the owner maintains. The source of consistent vocabulary that enables monthly/quarterly aggregation by activity.
 _Avoid_: Activity list, library.
 
-**Session**:
-A scheduled class period on a given date (e.g., the morning session, 9–11am). Observations belong to one kid in one session. A preschool day may run more than one session.
-_Avoid_: Class (overloaded), period, slot.
+**Session**: A scheduled class period on a given date — one Session Type running on one school date (e.g., the 9–10:30am morning block on Tue 12 Feb). Observations belong to one kid in one session. A preschool day may run more than one session; a kid attends exactly one session per day. Not persisted as its own row — derived from date + active Session Type + whether that date is a Holiday. See ADR 0007.
+_Avoid_: Class (overloaded), period, slot, occurrence.
+
+**Session Type**: A named, recurring time block the preschool runs — e.g., Session 1 (9–10:30am), Session 2 (11am–12:30pm). Has start/end and an active state; only active types are offered for planning and capture. When its time changes (e.g., Session 1 moves from 9am to 8:30am next year), the old row is deactivated and a new one created — deactivated rows are frozen history so past captures keep their original times. See ADR 0007.
+_Avoid_: Session schedule, time slot, period config.
+
+**Holiday**: A day or date range the preschool is closed — e.g., Eid al-Fitr (a 5-day span), Vesak Day, a school field trip. National holidays may be synced from the Indonesian holiday calendar; custom closures are entered by the owner; term-scoped closures belong to one term. One row per closure event with its own reason and source; multiple events can share a date (e.g., a national holiday and a field trip the same day). `_Avoid_`: Day off, closure, off-day, break (too generic). See ADR 0007.
 
 ### Reports
 

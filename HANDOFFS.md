@@ -1,12 +1,26 @@
-## [Session — 2026-07-13] — UI foundation sweep (Strategy B, §1)
+# HANDOFFS.md
 
-- **What changed:** 8-task subagent-driven plan executed on `feat/ui-foundation`. DESIGN.md rem-math fix + --space-* removal (T1); globals.css spacing-stance comment (T2); .dark rebuilt as neutral desaturated companion (T3); raw Tailwind colors → semantic tokens across 7 files (T4, C-2); emoji-as-chrome → Hugeicons in offline-indicator (T5, C-3); report status badges contract locked with unit test, dedup already resolved (T6, C-6); bg-brand-canvas already clean + real root metadata set (T7, H-2). C-5 (native <select>) and C-8 (teacher mobile tab) already resolved before this session.
-- **State:** shipped on `feat/ui-foundation`.
-- **Verification:** typecheck PASS. 277/278 tests pass (1 pre-existing auth test failure, unrelated). Lint: 0 errors, 774 pre-existing warnings. Audit sweep zeros: chrome emoji 0, local getStatusBadge defs 0, hardcoded canvas hex 0, native <select> 0. 10 raw color residues are blue info-panels + dark-page zinc variants — intentionally excluded per mapping tables.
+## [Session — 2026-07-18] — Migrate term entity to feature-based pattern
+
+- **What changed:**
+  - `src/features/term/{actions,schema,fields,types}.ts` — feature co-location for term entity
+  - `src/features/term/components/columns.tsx` — `termColumns` with extended row actions (Aktifkan, Kelola Murid, Lihat Sesi + RowActionsDialog edit/delete)
+  - `src/features/session/{actions,schema}.ts` — extract session CRUD from the mixed legacy file (full drain)
+  - `src/components/sections/term-form-wrapper.tsx` — `TermFormWrapper` using `DefaultFormFields` (kid/guardian pattern)
+  - `src/components/form/schema-registry.ts` — registered `'term'` schema key
+  - `src/components/shared/table/{data-table-row-action,row-actions-dialog}.tsx` — added optional `extendedActions` render-prop slot between Edit and Hapus
+  - Migrated term list page → `<DataTable>` with `form` prop (inline add-modal + termColumns)
+  - Migrated term create/edit pages → use `TermFormWrapper` (DefaultFormFields engine)
+  - Updated all 19 importers of `@/lib/actions/term` → new feature paths
+  - Deleted `src/lib/actions/term.ts` (drained)
+- **State:** shipped on `refactor/crud`
+- **Verification:**
+  - typecheck PASS (0 errors)
+  - 339 tests PASS (0 failures)
+  - lint: 0 errors, 90 pre-existing warnings
 - **Next steps:**
-  1. Open PR from `feat/ui-foundation` → `main`, merge after CI.
-  2. Signature-surface plan: owner dashboard (`owner/page.tsx`) — spec §2.1, Stripe-warm-light reference-driven, focal hierarchy + staggered-entrance motion + reduced-motion. Use visual companion for comparison.
-  3. Then teacher capture flow (§2.2), then reports timeline (§2.3).
-  4. Doc sync (§4) interleaves per surface.
-- **Blockers:** none.
-- **Notes:** `scale(0.95)` button-press dial deferred to live observation (§3.6). C-6 dedup (report badge duplicates) found already resolved — only added the contract test. Two worktree artifacts (T4 `.dark` regression, T7 test deletion) caught and fixed in review loop. Blue info-panels (`bg-blue-100/50`, `text-blue-600/700/800`) excluded from C-2 sweep — no semantic blue token exists, needs design decision later. 10 remaining raw-color occurrences are all blue; acceptable.
+  1. Open PR from `refactor/crud` → main, merge after CI
+  2. Continue pattern migration for session, activity, schedule, reports entities (per patterns.md)
+  3. The `src/components/sections/term-form.tsx` and `term-actions.tsx` legacy section files are still on disk but no longer imported by any page (they've been superseded). Clean up after verifying nothing links to them.
+  4. Delete the empty `src/features/term/hooks.ts`
+- **Blockers:** none

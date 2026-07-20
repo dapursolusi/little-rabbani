@@ -111,6 +111,7 @@ const FUTURE_SESSION = {
   holidayReason: null,
   createdAt: new Date(),
   updatedAt: new Date(),
+  deletedAt: null,
 };
 
 // A session in the past (locked)
@@ -125,6 +126,7 @@ const PAST_SESSION = {
   holidayReason: null,
   createdAt: new Date(),
   updatedAt: new Date(),
+  deletedAt: null,
 };
 
 describe('Schedule Server Actions', () => {
@@ -372,6 +374,7 @@ describe('Schedule Server Actions', () => {
         sortOrder: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
         FUTURE_SESSION
@@ -408,6 +411,7 @@ describe('Schedule Server Actions', () => {
         sortOrder: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(PAST_SESSION);
 
@@ -465,6 +469,7 @@ describe('Schedule Server Actions', () => {
         sortOrder: 0,
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       });
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
         FUTURE_SESSION

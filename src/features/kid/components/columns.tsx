@@ -4,11 +4,12 @@ import { STATUS_BADGE } from '@/features/kid/constants';
 import { ColumnDef } from '@tanstack/react-table';
 
 import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';
-import { DataTableRowActions } from '@/components/shared/table/data-table-row-action';
+import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
 import { Badge } from '@/components/ui/badge';
 
 import { getAge } from '@/lib/age';
 
+import { deleteKid, updateKid } from '../actions';
 import { Kid } from '../types';
 
 // This type is used to define the shape of our data.
@@ -84,14 +85,22 @@ export const kidColumns: ColumnDef<Kid>[] = [
     header: 'Aksi',
     enableHiding: false,
     cell: ({ row }) => {
+      const kid = row.original;
       return (
-        <DataTableRowActions
-          id={row.original.id}
-          actions={{
-            edit: () => {},
-            delete: () => {},
+        <RowActionsDialog
+          id={kid.id}
+          rowName={kid.name}
+          title="Edit Murid"
+          description="Perbarui data murid"
+          initialData={{
+            name: kid.name,
+            dob: kid.dob,
+            guardianId: kid.guardianId,
+            status: kid.status,
+            enrolledTermId: kid.enrolledTermId ?? '',
           }}
-          rowName={row.original.name}
+          updateAction={updateKid}
+          deleteAction={() => deleteKid(kid.id)}
         />
       );
     },

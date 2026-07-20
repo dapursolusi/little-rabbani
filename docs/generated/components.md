@@ -46,7 +46,7 @@ confirm-dialog.tsx
 conflict-dialog.tsx
 csv-import-form.tsx
 guardian-form.tsx
-kid-form.tsx
+kid-form-wrapper.tsx
 offline-indicator.tsx
 owner-dashboard/
   quick-actions.tsx
@@ -55,10 +55,12 @@ session-actions.tsx
 session-edit-form.tsx
 session-form.tsx
 session-generate-form.tsx
+session-type-form-wrapper.tsx
 teacher-pending-capture-banner.tsx
 teacher-schedule-view.tsx
 term-actions.tsx
 term-cohort-form.tsx
+term-form-wrapper.tsx
 term-form.tsx
 ```
 

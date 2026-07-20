@@ -2,11 +2,12 @@ import { notFound } from 'next/navigation';
 
 import { getGuardians } from '@/features/guardian/actions';
 import { getKid } from '@/features/kid/actions';
+import { kidFields } from '@/features/kid/fields';
+import { getTerms } from '@/features/term/actions';
 
-import { KidForm } from '@/components/sections/kid-form';
+import { KidFormWrapper } from '@/components/sections/kid-form-wrapper';
 import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
 
-import { getTerms } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Edit Murid' };
@@ -49,7 +50,7 @@ export default async function EditKidPage({ params }: IEditKidPageProps) {
       </div>
 
       <div className="mx-auto max-w-lg rounded-lg border bg-card p-6">
-        <KidForm
+        <KidFormWrapper
           mode="edit"
           initialData={{
             id: kidData.id,
@@ -59,8 +60,7 @@ export default async function EditKidPage({ params }: IEditKidPageProps) {
             status: kidData.status,
             enrolledTermId: kidData.enrolledTermId ?? '',
           }}
-          guardians={guardians}
-          terms={terms}
+          formFields={kidFields({ guardians, enrolledTerms: terms })}
         />
       </div>
     </div>

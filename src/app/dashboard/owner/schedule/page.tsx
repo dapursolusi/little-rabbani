@@ -1,9 +1,10 @@
 import Link from 'next/link';
 
+import { getTerms } from '@/features/term/actions';
+
 import { EmptyState } from '@/components/shared/empty-state';
 import { Badge } from '@/components/ui/badge';
 
-import { getTerms } from '@/lib/actions/term';
 import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 

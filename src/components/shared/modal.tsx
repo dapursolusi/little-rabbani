@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { type Dispatch, type ReactNode, type SetStateAction } from 'react';
 
 import Link from 'next/link';
 
@@ -7,10 +7,8 @@ import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import { Button, buttonVariants } from '@/components/ui/button';
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -29,6 +27,8 @@ interface ModalProps {
   };
   content?: ReactNode;
   footer?: ReactNode;
+  open?: boolean;
+  onOpenChange?: Dispatch<SetStateAction<boolean>>;
 }
 
 export function Modal({
@@ -36,14 +36,16 @@ export function Modal({
   description,
   trigger,
   content,
-  footer: _footer,
+  footer,
+  open,
+  onOpenChange,
 }: ModalProps) {
   return (
-    <Dialog>
-      <form>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {trigger && (
         <DialogTrigger
           render={
-            trigger?.href ? (
+            trigger.href ? (
               <Link
                 href={trigger.href}
                 className={cn(buttonVariants({ variant: 'default' }))}
@@ -54,37 +56,34 @@ export function Modal({
               <Button
                 variant="default"
                 render={
-                  typeof trigger?.render === 'function'
-                    ? trigger?.render
+                  typeof trigger.render === 'function'
+                    ? trigger.render
                     : undefined
                 }
               >
                 {' '}
-                {trigger?.icon && <HugeiconsIcon icon={trigger.icon} />}
-                {trigger?.text ?? 'Open Dialog'}
+                {trigger.icon && <HugeiconsIcon icon={trigger.icon} />}
+                {trigger.text ?? 'Open Dialog'}
               </Button>
             )
           }
         />
-        <DialogContent className="sm:max-w-sm">
-          <DialogHeader>
-            <DialogTitle>{title ?? 'Dialog Title'}</DialogTitle>
-            <DialogDescription>
-              {description ?? (
-                <span>
-                  Make changes to your profile here. Click save when you&apos;re
-                  done.
-                </span>
-              )}
-            </DialogDescription>
-          </DialogHeader>
-          {content ?? <div>Dialog content</div>}
-          <DialogFooter>
-            <DialogClose render={<Button variant="outline">Cancel</Button>} />
-            <Button type="submit">Save changes</Button>
-          </DialogFooter>
-        </DialogContent>
-      </form>
+      )}
+      <DialogContent className="sm:max-w-sm">
+        <DialogHeader>
+          <DialogTitle>{title ?? 'Dialog Title'}</DialogTitle>
+          <DialogDescription>
+            {description ?? (
+              <span>
+                Make changes to your profile here. Click save when you&apos;re
+                done.
+              </span>
+            )}
+          </DialogDescription>
+        </DialogHeader>
+        {content ?? <div>Dialog content</div>}
+        {footer}
+      </DialogContent>
     </Dialog>
   );
 }

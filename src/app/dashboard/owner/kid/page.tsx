@@ -1,12 +1,12 @@
 import { getGuardians } from '@/features/guardian/actions';
-import { getKids } from '@/features/kid/actions';
+import { createKid, getKids } from '@/features/kid/actions';
 import { kidColumns } from '@/features/kid/components/columns';
 import { kidFields } from '@/features/kid/fields';
 import { Kid } from '@/features/kid/types';
+import { getTerms } from '@/features/term/actions';
 
 import { DataTable } from '@/components/shared/table/data-table';
 
-import { getTerms } from '@/lib/actions/term';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Murid' };
@@ -62,6 +62,7 @@ export default async function KidListPage({ searchParams }: IKidListPageProps) {
               guardians: guardians?.data || [],
               enrolledTerms: terms?.data || [],
             }),
+            onSubmit: createKid,
           }}
         />
       </div>

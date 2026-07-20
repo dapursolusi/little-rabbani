@@ -106,6 +106,13 @@ dashboard/
         page.tsx
       loading.tsx
       page.tsx
+    session-type/
+      [id]/
+        edit/
+          page.tsx
+      create/
+        page.tsx
+      page.tsx
     settings/
       layout.tsx
       loading.tsx
