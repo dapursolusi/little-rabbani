@@ -397,6 +397,13 @@ export function HolidayCalendarView({ termId }: IHolidayCalendarViewProps) {
             ? `${holidays.length} hari libur tercatat`
             : 'Belum ada hari libur'}
         </p>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setShowAddDialog(true)}
+        >
+          + Tambah Libur
+        </Button>
       </div>
 
       {/* Calendar */}
