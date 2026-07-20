@@ -109,6 +109,11 @@ const navGroups: SidebarNavItem[] = [
         icon: CalendarCheckIcon,
       },
       {
+        title: 'Tipe Sesi',
+        href: '/dashboard/owner/session-type',
+        icon: Calendar01Icon,
+      },
+      {
         title: 'Aktivitas',
         href: '/dashboard/owner/activity',
         icon: Folder01Icon,
