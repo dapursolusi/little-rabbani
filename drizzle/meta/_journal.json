@@ -127,6 +127,20 @@
       "when": 1784540867664,
       "tag": "0017_purple_loki",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1784542442137,
+      "tag": "0018_cynical_iron_monger",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1784542554843,
+      "tag": "0019_oval_spectrum",
+      "breakpoints": true
     }
   ]
 }

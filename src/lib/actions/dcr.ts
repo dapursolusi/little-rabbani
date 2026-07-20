@@ -1,6 +1,6 @@
 'use server';
 
-import { asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -10,8 +10,10 @@ import {
   dailyClassReport,
   dcrActivity,
   scheduleItem,
+  sessionType,
   termSession,
 } from '@/lib/db/schema';
+import { resolveSessionType } from '@/lib/session-type-resolver';
 
 // ─────────────── Zod Schemas ───────────────
 
@@ -72,12 +74,39 @@ export async function getScheduleActivitiesForDcr(sessionId: string) {
     return { success: false as const, error: auth.error };
   }
 
+  // Resolve sessionId -> (date, sessionTypeId) via termSession
+  const ts = await db.query.termSession.findFirst({
+    where: eq(termSession.id, sessionId),
+  });
+
+  if (!ts) {
+    return { success: true as const, data: [] };
+  }
+
+  // Resolve session type from the termSession's label + date
+  const allTypes = await db.query.sessionType.findMany({
+    where: isNull(sessionType.deletedAt),
+  });
+  const resolved = resolveSessionType(allTypes, ts.label, ts.date);
+
+  if (!resolved) {
+    // Fallback: query by sessionId FK (old key, still valid until contract phase)
+    const items = await db.query.scheduleItem.findMany({
+      where: eq(scheduleItem.sessionId, sessionId),
+      orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
+      with: { activity: true },
+    });
+    return { success: true as const, data: items };
+  }
+
   const items = await db.query.scheduleItem.findMany({
-    where: eq(scheduleItem.sessionId, sessionId),
+    where: and(
+      eq(scheduleItem.date, ts.date),
+      eq(scheduleItem.sessionTypeId, resolved.id),
+      isNull(scheduleItem.deletedAt)
+    ),
     orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
-    with: {
-      activity: true,
-    },
+    with: { activity: true },
   });
 
   return { success: true as const, data: items };

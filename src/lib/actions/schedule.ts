@@ -4,14 +4,16 @@ import { and, asc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { db } from '@/lib/db';
-import { scheduleItem, termSession } from '@/lib/db/schema';
+import { scheduleItem, sessionType } from '@/lib/db/schema';
 
 import { requireOwner } from './utils';
 
 // ─────────────── Zod Schemas ───────────────
 
 const CreateScheduleItemSchema = z.object({
-  sessionId: z.string().min(1, 'Sesi wajib dipilih'),
+  date: z.string().min(1, 'Tanggal wajib dipilih'),
+  sessionTypeId: z.string().min(1, 'Tipe sesi wajib dipilih'),
+  sessionId: z.string().min(1),
   activityId: z.string().optional().or(z.literal('')),
   type: z.enum(['activity', 'outing']),
   outingLocation: z.string().optional().or(z.literal('')),
@@ -36,30 +38,23 @@ const DeleteScheduleItemSchema = z.object({
 
 // ─────────────── Helpers ───────────────
 
-function getSessionDateTime(session: {
-  date: string;
-  startTime: string;
-  endTime: string;
-}): { startAt: Date; endAt: Date } {
-  const startAt = new Date(`${session.date}T${session.startTime}`);
-  const endAt = new Date(`${session.date}T${session.endTime}`);
-  return { startAt, endAt };
-}
-
 /**
- * Check if a session is locked (start time has passed).
- * Schedule edits are only allowed before session start time.
+ * Check if a schedule is locked for the given date + session type.
+ * Schedule edits are only allowed before the session start time.
  */
-async function checkSessionLock(sessionId: string): Promise<string | null> {
-  const session = await db.query.termSession.findFirst({
-    where: eq(termSession.id, sessionId),
+async function checkScheduleLock(
+  date: string,
+  sessionTypeId: string
+): Promise<string | null> {
+  const st = await db.query.sessionType.findFirst({
+    where: eq(sessionType.id, sessionTypeId),
   });
 
-  if (!session) {
-    return 'Sesi tidak ditemukan';
+  if (!st) {
+    return 'Tipe sesi tidak ditemukan';
   }
 
-  const { startAt } = getSessionDateTime(session);
+  const startAt = new Date(`${date}T${st.start}`);
   const now = new Date();
 
   if (now >= startAt) {
@@ -72,9 +67,9 @@ async function checkSessionLock(sessionId: string): Promise<string | null> {
 // ─────────────── Read Operations ───────────────
 
 /**
- * Get all schedule items for a given session, ordered by sort_order.
+ * Get all schedule items for a given date + session type, ordered by sort_order.
  */
-export async function getScheduleItems(sessionId: string) {
+export async function getScheduleItems(date: string, sessionTypeId: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
@@ -82,7 +77,8 @@ export async function getScheduleItems(sessionId: string) {
 
   const items = await db.query.scheduleItem.findMany({
     where: and(
-      eq(scheduleItem.sessionId, sessionId),
+      eq(scheduleItem.date, date),
+      eq(scheduleItem.sessionTypeId, sessionTypeId),
       isNull(scheduleItem.deletedAt)
     ),
     orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
@@ -96,26 +92,21 @@ export async function getScheduleItems(sessionId: string) {
 
 /**
  * Get schedule items for teacher dashboard (no role guard - accessible by both).
- * Returns schedule items for sessions happening today.
- * The session must NOT be a holiday.
+ * Returns schedule items for sessions happening today keyed by date directly.
  */
 export async function getTodaySchedule() {
   const today = new Date().toISOString().split('T')[0];
 
-  const sessions = await db.query.termSession.findMany({
-    where: and(eq(termSession.date, today), eq(termSession.isHoliday, false)),
-    orderBy: [asc(termSession.startTime)],
+  const items = await db.query.scheduleItem.findMany({
+    where: and(eq(scheduleItem.date, today), isNull(scheduleItem.deletedAt)),
+    orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
     with: {
-      scheduleItems: {
-        orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
-        with: {
-          activity: true,
-        },
-      },
+      activity: true,
+      sessionType: true,
     },
   });
 
-  return { success: true as const, data: sessions };
+  return { success: true as const, data: items };
 }
 
 /**
@@ -124,45 +115,25 @@ export async function getTodaySchedule() {
 export async function getUpcomingSchedule() {
   const today = new Date().toISOString().split('T')[0];
 
-  const sessions = await db.query.termSession.findMany({
-    where: and(
-      eq(termSession.isHoliday, false)
-      // We'll get sessions from today onwards
-    ),
-    orderBy: [asc(termSession.date), asc(termSession.startTime)],
+  const items = await db.query.scheduleItem.findMany({
+    where: isNull(scheduleItem.deletedAt),
+    orderBy: [asc(scheduleItem.date), asc(scheduleItem.sortOrder)],
     with: {
-      scheduleItems: {
-        orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
-        with: {
-          activity: true,
-        },
-      },
+      activity: true,
+      sessionType: true,
     },
   });
 
   // Filter by date range
-  const filtered = sessions.filter((s) => {
-    return s.date >= today;
-  });
+  const filtered = items.filter((i) => i.date && i.date >= today);
 
   return { success: true as const, data: filtered.slice(0, 20) };
-}
-
-/**
- * Check if a session is a holiday.
- */
-export async function isSessionHoliday(sessionId: string) {
-  const session = await db.query.termSession.findFirst({
-    where: eq(termSession.id, sessionId),
-  });
-
-  return session?.isHoliday ?? false;
 }
 
 // ─────────────── Mutations (Owner-only) ───────────────
 
 /**
- * Create a schedule item for a session.
+ * Create a schedule item for a (date, sessionTypeId) pair.
  * VAL-CAPTURE-001: Owner creates schedule item with catalog activity.
  * VAL-CAPTURE-002: Owner creates schedule item with outing.
  * VAL-CAPTURE-004: Schedule editable until session start time.
@@ -183,24 +154,8 @@ export async function createScheduleItem(formData: FormData) {
 
   const data = parsed.data;
 
-  // Check if session is holiday
-  const session = await db.query.termSession.findFirst({
-    where: eq(termSession.id, data.sessionId),
-  });
-
-  if (!session) {
-    return { success: false as const, error: 'Sesi tidak ditemukan' };
-  }
-
-  if (session.isHoliday) {
-    return {
-      success: false as const,
-      error: 'Tidak bisa menambahkan jadwal ke hari libur',
-    };
-  }
-
-  // Check session lock
-  const lockError = await checkSessionLock(data.sessionId);
+  // Check schedule lock
+  const lockError = await checkScheduleLock(data.date, data.sessionTypeId);
   if (lockError) {
     return { success: false as const, error: lockError };
   }
@@ -209,7 +164,12 @@ export async function createScheduleItem(formData: FormData) {
   const existingItems = await db
     .select({ sortOrder: scheduleItem.sortOrder })
     .from(scheduleItem)
-    .where(eq(scheduleItem.sessionId, data.sessionId))
+    .where(
+      and(
+        eq(scheduleItem.date, data.date),
+        eq(scheduleItem.sessionTypeId, data.sessionTypeId)
+      )
+    )
     .orderBy(asc(scheduleItem.sortOrder));
 
   const nextSortOrder =
@@ -218,10 +178,13 @@ export async function createScheduleItem(formData: FormData) {
       : 0;
 
   try {
+    // ponytail: sessionId still written to maintain FK until contract phase (ticket #8)
     const [newItem] = await db
       .insert(scheduleItem)
       .values({
         sessionId: data.sessionId,
+        date: data.date,
+        sessionTypeId: data.sessionTypeId,
         activityId: data.activityId || null,
         type: data.type,
         outingLocation: data.outingLocation || null,
@@ -261,7 +224,7 @@ export async function updateScheduleItem(formData: FormData) {
 
   const data = parsed.data;
 
-  // Get the existing item to find the session
+  // Get the existing item to find date + sessionTypeId for lock check
   const existingItem = await db.query.scheduleItem.findFirst({
     where: eq(scheduleItem.id, data.id),
   });
@@ -270,8 +233,18 @@ export async function updateScheduleItem(formData: FormData) {
     return { success: false as const, error: 'Item jadwal tidak ditemukan' };
   }
 
-  // Check session lock
-  const lockError = await checkSessionLock(existingItem.sessionId);
+  if (!existingItem.date || !existingItem.sessionTypeId) {
+    return {
+      success: false as const,
+      error: 'Item jadwal belum memiliki data tanggal',
+    };
+  }
+
+  // Check schedule lock
+  const lockError = await checkScheduleLock(
+    existingItem.date,
+    existingItem.sessionTypeId
+  );
   if (lockError) {
     return { success: false as const, error: lockError };
   }
@@ -322,7 +295,7 @@ export async function deleteScheduleItem(formData: FormData) {
 
   const { id } = parsed.data;
 
-  // Get the existing item
+  // Get the existing item to check lock
   const existingItem = await db.query.scheduleItem.findFirst({
     where: eq(scheduleItem.id, id),
   });
@@ -331,8 +304,18 @@ export async function deleteScheduleItem(formData: FormData) {
     return { success: false as const, error: 'Item jadwal tidak ditemukan' };
   }
 
-  // Check session lock
-  const lockError = await checkSessionLock(existingItem.sessionId);
+  if (!existingItem.date || !existingItem.sessionTypeId) {
+    return {
+      success: false as const,
+      error: 'Item jadwal belum memiliki data tanggal',
+    };
+  }
+
+  // Check schedule lock
+  const lockError = await checkScheduleLock(
+    existingItem.date,
+    existingItem.sessionTypeId
+  );
   if (lockError) {
     return { success: false as const, error: lockError };
   }
@@ -366,7 +349,7 @@ export async function reorderScheduleItems(
     return { success: true as const, data: undefined };
   }
 
-  // Check session lock for the first item's session
+  // Check schedule lock for the first item
   const firstItem = await db.query.scheduleItem.findFirst({
     where: eq(scheduleItem.id, items[0].id),
   });
@@ -375,7 +358,17 @@ export async function reorderScheduleItems(
     return { success: false as const, error: 'Item jadwal tidak ditemukan' };
   }
 
-  const lockError = await checkSessionLock(firstItem.sessionId);
+  if (!firstItem.date || !firstItem.sessionTypeId) {
+    return {
+      success: false as const,
+      error: 'Item jadwal belum memiliki data tanggal',
+    };
+  }
+
+  const lockError = await checkScheduleLock(
+    firstItem.date,
+    firstItem.sessionTypeId
+  );
   if (lockError) {
     return { success: false as const, error: lockError };
   }
