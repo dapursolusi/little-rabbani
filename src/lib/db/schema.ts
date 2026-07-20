@@ -1,4 +1,4 @@
-import { relations } from 'drizzle-orm';
+import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   date,
@@ -9,6 +9,7 @@ import {
   text,
   timestamp,
   unique,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -143,6 +144,33 @@ export const kid = pgTable('kid', {
   deletedAt: timestamp('deleted_at'),
 });
 
+export const sessionType = pgTable(
+  'session_type',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull(),
+    start: text('start').notNull(), // HH:mm format
+    end: text('end').notNull(), // HH:mm format
+    active: boolean('active').notNull().default(true),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => ({
+    sessionTypeNameStartEnd: unique('session_type_name_start_end').on(
+      table.name,
+      table.start,
+      table.end
+    ),
+    sessionTypeActiveName: uniqueIndex('session_type_active_name')
+      .on(table.name)
+      .where(sql`active = true`),
+  })
+);
+
 export const termSession = pgTable('term_session', {
   id: uuid('id').defaultRandom().primaryKey(),
   termId: uuid('term_id')
@@ -224,6 +252,11 @@ export const scheduleItem = pgTable('schedule_item', {
     .$onUpdateFn(() => new Date()),
   deletedAt: timestamp('deleted_at'),
 });
+
+export const sessionTypeRelations = relations(
+  sessionType,
+  ({ many: _many }) => ({})
+);
 
 export const termSessionRelations = relations(termSession, ({ one, many }) => ({
   term: one(term, {
