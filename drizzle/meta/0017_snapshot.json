@@ -1,6 +1,6 @@
 {
-  "id": "6eead5a2-08fb-42fe-8117-ecf00b9d9b52",
-  "prevId": "ca3b7f50-1c70-42af-9955-3372f9c46714",
+  "id": "0f7d157d-8306-46bd-a128-7d239d5519b5",
+  "prevId": "6eead5a2-08fb-42fe-8117-ecf00b9d9b52",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -95,8 +95,12 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -231,8 +235,12 @@
           "name": "daily_class_report_session_id_term_session_id_fk",
           "tableFrom": "daily_class_report",
           "tableTo": "term_session",
-          "columnsFrom": ["session_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -240,8 +248,12 @@
           "name": "daily_class_report_captured_by_user_id_fk",
           "tableFrom": "daily_class_report",
           "tableTo": "user",
-          "columnsFrom": ["captured_by"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "captured_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -251,7 +263,9 @@
         "daily_class_report_session_id_unique": {
           "name": "daily_class_report_session_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["session_id"]
+          "columns": [
+            "session_id"
+          ]
         }
       },
       "policies": {},
@@ -347,8 +361,12 @@
           "name": "daily_report_snapshot_kid_id_kid_id_fk",
           "tableFrom": "daily_report_snapshot",
           "tableTo": "kid",
-          "columnsFrom": ["kid_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "kid_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -356,8 +374,12 @@
           "name": "daily_report_snapshot_session_id_term_session_id_fk",
           "tableFrom": "daily_report_snapshot",
           "tableTo": "term_session",
-          "columnsFrom": ["session_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -365,8 +387,12 @@
           "name": "daily_report_snapshot_edited_by_user_id_fk",
           "tableFrom": "daily_report_snapshot",
           "tableTo": "user",
-          "columnsFrom": ["edited_by"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "edited_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -376,7 +402,10 @@
         "daily_report_snapshot_kid_id_session_id_unique": {
           "name": "daily_report_snapshot_kid_id_session_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["kid_id", "session_id"]
+          "columns": [
+            "kid_id",
+            "session_id"
+          ]
         }
       },
       "policies": {},
@@ -447,8 +476,12 @@
           "name": "dcr_activity_dcr_id_daily_class_report_id_fk",
           "tableFrom": "dcr_activity",
           "tableTo": "daily_class_report",
-          "columnsFrom": ["dcr_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "dcr_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -456,8 +489,12 @@
           "name": "dcr_activity_activity_id_activity_id_fk",
           "tableFrom": "dcr_activity",
           "tableTo": "activity",
-          "columnsFrom": ["activity_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "activity_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -576,7 +613,9 @@
         "idempotency_key_key_unique": {
           "name": "idempotency_key_key_unique",
           "nullsNotDistinct": false,
-          "columns": ["key"]
+          "columns": [
+            "key"
+          ]
         }
       },
       "policies": {},
@@ -653,8 +692,12 @@
           "name": "kid_guardian_id_guardian_id_fk",
           "tableFrom": "kid",
           "tableTo": "guardian",
-          "columnsFrom": ["guardian_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "guardian_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -662,8 +705,12 @@
           "name": "kid_enrolled_term_id_term_id_fk",
           "tableFrom": "kid",
           "tableTo": "term",
-          "columnsFrom": ["enrolled_term_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "enrolled_term_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -775,8 +822,12 @@
           "name": "monthly_report_snapshot_kid_id_kid_id_fk",
           "tableFrom": "monthly_report_snapshot",
           "tableTo": "kid",
-          "columnsFrom": ["kid_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "kid_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -784,8 +835,12 @@
           "name": "monthly_report_snapshot_term_id_term_id_fk",
           "tableFrom": "monthly_report_snapshot",
           "tableTo": "term",
-          "columnsFrom": ["term_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "term_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -793,8 +848,12 @@
           "name": "monthly_report_snapshot_edited_by_user_id_fk",
           "tableFrom": "monthly_report_snapshot",
           "tableTo": "user",
-          "columnsFrom": ["edited_by"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "edited_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -804,7 +863,10 @@
         "monthly_report_snapshot_kid_id_month_unique": {
           "name": "monthly_report_snapshot_kid_id_month_unique",
           "nullsNotDistinct": false,
-          "columns": ["kid_id", "month"]
+          "columns": [
+            "kid_id",
+            "month"
+          ]
         }
       },
       "policies": {},
@@ -908,8 +970,12 @@
           "name": "observation_kid_id_kid_id_fk",
           "tableFrom": "observation",
           "tableTo": "kid",
-          "columnsFrom": ["kid_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "kid_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -917,8 +983,12 @@
           "name": "observation_session_id_term_session_id_fk",
           "tableFrom": "observation",
           "tableTo": "term_session",
-          "columnsFrom": ["session_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -926,8 +996,12 @@
           "name": "observation_teacher_id_user_id_fk",
           "tableFrom": "observation",
           "tableTo": "user",
-          "columnsFrom": ["teacher_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "teacher_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -937,7 +1011,10 @@
         "observation_kid_id_session_id_unique": {
           "name": "observation_kid_id_session_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["kid_id", "session_id"]
+          "columns": [
+            "kid_id",
+            "session_id"
+          ]
         }
       },
       "policies": {},
@@ -988,8 +1065,12 @@
           "name": "observation_activity_observation_id_observation_id_fk",
           "tableFrom": "observation_activity",
           "tableTo": "observation",
-          "columnsFrom": ["observation_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "observation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -997,8 +1078,12 @@
           "name": "observation_activity_dcr_activity_id_dcr_activity_id_fk",
           "tableFrom": "observation_activity",
           "tableTo": "dcr_activity",
-          "columnsFrom": ["dcr_activity_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "dcr_activity_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1008,7 +1093,10 @@
         "observation_activity_observation_id_dcr_activity_id_unique": {
           "name": "observation_activity_observation_id_dcr_activity_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["observation_id", "dcr_activity_id"]
+          "columns": [
+            "observation_id",
+            "dcr_activity_id"
+          ]
         }
       },
       "policies": {},
@@ -1058,8 +1146,12 @@
           "name": "observation_note_observation_id_observation_id_fk",
           "tableFrom": "observation_note",
           "tableTo": "observation",
-          "columnsFrom": ["observation_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "observation_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1139,8 +1231,12 @@
           "name": "push_subscription_user_id_user_id_fk",
           "tableFrom": "push_subscription",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1258,8 +1354,12 @@
           "name": "quarterly_report_snapshot_kid_id_kid_id_fk",
           "tableFrom": "quarterly_report_snapshot",
           "tableTo": "kid",
-          "columnsFrom": ["kid_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "kid_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1267,8 +1367,12 @@
           "name": "quarterly_report_snapshot_term_id_term_id_fk",
           "tableFrom": "quarterly_report_snapshot",
           "tableTo": "term",
-          "columnsFrom": ["term_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "term_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1276,8 +1380,12 @@
           "name": "quarterly_report_snapshot_edited_by_user_id_fk",
           "tableFrom": "quarterly_report_snapshot",
           "tableTo": "user",
-          "columnsFrom": ["edited_by"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "edited_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1287,7 +1395,10 @@
         "quarterly_report_snapshot_kid_id_term_id_unique": {
           "name": "quarterly_report_snapshot_kid_id_term_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["kid_id", "term_id"]
+          "columns": [
+            "kid_id",
+            "term_id"
+          ]
         }
       },
       "policies": {},
@@ -1352,8 +1463,12 @@
           "name": "reminder_config_user_id_user_id_fk",
           "tableFrom": "reminder_config",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1363,7 +1478,9 @@
         "reminder_config_user_id_unique": {
           "name": "reminder_config_user_id_unique",
           "nullsNotDistinct": false,
-          "columns": ["user_id"]
+          "columns": [
+            "user_id"
+          ]
         }
       },
       "policies": {},
@@ -1433,8 +1550,12 @@
           "name": "reminder_log_user_id_user_id_fk",
           "tableFrom": "reminder_log",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1442,8 +1563,12 @@
           "name": "reminder_log_session_id_term_session_id_fk",
           "tableFrom": "reminder_log",
           "tableTo": "term_session",
-          "columnsFrom": ["session_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1505,7 +1630,9 @@
         "report_template_key_unique": {
           "name": "report_template_key_unique",
           "nullsNotDistinct": false,
-          "columns": ["key"]
+          "columns": [
+            "key"
+          ]
         }
       },
       "policies": {},
@@ -1595,8 +1722,12 @@
           "name": "schedule_item_session_id_term_session_id_fk",
           "tableFrom": "schedule_item",
           "tableTo": "term_session",
-          "columnsFrom": ["session_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
@@ -1604,8 +1735,12 @@
           "name": "schedule_item_activity_id_activity_id_fk",
           "tableFrom": "schedule_item",
           "tableTo": "activity",
-          "columnsFrom": ["activity_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "activity_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1677,8 +1812,12 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1688,7 +1827,101 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": ["token"]
+          "columns": [
+            "token"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.session_type": {
+      "name": "session_type",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "start": {
+          "name": "start",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "end": {
+          "name": "end",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "active": {
+          "name": "active",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "session_type_active_name": {
+          "name": "session_type_active_name",
+          "columns": [
+            {
+              "expression": "name",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "active = true",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "session_type_name_start_end": {
+          "name": "session_type_name_start_end",
+          "nullsNotDistinct": false,
+          "columns": [
+            "name",
+            "start",
+            "end"
+          ]
         }
       },
       "policies": {},
@@ -1841,8 +2074,12 @@
           "name": "term_session_term_id_term_id_fk",
           "tableFrom": "term_session",
           "tableTo": "term",
-          "columnsFrom": ["term_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "term_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -1918,7 +2155,9 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": ["email"]
+          "columns": [
+            "email"
+          ]
         }
       },
       "policies": {},
@@ -1981,7 +2220,12 @@
     "public.absence_reason": {
       "name": "absence_reason",
       "schema": "public",
-      "values": ["sick", "family", "permission", "other"]
+      "values": [
+        "sick",
+        "family",
+        "permission",
+        "other"
+      ]
     },
     "public.activity_category": {
       "name": "activity_category",
@@ -2002,57 +2246,98 @@
     "public.appetite": {
       "name": "appetite",
       "schema": "public",
-      "values": ["good", "moderate", "poor"]
+      "values": [
+        "good",
+        "moderate",
+        "poor"
+      ]
     },
     "public.daily_report_status": {
       "name": "daily_report_status",
       "schema": "public",
-      "values": ["draft", "sent", "stale"]
+      "values": [
+        "draft",
+        "sent",
+        "stale"
+      ]
     },
     "public.deviation": {
       "name": "deviation",
       "schema": "public",
-      "values": ["done", "skipped", "modified"]
+      "values": [
+        "done",
+        "skipped",
+        "modified"
+      ]
     },
     "public.kid_status": {
       "name": "kid_status",
       "schema": "public",
-      "values": ["waiting", "enrolled", "alumni"]
+      "values": [
+        "waiting",
+        "enrolled",
+        "alumni"
+      ]
     },
     "public.monthly_report_status": {
       "name": "monthly_report_status",
       "schema": "public",
-      "values": ["draft", "final", "stale"]
+      "values": [
+        "draft",
+        "final",
+        "stale"
+      ]
     },
     "public.participation": {
       "name": "participation",
       "schema": "public",
-      "values": ["yes", "no"]
+      "values": [
+        "yes",
+        "no"
+      ]
     },
     "public.presence": {
       "name": "presence",
       "schema": "public",
-      "values": ["present_full", "late", "early_pickup", "absent"]
+      "values": [
+        "present_full",
+        "late",
+        "early_pickup",
+        "absent"
+      ]
     },
     "public.quarterly_report_status": {
       "name": "quarterly_report_status",
       "schema": "public",
-      "values": ["draft", "final", "stale"]
+      "values": [
+        "draft",
+        "final",
+        "stale"
+      ]
     },
     "public.reminder_type": {
       "name": "reminder_type",
       "schema": "public",
-      "values": ["capture_pending", "schedule_entry"]
+      "values": [
+        "capture_pending",
+        "schedule_entry"
+      ]
     },
     "public.role": {
       "name": "role",
       "schema": "public",
-      "values": ["owner", "teacher"]
+      "values": [
+        "owner",
+        "teacher"
+      ]
     },
     "public.schedule_item_type": {
       "name": "schedule_item_type",
       "schema": "public",
-      "values": ["activity", "outing"]
+      "values": [
+        "activity",
+        "outing"
+      ]
     }
   },
   "schemas": {},
