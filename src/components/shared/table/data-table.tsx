@@ -196,9 +196,9 @@ export function DataTable<TData, TValue>({
   if (data.length === 0) {
     return (
       <EmptyState
-        title={'Belum ada data'}
-        description={'Mulai dengan menambahkan murid baru.'}
-        actionLabel={'Tambah Murid'}
+        title={`Belum ada ${meta.label.toLowerCase()}`}
+        description={`Mulai dengan menambahkan ${meta.label.toLowerCase()} baru.`}
+        actionLabel={`Tambah ${meta.label}`}
         actionHref={'/dashboard/owner/kid/create'}
       />
     );
