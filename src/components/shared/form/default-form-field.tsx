@@ -22,6 +22,7 @@ export interface CreateUpdateFormProps {
   schemaKey?: SchemaKey;
   initialData: Record<string, unknown>;
   formFields: FormField[];
+  actionHref?: string;
   onSubmit?: (data: Record<string, unknown>) => unknown | Promise<unknown>;
   children?: ReactNode | ((ctx: { isSubmitting: boolean }) => ReactNode);
   meta?: { label: string; domain?: string };

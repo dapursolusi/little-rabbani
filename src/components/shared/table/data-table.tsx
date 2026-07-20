@@ -199,7 +199,7 @@ export function DataTable<TData, TValue>({
         title={`Belum ada ${meta.label.toLowerCase()}`}
         description={`Mulai dengan menambahkan ${meta.label.toLowerCase()} baru.`}
         actionLabel={`Tambah ${meta.label}`}
-        actionHref={'/dashboard/owner/kid/create'}
+        actionHref={form.actionHref ?? '/dashboard/owner/kid/create'}
       />
     );
   }

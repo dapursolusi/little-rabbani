@@ -18,34 +18,38 @@ export async function getSessionTypes(params?: {
     return { success: false as const, error: auth.error };
   }
 
-  const { search, limit = 50, offset = 0 } = params ?? {};
+  try {
+    const { search, limit = 50, offset = 0 } = params ?? {};
 
-  const conditions = [
-    eq(sessionType.active, true),
-    isNull(sessionType.deletedAt),
-  ];
-  if (search) {
-    conditions.push(ilike(sessionType.name, `%${search}%`));
+    const conditions = [
+      eq(sessionType.active, true),
+      isNull(sessionType.deletedAt),
+    ];
+    if (search) {
+      conditions.push(ilike(sessionType.name, `%${search}%`));
+    }
+
+    const where = and(...conditions);
+
+    const [items, totalResult] = await Promise.all([
+      db.query.sessionType.findMany({
+        where,
+        orderBy: (sessionType, { desc }) => [desc(sessionType.createdAt)],
+        limit,
+        offset,
+      }),
+      db
+        .select({ count: sql<number>`count(*)` })
+        .from(sessionType)
+        .where(where),
+    ]);
+
+    const total = totalResult?.[0]?.count ?? 0;
+
+    return { success: true as const, data: items, total };
+  } catch {
+    return { success: false as const, error: 'Gagal mengambil data sesi' };
   }
-
-  const where = and(...conditions);
-
-  const [items, totalResult] = await Promise.all([
-    db.query.sessionType.findMany({
-      where,
-      orderBy: (sessionType, { desc }) => [desc(sessionType.createdAt)],
-      limit,
-      offset,
-    }),
-    db
-      .select({ count: sql<number>`count(*)` })
-      .from(sessionType)
-      .where(where),
-  ]);
-
-  const total = totalResult?.[0]?.count ?? 0;
-
-  return { success: true as const, data: items, total };
 }
 
 export async function getSessionType(id: string) {
@@ -54,15 +58,19 @@ export async function getSessionType(id: string) {
     return { success: false as const, error: auth.error };
   }
 
-  const result = await db.query.sessionType.findFirst({
-    where: eq(sessionType.id, id),
-  });
+  try {
+    const result = await db.query.sessionType.findFirst({
+      where: eq(sessionType.id, id),
+    });
 
-  if (!result) {
-    return { success: false as const, error: 'Sesi tidak ditemukan' };
+    if (!result) {
+      return { success: false as const, error: 'Sesi tidak ditemukan' };
+    }
+
+    return { success: true as const, data: result };
+  } catch {
+    return { success: false as const, error: 'Gagal mengambil data sesi' };
   }
-
-  return { success: true as const, data: result };
 }
 
 export async function createSessionType(input: Record<string, unknown>) {
