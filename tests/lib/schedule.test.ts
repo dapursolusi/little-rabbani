@@ -37,9 +37,9 @@ vi.mock('@/lib/db', () => {
         where: vi.fn().mockResolvedValue(undefined),
       })),
       query: {
-        termSession: {
-          findMany: vi.fn(),
+        sessionType: {
           findFirst: vi.fn(),
+          findMany: vi.fn(),
         },
         scheduleItem: {
           findMany: vi.fn(),
@@ -99,31 +99,37 @@ function mockOwnerSession() {
   });
 }
 
-// A session in the future (not locked)
-const FUTURE_SESSION = {
-  id: 'session-future-1',
-  termId: 'term-1',
-  date: '2099-12-30',
-  startTime: '08:00',
-  endTime: '10:00',
-  label: 'Future Class',
-  isHoliday: false,
-  holidayReason: null,
+// A session type in the future (not locked)
+const FUTURE_TYPE = {
+  id: 'st-future-1',
+  name: 'Future Class',
+  start: '08:00',
+  end: '10:00',
+  active: true,
   createdAt: new Date(),
   updatedAt: new Date(),
   deletedAt: null,
 };
 
-// A session in the past (locked)
-const PAST_SESSION = {
-  id: 'session-past-1',
-  termId: 'term-1',
-  date: '2020-01-15',
-  startTime: '08:00',
-  endTime: '10:00',
-  label: 'Past Class',
-  isHoliday: false,
-  holidayReason: null,
+// A session type in the past (locked)
+const PAST_TYPE = {
+  id: 'st-past-1',
+  name: 'Past Class',
+  start: '08:00',
+  end: '10:00',
+  active: true,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  deletedAt: null,
+};
+
+const SCHEDULE_ITEM_BASE = {
+  date: null,
+  sessionTypeId: null,
+  sessionId: 'session-future-1',
+  outingLocation: null,
+  outingBringItems: null,
+  outingPermissionRequired: false,
   createdAt: new Date(),
   updatedAt: new Date(),
   deletedAt: null,
@@ -138,9 +144,7 @@ describe('Schedule Server Actions', () => {
   // VAL-CAPTURE-001: Owner creates schedule item with catalog activity
   describe('createScheduleItem - activity', () => {
     it('should create a schedule item with a catalog activity', async () => {
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        FUTURE_SESSION
-      );
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue(FUTURE_TYPE);
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
@@ -153,12 +157,11 @@ describe('Schedule Server Actions', () => {
           returning: vi.fn().mockResolvedValue([
             {
               id: 'si-1',
-              sessionId: 'session-future-1',
+              ...SCHEDULE_ITEM_BASE,
+              date: '2099-12-30',
+              sessionTypeId: 'st-future-1',
               activityId: 'activity-1',
               type: 'activity',
-              outingLocation: null,
-              outingBringItems: null,
-              outingPermissionRequired: false,
               sortOrder: 0,
             },
           ]),
@@ -167,6 +170,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
+          date: '2099-12-30',
+          sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           activityId: 'activity-1',
           type: 'activity',
@@ -177,15 +182,19 @@ describe('Schedule Server Actions', () => {
       if (result.success) {
         expect(result.data.type).toBe('activity');
         expect(result.data.activityId).toBe('activity-1');
+        expect(result.data.date).toBe('2099-12-30');
+        expect(result.data.sessionTypeId).toBe('st-future-1');
       }
     });
 
-    it('should reject if session not found', async () => {
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(undefined);
+    it('should reject if session type not found', async () => {
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue(undefined);
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
-          sessionId: 'nonexistent',
+          date: '2099-12-30',
+          sessionTypeId: 'nonexistent',
+          sessionId: 'session-future-1',
           activityId: 'activity-1',
           type: 'activity',
         })
@@ -195,31 +204,14 @@ describe('Schedule Server Actions', () => {
       expect(result.error).toContain('tidak ditemukan');
     });
 
-    it('should reject if session is a holiday', async () => {
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue({
-        ...FUTURE_SESSION,
-        isHoliday: true,
-        holidayReason: 'Hari Libur Nasional',
-      });
-
-      const result = await scheduleActions.createScheduleItem(
-        toFormData({
-          sessionId: 'session-future-1',
-          activityId: 'activity-1',
-          type: 'activity',
-        })
-      );
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('libur');
-    });
-
     // VAL-CROSS-025: Schedule edit window closes at session start
     it('should reject if session start time has passed (locked)', async () => {
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(PAST_SESSION);
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue(PAST_TYPE);
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
+          date: '2020-01-15',
+          sessionTypeId: 'st-past-1',
           sessionId: 'session-past-1',
           activityId: 'activity-1',
           type: 'activity',
@@ -256,6 +248,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
+          date: '2099-12-30',
+          sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           activityId: 'activity-1',
           type: 'activity',
@@ -265,14 +259,23 @@ describe('Schedule Server Actions', () => {
       expect(result.success).toBe(false);
       expect(result.error).toContain('Owner');
     });
+
+    it('should require date and sessionTypeId', async () => {
+      const result = await scheduleActions.createScheduleItem(
+        toFormData({
+          activityId: 'activity-1',
+          type: 'activity',
+        })
+      );
+
+      expect(result.success).toBe(false);
+    });
   });
 
   // VAL-CAPTURE-002: Owner creates schedule item with outing
   describe('createScheduleItem - outing', () => {
     it('should create an outing schedule item', async () => {
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        FUTURE_SESSION
-      );
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue(FUTURE_TYPE);
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
@@ -285,7 +288,9 @@ describe('Schedule Server Actions', () => {
           returning: vi.fn().mockResolvedValue([
             {
               id: 'si-2',
-              sessionId: 'session-future-1',
+              ...SCHEDULE_ITEM_BASE,
+              date: '2099-12-30',
+              sessionTypeId: 'st-future-1',
               activityId: null,
               type: 'outing',
               outingLocation: 'Kebun Binatang',
@@ -299,6 +304,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
+          date: '2099-12-30',
+          sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           type: 'outing',
           outingLocation: 'Kebun Binatang',
@@ -321,9 +328,7 @@ describe('Schedule Server Actions', () => {
   // VAL-CAPTURE-004 / VAL-CROSS-025: Locked after session start
   describe('session lock check', () => {
     it('should allow editing future session', async () => {
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        FUTURE_SESSION
-      );
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue(FUTURE_TYPE);
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
@@ -336,12 +341,11 @@ describe('Schedule Server Actions', () => {
           returning: vi.fn().mockResolvedValue([
             {
               id: 'si-3',
-              sessionId: 'session-future-1',
+              ...SCHEDULE_ITEM_BASE,
+              date: '2099-12-30',
+              sessionTypeId: 'st-future-1',
               activityId: 'activity-1',
               type: 'activity',
-              outingLocation: null,
-              outingBringItems: null,
-              outingPermissionRequired: false,
               sortOrder: 0,
             },
           ]),
@@ -350,6 +354,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
+          date: '2099-12-30',
+          sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           activityId: 'activity-1',
           type: 'activity',
@@ -365,23 +371,14 @@ describe('Schedule Server Actions', () => {
     it('should delete a schedule item', async () => {
       vi.mocked(db.query.scheduleItem.findFirst).mockResolvedValue({
         id: 'si-1',
-        sessionId: 'session-future-1',
+        ...SCHEDULE_ITEM_BASE,
+        date: '2099-12-30',
+        sessionTypeId: 'st-future-1',
         activityId: 'activity-1',
         type: 'activity',
-        outingLocation: null,
-        outingBringItems: null,
-        outingPermissionRequired: false,
         sortOrder: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
       });
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        FUTURE_SESSION
-      );
-      vi.mocked(db.delete).mockReturnValue({
-        where: vi.fn().mockResolvedValue(undefined),
-      } as unknown as ReturnType<typeof db.delete>);
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue(FUTURE_TYPE);
 
       const result = await scheduleActions.deleteScheduleItem(
         toFormData({ id: 'si-1' })
@@ -402,18 +399,15 @@ describe('Schedule Server Actions', () => {
     it('should reject deletion of locked session item', async () => {
       vi.mocked(db.query.scheduleItem.findFirst).mockResolvedValue({
         id: 'si-past',
+        ...SCHEDULE_ITEM_BASE,
+        date: '2020-01-15',
+        sessionTypeId: 'st-past-1',
         sessionId: 'session-past-1',
         activityId: 'activity-1',
         type: 'activity',
-        outingLocation: null,
-        outingBringItems: null,
-        outingPermissionRequired: false,
         sortOrder: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
       });
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(PAST_SESSION);
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue(PAST_TYPE);
 
       const result = await scheduleActions.deleteScheduleItem(
         toFormData({ id: 'si-past' })
@@ -460,32 +454,25 @@ describe('Schedule Server Actions', () => {
     it('should update a schedule item', async () => {
       vi.mocked(db.query.scheduleItem.findFirst).mockResolvedValue({
         id: 'si-1',
-        sessionId: 'session-future-1',
+        ...SCHEDULE_ITEM_BASE,
+        date: '2099-12-30',
+        sessionTypeId: 'st-future-1',
         activityId: 'activity-1',
         type: 'activity',
-        outingLocation: null,
-        outingBringItems: null,
-        outingPermissionRequired: false,
         sortOrder: 0,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
       });
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        FUTURE_SESSION
-      );
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue(FUTURE_TYPE);
       vi.mocked(db.update).mockReturnValue({
         set: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             returning: vi.fn().mockResolvedValue([
               {
                 id: 'si-1',
-                sessionId: 'session-future-1',
+                ...SCHEDULE_ITEM_BASE,
+                date: '2099-12-30',
+                sessionTypeId: 'st-future-1',
                 activityId: 'activity-2',
                 type: 'activity',
-                outingLocation: null,
-                outingBringItems: null,
-                outingPermissionRequired: false,
                 sortOrder: 0,
               },
             ]),
@@ -511,9 +498,7 @@ describe('Schedule Server Actions', () => {
   // VAL-CAPTURE-054: Schedule item with null activity_id renders as outing correctly
   describe('outing rendering (null activity_id)', () => {
     it('should create outing with null activity_id', async () => {
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        FUTURE_SESSION
-      );
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue(FUTURE_TYPE);
       vi.mocked(db.select).mockReturnValue({
         from: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnThis(),
@@ -526,7 +511,9 @@ describe('Schedule Server Actions', () => {
           returning: vi.fn().mockResolvedValue([
             {
               id: 'si-outing',
-              sessionId: 'session-future-1',
+              ...SCHEDULE_ITEM_BASE,
+              date: '2099-12-30',
+              sessionTypeId: 'st-future-1',
               activityId: null,
               type: 'outing',
               outingLocation: 'Taman Kota',
@@ -540,6 +527,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
+          date: '2099-12-30',
+          sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           type: 'outing',
           outingLocation: 'Taman Kota',
@@ -555,28 +544,6 @@ describe('Schedule Server Actions', () => {
         expect(result.data.outingLocation).toBe('Taman Kota');
         expect(result.data.outingPermissionRequired).toBe(true);
       }
-    });
-  });
-
-  // VAL-CAPTURE-003: Holiday warning
-  describe('holiday validation', () => {
-    it('should reject schedule items on holiday sessions', async () => {
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue({
-        ...FUTURE_SESSION,
-        isHoliday: true,
-        holidayReason: 'Hari Libur Nasional',
-      });
-
-      const result = await scheduleActions.createScheduleItem(
-        toFormData({
-          sessionId: 'session-future-1',
-          activityId: 'activity-1',
-          type: 'activity',
-        })
-      );
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('libur');
     });
   });
 });

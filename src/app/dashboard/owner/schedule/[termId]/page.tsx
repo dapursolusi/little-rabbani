@@ -4,13 +4,17 @@ import { getSessions } from '@/features/session/actions';
 import { getTerm } from '@/features/term/actions';
 import { Alert01Icon, ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
+import { isNull } from 'drizzle-orm';
 
 import { HolidayCalendarView } from '@/components/sections/holiday-calendar-view';
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 
+import { db } from '@/lib/db';
+import { sessionType } from '@/lib/db/schema';
 import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
+import { resolveSessionType } from '@/lib/session-type-resolver';
 import { cn } from '@/lib/utils';
 
 import { SessionScheduleEditor } from './session-schedule-editor';
@@ -30,6 +34,11 @@ export default async function ScheduleTermPage({
     getTerm(termId),
     getSessions(termId),
   ]);
+
+  // Load session types to resolve each termSession -> (date, sessionTypeId)
+  const allTypes = await db.query.sessionType.findMany({
+    where: isNull(sessionType.deletedAt),
+  });
 
   if (!termResult.success) {
     return (
@@ -104,6 +113,13 @@ export default async function ScheduleTermPage({
               const isFuture =
                 nowISO < `${session.date}T${session.startTime}:00`;
 
+              // Resolve session type for this session's label on its date
+              const resolved = resolveSessionType(
+                allTypes,
+                session.label,
+                session.date
+              );
+
               return (
                 <div
                   key={session.id}
@@ -164,6 +180,9 @@ export default async function ScheduleTermPage({
                     ) : (
                       <SessionScheduleEditor
                         sessionId={session.id}
+                        date={session.date}
+                        sessionTypeId={resolved?.id ?? ''}
+                        sessionType={resolved}
                         isLocked={isLocked}
                       />
                     )}

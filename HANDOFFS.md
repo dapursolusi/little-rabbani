@@ -1,26 +1,17 @@
-# HANDOFFS.md
-
-## [Session — 2026-07-18] — Migrate term entity to feature-based pattern
+## [Session — 2026-07-20] — Re-key scheduleItem to (date, sessionTypeId) (Issue #35)
 
 - **What changed:**
-  - `src/features/term/{actions,schema,fields,types}.ts` — feature co-location for term entity
-  - `src/features/term/components/columns.tsx` — `termColumns` with extended row actions (Aktifkan, Kelola Murid, Lihat Sesi + RowActionsDialog edit/delete)
-  - `src/features/session/{actions,schema}.ts` — extract session CRUD from the mixed legacy file (full drain)
-  - `src/components/sections/term-form-wrapper.tsx` — `TermFormWrapper` using `DefaultFormFields` (kid/guardian pattern)
-  - `src/components/form/schema-registry.ts` — registered `'term'` schema key
-  - `src/components/shared/table/{data-table-row-action,row-actions-dialog}.tsx` — added optional `extendedActions` render-prop slot between Edit and Hapus
-  - Migrated term list page → `<DataTable>` with `form` prop (inline add-modal + termColumns)
-  - Migrated term create/edit pages → use `TermFormWrapper` (DefaultFormFields engine)
-  - Updated all 19 importers of `@/lib/actions/term` → new feature paths
-  - Deleted `src/lib/actions/term.ts` (drained)
-- **State:** shipped on `refactor/crud`
-- **Verification:**
-  - typecheck PASS (0 errors)
-  - 339 tests PASS (0 failures)
-  - lint: 0 errors, 90 pre-existing warnings
+  - `src/lib/db/schema.ts` — Added `date` + `sessionTypeId` columns to `scheduleItem` + regular index; added `sessionType` relation; removed empty `sessionTypeRelations` block
+  - `src/lib/actions/schedule.ts` — Rewrote all server actions from `sessionId`-based to `(date, sessionTypeId)`-based reads; lock checks now use `sessionType.start`; `getTodaySchedule`/`getUpcomingSchedule` query schedule items directly by date
+  - `src/lib/actions/dcr.ts` — `getScheduleActivitiesForDcr` resolves `sessionId → (date, sessionTypeId)` via `termSession` + `resolveSessionType`
+  - `src/app/dashboard/owner/schedule/[termId]/page.tsx` — Loads session types, resolves each termSession via `resolveSessionType`, passes `date`+`sessionTypeId`+`sessionType` to the editor
+  - `src/app/dashboard/owner/schedule/[termId]/session-schedule-editor.tsx` — Uses `(date, sessionTypeId)` props instead of `sessionId`; fixed empty catch block (was swallowing errors)
+  - `drizzle/0018_*` + `0019_*` — Migrations for new columns + index fix
+  - `scripts/backfill-schedule-item-key.ts` — One-shot backfill of existing rows from `termSession`
+  - Tests updated for new query paths
+- **State:** Shipped
+- **Verification:** `bun run typecheck` clean, `bun vitest run tests/lib/` 24 files all pass (284 tests)
 - **Next steps:**
-  1. Open PR from `refactor/crud` → main, merge after CI
-  2. Continue pattern migration for session, activity, schedule, reports entities (per patterns.md)
-  3. The `src/components/sections/term-form.tsx` and `term-actions.tsx` legacy section files are still on disk but no longer imported by any page (they've been superseded). Clean up after verifying nothing links to them.
-  4. Delete the empty `src/features/term/hooks.ts`
-- **Blockers:** none
+  1. Ticket #8 — Drop `sessionId` FK from `scheduleItem` (contract phase), make `date`+`sessionTypeId` NOT NULL
+  2. Future: re-key capture-table references (observation, DCR, etc.) — Tickets #4–#7
+- **Blockers:** None

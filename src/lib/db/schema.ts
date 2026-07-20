@@ -2,6 +2,7 @@ import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
   date,
+  index,
   integer,
   jsonb,
   pgEnum,
@@ -274,32 +275,41 @@ export const scheduleItemTypeEnum = pgEnum('schedule_item_type', [
   'outing',
 ]);
 
-export const scheduleItem = pgTable('schedule_item', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  sessionId: uuid('session_id')
-    .notNull()
-    .references(() => termSession.id, { onDelete: 'cascade' }),
-  activityId: uuid('activity_id').references(() => activity.id, {
-    onDelete: 'set null',
-  }),
-  type: scheduleItemTypeEnum('type').notNull(),
-  outingLocation: text('outing_location'),
-  outingBringItems: text('outing_bring_items'),
-  outingPermissionRequired: boolean('outing_permission_required')
-    .notNull()
-    .default(false),
-  sortOrder: integer('sort_order').notNull().default(0),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .defaultNow()
-    .$onUpdateFn(() => new Date()),
-  deletedAt: timestamp('deleted_at'),
-});
-
-export const sessionTypeRelations = relations(
-  sessionType,
-  ({ many: _many }) => ({})
+export const scheduleItem = pgTable(
+  'schedule_item',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    sessionId: uuid('session_id')
+      .notNull()
+      .references(() => termSession.id, { onDelete: 'cascade' }),
+    // NEW: direct date + sessionTypeId anchor (replaces sessionId FK at contract phase)
+    date: date('date'),
+    sessionTypeId: uuid('session_type_id').references(() => sessionType.id, {
+      onDelete: 'cascade',
+    }),
+    activityId: uuid('activity_id').references(() => activity.id, {
+      onDelete: 'set null',
+    }),
+    type: scheduleItemTypeEnum('type').notNull(),
+    outingLocation: text('outing_location'),
+    outingBringItems: text('outing_bring_items'),
+    outingPermissionRequired: boolean('outing_permission_required')
+      .notNull()
+      .default(false),
+    sortOrder: integer('sort_order').notNull().default(0),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => ({
+    // ponytail: regular index, not unique — multiple items share a (date, sessionTypeId) group
+    scheduleItemDateSessionTypeIdx: index(
+      'schedule_item_date_session_type_idx'
+    ).on(table.date, table.sessionTypeId),
+  })
 );
 
 export const termSessionRelations = relations(termSession, ({ one, many }) => ({
@@ -314,6 +324,10 @@ export const scheduleItemRelations = relations(scheduleItem, ({ one }) => ({
   session: one(termSession, {
     fields: [scheduleItem.sessionId],
     references: [termSession.id],
+  }),
+  sessionType: one(sessionType, {
+    fields: [scheduleItem.sessionTypeId],
+    references: [sessionType.id],
   }),
   activity: one(activity, {
     fields: [scheduleItem.activityId],

@@ -41,6 +41,10 @@ vi.mock('@/lib/db', () => {
           findMany: vi.fn(),
           findFirst: vi.fn(),
         },
+        sessionType: {
+          findFirst: vi.fn(),
+          findMany: vi.fn(),
+        },
         scheduleItem: {
           findMany: vi.fn(),
           findFirst: vi.fn(),
@@ -222,10 +226,40 @@ describe('DCR Server Actions', () => {
     it('should return schedule activities for a session', async () => {
       mockOwnerSession();
 
+      // Mock the new resolution path: termSession → sessionType → scheduleItem by (date, sessionTypeId)
+      vi.mocked(db.query.termSession.findFirst).mockResolvedValue({
+        id: 'session-1',
+        termId: 'term-1',
+        date: '2099-12-30',
+        startTime: '08:00',
+        endTime: '10:00',
+        label: 'Sesi Pagi',
+        isHoliday: false,
+        holidayReason: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      });
+
+      vi.mocked(db.query.sessionType.findMany).mockResolvedValue([
+        {
+          id: 'st-1',
+          name: 'Sesi Pagi',
+          start: '08:00',
+          end: '10:00',
+          active: true,
+          createdAt: new Date(2025, 0, 1),
+          updatedAt: new Date(2025, 0, 1),
+          deletedAt: null,
+        },
+      ]);
+
       vi.mocked(db.query.scheduleItem.findMany).mockResolvedValue([
         {
           id: 'si-1',
           sessionId: 'session-1',
+          date: '2099-12-30',
+          sessionTypeId: 'st-1',
           activityId: 'activity-1',
           type: 'activity',
           outingLocation: null,
@@ -234,6 +268,7 @@ describe('DCR Server Actions', () => {
           sortOrder: 0,
           createdAt: new Date(),
           updatedAt: new Date(),
+          deletedAt: null,
           activity: {
             id: 'activity-1',
             name: 'Mewarnai',
@@ -247,6 +282,8 @@ describe('DCR Server Actions', () => {
         {
           id: 'si-2',
           sessionId: 'session-1',
+          date: '2099-12-30',
+          sessionTypeId: 'st-1',
           activityId: null,
           type: 'outing',
           outingLocation: 'Kebun Binatang',
@@ -255,6 +292,7 @@ describe('DCR Server Actions', () => {
           sortOrder: 1,
           createdAt: new Date(),
           updatedAt: new Date(),
+          deletedAt: null,
           activity: null,
         },
       ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any

@@ -37,10 +37,12 @@ import {
   getScheduleItems,
 } from '@/lib/actions/schedule';
 import { getCategoryLabel } from '@/lib/activity-utils';
+import type { ResolvedSessionType } from '@/lib/session-type-resolver';
 
 interface IScheduleItem {
   id: string;
-  sessionId: string;
+  date: string | null;
+  sessionTypeId: string | null;
   activityId: string | null;
   type: 'activity' | 'outing';
   outingLocation: string | null;
@@ -62,11 +64,17 @@ interface IActivity {
 
 interface ISessionScheduleEditorProps {
   sessionId: string;
+  date: string;
+  sessionTypeId: string;
+  sessionType: ResolvedSessionType | null;
   isLocked: boolean;
 }
 
 export function SessionScheduleEditor({
   sessionId,
+  date,
+  sessionTypeId,
+  sessionType,
   isLocked,
 }: ISessionScheduleEditorProps) {
   const router = useRouter();
@@ -97,7 +105,7 @@ export function SessionScheduleEditor({
       setIsLoading(true);
       try {
         const [itemsResult, activitiesResult] = await Promise.all([
-          getScheduleItems(sessionId),
+          getScheduleItems(date, sessionTypeId),
           getActiveActivities(),
         ]);
 
@@ -110,8 +118,8 @@ export function SessionScheduleEditor({
         if (activitiesResult.success) {
           setActivities(activitiesResult.data);
         }
-      } catch {
-        // Silently handle
+      } catch (err) {
+        console.error('Failed to load schedule data:', err);
       } finally {
         if (!cancelled) {
           setIsLoading(false);
@@ -124,7 +132,7 @@ export function SessionScheduleEditor({
     return () => {
       cancelled = true;
     };
-  }, [sessionId, refreshKey]);
+  }, [date, sessionTypeId, refreshKey]);
 
   async function handleAddActivity() {
     if (!selectedActivityId) {
@@ -135,6 +143,8 @@ export function SessionScheduleEditor({
     setIsProcessing(true);
     try {
       const formData = new FormData();
+      formData.set('date', date);
+      formData.set('sessionTypeId', sessionTypeId);
       formData.set('sessionId', sessionId);
       formData.set('activityId', selectedActivityId);
       formData.set('type', 'activity');
@@ -165,6 +175,8 @@ export function SessionScheduleEditor({
     setIsProcessing(true);
     try {
       const formData = new FormData();
+      formData.set('date', date);
+      formData.set('sessionTypeId', sessionTypeId);
       formData.set('sessionId', sessionId);
       formData.set('type', 'outing');
       formData.set('outingLocation', outingLocation);
@@ -225,6 +237,13 @@ export function SessionScheduleEditor({
 
   return (
     <div className="space-y-3">
+      {/* Session type title */}
+      {sessionType && (
+        <p className="text-xs text-muted-foreground">
+          {sessionType.name} ({sessionType.start} — {sessionType.end})
+        </p>
+      )}
+
       {/* No items state */}
       {items.length === 0 && (
         <div className="rounded-md border border-dashed p-4 text-center text-sm text-muted-foreground">
