@@ -1,4 +1,5 @@
 import { GuardianFormSchema } from '@/features/guardian/schema';
+import { HolidayFormSchema } from '@/features/holiday/schema';
 import { KidFormSchema } from '@/features/kid/schema';
 import { SessionTypeFormSchema } from '@/features/sessionType/schema';
 import { TermFormSchema } from '@/features/term/schema';
@@ -9,6 +10,7 @@ const schemas = {
   guardian: GuardianFormSchema,
   term: TermFormSchema,
   sessionType: SessionTypeFormSchema,
+  holiday: HolidayFormSchema,
 } as const satisfies Record<string, z.ZodObject<z.ZodRawShape>>;
 
 export type SchemaKey = keyof typeof schemas;
