@@ -46,6 +46,7 @@ confirm-dialog.tsx
 conflict-dialog.tsx
 csv-import-form.tsx
 guardian-form.tsx
+holiday-calendar-view.tsx
 kid-form-wrapper.tsx
 offline-indicator.tsx
 owner-dashboard/
