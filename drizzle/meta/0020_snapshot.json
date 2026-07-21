@@ -1,6 +1,6 @@
 {
-  "id": "b4288ac9-f2a5-4497-b451-1d5ec22ad17f",
-  "prevId": "b4288ac9-f2a5-4497-b451-1d5ec22ad17f",
+  "id": "ae1dfc76-30f3-40cb-82cd-6c5b94db043b",
+  "prevId": "ae1dfc76-30f3-40cb-82cd-6c5b94db043b",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -339,9 +339,30 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "session_type_id": {
+          "name": "session_type_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "daily_report_snapshot_kid_id_date_unique": {
+          "name": "daily_report_snapshot_kid_id_date_unique",
+          "columns": ["kid_id", "date"],
+          "isUnique": true,
+          "nullsNotDistinct": false,
+          "type": "unique",
+          "concurrently": false
+        }
+      },
       "foreignKeys": {
         "daily_report_snapshot_kid_id_kid_id_fk": {
           "name": "daily_report_snapshot_kid_id_kid_id_fk",
@@ -368,6 +389,15 @@
           "columnsFrom": ["edited_by"],
           "columnsTo": ["id"],
           "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "daily_report_snapshot_session_type_id_session_type_id_fk": {
+          "name": "daily_report_snapshot_session_type_id_session_type_id_fk",
+          "tableFrom": "daily_report_snapshot",
+          "tableTo": "session_type",
+          "columnsFrom": ["session_type_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },

@@ -1,6 +1,6 @@
 'use server';
 
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -11,6 +11,7 @@ import {
   kid,
   observation,
   observationNote,
+  sessionType,
   termSession,
 } from '@/lib/db/schema';
 
@@ -124,6 +125,32 @@ async function getObservationData(
   };
 }
 
+/**
+ * Resolve sessionId to date and sessionTypeId by matching termSession.label
+ * to sessionType.name (active, not deleted).
+ */
+async function resolveSession(
+  sessionId: string
+): Promise<{ date: string; sessionTypeId: string } | null> {
+  const ts = await db.query.termSession.findFirst({
+    where: eq(termSession.id, sessionId),
+    columns: { date: true, label: true },
+  });
+  if (!ts) return null;
+
+  const st = await db.query.sessionType.findFirst({
+    where: and(
+      eq(sessionType.name, ts.label),
+      eq(sessionType.active, true),
+      isNull(sessionType.deletedAt)
+    ),
+    columns: { id: true },
+  });
+  if (!st) return null;
+
+  return { date: ts.date, sessionTypeId: st.id };
+}
+
 // ─────────────── Read Operations ───────────────
 
 /**
@@ -174,6 +201,14 @@ export async function getDailyReportsForSession(sessionId: string) {
     return { success: false as const, error: auth.error };
   }
 
+  const resolved = await resolveSession(sessionId);
+  if (!resolved) {
+    return {
+      success: false as const,
+      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
+    };
+  }
+
   const sessionData = await db.query.termSession.findFirst({
     where: eq(termSession.id, sessionId),
   });
@@ -185,7 +220,10 @@ export async function getDailyReportsForSession(sessionId: string) {
   const kids = await getEnrolledKidsForSession(sessionId);
 
   const reports = await db.query.dailyReportSnapshot.findMany({
-    where: eq(dailyReportSnapshot.sessionId, sessionId),
+    where: and(
+      eq(dailyReportSnapshot.date, resolved.date),
+      eq(dailyReportSnapshot.sessionTypeId, resolved.sessionTypeId)
+    ),
     with: {
       kid: {
         columns: { id: true, name: true },
@@ -213,10 +251,18 @@ export async function getDailyReport(kidId: string, sessionId: string) {
     return { success: false as const, error: auth.error };
   }
 
+  const resolved = await resolveSession(sessionId);
+  if (!resolved) {
+    return {
+      success: false as const,
+      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
+    };
+  }
+
   const report = await db.query.dailyReportSnapshot.findFirst({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      eq(dailyReportSnapshot.sessionId, sessionId)
+      eq(dailyReportSnapshot.date, resolved.date)
     ),
   });
 
@@ -233,10 +279,18 @@ export async function getDailyReportStatus(kidId: string, sessionId: string) {
     return { success: false as const, error: auth.error };
   }
 
+  const resolved = await resolveSession(sessionId);
+  if (!resolved) {
+    return {
+      success: false as const,
+      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
+    };
+  }
+
   const report = await db.query.dailyReportSnapshot.findFirst({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      eq(dailyReportSnapshot.sessionId, sessionId)
+      eq(dailyReportSnapshot.date, resolved.date)
     ),
     columns: { status: true, narrativeAiDraft: true, narrativeFinal: true },
   });
@@ -262,6 +316,14 @@ export async function generateDailyReports(sessionId: string) {
     return { success: false as const, error: auth.error };
   }
 
+  const resolved = await resolveSession(sessionId);
+  if (!resolved) {
+    return {
+      success: false as const,
+      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
+    };
+  }
+
   const sessionData = await db.query.termSession.findFirst({
     where: eq(termSession.id, sessionId),
   });
@@ -279,7 +341,7 @@ export async function generateDailyReports(sessionId: string) {
     };
   }
 
-  const sessionDate = sessionData.date;
+  const sessionDate = resolved.date;
 
   // Generate reports in parallel for all kids
   const results: IReportResult[] = await Promise.all(
@@ -329,7 +391,7 @@ export async function generateDailyReports(sessionId: string) {
         const existing = await db.query.dailyReportSnapshot.findFirst({
           where: and(
             eq(dailyReportSnapshot.kidId, kidData.id),
-            eq(dailyReportSnapshot.sessionId, sessionId)
+            eq(dailyReportSnapshot.date, resolved.date)
           ),
           columns: { id: true },
         });
@@ -360,6 +422,8 @@ export async function generateDailyReports(sessionId: string) {
             .insert(dailyReportSnapshot)
             .values({
               kidId: kidData.id,
+              date: resolved.date,
+              sessionTypeId: resolved.sessionTypeId,
               sessionId,
               structuredJson: structuredData,
               narrativeAiDraft: narrativeAiDraft || null,
@@ -422,10 +486,18 @@ export async function updateDailyReportNarrative(
     };
   }
 
+  const resolved = await resolveSession(sessionId);
+  if (!resolved) {
+    return {
+      success: false as const,
+      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
+    };
+  }
+
   const report = await db.query.dailyReportSnapshot.findFirst({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      eq(dailyReportSnapshot.sessionId, sessionId)
+      eq(dailyReportSnapshot.date, resolved.date)
     ),
     columns: { id: true, status: true },
   });
@@ -483,10 +555,18 @@ export async function markDailyReportSent(kidId: string, sessionId: string) {
     };
   }
 
+  const resolved = await resolveSession(sessionId);
+  if (!resolved) {
+    return {
+      success: false as const,
+      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
+    };
+  }
+
   const report = await db.query.dailyReportSnapshot.findFirst({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      eq(dailyReportSnapshot.sessionId, sessionId)
+      eq(dailyReportSnapshot.date, resolved.date)
     ),
     columns: { id: true, status: true, narrativeFinal: true },
   });
@@ -539,10 +619,18 @@ export async function getDailyReportDetail(kidId: string, sessionId: string) {
     return { success: false as const, error: auth.error };
   }
 
+  const resolved = await resolveSession(sessionId);
+  if (!resolved) {
+    return {
+      success: false as const,
+      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
+    };
+  }
+
   const report = await db.query.dailyReportSnapshot.findFirst({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      eq(dailyReportSnapshot.sessionId, sessionId)
+      eq(dailyReportSnapshot.date, resolved.date)
     ),
     with: {
       kid: {

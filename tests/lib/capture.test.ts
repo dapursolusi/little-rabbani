@@ -61,7 +61,7 @@ vi.mock('@/lib/db', () => {
         },
         sessionType: {
           findFirst: vi.fn(),
-          findMany: vi.fn(),
+          findMany: vi.fn().mockResolvedValue([]),
         },
       },
     },

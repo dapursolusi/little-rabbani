@@ -26,6 +26,7 @@ vi.mock('@/lib/db', () => {
     db: {
       query: {
         termSession: { findMany: vi.fn(), findFirst: vi.fn() },
+        sessionType: { findFirst: vi.fn() },
         dailyReportSnapshot: { findFirst: vi.fn(), findMany: vi.fn() },
         kid: { findMany: vi.fn() },
         observation: { findFirst: vi.fn(), findMany: vi.fn() },
@@ -44,6 +45,9 @@ const mockDb = db as unknown as {
   query: {
     termSession: {
       findMany: ReturnType<typeof vi.fn>;
+      findFirst: ReturnType<typeof vi.fn>;
+    };
+    sessionType: {
       findFirst: ReturnType<typeof vi.fn>;
     };
     dailyReportSnapshot: {
@@ -89,6 +93,13 @@ describe('Daily Report - Server Actions', () => {
   const mockKid2 = { id: kidId2, name: 'Budi' };
   const mockKid3 = { id: kidId3, name: 'Citra' };
 
+  const mockSessionType = {
+    id: 'st-pagi',
+    name: 'Pagi',
+    active: true,
+    deletedAt: null,
+  };
+
   const mockObservation = {
     id: 'obs-1',
     kidId: kidId1,
@@ -109,6 +120,8 @@ describe('Daily Report - Server Actions', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     (requireOwner as ReturnType<typeof vi.fn>).mockResolvedValue(mockAuth);
+    mockDb.query.sessionType.findFirst.mockResolvedValue(mockSessionType);
+    mockDb.query.termSession.findFirst.mockResolvedValue(mockSession);
   });
 
   afterEach(() => {
