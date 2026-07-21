@@ -2,14 +2,14 @@
 
 import { headers } from 'next/headers';
 
-import { and, asc, count, eq, gte, ilike, lte, or } from 'drizzle-orm';
+import { and, asc, count, eq, ilike } from 'drizzle-orm';
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { term, termSession } from '@/lib/db/schema';
+import { sessionType } from '@/lib/db/schema';
 
 /**
- * Get all sessions for the teacher capture session picker.
+ * Get all session types for the teacher capture session picker.
  */
 export async function getTeacherSessions() {
   const session = await auth.api.getSession({
@@ -20,24 +20,21 @@ export async function getTeacherSessions() {
     return { success: false as const, error: 'redirect' };
   }
 
-  const sessions = await db.query.termSession.findMany({
-    orderBy: [asc(termSession.date), asc(termSession.startTime)],
-    with: {
-      term: true,
-    },
+  const types = await db.query.sessionType.findMany({
+    where: and(eq(sessionType.active, true)),
+    orderBy: [asc(sessionType.start)],
   });
 
-  return { success: true as const, data: sessions };
+  return { success: true as const, data: types };
 }
 
 /**
- * Get filtered/paginated sessions for the teacher capture session picker.
- * Supports text search (date, label, or term name), optional date range, and pagination.
+ * Get filtered session types for the teacher capture session picker.
  */
 export async function getTeacherSessionsFiltered(
   search: string,
-  dateFrom?: string,
-  dateTo?: string,
+  _dateFrom?: string,
+  _dateTo?: string,
   page: number = 1,
   pageSize: number = 50
 ) {
@@ -53,46 +50,24 @@ export async function getTeacherSessionsFiltered(
 
   const conditions: ReturnType<typeof and>[] = [];
   if (search) {
-    conditions.push(
-      or(
-        ilike(termSession.date, `%${search}%`),
-        ilike(termSession.label, `%${search}%`),
-        ilike(term.name, `%${search}%`)
-      )
-    );
-  }
-  if (dateFrom) {
-    conditions.push(gte(termSession.date, dateFrom));
-  }
-  if (dateTo) {
-    conditions.push(lte(termSession.date, dateTo));
+    conditions.push(ilike(sessionType.name, `%${search}%`));
   }
   const where = conditions.length > 0 ? and(...conditions) : undefined;
 
   const [rows, totalResult] = await Promise.all([
     db
       .select()
-      .from(termSession)
-      .leftJoin(term, eq(termSession.termId, term.id))
+      .from(sessionType)
       .where(where)
-      .orderBy(asc(termSession.date), asc(termSession.startTime))
+      .orderBy(asc(sessionType.start))
       .limit(pageSize)
       .offset(offset),
-    db
-      .select({ count: count() })
-      .from(termSession)
-      .leftJoin(term, eq(termSession.termId, term.id))
-      .where(where),
+    db.select({ count: count() }).from(sessionType).where(where),
   ]);
-
-  const data = rows.map((r) => ({
-    ...r.term_session,
-    term: r.term,
-  }));
 
   return {
     success: true as const,
-    data,
+    data: rows,
     total: totalResult[0]?.count ?? 0,
   };
 }

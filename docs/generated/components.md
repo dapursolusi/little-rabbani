@@ -52,10 +52,6 @@ offline-indicator.tsx
 owner-dashboard/
   quick-actions.tsx
   stat-cards.tsx
-session-actions.tsx
-session-edit-form.tsx
-session-form.tsx
-session-generate-form.tsx
 session-type-form-wrapper.tsx
 teacher-pending-capture-banner.tsx
 teacher-schedule-view.tsx

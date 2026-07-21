@@ -10,7 +10,6 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { EmptyState } from '@/components/shared/empty-state';
 
 import { getSessionWithKids } from '@/lib/actions/capture';
-import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 
 import { CaptureRosterClient } from './capture-roster';
@@ -25,9 +24,11 @@ export default async function CaptureSessionPage({
   params,
 }: ICaptureSessionPageProps) {
   const { sessionId } = await params;
-  const result = await getSessionWithKids(sessionId);
 
-  // Blocked state (holiday, before session start)
+  // ponytail: [sessionId] route — sessionId is used as sessionTypeId with today's date
+  const today = new Date().toISOString().split('T')[0];
+  const result = await getSessionWithKids(today, sessionId);
+
   if (!result.success) {
     return (
       <div className="p-4 sm:p-6">
@@ -49,7 +50,7 @@ export default async function CaptureSessionPage({
     );
   }
 
-  const { session, kids } = result.data;
+  const { date, sessionType, kids } = result.data;
 
   return (
     <div className="flex min-h-screen flex-col bg-muted">
@@ -69,8 +70,8 @@ export default async function CaptureSessionPage({
             Observasi Murid
           </h1>
           <p className="text-sm text-muted-foreground">
-            {formatDate(session.date)} — {session.startTime} — {session.endTime}
-            {session.label && ` • ${session.label}`}
+            {date} — {sessionType.start} — {sessionType.end}
+            {sessionType.name && ` • ${sessionType.name}`}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
             {kids.length} murid terdaftar
@@ -79,10 +80,9 @@ export default async function CaptureSessionPage({
       </div>
 
       <main className="flex-1">
-        {/* VAL-CAPTURE-017: Roster with per-kid capture state */}
         <CaptureRosterClient
           sessionId={sessionId}
-          sessionDate={session.date}
+          sessionDate={date}
           kids={kids.map((k) => ({
             id: k.id,
             name: k.name,
@@ -107,7 +107,6 @@ export default async function CaptureSessionPage({
         />
       </main>
 
-      {/* No kids - empty roster (VAL-CAPTURE-027) */}
       {kids.length === 0 && (
         <div className="px-4 py-16">
           <EmptyState

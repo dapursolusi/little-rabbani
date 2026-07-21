@@ -34,7 +34,6 @@ vi.mock('@/lib/db', () => {
     db: {
       query: {
         term: { findFirst: vi.fn() },
-        termSession: { findMany: vi.fn(), findFirst: vi.fn() },
         kid: { findMany: vi.fn(), findFirst: vi.fn() },
         monthlyReportSnapshot: { findFirst: vi.fn(), findMany: vi.fn() },
         dailyReportSnapshot: { findMany: vi.fn() },
@@ -61,10 +60,6 @@ const { db } = await import('@/lib/db');
 const mockDb = db as unknown as {
   query: {
     term: { findFirst: ReturnType<typeof vi.fn> };
-    termSession: {
-      findMany: ReturnType<typeof vi.fn>;
-      findFirst: ReturnType<typeof vi.fn>;
-    };
     kid: {
       findMany: ReturnType<typeof vi.fn>;
       findFirst: ReturnType<typeof vi.fn>;
@@ -102,10 +97,6 @@ describe('Monthly Report - Server Actions', () => {
   };
 
   const mockKid1 = { id: kidId1, name: 'Ahmad', guardianId: 'guardian-1' };
-
-  const mockSession1 = { id: 'session-1', date: '2025-06-03' };
-  const mockSession2 = { id: 'session-2', date: '2025-06-05' };
-  const mockSession3 = { id: 'session-3', date: '2025-06-10' };
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -198,46 +189,55 @@ describe('Monthly Report - Server Actions', () => {
       // Mock no existing report
       mockDb.query.monthlyReportSnapshot.findFirst.mockResolvedValue(null);
 
-      // Mock sessions in month
-      mockDb.query.termSession.findMany.mockResolvedValue([
-        mockSession1,
-        mockSession2,
-        mockSession3,
-      ]);
-
-      // Mock observations
-      mockDb.query.observation.findMany.mockResolvedValue([
-        {
-          id: 'obs-1',
-          mood: 4,
-          appetite: 'good',
-          presence: 'present_full',
-        },
-        {
-          id: 'obs-2',
-          mood: 5,
-          appetite: 'good',
-          presence: 'present_full',
-        },
-        {
-          id: 'obs-3',
-          mood: 4,
-          appetite: 'moderate',
-          presence: 'present_full',
-        },
-      ]);
+      // Mock observations in month (first call: getObservationDaysInMonth)
+      mockDb.query.observation.findMany
+        .mockResolvedValueOnce([
+          { date: '2025-06-03' },
+          { date: '2025-06-05' },
+          { date: '2025-06-10' },
+        ])
+        // Second call: computeMonthlyStats
+        .mockResolvedValueOnce([
+          {
+            id: 'obs-1',
+            date: '2025-06-03',
+            mood: 4,
+            appetite: 'good',
+            presence: 'present_full',
+          },
+          {
+            id: 'obs-2',
+            date: '2025-06-05',
+            mood: 5,
+            appetite: 'good',
+            presence: 'present_full',
+          },
+          {
+            id: 'obs-3',
+            date: '2025-06-10',
+            mood: 4,
+            appetite: 'moderate',
+            presence: 'present_full',
+          },
+        ])
+        // Third call: locked observations
+        .mockResolvedValueOnce([
+          { id: 'obs-1' },
+          { id: 'obs-2' },
+          { id: 'obs-3' },
+        ]);
 
       // Mock daily report narratives
       mockDb.query.dailyReportSnapshot.findMany.mockResolvedValue([
         {
           narrativeFinal: 'Ananda Ahmad bersemangat hari ini.',
           narrativeAiDraft: null,
-          session: { date: '2025-06-03' },
+          date: '2025-06-03',
         },
         {
           narrativeFinal: 'Ananda Ahmad belajar dengan baik.',
           narrativeAiDraft: null,
-          session: { date: '2025-06-05' },
+          date: '2025-06-05',
         },
       ]);
 
@@ -347,6 +347,7 @@ describe('Monthly Report - Server Actions', () => {
 
     it('returns error when no daily reports exist for the month', async () => {
       // Mock no observations
+      mockDb.query.observation.findMany.mockReset();
       mockDb.query.observation.findMany.mockResolvedValue([]);
       mockDb.query.dailyReportSnapshot.findMany.mockResolvedValue([]);
       mockDb.query.observationActivity.findMany.mockResolvedValue([]);
@@ -355,7 +356,7 @@ describe('Monthly Report - Server Actions', () => {
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Belum ada data');
+        expect(result.error).toContain('Tidak ada data');
       }
     });
 

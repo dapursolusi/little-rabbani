@@ -126,7 +126,6 @@ const PAST_TYPE = {
 const SCHEDULE_ITEM_BASE = {
   date: null,
   sessionTypeId: null,
-  sessionId: 'session-future-1',
   outingLocation: null,
   outingBringItems: null,
   outingPermissionRequired: false,
@@ -402,7 +401,6 @@ describe('Schedule Server Actions', () => {
         ...SCHEDULE_ITEM_BASE,
         date: '2020-01-15',
         sessionTypeId: 'st-past-1',
-        sessionId: 'session-past-1',
         activityId: 'activity-1',
         type: 'activity',
         sortOrder: 0,

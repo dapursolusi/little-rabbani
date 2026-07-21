@@ -175,18 +175,18 @@ export function CaptureRosterClient({
     if (pass2CheckedRef.current) return;
     pass2CheckedRef.current = true;
 
-    getPass2Status(sessionId).then((result) => {
+    getPass2Status(sessionDate, sessionId).then((result) => {
       if (result.success && result.data.isDcrCaptured) {
         setIsPass2Unlocked(true);
         // Fetch DCR activities for Pass 2
-        getPass2Activities(sessionId).then((actResult) => {
+        getPass2Activities(sessionDate, sessionId).then((actResult) => {
           if (actResult.success) {
             setDcrActivities(actResult.data);
           }
         });
       }
     });
-  }, [sessionId]);
+  }, [sessionId, sessionDate]);
 
   // Monitor online/offline status
   useEffect(() => {
@@ -238,10 +238,10 @@ export function CaptureRosterClient({
 
       // Fetch latest Pass 2 data if needed
       if (pass2CheckedRef.current) {
-        const result = await getPass2Status(sessionId);
+        const result = await getPass2Status(sessionDate, sessionId);
         if (result.success && result.data.isDcrCaptured) {
           setIsPass2Unlocked(true);
-          const actResult = await getPass2Activities(sessionId);
+          const actResult = await getPass2Activities(sessionDate, sessionId);
           if (actResult.success) {
             setDcrActivities(actResult.data);
           }
@@ -582,7 +582,7 @@ export function CaptureRosterClient({
 
       const formData = new FormData();
       formData.append('kidId', selectedKid.id);
-      formData.append('sessionId', sessionId);
+      formData.append('date', sessionDate);
       formData.append('activities', JSON.stringify(activitiesPayload));
 
       const result = await savePass2Observation(formData);

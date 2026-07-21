@@ -172,25 +172,6 @@ export const sessionType = pgTable(
   })
 );
 
-export const termSession = pgTable('term_session', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  termId: uuid('term_id')
-    .notNull()
-    .references(() => term.id, { onDelete: 'cascade' }),
-  date: date('date').notNull(),
-  startTime: text('start_time').notNull(),
-  endTime: text('end_time').notNull(),
-  label: text('label').notNull(),
-  isHoliday: boolean('is_holiday').notNull().default(false),
-  holidayReason: text('holiday_reason'),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .defaultNow()
-    .$onUpdateFn(() => new Date()),
-  deletedAt: timestamp('deleted_at'),
-});
-
 // Relations
 
 export const guardianRelations = relations(guardian, ({ many }) => ({
@@ -210,7 +191,6 @@ export const kidRelations = relations(kid, ({ one }) => ({
 
 export const termRelations = relations(term, ({ many }) => ({
   kids: many(kid),
-  sessions: many(termSession),
 }));
 
 export const activity = pgTable('activity', {
@@ -279,10 +259,6 @@ export const scheduleItem = pgTable(
   'schedule_item',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    sessionId: uuid('session_id')
-      .notNull()
-      .references(() => termSession.id, { onDelete: 'cascade' }),
-    // NEW: direct date + sessionTypeId anchor (replaces sessionId FK at contract phase)
     date: date('date'),
     sessionTypeId: uuid('session_type_id').references(() => sessionType.id, {
       onDelete: 'cascade',
@@ -312,19 +288,7 @@ export const scheduleItem = pgTable(
   })
 );
 
-export const termSessionRelations = relations(termSession, ({ one, many }) => ({
-  term: one(term, {
-    fields: [termSession.termId],
-    references: [term.id],
-  }),
-  scheduleItems: many(scheduleItem),
-}));
-
 export const scheduleItemRelations = relations(scheduleItem, ({ one }) => ({
-  session: one(termSession, {
-    fields: [scheduleItem.sessionId],
-    references: [termSession.id],
-  }),
   sessionType: one(sessionType, {
     fields: [scheduleItem.sessionTypeId],
     references: [sessionType.id],
@@ -347,11 +311,6 @@ export const dailyClassReport = pgTable(
   'daily_class_report',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    sessionId: uuid('session_id')
-      .notNull()
-      .unique()
-      .references(() => termSession.id, { onDelete: 'cascade' }),
-    // NEW: re-key columns (replaces sessionId FK at contract phase — Issue #36)
     date: date('date').notNull(),
     sessionTypeId: uuid('session_type_id')
       .notNull()
@@ -395,10 +354,6 @@ export const dcrActivity = pgTable('dcr_activity', {
 export const dailyClassReportRelations = relations(
   dailyClassReport,
   ({ one, many }) => ({
-    session: one(termSession, {
-      fields: [dailyClassReport.sessionId],
-      references: [termSession.id],
-    }),
     sessionType: one(sessionType, {
       fields: [dailyClassReport.sessionTypeId],
       references: [sessionType.id],
@@ -446,9 +401,6 @@ export const observation = pgTable(
     kidId: uuid('kid_id')
       .notNull()
       .references(() => kid.id, { onDelete: 'cascade' }),
-    sessionId: uuid('session_id')
-      .notNull()
-      .references(() => termSession.id, { onDelete: 'cascade' }),
     date: date('date').notNull(),
     sessionTypeId: uuid('session_type_id')
       .notNull()
@@ -470,7 +422,6 @@ export const observation = pgTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
-    uniqueKidSession: unique().on(table.kidId, table.sessionId),
     uniqueKidDate: unique().on(table.kidId, table.date),
   })
 );
@@ -618,9 +569,6 @@ export const dailyReportSnapshot = pgTable(
     sessionTypeId: uuid('session_type_id')
       .notNull()
       .references(() => sessionType.id, { onDelete: 'cascade' }),
-    sessionId: uuid('session_id')
-      .notNull()
-      .references(() => termSession.id, { onDelete: 'cascade' }),
     structuredJson: jsonb('structured_json').notNull(), // JSONB of structured data
     narrativeAiDraft: text('narrative_ai_draft'),
     narrativeFinal: text('narrative_final'),
@@ -651,10 +599,6 @@ export const dailyReportSnapshotRelations = relations(
     sessionType: one(sessionType, {
       fields: [dailyReportSnapshot.sessionTypeId],
       references: [sessionType.id],
-    }),
-    session: one(termSession, {
-      fields: [dailyReportSnapshot.sessionId],
-      references: [termSession.id],
     }),
     editor: one(user, {
       fields: [dailyReportSnapshot.editedBy],
@@ -736,10 +680,6 @@ export const observationRelations = relations(observation, ({ one, many }) => ({
   kid: one(kid, {
     fields: [observation.kidId],
     references: [kid.id],
-  }),
-  session: one(termSession, {
-    fields: [observation.sessionId],
-    references: [termSession.id],
   }),
   sessionType: one(sessionType, {
     fields: [observation.sessionTypeId],
@@ -857,9 +797,6 @@ export const reminderLog = pgTable('reminder_log', {
   sessionTypeId: uuid('session_type_id').references(() => sessionType.id, {
     onDelete: 'set null',
   }),
-  sessionId: uuid('session_id').references(() => termSession.id, {
-    onDelete: 'set null',
-  }),
   scheduledAt: timestamp('scheduled_at').notNull(),
   sentAt: timestamp('sent_at').notNull().defaultNow(),
   acknowledgedAt: timestamp('acknowledged_at'),
@@ -870,10 +807,6 @@ export const reminderLogRelations = relations(reminderLog, ({ one }) => ({
   user: one(user, {
     fields: [reminderLog.userId],
     references: [user.id],
-  }),
-  session: one(termSession, {
-    fields: [reminderLog.sessionId],
-    references: [termSession.id],
   }),
   sessionType: one(sessionType, {
     fields: [reminderLog.sessionTypeId],

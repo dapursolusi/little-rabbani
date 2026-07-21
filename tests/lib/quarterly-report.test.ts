@@ -37,7 +37,6 @@ vi.mock('@/lib/db', () => {
       })),
       query: {
         term: { findFirst: vi.fn(), findMany: vi.fn() },
-        termSession: { findMany: vi.fn(), findFirst: vi.fn() },
         kid: { findMany: vi.fn(), findFirst: vi.fn() },
         quarterlyReportSnapshot: { findFirst: vi.fn(), findMany: vi.fn() },
         dailyReportSnapshot: { findMany: vi.fn() },
@@ -67,10 +66,6 @@ const mockDb = db as unknown as {
     term: {
       findFirst: ReturnType<typeof vi.fn>;
       findMany: ReturnType<typeof vi.fn>;
-    };
-    termSession: {
-      findMany: ReturnType<typeof vi.fn>;
-      findFirst: ReturnType<typeof vi.fn>;
     };
     kid: {
       findMany: ReturnType<typeof vi.fn>;
@@ -124,10 +119,6 @@ describe('Quarterly Report - Server Actions', () => {
     status: 'enrolled',
     enrolledTermId: termId,
   };
-
-  const mockSession1 = { id: 'session-1', date: '2025-01-06' };
-  const mockSession2 = { id: 'session-2', date: '2025-01-08' };
-  const mockSession3 = { id: 'session-3', date: '2025-01-13' };
 
   beforeEach(() => {
     vi.resetAllMocks();
@@ -196,34 +187,51 @@ describe('Quarterly Report - Server Actions', () => {
       // Mock no existing report
       mockDb.query.quarterlyReportSnapshot.findFirst.mockResolvedValue(null);
 
-      // Mock sessions in term
-      mockDb.query.termSession.findMany.mockResolvedValue([
-        mockSession1,
-        mockSession2,
-        mockSession3,
-      ]);
+      // Mock observations for date range + stats
+      mockDb.query.observation.findMany
+        .mockResolvedValueOnce([
+          { date: '2025-01-06' },
+          { date: '2025-01-08' },
+          { date: '2025-01-13' },
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'obs-1',
+            date: '2025-01-06',
+            mood: 4,
+            appetite: 'good',
+            presence: 'present_full',
+          },
+          {
+            id: 'obs-2',
+            date: '2025-01-08',
+            mood: 5,
+            appetite: 'good',
+            presence: 'present_full',
+          },
+          {
+            id: 'obs-3',
+            date: '2025-01-13',
+            mood: 4,
+            appetite: 'moderate',
+            presence: 'late',
+          },
+        ]);
 
       // Mock term info
       mockDb.query.term.findFirst.mockResolvedValue(mockTerm);
-
-      // Mock observations
-      mockDb.query.observation.findMany.mockResolvedValue([
-        { id: 'obs-1', mood: 4, appetite: 'good', presence: 'present_full' },
-        { id: 'obs-2', mood: 5, appetite: 'good', presence: 'present_full' },
-        { id: 'obs-3', mood: 4, appetite: 'moderate', presence: 'late' },
-      ]);
 
       // Mock daily report narratives
       mockDb.query.dailyReportSnapshot.findMany.mockResolvedValue([
         {
           narrativeFinal: 'Ananda Ahmad bersemangat hari ini.',
           narrativeAiDraft: null,
-          session: { date: '2025-01-06' },
+          date: '2025-01-06',
         },
         {
           narrativeFinal: 'Ananda Ahmad belajar dengan baik.',
           narrativeAiDraft: null,
-          session: { date: '2025-01-08' },
+          date: '2025-01-08',
         },
       ]);
 
@@ -361,17 +369,16 @@ describe('Quarterly Report - Server Actions', () => {
       }
     });
 
-    it('returns error when no daily reports exist for the term', async () => {
-      // Mock no observations
+    it('returns error when no observations exist for the term', async () => {
+      // Reset chain and set empty observations
+      mockDb.query.observation.findMany.mockReset();
       mockDb.query.observation.findMany.mockResolvedValue([]);
-      mockDb.query.dailyReportSnapshot.findMany.mockResolvedValue([]);
-      mockDb.query.observationActivity.findMany.mockResolvedValue([]);
 
       const result = await generateQuarterlyReport(kidId1, termId);
 
       expect(result.success).toBe(false);
       if (!result.success) {
-        expect(result.error).toContain('Belum ada data');
+        expect(result.error).toContain('Tidak ada data');
       }
     });
 
@@ -399,6 +406,37 @@ describe('Quarterly Report - Server Actions', () => {
         ...mockKid1,
         enrolledTermId: termId2,
       });
+
+      // Mock observations
+      mockDb.query.observation.findMany
+        .mockResolvedValueOnce([
+          { date: '2025-07-01' },
+          { date: '2025-07-03' },
+          { date: '2025-07-08' },
+        ])
+        .mockResolvedValueOnce([
+          {
+            id: 'obs-1',
+            date: '2025-07-01',
+            mood: 4,
+            appetite: 'good',
+            presence: 'present_full',
+          },
+          {
+            id: 'obs-2',
+            date: '2025-07-03',
+            mood: 5,
+            appetite: 'good',
+            presence: 'present_full',
+          },
+          {
+            id: 'obs-3',
+            date: '2025-07-08',
+            mood: 4,
+            appetite: 'moderate',
+            presence: 'late',
+          },
+        ]);
 
       // Mock term info for termId2
       mockDb.query.term.findFirst.mockResolvedValue({
@@ -460,25 +498,26 @@ describe('Quarterly Report - Server Actions', () => {
         status: 'alumni',
       });
 
-      // Mock observations (only 2 sessions have observations — mid-term graduation)
+      // Reset and set observations for date range (getObservationDates) + stats
       mockDb.query.observation.findMany
+        .mockReset()
+        .mockResolvedValueOnce([{ date: '2025-01-06' }, { date: '2025-01-08' }])
         .mockResolvedValueOnce([
-          // First call: get observations by kidId (for session filtering)
-          { sessionId: 'session-1' },
-          { sessionId: 'session-2' },
-        ])
-        .mockResolvedValueOnce([
-          // Second call: get observations for stats
-          { id: 'obs-1', mood: 4, appetite: 'good', presence: 'present_full' },
-          { id: 'obs-2', mood: 5, appetite: 'good', presence: 'present_full' },
+          {
+            id: 'obs-1',
+            date: '2025-01-06',
+            mood: 4,
+            appetite: 'good',
+            presence: 'present_full',
+          },
+          {
+            id: 'obs-2',
+            date: '2025-01-08',
+            mood: 5,
+            appetite: 'good',
+            presence: 'present_full',
+          },
         ]);
-
-      // Only 2 sessions pass through (instead of 3)
-      mockDb.query.termSession.findMany.mockResolvedValue([
-        mockSession1,
-        mockSession2,
-        mockSession3,
-      ]);
 
       // Mock AI generation — 3 separate calls, each returning empty (no narratives)
       mockGenerateNarrative.mockImplementation(

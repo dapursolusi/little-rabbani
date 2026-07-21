@@ -4,7 +4,7 @@ import { and, eq } from 'drizzle-orm';
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { observation, observationActivity, termSession } from '@/lib/db/schema';
+import { observation, observationActivity } from '@/lib/db/schema';
 
 /**
  * GET /api/capture/participation?kidId=xxx&date=yyyy-mm-dd
@@ -27,7 +27,6 @@ export async function GET(request: NextRequest) {
 
     const kidId = request.nextUrl.searchParams.get('kidId');
     const dateParam = request.nextUrl.searchParams.get('date');
-    const sessionId = request.nextUrl.searchParams.get('sessionId');
 
     if (!kidId) {
       return NextResponse.json(
@@ -36,35 +35,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Resolve date from explicit date param or from sessionId
-    let resolvedDate: string;
-    if (dateParam) {
-      resolvedDate = dateParam;
-    } else if (sessionId) {
-      const session = await db.query.termSession.findFirst({
-        where: eq(termSession.id, sessionId),
-        columns: { date: true },
-      });
-      if (!session) {
-        return NextResponse.json(
-          { success: false, error: 'Sesi tidak ditemukan' },
-          { status: 400 }
-        );
-      }
-      resolvedDate = session.date;
-    } else {
+    if (!dateParam) {
       return NextResponse.json(
-        { success: false, error: 'Parameter date atau sessionId wajib diisi' },
+        { success: false, error: 'Parameter date wajib diisi' },
         { status: 400 }
       );
     }
 
     // Find the observation by kidId + date
     const obs = await db.query.observation.findFirst({
-      where: and(
-        eq(observation.kidId, kidId),
-        eq(observation.date, resolvedDate)
-      ),
+      where: and(eq(observation.kidId, kidId), eq(observation.date, dateParam)),
     });
 
     if (!obs) {

@@ -13,7 +13,6 @@ import {
   observation,
   observationActivity,
   term,
-  termSession,
 } from '@/lib/db/schema';
 
 // ─────────────── Zod Schemas ───────────────
@@ -50,7 +49,7 @@ export interface IMonthOption {
   year: number;
   month: number;
   label: string;
-  value: string; // "YYYY-MM"
+  value: string;
 }
 
 export interface IMonthlyReportResult {
@@ -63,9 +62,6 @@ export interface IMonthlyReportResult {
 
 // ─────────────── Helpers ───────────────
 
-/**
- * Generate the list of months between two dates, inclusive.
- */
 function getMonthsBetween(start: string, end: string): IMonthOption[] {
   const months: IMonthOption[] = [];
   const startDate = new Date(start + 'T00:00:00');
@@ -76,7 +72,7 @@ function getMonthsBetween(start: string, end: string): IMonthOption[] {
 
   while (current <= endMonthStart) {
     const year = current.getFullYear();
-    const month = current.getMonth() + 1; // 1-based
+    const month = current.getMonth() + 1;
     const monthStr = month.toString().padStart(2, '0');
     const label = `${year}-${monthStr}`;
 
@@ -94,37 +90,42 @@ function getMonthsBetween(start: string, end: string): IMonthOption[] {
 }
 
 /**
- * Get sessions for a given term and month.
- * Returns session IDs within that month.
+ * Get observation-based school days for a given term and month.
  */
-async function getSessionsInMonth(termId: string, year: number, month: number) {
+async function getObservationDaysInMonth(
+  _termId: string,
+  year: number,
+  month: number,
+  _startDate: string,
+  _endDate: string
+) {
   const monthStr = month.toString().padStart(2, '0');
-  const prefix = `${year}-${monthStr}`;
+  const monthStart = `${year}-${monthStr}-01`;
+  const monthEnd = `${year}-${monthStr}-31`;
 
-  const sessions = await db.query.termSession.findMany({
+  // Get unique dates in the month with observations
+  const observations = await db.query.observation.findMany({
     where: and(
-      eq(termSession.termId, termId),
-      sql`${termSession.date}::text LIKE ${prefix + '%'}`,
-      eq(termSession.isHoliday, false)
+      gte(observation.date, monthStart),
+      lte(observation.date, monthEnd)
     ),
-    columns: { id: true, date: true },
+    columns: { date: true },
+    orderBy: [asc(observation.date)],
   });
 
-  return sessions;
+  const uniqueDates = [...new Set(observations.map((o) => o.date))];
+  return uniqueDates.map((date) => ({ id: date, date }));
 }
 
 /**
- * Compute monthly stats for a kid in a given month and term.
- * Stats: attendance %, mood distribution, appetite distribution,
- * activity participation counts.
+ * Compute monthly stats for a kid in a given date range.
  */
 async function computeMonthlyStats(
   kidId: string,
-  sessionIds: string[],
-  sessions: { id: string; date: string }[]
+  startDate: string,
+  endDate: string
 ): Promise<IMonthlyStats> {
-  // If no sessions, return empty stats
-  if (sessionIds.length === 0) {
+  if (!startDate || !endDate) {
     return {
       attendancePercent: 0,
       totalSchoolDays: 0,
@@ -136,12 +137,6 @@ async function computeMonthlyStats(
     };
   }
 
-  // Derive date range from the sessions
-  const dates = sessions.map((s) => s.date).filter(Boolean);
-  const startDate = dates.length > 0 ? dates[0] : '';
-  const endDate = dates.length > 0 ? dates[dates.length - 1] : '';
-
-  // Get all observations for this kid within the date range
   const observations = await db.query.observation.findMany({
     where: and(
       eq(observation.kidId, kidId),
@@ -153,10 +148,12 @@ async function computeMonthlyStats(
       mood: true,
       appetite: true,
       presence: true,
+      date: true,
     },
   });
 
-  const totalSchoolDays = sessionIds.length;
+  const uniqueDates = new Set(observations.map((o) => o.date));
+  const totalSchoolDays = uniqueDates.size;
   const daysPresent = observations.filter(
     (o) =>
       o.presence === 'present_full' ||
@@ -167,21 +164,17 @@ async function computeMonthlyStats(
   const attendancePercent =
     totalSchoolDays > 0 ? Math.round((daysPresent / totalSchoolDays) * 100) : 0;
 
-  // Mood distribution (1-5)
   const moodDistribution: Record<number, number> = {};
   for (const obs of observations) {
     moodDistribution[obs.mood] = (moodDistribution[obs.mood] ?? 0) + 1;
   }
 
-  // Appetite distribution
   const appetiteDistribution: Record<string, number> = {};
   for (const obs of observations) {
     appetiteDistribution[obs.appetite] =
       (appetiteDistribution[obs.appetite] ?? 0) + 1;
   }
 
-  // Activity participation counts — get activity participation for all
-  // observations of this kid in the given sessions
   const observationIds = observations.map((o) => o.id);
 
   const activityParticipation: Record<string, number> = {};
@@ -223,7 +216,6 @@ async function computeMonthlyStats(
 
 /**
  * Get daily report narratives for a kid in a specific month.
- * Used as source material for the monthly AI narrative.
  */
 async function getDailyNarrativesForMonth(
   kidId: string,
@@ -231,25 +223,22 @@ async function getDailyNarrativesForMonth(
   month: number
 ): Promise<{ date: string; narrative: string }[]> {
   const monthStr = month.toString().padStart(2, '0');
-  const prefix = `${year}-${monthStr}`;
+  const monthStart = `${year}-${monthStr}-01`;
+  const monthEnd = `${year}-${monthStr}-31`;
 
   const reports = await db.query.dailyReportSnapshot.findMany({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      sql`${dailyReportSnapshot.createdAt}::text LIKE ${prefix + '%'}`
+      gte(dailyReportSnapshot.date, monthStart),
+      lte(dailyReportSnapshot.date, monthEnd)
     ),
-    with: {
-      session: {
-        columns: { date: true },
-      },
-    },
     orderBy: [asc(dailyReportSnapshot.generatedAt)],
   });
 
   return reports
     .filter((r) => r.narrativeFinal || r.narrativeAiDraft)
     .map((r) => ({
-      date: r.session?.date ?? '',
+      date: r.date ?? '',
       narrative: r.narrativeFinal ?? r.narrativeAiDraft ?? '',
     }))
     .filter((r) => r.narrative.length > 0);
@@ -257,9 +246,6 @@ async function getDailyNarrativesForMonth(
 
 // ─────────────── Read Operations ───────────────
 
-/**
- * Get the current active term.
- */
 export async function getActiveTerm() {
   const auth = await requireOwner();
   if (!auth.authorized) {
@@ -280,9 +266,6 @@ export async function getActiveTerm() {
   return { success: true as const, data: activeTerm };
 }
 
-/**
- * Get enrolled kids for the active term.
- */
 export async function getEnrolledKids(termId: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
@@ -303,10 +286,6 @@ export async function getEnrolledKids(termId: string) {
   return { success: true as const, data: kidsList };
 }
 
-/**
- * Get enrolled kids with pagination and search.
- * Supports case-insensitive ILIKE search on kid name, LIMIT/OFFSET pagination.
- */
 export async function getEnrolledKidsPaginated(
   termId: string,
   search: string,
@@ -363,9 +342,6 @@ export async function getEnrolledKidsPaginated(
   };
 }
 
-/**
- * Get month options for a term (all months covered by the term).
- */
 export async function getMonthOptions(termId: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
@@ -386,9 +362,6 @@ export async function getMonthOptions(termId: string) {
   return { success: true as const, data: months };
 }
 
-/**
- * Get existing monthly reports for a kid.
- */
 export async function getKidMonthlyReports(kidId: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
@@ -408,10 +381,6 @@ export async function getKidMonthlyReports(kidId: string) {
   return { success: true as const, data: reports };
 }
 
-/**
- * Batch fetch monthly reports for multiple kid IDs.
- * Uses a single inArray query instead of N+1 sequential awaits.
- */
 export async function getKidMonthlyReportsBatch(kidIds: string[]) {
   const auth = await requireOwner();
   if (!auth.authorized) {
@@ -444,9 +413,6 @@ export async function getKidMonthlyReportsBatch(kidIds: string[]) {
   return { success: true as const, data: reports };
 }
 
-/**
- * Get a single monthly report by ID.
- */
 export async function getMonthlyReport(reportId: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
@@ -478,9 +444,6 @@ export async function getMonthlyReport(reportId: string) {
   };
 }
 
-/**
- * Get monthly reports for a kid in a specific month.
- */
 export async function getMonthlyReportForKidMonth(
   kidId: string,
   month: string
@@ -510,19 +473,6 @@ export async function getMonthlyReportForKidMonth(
 
 // ─────────────── Monthly Report Generation ───────────────
 
-/**
- * Generate a monthly report for a specific kid and month.
- * Computes stats via SQL aggregation, generates AI narrative from daily
- * report narratives, locks observations used.
- *
- * VAL-MONTHLY-001: Owner generates monthly report with stats + AI narrative.
- * VAL-MONTHLY-002: Stats are accurate (computed from source observations).
- * VAL-MONTHLY-003: AI narrative sourced from daily report narratives.
- * VAL-MONTHLY-004: AI narrative in Bahasa Indonesia.
- * VAL-MONTHLY-005: Observations are locked on generation.
- * VAL-MONTHLY-010: Concurrent generation blocked.
- * VAL-MONTHLY-011: Snapshot stored for future delta.
- */
 export async function generateMonthlyReport(
   kidId: string,
   termId: string,
@@ -533,13 +483,10 @@ export async function generateMonthlyReport(
     return { success: false as const, error: auth.error };
   }
 
-  // Parse month to get year and month number
   const [yearStr, monthStr] = month.split('-');
   const year = parseInt(yearStr, 10);
   const monthNum = parseInt(monthStr, 10);
 
-  // Check concurrent generation: if a report exists with status 'draft' or 'final',
-  // generation is already in progress or completed
   const existingReport = await db.query.monthlyReportSnapshot.findFirst({
     where: and(
       eq(monthlyReportSnapshot.kidId, kidId),
@@ -559,7 +506,6 @@ export async function generateMonthlyReport(
     };
   }
 
-  // Get kid info
   const kidInfo = await db.query.kid.findFirst({
     where: eq(kid.id, kidId),
     columns: { id: true, name: true },
@@ -569,23 +515,26 @@ export async function generateMonthlyReport(
     return { success: false as const, error: 'Murid tidak ditemukan' };
   }
 
-  // Get sessions in the month
-  const sessions = await getSessionsInMonth(termId, year, monthNum);
+  const monthStart = `${year}-${monthStr}-01`;
+  const monthEnd = `${year}-${monthStr}-31`;
+
+  const sessions = await getObservationDaysInMonth(
+    termId,
+    year,
+    monthNum,
+    '',
+    ''
+  );
 
   if (sessions.length === 0) {
     return {
       success: false as const,
-      error:
-        'Tidak ada sesi sekolah pada bulan ini. Periksa jadwal term yang aktif.',
+      error: 'Tidak ada data observasi pada bulan ini.',
     };
   }
 
   // Compute stats
-  const stats = await computeMonthlyStats(
-    kidId,
-    sessions.map((s) => s.id),
-    sessions
-  );
+  const stats = await computeMonthlyStats(kidId, monthStart, monthEnd);
 
   // Get daily narratives for AI
   const dailyNarratives = await getDailyNarrativesForMonth(
@@ -594,7 +543,6 @@ export async function generateMonthlyReport(
     monthNum
   );
 
-  // Check if there are no daily reports at all
   const dailyReportCount = dailyNarratives.length;
   const hasAnyData = stats.totalObservations > 0 || dailyReportCount > 0;
 
@@ -605,7 +553,6 @@ export async function generateMonthlyReport(
     };
   }
 
-  // Generate AI narrative
   let narrativeAiDraft = '';
   try {
     const toplevelMood =
@@ -622,7 +569,6 @@ export async function generateMonthlyReport(
           )
         : 3;
 
-    // Concatenate daily narrative texts so the AI can reference them (VAL-MONTHLY-003)
     const concatenatedDailyNarratives = dailyNarratives
       .map((d) => `[${d.date}] ${d.narrative}`)
       .join('\n\n');
@@ -637,9 +583,7 @@ export async function generateMonthlyReport(
       reportType: 'monthly',
     });
 
-    // Enhance with monthly-specific content if AI returned result
     if (narrativeAiDraft) {
-      // Prepend an attendance summary paragraph
       narrativeAiDraft = `Laporan Bulanan Ananda ${kidInfo.name}
 
 Kehadiran: ${stats.attendancePercent}% (${stats.daysPresent} dari ${stats.totalSchoolDays} hari sekolah).
@@ -654,14 +598,10 @@ Nafsu makan: ${Object.entries(stats.appetiteDistribution)
 ${narrativeAiDraft}`;
     }
   } catch {
-    // AI failure: structured-only fallback (VAL-MONTHLY-009)
     narrativeAiDraft = '';
   }
 
-  // Get all observation IDs to lock (by date range)
-  const dates = sessions.map((s) => s.date).filter(Boolean);
-  const monthStart = dates.length > 0 ? dates[0] : '';
-  const monthEnd = dates.length > 0 ? dates[dates.length - 1] : '';
+  // Lock observation IDs
   const observationsInMonth = await db.query.observation.findMany({
     where: and(
       eq(observation.kidId, kidId),
@@ -672,7 +612,6 @@ ${narrativeAiDraft}`;
   });
   const lockedObservationIds = observationsInMonth.map((o) => o.id);
 
-  // Upsert the snapshot
   const statsJson = stats as unknown as Record<string, unknown>;
 
   if (existingReport) {
@@ -731,12 +670,6 @@ ${narrativeAiDraft}`;
 
 // ─────────────── Narrative Editing ───────────────
 
-/**
- * Update the narrative of a monthly report.
- * If status is 'final', transitions to 'stale' to signal re-gen needed.
- *
- * VAL-MONTHLY-006: Owner can edit monthly narrative.
- */
 export async function updateMonthlyReportNarrative(
   reportId: string,
   narrative: string
@@ -763,7 +696,6 @@ export async function updateMonthlyReportNarrative(
     return { success: false as const, error: 'Laporan tidak ditemukan' };
   }
 
-  // Editing a finalized report makes it stale
   const newStatus = report.status === 'final' ? 'stale' : report.status;
 
   const [updatedReport] = await db
@@ -792,9 +724,6 @@ export async function updateMonthlyReportNarrative(
 
 // ─────────────── Mark as Final ───────────────
 
-/**
- * Mark a monthly report as final.
- */
 export async function markMonthlyReportFinal(reportId: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
@@ -837,15 +766,8 @@ export async function markMonthlyReportFinal(reportId: string) {
   };
 }
 
-// ─────────────── Owner Override (Unlock Observations) ───────────────
+// ─────────────── Owner Override ───────────────
 
-/**
- * Owner override to unlock observations for a monthly report.
- * This transitions the report status to 'stale', clearing the locked
- * observation IDs, and prompting re-generation.
- *
- * VAL-MONTHLY-007: Owner override unlocks observations, marks report stale.
- */
 export async function unlockObservationsForReport(reportId: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
@@ -869,7 +791,6 @@ export async function unlockObservationsForReport(reportId: string) {
     return { success: false as const, error: 'Laporan tidak ditemukan' };
   }
 
-  // Clear locked_observation_ids and set status to stale
   const [updatedReport] = await db
     .update(monthlyReportSnapshot)
     .set({

@@ -24,7 +24,6 @@ import {
   observationActivity,
   quarterlyReportSnapshot,
   term,
-  termSession,
 } from '@/lib/db/schema';
 
 // ─────────────── Zod Schemas ───────────────
@@ -79,30 +78,35 @@ export interface IQuarterlyReportData {
 // ─────────────── Helpers ───────────────
 
 /**
- * Get all sessions for a term that are not holidays.
+ * Get observation dates for a kid in a date range (non-holiday proxy).
  */
-async function getTermSessions(termId: string) {
-  const sessions = await db.query.termSession.findMany({
+async function getObservationDates(
+  kidId: string,
+  startDate: string,
+  endDate: string
+) {
+  const obs = await db.query.observation.findMany({
     where: and(
-      eq(termSession.termId, termId),
-      eq(termSession.isHoliday, false)
+      eq(observation.kidId, kidId),
+      gte(observation.date, startDate),
+      lte(observation.date, endDate)
     ),
-    columns: { id: true, date: true },
-    orderBy: [asc(termSession.date)],
+    columns: { date: true },
+    orderBy: [asc(observation.date)],
   });
 
-  return sessions;
+  return obs.map((o) => o.date);
 }
 
 /**
- * Compute term stats for a kid.
+ * Compute term stats for a kid based on date range.
  */
 async function computeTermStats(
   kidId: string,
-  sessionIds: string[],
-  sessions: { id: string; date: string }[]
+  startDate: string,
+  endDate: string
 ): Promise<IQuarterlyStats> {
-  if (sessionIds.length === 0) {
+  if (!startDate || !endDate) {
     return {
       attendancePercent: 0,
       totalSchoolDays: 0,
@@ -114,21 +118,24 @@ async function computeTermStats(
     };
   }
 
-  // Derive date range from the sessions
-  const dates = sessions.map((s) => s.date).filter(Boolean);
-  const startDate = dates.length > 0 ? dates[0] : '';
-  const endDate = dates.length > 0 ? dates[dates.length - 1] : '';
-
   const observations = await db.query.observation.findMany({
     where: and(
       eq(observation.kidId, kidId),
       gte(observation.date, startDate),
       lte(observation.date, endDate)
     ),
-    columns: { id: true, mood: true, appetite: true, presence: true },
+    columns: {
+      id: true,
+      mood: true,
+      appetite: true,
+      presence: true,
+      date: true,
+    },
   });
 
-  const totalSchoolDays = sessionIds.length;
+  // Use unique dates as school days
+  const uniqueDates = new Set(observations.map((o) => o.date));
+  const totalSchoolDays = uniqueDates.size;
   const daysPresent = observations.filter(
     (o) =>
       o.presence === 'present_full' ||
@@ -200,45 +207,35 @@ async function computeTermStats(
 }
 
 /**
- * Get daily report narratives for a kid in a specific term.
+ * Get daily report narratives for a kid in a date range.
  */
 async function getDailyNarrativesForTerm(
   kidId: string,
-  _termId: string,
-  sessionIds: string[]
+  startDate: string,
+  endDate: string
 ): Promise<{ date: string; narrative: string }[]> {
-  if (sessionIds.length === 0) return [];
+  if (!startDate || !endDate) return [];
 
   const reports = await db.query.dailyReportSnapshot.findMany({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      inArray(dailyReportSnapshot.sessionId, sessionIds)
+      gte(dailyReportSnapshot.date, startDate),
+      lte(dailyReportSnapshot.date, endDate)
     ),
-    with: {
-      session: {
-        columns: { date: true },
-      },
-    },
     orderBy: [asc(dailyReportSnapshot.generatedAt)],
   });
 
   return reports
     .filter((r) => r.narrativeFinal || r.narrativeAiDraft)
-    .map((r) => {
-      const sessionData =
-        r.session && !Array.isArray(r.session) ? r.session : undefined;
-      return {
-        date: sessionData?.date ?? '',
-        narrative: r.narrativeFinal ?? r.narrativeAiDraft ?? '',
-      };
-    })
+    .map((r) => ({
+      date: r.date ?? '',
+      narrative: r.narrativeFinal ?? r.narrativeAiDraft ?? '',
+    }))
     .filter((r) => r.narrative.length > 0);
 }
 
 /**
- * Build a combined notes string containing stats, daily narratives, and delta
- * that can be passed to each section's generateNarrative call.
- * Each section call will receive the same context but with a different sectionType.
+ * Build a combined notes string containing stats, daily narratives, and delta.
  */
 function buildNotesForSections(
   kidName: string,
@@ -285,8 +282,6 @@ Rekomendasi: ${previousSnapshot.sections.recommendations}`;
 
 /**
  * Calls generateNarrative 3 times, once per quarterly section.
- * Each section gets a focused prompt with quarterly-section reportType.
- * Individual section failures are handled gracefully (empty string returned).
  */
 async function generateAllQuarterlySections(
   kidName: string,
@@ -323,7 +318,6 @@ async function generateAllQuarterlySections(
       });
       results.push(content || '');
     } catch {
-      // Individual section failure — leave empty, continue to next section
       results.push('');
     }
   }
@@ -526,14 +520,6 @@ export async function getKidQuarterlyReportsBatchForTerm(
 
 /**
  * Generate a quarterly report for a specific kid and term.
- *
- * VAL-QUARTERLY-001: Owner generates quarterly report as PDF with three sections.
- * VAL-QUARTERLY-002: PDF uses previous-term snapshot for delta comparison.
- * VAL-QUARTERLY-003: First-term quarterly generates without delta.
- * VAL-QUARTERLY-004: AI drafts three sections in Bahasa Indonesia.
- * VAL-QUARTERLY-008: AI failure — structured-only without narrative sections.
- * VAL-QUARTERLY-010: Snapshot stored for next term's delta.
- * VAL-QUARTERLY-011: Kid graduated mid-term — report for completed months only.
  */
 export async function generateQuarterlyReport(kidId: string, termId: string) {
   const auth = await requireOwner();
@@ -541,7 +527,6 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
     return { success: false as const, error: auth.error };
   }
 
-  // Check concurrent generation
   const existingReport = await db.query.quarterlyReportSnapshot.findFirst({
     where: and(
       eq(quarterlyReportSnapshot.kidId, kidId),
@@ -561,7 +546,6 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
     };
   }
 
-  // Get kid info
   const kidInfo = await db.query.kid.findFirst({
     where: eq(kid.id, kidId),
     columns: { id: true, name: true, status: true, enrolledTermId: true },
@@ -571,7 +555,6 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
     return { success: false as const, error: 'Murid tidak ditemukan' };
   }
 
-  // Check if kid is enrolled in this term or was enrolled (alumni)
   const isEnrolledOrWasEnrolled =
     kidInfo.status === 'enrolled' || kidInfo.status === 'alumni';
 
@@ -582,7 +565,6 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
     };
   }
 
-  // Get term info
   const termInfo = await db.query.term.findFirst({
     where: eq(term.id, termId),
     columns: { id: true, name: true, startDate: true, endDate: true },
@@ -592,45 +574,28 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
     return { success: false as const, error: 'Term tidak ditemukan' };
   }
 
-  // Get sessions for this term
-  const allSessions = await getTermSessions(termId);
+  const { startDate, endDate } = termInfo;
 
-  if (allSessions.length === 0) {
+  // Get observation dates for this kid in the term's date range
+  const allDates = await getObservationDates(kidId, startDate, endDate);
+
+  if (allDates.length === 0) {
     return {
       success: false as const,
-      error: 'Tidak ada sesi sekolah pada term ini.',
+      error: 'Tidak ada data observasi pada term ini.',
     };
   }
 
-  // VAL-QUARTERLY-011: If kid graduated mid-term, only include sessions before graduation
-  // We use the kid's updated_at as a proxy for when status changed to alumni,
-  // and also check for observations only existing within enrolled period
-  let sessions = allSessions;
-  if (kidInfo.status === 'alumni') {
-    // Get sessions that have observations for this kid (actual attendance data)
-    const sessionsWithData = await db.query.observation.findMany({
-      where: eq(observation.kidId, kidId),
-      columns: { sessionId: true },
-    });
-    const sessionIdsWithData = new Set(
-      sessionsWithData.map((s) => s.sessionId)
-    );
-    sessions = allSessions.filter((s) => sessionIdsWithData.has(s.id));
-  }
-
-  const sessionIds = sessions.map((s) => s.id);
-
-  // Compute stats
-  const stats = await computeTermStats(kidId, sessionIds, sessions);
+  // Compute stats using date range
+  const stats = await computeTermStats(kidId, startDate, endDate);
 
   // Get daily narratives
   const dailyNarratives = await getDailyNarrativesForTerm(
     kidId,
-    termId,
-    sessionIds
+    startDate,
+    endDate
   );
 
-  // Check if there's any data
   const hasAnyData = stats.totalObservations > 0 || dailyNarratives.length > 0;
 
   if (!hasAnyData) {
@@ -640,9 +605,6 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
     };
   }
 
-  // Find previous quarterly snapshot for delta comparison
-  // VAL-QUARTERLY-002: Use previous-term snapshot for delta
-  // VAL-QUARTERLY-003: First-term generates without delta
   const previousSnapshot = await db.query.quarterlyReportSnapshot.findFirst({
     where: and(
       eq(quarterlyReportSnapshot.kidId, kidId),
@@ -657,12 +619,9 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
     },
   });
 
-  // Generate AI narrative sections — 3 separate calls, one per section
-  // VAL-QUARTERLY-004: Split into 3 focused prompts to avoid truncation on long prompts
   let sectionsJson: IQuarterlySections | null = null;
   let narrativeAiDraft = '';
 
-  // Build the context payload for each section call (stats + narratives + delta)
   const { statsText, narrativesText, deltaText } = buildNotesForSections(
     kidInfo.name,
     stats,
@@ -676,34 +635,28 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
       : null
   );
 
-  // Combined notes in a structured format parseable by buildUserPrompt for quarterly-section
   const combinedNotes = `STATS:\n${statsText}\n\nNARRATIVES:\n${narrativesText}\n\nDELTA:\n${deltaText}`;
 
-  // Call all 3 sections — each section failure is handled independently
   const { section1, section2, section3 } = await generateAllQuarterlySections(
     kidInfo.name,
     stats,
     combinedNotes
   );
 
-  // Build sections from results (individual failure = empty string)
   sectionsJson = {
     changes: section1,
     improvements: section2,
     recommendations: section3,
   };
 
-  // If all 3 failed, keep narrativeAiDraft empty (structured-only fallback)
   if (section1 || section2 || section3) {
     narrativeAiDraft = [section1, section2, section3]
       .filter(Boolean)
       .join('\n\n');
   }
 
-  // Reference to previous snapshot
   const previousSnapshotId = previousSnapshot?.id ?? null;
 
-  // Upsert the snapshot
   const statsJson = stats as unknown as Record<string, unknown>;
   const sectionsData = sectionsJson as unknown as Record<string, unknown>;
 
@@ -770,9 +723,6 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
 
 /**
  * Update the three sections of a quarterly report.
- * If status is 'final', transitions to 'stale'.
- *
- * VAL-QUARTERLY-005: Owner can edit quarterly sections.
  */
 export async function updateQuarterlySections(
   reportId: string,
@@ -800,7 +750,6 @@ export async function updateQuarterlySections(
     return { success: false as const, error: 'Laporan tidak ditemukan' };
   }
 
-  // Editing a finalized report makes it stale
   const newStatus = report.status === 'final' ? 'stale' : report.status;
 
   const sectionsData = sections as unknown as Record<string, unknown>;
@@ -831,9 +780,6 @@ export async function updateQuarterlySections(
 
 // ─────────────── Mark as Final ───────────────
 
-/**
- * Mark a quarterly report as final.
- */
 export async function markQuarterlyReportFinal(reportId: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
@@ -882,9 +828,6 @@ export async function markQuarterlyReportFinal(reportId: string) {
 
 // ─────────────── PDF Storage ───────────────
 
-/**
- * Store PDF data (base64) for a quarterly report.
- */
 export async function saveQuarterlyPdfData(
   reportId: string,
   pdfBase64: string
@@ -909,9 +852,6 @@ export async function saveQuarterlyPdfData(
   };
 }
 
-/**
- * Get the PDF data for a quarterly report.
- */
 export async function getQuarterlyPdfData(reportId: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {

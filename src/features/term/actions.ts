@@ -3,7 +3,7 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { kid, term, termSession } from '@/lib/db/schema';
+import { kid, term } from '@/lib/db/schema';
 
 import { requireOwner } from '../../lib/actions/utils';
 import { TermFormSchema } from './schema';
@@ -19,9 +19,6 @@ export async function getTerms() {
   const terms = await db.query.term.findMany({
     where: isNull(term.deletedAt),
     orderBy: (t, { desc }) => [desc(t.createdAt)],
-    with: {
-      sessions: true,
-    },
   });
 
   return { success: true as const, data: terms };
@@ -35,9 +32,6 @@ export async function getTerm(id: string) {
 
   const result = await db.query.term.findFirst({
     where: eq(term.id, id),
-    with: {
-      sessions: true,
-    },
   });
 
   if (!result) {
@@ -166,19 +160,6 @@ export async function deleteTerm(id: string) {
   const authCheck = await requireOwner();
   if (!authCheck.authorized) {
     return { success: false as const, error: authCheck.error };
-  }
-
-  // Check for linked sessions
-  const linkedSessions = await db
-    .select({ id: termSession.id })
-    .from(termSession)
-    .where(eq(termSession.termId, id));
-
-  if (linkedSessions.length > 0) {
-    return {
-      success: false as const,
-      error: 'Hapus sesi terlebih dahulu',
-    };
   }
 
   try {

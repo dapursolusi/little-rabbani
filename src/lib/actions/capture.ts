@@ -17,9 +17,7 @@ import {
   observationActivity,
   observationNote,
   sessionType,
-  termSession,
 } from '@/lib/db/schema';
-import { resolveSessionType } from '@/lib/session-type-resolver';
 
 // ─────────────── Zod Schemas ───────────────
 
@@ -35,15 +33,14 @@ const AbsenceReasonSchema = z.enum(['sick', 'family', 'permission', 'other']);
 
 const SavePass1Schema = z.object({
   kidId: z.string().min(1, 'Anak wajib dipilih'),
-  sessionId: z.string().min(1, 'Sesi wajib dipilih'),
-  date: z.string().optional(), // resolved from session if not provided
+  date: z.string().min(1, 'Tanggal wajib diisi'),
   mood: MoodSchema,
   appetite: AppetiteSchema,
   presence: PresenceSchema,
   absenceReason: AbsenceReasonSchema.optional().or(z.literal('')),
   notes: z.string().optional().or(z.literal('')),
   idempotencyKey: z.string().optional().or(z.literal('')),
-  version: z.coerce.number().int().optional(), // client-provided version for optimistic locking
+  version: z.coerce.number().int().optional(),
 });
 
 const Pass2ActivitySchema = z.object({
@@ -53,71 +50,14 @@ const Pass2ActivitySchema = z.object({
 
 const SavePass2Schema = z.object({
   kidId: z.string().min(1, 'Anak wajib dipilih'),
-  sessionId: z.string().min(1, 'Sesi wajib dipilih'),
-  activities: z.string().min(2, 'Aktivitas wajib diisi'), // JSON string
+  date: z.string().min(1, 'Tanggal wajib diisi'),
+  activities: z.string().min(2, 'Aktivitas wajib diisi'),
 });
 
 // ─────────────── Helpers ───────────────
 
 /**
- * Resolve the sessionTypeId from a termSession's label.
- * Looks up the active sessionType whose name matches the session label.
- */
-async function resolveSessionTypeByLabel(
-  sessionLabel: string
-): Promise<{ id: string } | null> {
-  const st = await db.query.sessionType.findFirst({
-    where: and(
-      eq(sessionType.name, sessionLabel),
-      eq(sessionType.active, true)
-    ),
-    columns: { id: true },
-  });
-  return st ?? null;
-}
-
-/**
- * Check if session exists, is not holiday, and has started.
- */
-async function validateSessionForCapture(
-  sessionId: string
-): Promise<
-  | { valid: true; session: typeof termSession.$inferSelect }
-  | { valid: false; error: string }
-> {
-  const session = await db.query.termSession.findFirst({
-    where: eq(termSession.id, sessionId),
-  });
-
-  if (!session) {
-    return { valid: false, error: 'Sesi tidak ditemukan' };
-  }
-
-  // VAL-CAPTURE-028: Block capture on holiday session
-  if (session.isHoliday) {
-    return {
-      valid: false,
-      error: 'Sesi ini adalah hari libur — tidak dapat melakukan capture',
-    };
-  }
-
-  // VAL-CAPTURE-052: Block capture before session starts
-  const sessionStart = new Date(`${session.date}T${session.startTime}`);
-  const now = new Date();
-  if (now < sessionStart) {
-    return {
-      valid: false,
-      error: 'Sesi belum dimulai — capture belum tersedia',
-    };
-  }
-
-  return { valid: true, session };
-}
-
-/**
  * Require the current user to be a Teacher.
- * Redirects to login if unauthenticated, returns error if not Owner or Teacher.
- * Both Owners and Teachers can access capture (Owners can also test).
  */
 async function requireTeacher(): Promise<
   { authorized: true; userId: string } | { authorized: false; error: string }
@@ -139,86 +79,45 @@ async function requireTeacher(): Promise<
   return { authorized: true, userId: session.user.id };
 }
 
-// ─────────────── Session Key Resolution ───────────────
-
-/**
- * Resolve a sessionId to its (date, sessionTypeId) pair.
- * Used by Pass 2 lookups to re-key from sessionId to (date, sessionTypeId).
- */
-async function resolveSessionKey(sessionId: string) {
-  const ts = await db.query.termSession.findFirst({
-    where: eq(termSession.id, sessionId),
-  });
-  if (!ts) return null;
-
-  const allTypes = await db.query.sessionType.findMany({
-    where: isNull(sessionType.deletedAt),
-  });
-  const resolved = resolveSessionType(allTypes, ts.label, ts.date);
-  if (!resolved) return null;
-
-  return { date: ts.date, sessionTypeId: resolved.id };
-}
-
 // ─────────────── Read Operations ───────────────
 
 /**
- * Get all sessions available for teacher capture view.
- * Only shows sessions from active terms.
- * Accessible by both Teacher and Owner.
+ * Get session info for the teacher capture view.
+ * Returns session type and enrolled kids with capture states.
  */
-export async function getTeacherSessions() {
+export async function getSessionWithKids(date: string, sessionTypeId: string) {
   const auth = await requireTeacher();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const sessions = await db.query.termSession.findMany({
-    orderBy: [asc(termSession.date), asc(termSession.startTime)],
-    with: {
-      term: true,
-    },
+  // Find active session type
+  const st = await db.query.sessionType.findFirst({
+    where: and(
+      eq(sessionType.id, sessionTypeId),
+      eq(sessionType.active, true),
+      isNull(sessionType.deletedAt)
+    ),
   });
 
-  return { success: true as const, data: sessions };
-}
-
-/**
- * Get session with enrolled kids and their capture states.
- * VAL-CAPTURE-017: Teacher sees roster with per-kid capture state.
- * VAL-CAPTURE-027: Empty roster for no enrolled kids.
- * VAL-CAPTURE-028: Holiday blocked.
- * VAL-CAPTURE-022: Available anytime post-class.
- * VAL-CAPTURE-052: Blocked before session start.
- */
-export async function getSessionWithKids(sessionId: string) {
-  const auth = await requireTeacher();
-  if (!auth.authorized) {
-    return { success: false as const, error: auth.error };
+  if (!st) {
+    return { success: false as const, error: 'Tipe sesi tidak ditemukan' };
   }
 
-  // Validate session (holiday, start time)
-  const validation = await validateSessionForCapture(sessionId);
-  if (!validation.valid) {
-    return { success: false as const, error: validation.error };
-  }
-
-  const { session } = validation;
-
-  // Get term to find enrolled kids
-  const termData = await db.query.term.findFirst({
-    where: (fields, { eq: eqOp }) => eqOp(fields.id, session.termId),
+  // Find active term
+  const activeTerm = await db.query.term.findFirst({
+    where: (fields, { eq: eqOp }) => eqOp(fields.isActive, true),
   });
 
-  if (!termData) {
-    return { success: false as const, error: 'Term tidak ditemukan' };
+  if (!activeTerm) {
+    return { success: false as const, error: 'Tidak ada term aktif' };
   }
 
-  // Get enrolled kids for this term
+  // Get enrolled kids for the active term
   const kids = await db.query.kid.findMany({
     where: (fields, { eq: eqOp, and: andOp }) =>
       andOp(
-        eqOp(fields.enrolledTermId, termData.id),
+        eqOp(fields.enrolledTermId, activeTerm.id),
         eqOp(fields.status, 'enrolled')
       ),
     with: {
@@ -227,20 +126,18 @@ export async function getSessionWithKids(sessionId: string) {
     orderBy: [asc(kid.name)],
   });
 
-  // Get existing observations for this session's date
+  // Get existing observations for this date
   const existingObservations = await db.query.observation.findMany({
-    where: eq(observation.date, session.date),
+    where: eq(observation.date, date),
     with: {
       notes: true,
     },
   });
 
-  // Build capture state map
   const observationMap = new Map(
     existingObservations.map((obs) => [obs.kidId, obs])
   );
 
-  // Attach capture state
   const kidsWithState = kids.map((k) => {
     const obs = observationMap.get(k.id);
     return {
@@ -256,39 +153,26 @@ export async function getSessionWithKids(sessionId: string) {
   return {
     success: true as const,
     data: {
-      session,
+      date,
+      sessionType: st,
       kids: kidsWithState,
     },
   };
 }
 
 /**
- * Get Pass 2 lock status for a session.
- * VAL-CAPTURE-023: Locked when DCR not captured.
- * VAL-CAPTURE-024: Unlocked when DCR captured.
+ * Get Pass 2 lock status for a date + sessionTypeId.
  */
-export async function getPass2Status(sessionId: string) {
+export async function getPass2Status(date: string, sessionTypeId: string) {
   const auth = await requireTeacher();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const key = await resolveSessionKey(sessionId);
-  if (!key) {
-    // Fallback: sessionId lookup
-    const dcr = await db.query.dailyClassReport.findFirst({
-      where: eq(dailyClassReport.sessionId, sessionId),
-    });
-    return {
-      success: true as const,
-      data: { isDcrCaptured: !!dcr, dcrId: dcr?.id ?? null },
-    };
-  }
-
   const dcr = await db.query.dailyClassReport.findFirst({
     where: and(
-      eq(dailyClassReport.date, key.date),
-      eq(dailyClassReport.sessionTypeId, key.sessionTypeId)
+      eq(dailyClassReport.date, date),
+      eq(dailyClassReport.sessionTypeId, sessionTypeId)
     ),
   });
 
@@ -303,35 +187,17 @@ export async function getPass2Status(sessionId: string) {
 
 /**
  * Get DCR activities for Pass 2.
- * VAL-CAPTURE-014: Unplanned activities flow into Pass 2.
- * VAL-CAPTURE-025: Teacher captures yes/no per activity.
  */
-export async function getPass2Activities(sessionId: string) {
+export async function getPass2Activities(date: string, sessionTypeId: string) {
   const auth = await requireTeacher();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const key = await resolveSessionKey(sessionId);
-  if (!key) {
-    // Fallback: sessionId lookup
-    const dcr = await db.query.dailyClassReport.findFirst({
-      where: eq(dailyClassReport.sessionId, sessionId),
-    });
-    if (!dcr) return { success: true as const, data: [] };
-    const activities = await db.query.dcrActivity.findMany({
-      where: eq(dcrActivity.dcrId, dcr.id),
-      orderBy: [asc(dcrActivity.createdAt)],
-      with: { activity: true },
-    });
-    return { success: true as const, data: activities };
-  }
-
-  // Get the DCR for this (date, sessionTypeId)
   const dcr = await db.query.dailyClassReport.findFirst({
     where: and(
-      eq(dailyClassReport.date, key.date),
-      eq(dailyClassReport.sessionTypeId, key.sessionTypeId)
+      eq(dailyClassReport.date, date),
+      eq(dailyClassReport.sessionTypeId, sessionTypeId)
     ),
   });
 
@@ -351,7 +217,7 @@ export async function getPass2Activities(sessionId: string) {
 }
 
 /**
- * Get existing observation for a kid on a given date (for editing).
+ * Get existing observation for a kid on a given date.
  */
 export async function getKidObservation(kidId: string, date: string) {
   const auth = await requireTeacher();
@@ -397,13 +263,6 @@ export async function getKidPass2Activities(kidId: string, date: string) {
 
 /**
  * Save Pass 1 observation (create or update).
- * VAL-CAPTURE-018: Captures mood, appetite, presence, notes.
- * VAL-CAPTURE-019: Mood validated 1-5.
- * VAL-CAPTURE-020: Appetite validated 3-level.
- * VAL-CAPTURE-021: Absence reason required when absent.
- * VAL-CAPTURE-030: Update existing observation (re-capture).
- * VAL-CAPTURE-051: Late/early_pickup presence handled.
- * VAL-CAPTURE-053: Notes append-only.
  */
 export async function savePass1Observation(formData: FormData) {
   const auth = await requireTeacher();
@@ -419,21 +278,12 @@ export async function savePass1Observation(formData: FormData) {
     return { success: false as const, error: firstError };
   }
 
-  const {
-    kidId,
-    sessionId,
-    date: rawDate,
-    mood,
-    appetite,
-    presence,
-    notes,
-  } = parsed.data;
+  const { kidId, date, mood, appetite, presence, notes } = parsed.data;
   const absenceReason = parsed.data.absenceReason || null;
   const idempotencyKeyValue = parsed.data.idempotencyKey || null;
-  // Client-provided version for optimistic locking (the version the client had when it loaded the data)
   const clientVersion = parsed.data.version;
 
-  // VAL-CAPTURE-040: Check idempotency key for duplicate prevention
+  // Idempotency check
   if (idempotencyKeyValue) {
     const existingKeys = await db
       .select()
@@ -453,7 +303,7 @@ export async function savePass1Observation(formData: FormData) {
     }
   }
 
-  // VAL-CAPTURE-021: Absence reason required when absent
+  // Absence reason required when absent
   if (presence === 'absent' && !absenceReason) {
     return {
       success: false as const,
@@ -461,40 +311,28 @@ export async function savePass1Observation(formData: FormData) {
     };
   }
 
-  // Validate session
-  const validation = await validateSessionForCapture(sessionId);
-  if (!validation.valid) {
-    return { success: false as const, error: validation.error };
-  }
-
   try {
-    // Resolve date from form param or session
-    const resolvedDate = rawDate || validation.session.date;
-    // Resolve sessionTypeId from session label
-    const st = await resolveSessionTypeByLabel(validation.session.label);
-    if (!st) {
-      return {
-        success: false as const,
-        error:
-          'Tipe sesi tidak ditemukan untuk label: ' + validation.session.label,
-      };
-    }
-
     // Check if observation already exists for this kid + date
     const existing = await db.query.observation.findFirst({
-      where: and(
-        eq(observation.kidId, kidId),
-        eq(observation.date, resolvedDate)
-      ),
+      where: and(eq(observation.kidId, kidId), eq(observation.date, date)),
     });
 
     let obsId: string;
     let newVersion: number;
 
+    // Resolve sessionTypeId from the date — use the active session type
+    const st = await db.query.sessionType.findFirst({
+      where: and(eq(sessionType.active, true), isNull(sessionType.deletedAt)),
+    });
+
+    if (!st) {
+      return {
+        success: false as const,
+        error: 'Tidak ada tipe sesi aktif',
+      };
+    }
+
     if (existing) {
-      // VAL-CAPTURE-030: Update existing observation (re-capture) with optimistic locking
-      // Use the client-provided version in the WHERE clause, NOT the freshly-fetched DB version.
-      // This ensures concurrent saves with stale versions return 409 conflict.
       const expectedVersion =
         clientVersion !== undefined ? clientVersion : existing.version;
       newVersion = expectedVersion + 1;
@@ -519,7 +357,6 @@ export async function savePass1Observation(formData: FormData) {
         )
         .returning();
 
-      // If no rows returned, version conflict
       if (!updated) {
         return {
           success: false as const,
@@ -529,14 +366,12 @@ export async function savePass1Observation(formData: FormData) {
 
       obsId = existing.id;
     } else {
-      // Create new observation
       newVersion = 0;
       const [created] = await db
         .insert(observation)
         .values({
           kidId,
-          sessionId,
-          date: resolvedDate,
+          date,
           sessionTypeId: st.id,
           teacherId: auth.userId,
           mood,
@@ -551,7 +386,7 @@ export async function savePass1Observation(formData: FormData) {
       obsId = created.id;
     }
 
-    // VAL-CAPTURE-053: Notes are append-only
+    // Notes are append-only
     if (notes && notes.trim()) {
       await db.insert(observationNote).values({
         observationId: obsId,
@@ -559,7 +394,6 @@ export async function savePass1Observation(formData: FormData) {
       });
     }
 
-    // VAL-CAPTURE-040: Store idempotency key on successful save
     if (idempotencyKeyValue) {
       const sevenDaysFromNow = new Date();
       sevenDaysFromNow.setDate(sevenDaysFromNow.getDate() + 7);
@@ -584,8 +418,6 @@ export async function savePass1Observation(formData: FormData) {
 
 /**
  * Save Pass 2 observation activities (participation).
- * VAL-CAPTURE-025: Yes/no per activity.
- * VAL-CAPTURE-026: Absent kids skip Pass 2.
  */
 export async function savePass2Observation(formData: FormData) {
   const auth = await requireTeacher();
@@ -601,9 +433,8 @@ export async function savePass2Observation(formData: FormData) {
     return { success: false as const, error: firstError };
   }
 
-  const { kidId, sessionId, activities: activitiesJson } = parsed.data;
+  const { kidId, date, activities: activitiesJson } = parsed.data;
 
-  // Parse activities JSON
   let activities: Array<{ dcrActivityId: string; participated: 'yes' | 'no' }>;
   try {
     const parsedActivities = JSON.parse(activitiesJson);
@@ -617,21 +448,8 @@ export async function savePass2Observation(formData: FormData) {
   }
 
   try {
-    // Resolve the session's date for the lookup
-    const pass2Session = await db.query.termSession.findFirst({
-      where: eq(termSession.id, sessionId),
-      columns: { date: true },
-    });
-    if (!pass2Session) {
-      return { success: false as const, error: 'Sesi tidak ditemukan' };
-    }
-
-    // Find the observation (must exist - Pass 1 must be done first)
     const obs = await db.query.observation.findFirst({
-      where: and(
-        eq(observation.kidId, kidId),
-        eq(observation.date, pass2Session.date)
-      ),
+      where: and(eq(observation.kidId, kidId), eq(observation.date, date)),
     });
 
     if (!obs) {
@@ -642,7 +460,6 @@ export async function savePass2Observation(formData: FormData) {
       };
     }
 
-    // VAL-CAPTURE-026: Skip Pass 2 for absent kids
     if (obs.presence === 'absent') {
       return {
         success: false as const,
@@ -650,12 +467,10 @@ export async function savePass2Observation(formData: FormData) {
       };
     }
 
-    // Delete existing observation activities for this observation
     await db
       .delete(observationActivity)
       .where(eq(observationActivity.observationId, obs.id));
 
-    // Insert new activities
     if (activities.length > 0) {
       const values = activities.map((act) => ({
         observationId: obs.id,
@@ -678,12 +493,7 @@ export async function savePass2Observation(formData: FormData) {
 // ─────────────── Teacher Pending Capture ───────────────
 
 /**
- * Get the total count of kids with pending (uncaptured) observations
- * across today's sessions for the Teacher dashboard banner.
- * Only considers non-holiday sessions from the active term.
- *
- * VAL-REMIN-005: Teacher sees pending capture count on dashboard.
- * VAL-REMIN-007: Count decreases as captures complete.
+ * Get the total count of kids with pending observations across today's sessions.
  */
 export async function getTeacherPendingCaptureCount() {
   const auth = await requireTeacher();
@@ -699,19 +509,6 @@ export async function getTeacherPendingCaptureCount() {
 
   if (!activeTerm) return { success: true as const, data: 0 };
 
-  // Get today's non-holiday sessions from the active term
-  const todaySessions = await db.query.termSession.findMany({
-    where: (session, { eq, and }) =>
-      and(
-        eq(session.date, today),
-        eq(session.termId, activeTerm.id),
-        eq(session.isHoliday, false)
-      ),
-  });
-
-  if (todaySessions.length === 0) return { success: true as const, data: 0 };
-
-  // Get enrolled kids for the active term
   const enrolledKids = await db.query.kid.findMany({
     where: (kid, { eq, and }) =>
       and(eq(kid.enrolledTermId, activeTerm.id), eq(kid.status, 'enrolled')),
@@ -721,23 +518,18 @@ export async function getTeacherPendingCaptureCount() {
 
   const enrolledKidIds = enrolledKids.map((k) => k.id);
 
-  let totalPending = 0;
+  // Count observed kids for today
+  const observedKids = await db
+    .select({ kidId: observation.kidId })
+    .from(observation)
+    .where(
+      and(
+        eq(observation.date, today),
+        inArray(observation.kidId, enrolledKidIds)
+      )
+    );
 
-  for (const session of todaySessions) {
-    // Count how many enrolled kids already have observations for this session's date
-    const observedKids = await db
-      .select({ kidId: observation.kidId })
-      .from(observation)
-      .where(
-        and(
-          eq(observation.date, session.date),
-          inArray(observation.kidId, enrolledKidIds)
-        )
-      );
-
-    const observedCount = observedKids.length;
-    totalPending += Math.max(0, enrolledKids.length - observedCount);
-  }
+  const totalPending = Math.max(0, enrolledKids.length - observedKids.length);
 
   return { success: true as const, data: totalPending };
 }

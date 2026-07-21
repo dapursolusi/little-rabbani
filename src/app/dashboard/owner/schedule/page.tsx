@@ -58,7 +58,7 @@ export default async function ScheduleSelectorPage() {
                 {formatDate(t.startDate)} — {formatDate(t.endDate)}
               </p>
               <p className="mt-1 text-xs text-muted-foreground/60">
-                {t.sessions.length} sesi
+                {t.startDate} — {t.endDate}
               </p>
             </Link>
           ))}
