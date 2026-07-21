@@ -845,6 +845,10 @@ export const reminderLog = pgTable('reminder_log', {
     .notNull()
     .references(() => user.id, { onDelete: 'cascade' }),
   type: reminderTypeEnum('type').notNull(),
+  date: date('date'),
+  sessionTypeId: uuid('session_type_id').references(() => sessionType.id, {
+    onDelete: 'set null',
+  }),
   sessionId: uuid('session_id').references(() => termSession.id, {
     onDelete: 'set null',
   }),
@@ -862,5 +866,9 @@ export const reminderLogRelations = relations(reminderLog, ({ one }) => ({
   session: one(termSession, {
     fields: [reminderLog.sessionId],
     references: [termSession.id],
+  }),
+  sessionType: one(sessionType, {
+    fields: [reminderLog.sessionTypeId],
+    references: [sessionType.id],
   }),
 }));
