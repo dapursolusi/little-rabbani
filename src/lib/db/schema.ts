@@ -614,6 +614,10 @@ export const dailyReportSnapshot = pgTable(
     kidId: uuid('kid_id')
       .notNull()
       .references(() => kid.id, { onDelete: 'cascade' }),
+    date: date('date').notNull(),
+    sessionTypeId: uuid('session_type_id')
+      .notNull()
+      .references(() => sessionType.id, { onDelete: 'cascade' }),
     sessionId: uuid('session_id')
       .notNull()
       .references(() => termSession.id, { onDelete: 'cascade' }),
@@ -633,7 +637,7 @@ export const dailyReportSnapshot = pgTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
-    uniqueKidSession: unique().on(table.kidId, table.sessionId),
+    uniqueKidDate: unique().on(table.kidId, table.date),
   })
 );
 
@@ -643,6 +647,10 @@ export const dailyReportSnapshotRelations = relations(
     kid: one(kid, {
       fields: [dailyReportSnapshot.kidId],
       references: [kid.id],
+    }),
+    sessionType: one(sessionType, {
+      fields: [dailyReportSnapshot.sessionTypeId],
+      references: [sessionType.id],
     }),
     session: one(termSession, {
       fields: [dailyReportSnapshot.sessionId],
