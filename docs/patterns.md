@@ -1,30 +1,10 @@
 # Code Patterns — Living Reference
 
-> **Status: DRAFT, not canon.** This is an extraction of the patterns actually
-> implemented in the `ea4ad26 → HEAD` refactor (the `features/`-based rewrite).
-> It is a _description_ of current movement, **not a rule**. Settled decisions
-> (the `as never` cast, `ui/` is auto-generated, action-result shape) live in
-> `AGENTS.md` → `## Code Patterns › Settled hard rules`; this doc carries only
-> the living, still-moving picture. The shape is still
-> in flux — the form engine covers 2 of ~8 entities, and the backend vertical
-> (services, logging, middleware) hasn't been refactored yet. Refine this file
-> as the migration proceeds; when a pattern truly settles, promote it into
-> `AGENTS.md` as a rule.
+> **Status: DRAFT.** Describes the `features/`-based rewrite target, not a rule. Settled decisions (schema-registry cast, `ui/` auto-gen, action-result shape) live in `AGENTS.md`.
 >
-> ## Why this exists (not a rules/ system)
+> ## Why this exists
 >
-> The repo carries two organizations at once:
->
-> - **`src/lib/actions/`** — the _legacy_ flat, by-domain action dump. Diagonal
->   to the feature structure. From the AI-generated initial codebase.
-> - **`src/features/<entity>/`** — the target: feature-based co-location with a
->   shared CRUD engine. The deliberate refactor direction.
->
-> This file documents the **target** so agentic work on still-unmigrated domains
-> (term, session, activity, schedule, reports…) lands in the new shape instead
-> of re-entrenching `lib/actions/`. It is intentionally narrow — it locks
-> **direction** (feature-based, `kid`/`guardian` as the template) but does NOT
-> lock the engine's internals until one full vertical settles top-to-bottom.
+> Two orgs coexist: legacy `src/lib/actions/` (flat, domain-dump) → target `src/features/<entity>/` (co-located CRUD engine). This doc ensures new domains land in the target shape. Locks **direction** (feature-based, template = `kid`/`guardian`), not engine internals.
 
 ## 1. Feature-based co-location
 
@@ -356,32 +336,16 @@ from the enabled columns' titles (`'Cari Nama atau Nama Wali …'`).
 
 ---
 
-## What's NOT settled (deferred from this extraction)
+## What's NOT settled
 
-This file deliberately does NOT prescribe:
+- **Services layer** — none yet, actions talk to Drizzle directly. Extract pattern when backend refactor begins.
+- **Logging** — no convention yet. `console.warn`/`console.error` only.
+- **Middleware** — `requireOwner()` per-action is the only gate.
+- **Engine final shape** — schemaKey registry vs per-entity forms, actions split into `fetch.ts`/`write.ts`, `RowActionsDialog` vs `DataTableRowActions` consolidation.
+- **Legacy `sections/` wrappers** — not yet ported to generic engine.
 
-- **Services layer.** No `services/` or repository split exists. Actions talk
-  to Drizzle directly. When the backend refactor begins, extract a pattern
-  here first, promote to AGENTS.md when stable.
-- **Logging.** No structured logging convention yet. `console.warn`/`console.error`
-  only (per AGENTS.md). Action `catch` blocks currently swallow the error
-  message into the envelope string — a logging layer may surface more.
-- **Middleware.** `requireOwner()` is the only gate, called per-action. No
-  Next middleware role-check pattern yet.
-- **The engine's final shape.** Whether `schemaKey` registry beats per-entity
-  forms; whether `actions.ts` splits into `fetch.ts`/`write.ts` (declared as
-  intent here, not yet done); how `RowActionsDialog` and `DataTableRowActions`
-  consolidate.
-- **The `sections/` legacy wrappers** (`guardian-form.tsx`, `term-form.tsx`,
-  `session-*.tsx`, `term-actions.tsx`) — pre-engine, hand-rolled, not yet
-  ported to `DefaultFormFields`/the generic row actions.
+## How to use
 
-## How to use this file while migrating
-
-- New entity? Copy `kid` (or `guardian`) as the template. Add it to the registry.
-- Agentic session touches `lib/actions/term.ts`? This file says: the target is
-  `features/term/actions.ts` + `fields.ts` + `schema.ts` + registry entry.
-  Land the new code there, drain the legacy file.
-- Find a contradiction between this file and the code? **The code wins** for
-  now; update this file. When a section has survived 3+ entities unchanged,
-  propose promoting it to `AGENTS.md` as a hard rule.
+- New entity → copy `kid`/`guardian` template, add to registry
+- Touching `lib/actions/term.ts`? → land in `features/term/`, drain legacy file
+- Code contradicts this doc? **Code wins** — update doc. Promote to `AGENTS.md` after 3+ entities use pattern unchanged.

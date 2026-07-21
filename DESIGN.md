@@ -4,24 +4,17 @@
 
 ## 1. Visual Theme & Atmosphere
 
-Little Rabbani's design system is a **warm, nurturing preschool LMS** wearing the green of its dotted background pattern across every surface. The canvas alternates between a warm cream (`#FAF5F2`) and a warm off-white (`#F0EBE6`) — colors that reference the calm, inviting surfaces of an early-childhood environment — while the signature **Little Rabbani Green** (`#048647`) anchors the brand moment on hero bands, CTAs, and dashboard surfaces. The greens come in four calibrated shades (Brand, Bright, Dark Teal, Mid Teal) each mapped to a specific surface role, and amber gold (`#EAB308`) appears as the status/badge accent — used sparingly for achievement ceremony, never as a general accent.
-
-Typography carries most of the brand voice. The open-source **Inter** typeface (loaded via `next/font` in this Next.js project) sits across nearly every surface with a tight `-0.16px` letter-spacing — it reads confident and friendly rather than fashion-magazine severe. What's unusual: the marketing page switches to a warm serif (`"Lora", "Iowan Old Style", Georgia`) for specific headline moments, subtly echoing the nostalgic feel of a preschool chalkboard. And decorative touches use a handwritten script (`"Caveat", "Comic Sans MS", cursive`) for child-name personalizations — referencing the hand-written name tags on classroom cubbies. Three typefaces, three contexts — the system is disciplined about when each appears.
-
-The surfaces breathe through rounded geometry. Every button is a 50px full-pill. Cards take a 12px rounded-rectangle. The "WhatsApp" floating button — a 56px circular contact button in WhatsApp Green (`#25D366`) — is the product's signature depth move: it floats bottom-right with a layered shadow stack (`0 0 6px rgba(0,0,0,0.24)` base + `0 8px 12px rgba(0,0,0,0.14)` ambient) and compresses via `scale(0.95)` on press. Elevations are otherwise restrained — card shadows stay at a whispered `0.14/0.24` alpha, the dashboard sidebar gets a quiet three-layer shadow stack. The whole system feels like clean classroom signage: legible, warm, and never shouting.
+Warm, nurturing preschool LMS. Cream canvas (`#FAF5F2` / `#F0EBE6`), four-tier greens (Brand/Bright/Dark Teal/Mid Teal), Amber Gold (`#EAB308`) reserved for achievement ceremony. Inter typeface everywhere (`-0.16px` tracking). Marketing pages switch to Lora serif for headlines; Caveat script for child-name decorations. 50px full-pill buttons, `scale(0.95)` active press. WhatsApp floating button (`#25D366`, 56px) with layered shadow stack — signature elevation element.
 
 **Key Characteristics:**
 
-- Four-tier green brand system (Brand / Bright / Dark Teal / Mid Teal) each mapped to a distinct surface role — not a single "brand green"
-- Amber Gold reserved for achievement/status ceremony moments only; never a general-purpose accent
-- Warm cream canvas (`#FAF5F2` / `#F0EBE6`) instead of cold white — references the calm preschool environment
-- Open-source typeface (Inter, via `next/font`) with tight `-0.16px` letter-spacing as the universal voice
-- Context-specific type switches: serif (Lora) for marketing headline moments, script (Caveat) for child-name decorative touches
-- Full-pill buttons (`50px` radius) universal, `scale(0.95)` active press the signature micro-interaction
-- Floating "WhatsApp" circular contact button (`56px`, WhatsApp Green `#25D366` fill, layered shadow stack) — the product's signature elevation element, matching littlerabbani.com
-- Decorative blobs (Soft Gold `#FDE68A` and Sky Blue `#7DD3FC`) used as playful background accents — never on functional surfaces
-- 12px card radius + whisper-soft shadows keep content cards flat-plus-hint-of-lift
-- Rem-based spacing uses the standard Tailwind v4 scale (`1rem = 16px`). The app does not use custom `--space-*` tokens; use Tailwind utilities instead. See [Spacing System](#spacing-system).
+- Four-tier greens mapped to distinct surface roles, Amber Gold = achievement-only
+- Cream canvas (`#FAF5F2` / `#F0EBE6`), never pure white
+- Inter as universal voice, Lora for marketing headlines, Caveat for child-name decorations
+- 50px full-pill buttons, `scale(0.95)` active press, WhatsApp floating button (`#25D366`)
+- Decorative blobs (`#FDE68A` / `#7DD3FC`) on marketing surfaces only — never functional
+- 12px card radius, whisper-soft layered shadows
+- Standard Tailwind v4 spacing — no custom `--space-*` tokens
 
 **Color-block page rhythm:** Cream hero → White content sections → Dark Teal (`#385451`) feature band with white text → Cream utility zone → Dark Teal (`#385451`) footer with gold / white text — a deep-teal bookend around the bright body.
 
@@ -134,81 +127,26 @@ No OpenType stylistic sets explicitly activated at `:root`.
 
 ### Buttons
 
-**1. Primary Filled — "Save changes / Mark complete / Send report"**
+**Shared baseline:** 50px radius (full pill), `7px 16px` padding, Inter, `scale(0.95)` active state, `all 0.2s ease` transition. Listed below as variant-specific overrides only.
 
-- Background: `#0E9F5A` (Bright Green)
-- Text: `#ffffff`
-- Border: `1px solid #0E9F5A`
-- Radius: `50px` (full pill)
-- Padding: `7px 16px`
-- Font: Inter, 16px, weight 600, letter-spacing `-0.01em`
-- Active state: `transform: scale(0.95)` via `--buttonActiveScale`
-- Transition: `all 0.2s ease`
+| Variant                 | BG               | Text      | Border                 | Font                   | Use                                  |
+| ----------------------- | ---------------- | --------- | ---------------------- | ---------------------- | ------------------------------------ |
+| Primary Filled          | `#0E9F5A`        | `#fff`    | `1px solid #0E9F5A`    | 16px / 600 / `-0.01em` | "Save / Mark complete / Send report" |
+| Primary Outlined        | transparent      | `#0E9F5A` | `1px solid #0E9F5A`    | —                      | "Cancel / View details"              |
+| Black Filled            | `#000`           | `#fff`    | `1px solid #000`       | 14px / 600             | Login strips, conversion moments     |
+| Dark Outlined           | transparent      | `#1a1a2e` | `1px solid #1a1a2e`    | 14px / 600             | "Back to dashboard"                  |
+| Green-on-Green Inverted | `#fff`           | `#0E9F5A` | `1px solid #fff`       | —                      | White button on dark teal bands      |
+| Outlined on Dark        | transparent      | `#fff`    | `1px solid #fff`       | —                      | Secondary CTA on dark-teal bands     |
+| Consent Agree           | `rgb(14,159,90)` | `#fff`    | none                   | 14px / 400             | Cookie-consent agree action          |
+| Feedback Tab            | `#0E9F5A`        | `#fff`    | `12px 12px 0 0` radius | 14px / 400             | Fixed bottom-right "Report an issue" |
 
-**2. Primary Outlined — "Cancel / View details"**
+**WhatsApp floating button:**
 
-- Background: transparent
-- Text: `#0E9F5A` (Bright Green)
-- Border: `1px solid #0E9F5A`
-- Same radius/padding/active/transition as Primary Filled
-
-**3. Black Filled — "Sign in / Continue"**
-
-- Background: `#000000`
-- Text: `#ffffff`
-- Border: `1px solid #000000`
-- Radius: `50px`, Padding: `7px 16px`
-- Font: 14px, weight 600
-- Used on high-contrast login strips and conversion moments
-
-**4. Dark Outlined — "Back to dashboard"**
-
-- Background: transparent
-- Text: `#1a1a2e` (Text Black)
-- Border: `1px solid #1a1a2e`
-- Radius: `50px`, Padding: `7px 16px`
-- Font: 14px, weight 600
-
-**5. Green-on-Green Inverted — "Get started"**
-
-- Background: `#ffffff`
-- Text: `#0E9F5A`
-- Border: `1px solid #ffffff`
-- Used when the surface behind the button is the dark teal band — white button with green text instead of a filled green pill on teal bg
-
-**6. Outlined on Dark — "Learn more / View docs"**
-
-- Background: transparent
-- Text: `#ffffff`
-- Border: `1px solid #ffffff`
-- Used on dark-teal feature bands for secondary action paired with a white filled CTA
-
-**7. Consent Agree (dark-teal variant)**
-
-- Background: `rgb(14, 159, 90)` (Bright Green, consent-specific variant)
-- Text: `#ffffff`
-- No border, `50px` radius, `7px 16px` padding, 14px / weight 400
-- Reserved for the cookie-consent/banner Agree action
-
-**8. WhatsApp — Floating Circular Contact Button**
-
-- Background: `#25D366` (WhatsApp Green) — matches littlerabbani.com
-- Icon: `#ffffff` (WhatsApp glyph)
-- Size: `5.6rem / 56px` (standard), `4rem / 40px` (mini variant)
-- Radius: `50%` (full circle)
-- Fixed bottom-right, `-0.8rem` touch offset for extra tap comfort
-- Shadow stack: base `0 0 6px rgba(0,0,0,0.24)` + ambient `0 8px 12px rgba(0,0,0,0.14)`
-- Active state: ambient shadow fades to `0 8px 12px rgba(0,0,0,0)` with `scale(0.95)`
-- This is the product's signature elevation element — it floats over every scrolled surface, matching the main website's floating WhatsApp button
-
-**9. Full-width Feedback Tab — "Report an issue / Contact support"**
-
-- Background: `#0E9F5A` (Bright Green)
-- Text: `#ffffff`
-- Radius: `12px 12px 0px 0px` (top-rounded only)
-- Padding: `8px 16px`
-- Font: 14px, weight 400
-- Positioned fixed bottom-right-inside, attached to the viewport edge (offset from the WhatsApp button so they do not overlap)
+- `#25D366` bg, white WhatsApp glyph, 56px/40px, 50% radius
+- Fixed bottom-right, `-0.8rem` touch offset
+- Shadow stack: `0 0 6px rgba(0,0,0,0.24)` + `0 8px 12px rgba(0,0,0,0.14)`
+- Active: ambient shadow → `0 8px 12px rgba(0,0,0,0)` with `scale(0.95)`
+- Signature elevation element, matches littlerabbani.com
 
 ### Cards & Containers
 
@@ -482,7 +420,7 @@ Whitespace carries the feeling of "plenty of space in the classroom." Section pa
 | Achievement Tile  | Light drop shadow around illustrated icon                                         | Physical-coin feel for achievement tiles                         |
 | Popover / Tooltip | `drop-shadow(0 4px 1px rgba(0,0,0,0.11)) drop-shadow(0 0 2px rgba(0,0,0,0.24))`   | Stacked SVG drop shadows for popover visuals                     |
 
-**Shadow philosophy:** Whisper-soft, layered over solid — the system never reaches for a single heavy drop shadow. Instead, it stacks 2–3 low-alpha shadows with different offsets to simulate real-world ambient + direct lighting. The WhatsApp button is the most elevated element on any page.
+**Shadow philosophy:** 2–3 low-alpha layered shadows per element, never one heavy shadow. WhatsApp button is the most elevated element on any page.
 
 ### Decorative Depth
 
@@ -490,38 +428,18 @@ Whitespace carries the feeling of "plenty of space in the classroom." Section pa
 - **Color-block banding** carries perceived depth (dark-teal bands read as "recessed feature zones" between cream/white body sections)
 - **Decorative blobs** (Soft Gold `#FDE68A`, Sky Blue `#7DD3FC`) at low opacity behind marketing sections add playful depth without structural gradients
 
-## 7. Do's and Don'ts
+## 7. Rules
 
-### Do
-
-- Use Cream (`#FAF5F2`) or Warm Off-White (`#F0EBE6`) as page canvas instead of pure white — the warm cream is the signature
-- Map the green tiers to their intended surface role — Little Rabbani Green for headings, Bright Green for CTAs, Dark Teal for sidebar/footer/bands, Mid Teal for decorative
-- Keep tracking tight at `-0.01em` / `-0.16px` on Inter across the whole system
-- Use 50px full-pill radius on every button without exception
-- Apply `transform: scale(0.95)` as the universal button active state
-- Reserve Amber Gold for achievement/status ceremony moments only
-- Use Inter for nearly everything; switch to Lora only for marketing editorial headlines; reserve Caveat script for certificate/profile name decorations
-- Layer 2–3 low-alpha shadows instead of one heavier drop shadow for elevation
-- Use the WhatsApp circular button as the persistent floating contact entry on every surface (matches littlerabbani.com)
-- Let the cream canvas breathe between content cards — use whitespace, not dividers
-- Use shadcn/ui (base-nova) as the primitive component foundation, then theme with the tokens in this doc
-- Use hugeicons for all iconography
-
-### Don't
-
-- Don't use pure white as the page canvas — the warm cream temperature is load-bearing
-- Don't pick "one brand green" — the four-green system is intentional; using only `#048647` everywhere flattens the brand
-- Don't use Amber Gold as a general-purpose accent — it's an achievement/status signal only
-- Don't substitute WhatsApp Green (`#25D366`) for brand green — it is reserved exclusively for the WhatsApp contact affordance
-- Don't use Sky Blue (`#7DD3FC`) or Soft Gold (`#FDE68A`) on functional surfaces — decorative blobs only
-- Don't square the corners on buttons — the 50px pill is universal
-- Don't introduce gradient fills on functional surfaces — the system is color-block throughout (decorative blobs are the only exception, behind marketing sections)
-- Don't weight-contrast h1 and h2 by size — the hierarchy comes from weight + color (600 Little Rabbani Green vs 400 Text Black)
-- Don't use pure black for body text — `#1a1a2e` matches the warm canvas
-- Don't skip the `scale(0.95)` active feedback on buttons — it's a signature micro-interaction
-- Don't stack single heavy shadows; always layer 2–3 low-alpha ones
-- Don't introduce serifs or scripts into the main dashboard flow — they belong to marketing and certificate contexts respectively
-- Don't edit `src/components/ui/` shadcn base-nova components directly — they are auto-generated
+- Canvas: Cream (`#FAF5F2`) or Warm Off-White (`#F0EBE6`), never pure white
+- Green roles: Little Rabbani Green for headings, Bright Green for CTAs, Dark Teal for sidebar/bands/footer
+- Tracking: `-0.01em` / `-0.16px` on Inter throughout
+- Buttons: 50px full-pill, `scale(0.95)` active state, always
+- Amber Gold: achievement/status ceremony only
+- Typefaces: Inter for UI, Lora for marketing headlines, Caveat for certificate decorations
+- Shadows: 2–3 low-alpha layered, never single heavy shadow
+- WhatsApp button: persistent floating contact on every surface
+- Icons: hugeicons for all chrome, emoji only for data content (mood glyphs)
+- shadcn/base-nova primitives, theme via tokens — never edit `src/components/ui/`
 
 ## 8. Responsive Behavior
 
@@ -559,67 +477,11 @@ Whitespace carries the feeling of "plenty of space in the classroom." Section pa
 - `opacity 0.3s ease-in` fade-in transition on image load (prevents jarring pop-in)
 - Student avatars scale proportionally; never stretches
 
-## 9. Agent Prompt Guide
+## 9. Known Gaps
 
-### Quick Color Reference
-
-- Primary CTA: "Bright Green (`#0E9F5A`)"
-- Primary CTA text: "White (`#ffffff`)"
-- Brand heading: "Little Rabbani Green (`#048647`)"
-- Sidebar / feature band / footer: "Dark Teal Green (`#385451`)"
-- Page canvas: "Cream (`#FAF5F2`)"
-- Card canvas: "White (`#ffffff`)"
-- Heading text on light: "Text Black (`#1a1a2e`)"
-- Body text on light: "Text Black Soft (`rgba(26,26,46,0.58)`)"
-- Body text on dark-teal: "Text White Soft (`rgba(255,255,255,0.70)`)"
-- Achievement accent: "Amber Gold (`#EAB308`)"
-- Achievement text: "Dashboard Teal (`#385451`)"
-- Destructive: "Red (`#c82014`)"
-- Floating contact: "WhatsApp Green (`#25D366`)"
-- Decorative blobs: "Soft Gold (`#FDE68A`) / Sky Blue (`#7DD3FC`)"
-- Valid-field tint: "Soft Mint (`#D1F0E0`)"
-
-### Example Component Prompts
-
-1. "Create a primary Little Rabbani CTA pill button with Bright Green (`#0E9F5A`) background, white text 'Save changes', Inter font at 16px weight 600 with `-0.01em` letter-spacing, `50px` border-radius (full pill), `7px 16px` padding. Apply `transform: scale(0.95)` as the active state with a `0.2s ease` transition."
-
-2. "Design a content card with White (`#ffffff`) background at `12px` border-radius, layered shadow `0 0 0.5px rgba(0,0,0,0.14), 0 1px 1px rgba(0,0,0,0.24)`. Pad contents `16–24px` (`p-4` to `p-6`). Place on a Cream (`#FAF5F2`) page canvas with `gap-4` to siblings."
-
-3. "Build the WhatsApp floating circular contact button — `56px` diameter, WhatsApp Green (`#25D366`) fill, white WhatsApp glyph icon centered. Layered shadow: `0 0 6px rgba(0,0,0,0.24)` + `0 8px 12px rgba(0,0,0,0.14)`. Fixed position bottom-right with `-0.8rem` touch offset. Active state collapses the ambient shadow to `0 8px 12px rgba(0,0,0,0)` with `scale(0.95)`. This matches littlerabbani.com's floating WhatsApp button."
-
-4. "Build a dark-teal feature band — full-width section with Dark Teal Green (`#385451`) background. Left column: white Inter h2 at 24px weight 600, followed by a Text White Soft (`rgba(255,255,255,0.70)`) body paragraph and a CTA row with two buttons (White-filled with Bright Green text for primary, Outlined-on-Dark white border for secondary). Right column: classroom photography. Split ratio 40/60, stacked vertically below `768px`."
-
-5. "Create an achievement status card — Dark Teal Green (`#385451`) panel with `12px` border-radius, colored gradient top stripe (Bronze/Silver/Gold tier). Title in Inter 24px weight 600 in white. Benefits list as white bullets with `rgba(255,255,255,0.70)` secondary captions. Bottom progression text in Text White Soft. Stack 3 panels in a grid at `lg+`, single column on mobile."
-
-6. "Design an achievement tile — card radius matches `12px`, fills with an illustrated icon (hand-drawn watercolor-painted feel) as the entire surface. Subtle drop shadow makes it feel like a physical reward coin on the cream canvas. Group under a category label ('Student of the Week', 'Reading Stars', 'Helpful Friend') in Inter 24px weight 400 above the grid."
-
-7. "Create a Little Rabbani lesson-detail header — Dark Teal Green (`#385451`) band with breadcrumb 'Dashboard / Lessons / Numeracy — Caterpillar' in 14/400 white above the lesson title in Inter 32/700 uppercase white. Lesson icon centered below title. Below icon: a 4-up stage selector row — each stage-icon button shows a hugeicons stage silhouette, stage name ('Introduction' / 'Activity' / 'Practice' / 'Wrap-up') in 16/700 white, and duration in 13/400 Text White Soft. Selected stage wraps the icon in a `2px solid #0E9F5A` circular ring."
-
-8. "Build a Little Rabbani lesson configure flow — under the stage selector, 3 stacked outlined-rectangle input rows (white bg, `1px solid #d6dbde` border, `4px` radius). Each has a floating label ('Class', 'Subject', 'Teacher') above the top border in 13/700 Text Black uppercase. Value centered (e.g., 'Caterpillar', 'Numeracy', 'Ms. Aisha'). Right side: chevron-down in Text Black Soft. For the materials row, embed a numeric stepper (`−` `1` `+` with circular `32px` outlined buttons). Below all three fields: outlined green 'Configure' pill with gold sparkle icon, `50px` radius, `14px 40px` padding. Pair with a Bright Green filled 'Save Lesson' pill in the same row."
-
-9. "Design a Little Rabbani lesson description band — full-width Dark Teal Green (`#385451`) below lesson header. Top: a gold-outlined '5★ badge' Achievement Cost Pill (`50px` radius, `4px 12px` padding, Amber Gold `#EAB308` border and text). Below: lesson description in white 16/400/1.5. Lesson meta inline summary in white 14/700 ('3 activities, 15 min, Numeracy') with info-icon tooltip. Outlined-white-on-teal pill button 'Full lesson plan & materials'. 32px vertical padding."
-
-10. "Create a Little Rabbani lesson progress table — two-column layout inside a White card. Left column: 'Materials' header (24/400 Text Black), followed by material list or 'No materials for this lesson' placeholder paragraph in 14/400 Text Black Soft. Right column: 'Objectives' header, then label/value rows (objective name left, status right — 'In progress' / 'Complete' / 'Not started') separated by `1px solid #e7e7e7` hairlines. Typography: labels in 14/400 Text Black, values in 14/700 Text Black right-aligned. Footnote asterisk markers in 13/400 Text Black Soft at the bottom."
-
-### Iteration Guide
-
-When refining existing screens generated with this design system:
-
-1. Focus on ONE component at a time
-2. Reference specific color names and hex codes from this document
-3. Use natural language descriptions ("warm cream canvas," "four-tier green system") alongside exact values
-4. Preserve the 50px pill + `scale(0.95)` active state universally
-5. Check that greens are mapped to their correct role (Bright Green for CTA, Little Rabbani Green for heading, Dark Teal for sidebar/band/footer)
-6. Don't introduce gradients on functional surfaces — the system is color-block (decorative blobs behind marketing sections are the only exception)
-7. Keep Inter tracking at `-0.01em` / `-0.16px` across the board
-8. Use shadcn/ui (base-nova) primitives as the foundation, themed with these tokens
-9. Use hugeicons for all iconography — never inline raw SVGs for standard UI icons
-
-### Known Gaps
-
-- Decorative blob positioning (Soft Gold `#FDE68A` / Sky Blue `#7DD3FC`) on marketing sections is qualitative — exact coordinates per section are not tokenized; place by eye behind sections where "playful preschool" feel is needed
-- Specific per-component animation timings beyond the few documented (`--duration: 0.4s`, `--iconTransition: all ease-out 0.2s`, `--expanderDuration: 300ms`) are not captured for every interactive surface
-- Form error-state full styling (red border weight, icon placement) is visible on the tint token but not exhaustively specified
-- Certificate-page specific components (child-name script card, star-grid award) are referenced but not covered by this extraction — add when certificate feature is built
-- Parent-portal specific mockup specs are hinted at by the Partnership Card but not fully documented — extend when parent portal is built
-- Achievement tier color gradients (Bronze/Silver/Gold header rings) are qualitative — exact stops not tokenized
+- Decorative blob positioning — qualitative, place by eye on marketing sections
+- Per-component animation timings — only a few documented (`--duration: 0.4s`, `--iconTransition: all ease-out 0.2s`, `--expanderDuration: 300ms`)
+- Form error-state full styling — not exhaustively specified
+- Certificate-page components — add when certificate feature is built
+- Parent-portal specs — extend when parent portal is built
+- Achievement tier color gradients (Bronze/Silver/Gold) — qualitative, exact stops not tokenized
