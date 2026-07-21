@@ -3,7 +3,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { and, asc, eq, inArray } from 'drizzle-orm';
+import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { auth } from '@/lib/auth';
@@ -16,8 +16,10 @@ import {
   observation,
   observationActivity,
   observationNote,
+  sessionType,
   termSession,
 } from '@/lib/db/schema';
+import { resolveSessionType } from '@/lib/session-type-resolver';
 
 // ─────────────── Zod Schemas ───────────────
 
@@ -117,6 +119,27 @@ async function requireTeacher(): Promise<
   }
 
   return { authorized: true, userId: session.user.id };
+}
+
+// ─────────────── Session Key Resolution ───────────────
+
+/**
+ * Resolve a sessionId to its (date, sessionTypeId) pair.
+ * Used by Pass 2 lookups to re-key from sessionId to (date, sessionTypeId).
+ */
+async function resolveSessionKey(sessionId: string) {
+  const ts = await db.query.termSession.findFirst({
+    where: eq(termSession.id, sessionId),
+  });
+  if (!ts) return null;
+
+  const allTypes = await db.query.sessionType.findMany({
+    where: isNull(sessionType.deletedAt),
+  });
+  const resolved = resolveSessionType(allTypes, ts.label, ts.date);
+  if (!resolved) return null;
+
+  return { date: ts.date, sessionTypeId: resolved.id };
 }
 
 // ─────────────── Read Operations ───────────────
@@ -232,8 +255,23 @@ export async function getPass2Status(sessionId: string) {
     return { success: false as const, error: auth.error };
   }
 
+  const key = await resolveSessionKey(sessionId);
+  if (!key) {
+    // Fallback: sessionId lookup
+    const dcr = await db.query.dailyClassReport.findFirst({
+      where: eq(dailyClassReport.sessionId, sessionId),
+    });
+    return {
+      success: true as const,
+      data: { isDcrCaptured: !!dcr, dcrId: dcr?.id ?? null },
+    };
+  }
+
   const dcr = await db.query.dailyClassReport.findFirst({
-    where: eq(dailyClassReport.sessionId, sessionId),
+    where: and(
+      eq(dailyClassReport.date, key.date),
+      eq(dailyClassReport.sessionTypeId, key.sessionTypeId)
+    ),
   });
 
   return {
@@ -256,9 +294,27 @@ export async function getPass2Activities(sessionId: string) {
     return { success: false as const, error: auth.error };
   }
 
-  // Get the DCR for this session
+  const key = await resolveSessionKey(sessionId);
+  if (!key) {
+    // Fallback: sessionId lookup
+    const dcr = await db.query.dailyClassReport.findFirst({
+      where: eq(dailyClassReport.sessionId, sessionId),
+    });
+    if (!dcr) return { success: true as const, data: [] };
+    const activities = await db.query.dcrActivity.findMany({
+      where: eq(dcrActivity.dcrId, dcr.id),
+      orderBy: [asc(dcrActivity.createdAt)],
+      with: { activity: true },
+    });
+    return { success: true as const, data: activities };
+  }
+
+  // Get the DCR for this (date, sessionTypeId)
   const dcr = await db.query.dailyClassReport.findFirst({
-    where: eq(dailyClassReport.sessionId, sessionId),
+    where: and(
+      eq(dailyClassReport.date, key.date),
+      eq(dailyClassReport.sessionTypeId, key.sessionTypeId)
+    ),
   });
 
   if (!dcr) {

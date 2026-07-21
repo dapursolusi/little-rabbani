@@ -8,6 +8,7 @@ import {
   dailyClassReport,
   dailyReportSnapshot,
   kid,
+  sessionType,
   term,
   termSession,
 } from '@/lib/db/schema';
@@ -74,7 +75,11 @@ export async function getOwnerDashboardStats(): Promise<DashboardStats> {
           eq(termSession.termId, activeTerm.id),
           eq(termSession.isHoliday, false),
           sql`${termSession.date} + ${termSession.endTime}::time < NOW()`,
-          sql`NOT EXISTS (SELECT 1 FROM ${dailyClassReport} WHERE ${dailyClassReport.sessionId} = ${termSession.id})`
+          sql`NOT EXISTS (SELECT 1 FROM ${dailyClassReport}
+            JOIN ${sessionType} ON ${sessionType.id} = ${dailyClassReport.sessionTypeId}
+              AND ${sessionType.active} = true AND ${sessionType.deletedAt} IS NULL
+            WHERE ${dailyClassReport.date} = ${termSession.date}
+              AND ${sessionType.name} = ${termSession.label})`
         )
       );
     pendingDcrsCount = Number(pendingDcrsResult[0]?.count ?? 0);
@@ -91,7 +96,11 @@ export async function getOwnerDashboardStats(): Promise<DashboardStats> {
           eq(termSession.termId, activeTerm.id),
           eq(termSession.isHoliday, false),
           sql`${termSession.date} + ${termSession.endTime}::time < NOW()`,
-          sql`EXISTS (SELECT 1 FROM ${dailyClassReport} WHERE ${dailyClassReport.sessionId} = ${termSession.id})`,
+          sql`EXISTS (SELECT 1 FROM ${dailyClassReport}
+            JOIN ${sessionType} ON ${sessionType.id} = ${dailyClassReport.sessionTypeId}
+              AND ${sessionType.active} = true AND ${sessionType.deletedAt} IS NULL
+            WHERE ${dailyClassReport.date} = ${termSession.date}
+              AND ${sessionType.name} = ${termSession.label})`,
           sql`NOT EXISTS (SELECT 1 FROM ${dailyReportSnapshot} WHERE ${dailyReportSnapshot.sessionId} = ${termSession.id})`
         )
       );
