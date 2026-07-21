@@ -1,6 +1,6 @@
 {
-  "id": "ae1dfc76-30f3-40cb-82cd-6c5b94db043b",
-  "prevId": "ae1dfc76-30f3-40cb-82cd-6c5b94db043b",
+  "id": "d137ad05-48e7-4603-9a9d-8a84fe31c83c",
+  "prevId": "d652bed6-3089-4895-b7e3-c90dd95878d9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -179,12 +179,6 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "session_id": {
-          "name": "session_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
         "learning_notes": {
           "name": "learning_notes",
           "type": "text",
@@ -275,12 +269,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "session_id": {
-          "name": "session_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
         "structured_json": {
           "name": "structured_json",
           "type": "jsonb",
@@ -339,30 +327,9 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
-        },
-        "date": {
-          "name": "date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "session_type_id": {
-          "name": "session_type_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
         }
       },
-      "indexes": {
-        "daily_report_snapshot_kid_id_date_unique": {
-          "name": "daily_report_snapshot_kid_id_date_unique",
-          "columns": ["kid_id", "date"],
-          "isUnique": true,
-          "nullsNotDistinct": false,
-          "type": "unique",
-          "concurrently": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "daily_report_snapshot_kid_id_kid_id_fk": {
           "name": "daily_report_snapshot_kid_id_kid_id_fk",
@@ -389,15 +356,6 @@
           "columnsFrom": ["edited_by"],
           "columnsTo": ["id"],
           "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "daily_report_snapshot_session_type_id_session_type_id_fk": {
-          "name": "daily_report_snapshot_session_type_id_session_type_id_fk",
-          "tableFrom": "daily_report_snapshot",
-          "tableTo": "session_type",
-          "columnsFrom": ["session_type_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -950,12 +908,6 @@
         },
         "kid_id": {
           "name": "kid_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "session_id": {
-          "name": "session_id",
           "type": "uuid",
           "primaryKey": false,
           "notNull": true
@@ -1520,12 +1472,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "session_id": {
-          "name": "session_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "scheduled_at": {
           "name": "scheduled_at",
           "type": "timestamp",
@@ -1551,18 +1497,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
-        },
-        "date": {
-          "name": "date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "session_type_id": {
-          "name": "session_type_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {},
@@ -1581,15 +1515,6 @@
           "tableFrom": "reminder_log",
           "tableTo": "term_session",
           "columnsFrom": ["session_id"],
-          "columnsTo": ["id"],
-          "onDelete": "set null",
-          "onUpdate": "no action"
-        },
-        "reminder_log_session_type_id_session_type_id_fk": {
-          "name": "reminder_log_session_type_id_session_type_id_fk",
-          "tableFrom": "reminder_log",
-          "tableTo": "session_type",
-          "columnsFrom": ["session_type_id"],
           "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
@@ -1669,12 +1594,6 @@
           "primaryKey": true,
           "notNull": true,
           "default": "gen_random_uuid()"
-        },
-        "session_id": {
-          "name": "session_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
         },
         "date": {
           "name": "date",
@@ -2032,99 +1951,6 @@
       },
       "indexes": {},
       "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
-    "public.term_session": {
-      "name": "term_session",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "term_id": {
-          "name": "term_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "date": {
-          "name": "date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "start_time": {
-          "name": "start_time",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "end_time": {
-          "name": "end_time",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "label": {
-          "name": "label",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "is_holiday": {
-          "name": "is_holiday",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
-        "holiday_reason": {
-          "name": "holiday_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "deleted_at": {
-          "name": "deleted_at",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {
-        "term_session_term_id_term_id_fk": {
-          "name": "term_session_term_id_term_id_fk",
-          "tableFrom": "term_session",
-          "tableTo": "term",
-          "columnsFrom": ["term_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},

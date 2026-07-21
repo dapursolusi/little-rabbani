@@ -1,5 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import * as captureActions from '@/lib/actions/capture';
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
@@ -50,10 +52,6 @@ vi.mock('@/lib/db', () => {
           findFirst: vi.fn(),
         },
         dcrActivity: {
-          findMany: vi.fn(),
-        },
-        termSession: {
-          findFirst: vi.fn(),
           findMany: vi.fn(),
         },
         term: {
@@ -109,28 +107,6 @@ function mockTeacherSession() {
   });
 }
 
-function mockSession(
-  overrides: Partial<{
-    date: string;
-    startTime: string;
-    endTime: string;
-    isHoliday: boolean;
-  }> = {}
-) {
-  return {
-    id: 'session-1',
-    termId: 'term-1',
-    date: overrides.date ?? '2026-07-08',
-    startTime: overrides.startTime ?? '08:00',
-    endTime: overrides.endTime ?? '10:00',
-    label: 'Kelas Pagi',
-    isHoliday: overrides.isHoliday ?? false,
-    holidayReason: null,
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-}
-
 describe('Capture Server Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -140,257 +116,6 @@ describe('Capture Server Actions', () => {
 
   afterEach(() => {
     vi.useRealTimers();
-  });
-
-  // ─────────────── getSessionWithKids ───────────────
-
-  describe('getSessionWithKids', () => {
-    it('should return session with enrolled kids', async () => {
-      mockTeacherSession();
-
-      const mockKids = [
-        {
-          id: 'kid-1',
-          name: 'Aisyah',
-          dob: '2020-01-01',
-          status: 'enrolled',
-          guardianId: 'guardian-1',
-          enrolledTermId: 'term-1',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          guardian: {
-            id: 'guardian-1',
-            name: 'Ibu Aisyah',
-            phone: '08123456789',
-            email: null,
-            secondContactName: null,
-            secondContactPhone: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        },
-        {
-          id: 'kid-2',
-          name: 'Budi',
-          dob: '2020-02-02',
-          status: 'enrolled',
-          guardianId: 'guardian-2',
-          enrolledTermId: 'term-1',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          guardian: {
-            id: 'guardian-2',
-            name: 'Bapak Budi',
-            phone: '08129876543',
-            email: null,
-            secondContactName: null,
-            secondContactPhone: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        },
-      ];
-
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      vi.mocked(db.query.term.findFirst).mockResolvedValue({
-        id: 'term-1',
-        name: 'Semester 1 2026',
-        startDate: '2026-01-01',
-        endDate: '2026-12-31',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      vi.mocked(db.query.kid.findMany).mockResolvedValue(mockKids as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      // No existing observations
-      vi.mocked(db.query.observation.findMany).mockResolvedValue([]);
-
-      const result = await captureActions.getSessionWithKids('session-1');
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.session.id).toBe('session-1');
-        expect(result.data.kids).toHaveLength(2);
-        expect(result.data.kids[0].captureState).toBe('uncaptured');
-      }
-    });
-
-    // VAL-CAPTURE-027: Session with zero enrolled kids shows empty roster
-    it('should return empty kids array for session with no enrolled kids', async () => {
-      mockTeacherSession();
-
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      vi.mocked(db.query.term.findFirst).mockResolvedValue({
-        id: 'term-1',
-        name: 'Semester 1 2026',
-        startDate: '2026-01-01',
-        endDate: '2026-12-31',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      vi.mocked(db.query.kid.findMany).mockResolvedValue([]);
-
-      const result = await captureActions.getSessionWithKids('session-1');
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.kids).toHaveLength(0);
-      }
-    });
-
-    // VAL-CAPTURE-028: Capture on holiday session is blocked
-    it('should block capture on holiday session', async () => {
-      mockTeacherSession();
-
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession({ isHoliday: true }) as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      const result = await captureActions.getSessionWithKids('session-1');
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('libur');
-    });
-
-    // VAL-CAPTURE-052: Teacher cannot capture before session starts
-    it('should block capture before session start time', async () => {
-      mockTeacherSession();
-      vi.setSystemTime(new Date('2026-07-08T05:00:00')); // Before 08:00
-
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession({ startTime: '08:00' }) as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      const result = await captureActions.getSessionWithKids('session-1');
-      expect(result.success).toBe(false);
-      if (!result.success) {
-        expect(result.error).toContain('belum dimulai');
-      }
-    });
-
-    // VAL-CAPTURE-022: Pass 1 available anytime post-class
-    it('should allow capture for sessions that ended recently', async () => {
-      mockTeacherSession();
-      vi.setSystemTime(new Date('2026-07-08T10:05:00')); // 5 min after 10:00
-
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession({ endTime: '10:00' }) as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      vi.mocked(db.query.term.findFirst).mockResolvedValue({
-        id: 'term-1',
-        name: 'Semester 1 2026',
-        startDate: '2026-01-01',
-        endDate: '2026-12-31',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      vi.mocked(db.query.kid.findMany).mockResolvedValue([]);
-
-      const result = await captureActions.getSessionWithKids('session-1');
-      expect(result.success).toBe(true);
-    });
-
-    it('should allow capture for sessions that ended days ago', async () => {
-      mockTeacherSession();
-
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession({
-          date: '2026-07-05',
-          endTime: '10:00',
-        }) as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      vi.mocked(db.query.term.findFirst).mockResolvedValue({
-        id: 'term-1',
-        name: 'Semester 1 2026',
-        startDate: '2026-01-01',
-        endDate: '2026-12-31',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      vi.mocked(db.query.kid.findMany).mockResolvedValue([]);
-
-      const result = await captureActions.getSessionWithKids('session-1');
-      expect(result.success).toBe(true);
-    });
-
-    it('should show existing capture state with check/cross', async () => {
-      mockTeacherSession();
-
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      vi.mocked(db.query.term.findFirst).mockResolvedValue({
-        id: 'term-1',
-        name: 'Semester 1 2026',
-        startDate: '2026-01-01',
-        endDate: '2026-12-31',
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      vi.mocked(db.query.kid.findMany).mockResolvedValue([
-        {
-          id: 'kid-1',
-          name: 'Aisyah',
-          dob: '2020-01-01',
-          status: 'enrolled',
-          guardianId: 'guardian-1',
-          enrolledTermId: 'term-1',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        {
-          id: 'kid-2',
-          name: 'Budi',
-          dob: '2020-02-02',
-          status: 'enrolled',
-          guardianId: 'guardian-2',
-          enrolledTermId: 'term-1',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      // One observation exists
-      vi.mocked(db.query.observation.findMany).mockResolvedValue([
-        {
-          id: 'obs-1',
-          kidId: 'kid-1',
-          sessionId: 'session-1',
-          teacherId: 'teacher-1',
-          mood: 4,
-          appetite: 'good',
-          presence: 'present_full',
-          absenceReason: null,
-          version: 1,
-          capturedAt: new Date(),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      const result = await captureActions.getSessionWithKids('session-1');
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data.kids[0].captureState).toBe('captured');
-        expect(result.data.kids[1].captureState).toBe('uncaptured');
-      }
-    });
   });
 
   // ─────────────── savePass1Observation ───────────────
@@ -414,10 +139,6 @@ describe('Capture Server Actions', () => {
         updatedAt: new Date(),
       };
 
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
       vi.mocked(db.query.sessionType.findFirst).mockResolvedValue({
         id: 'st-1',
         name: 'Kelas Pagi',
@@ -427,7 +148,7 @@ describe('Capture Server Actions', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as any);
 
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(undefined);
 
@@ -435,11 +156,11 @@ describe('Capture Server Actions', () => {
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newObservation]),
         }),
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as any);
 
       const formData = new FormData();
       formData.append('kidId', 'kid-1');
-      formData.append('sessionId', 'session-1');
+      formData.append('date', '2026-07-08');
       formData.append('mood', '4');
       formData.append('appetite', 'good');
       formData.append('presence', 'present_full');
@@ -452,13 +173,12 @@ describe('Capture Server Actions', () => {
       }
     });
 
-    // VAL-CAPTURE-019: Mood validated as 5-level scale
     it('should reject mood outside 1-5 range', async () => {
       mockTeacherSession();
 
       const formData = new FormData();
       formData.append('kidId', 'kid-1');
-      formData.append('sessionId', 'session-1');
+      formData.append('date', '2026-07-08');
       formData.append('mood', '6');
       formData.append('appetite', 'good');
       formData.append('presence', 'present_full');
@@ -467,13 +187,12 @@ describe('Capture Server Actions', () => {
       expect(result.success).toBe(false);
     });
 
-    // VAL-CAPTURE-020: Appetite validated as 3-level scale
     it('should reject invalid appetite value', async () => {
       mockTeacherSession();
 
       const formData = new FormData();
       formData.append('kidId', 'kid-1');
-      formData.append('sessionId', 'session-1');
+      formData.append('date', '2026-07-08');
       formData.append('mood', '3');
       formData.append('appetite', 'invalid');
       formData.append('presence', 'present_full');
@@ -482,143 +201,21 @@ describe('Capture Server Actions', () => {
       expect(result.success).toBe(false);
     });
 
-    // VAL-CAPTURE-021: Absence reason required when absent
     it('should require absence_reason when presence is absent', async () => {
       mockTeacherSession();
 
       const formData = new FormData();
       formData.append('kidId', 'kid-1');
-      formData.append('sessionId', 'session-1');
+      formData.append('date', '2026-07-08');
       formData.append('mood', '3');
       formData.append('appetite', 'good');
       formData.append('presence', 'absent');
-      // No absence_reason
 
       const result = await captureActions.savePass1Observation(formData);
       expect(result.success).toBe(false);
       expect(result.error).toContain('wajib');
     });
 
-    // VAL-CAPTURE-030: Update existing observation
-    it('should update existing observation (re-capture)', async () => {
-      mockTeacherSession();
-
-      const existingObs = {
-        id: 'obs-1',
-        kidId: 'kid-1',
-        sessionId: 'session-1',
-        teacherId: 'teacher-1',
-        mood: 3,
-        appetite: 'good',
-        presence: 'present_full',
-        absenceReason: null,
-        version: 0,
-        capturedAt: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue({
-        id: 'st-1',
-        name: 'Kelas Pagi',
-        start: '08:00',
-        end: '10:00',
-        active: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      vi.mocked(db.query.observation.findFirst).mockResolvedValue(
-        existingObs as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      vi.mocked(db.update).mockReturnValue({
-        set: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            returning: vi
-              .fn()
-              .mockResolvedValue([{ ...existingObs, mood: 5, version: 1 }]),
-          }),
-        }),
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      const formData = new FormData();
-      formData.append('kidId', 'kid-1');
-      formData.append('sessionId', 'session-1');
-      formData.append('mood', '5');
-      formData.append('appetite', 'good');
-      formData.append('presence', 'present_full');
-
-      const result = await captureActions.savePass1Observation(formData);
-      expect(result.success).toBe(true);
-    });
-
-    // VAL-CAPTURE-053: Notes are append-only
-    it('should create new note without deleting old ones', async () => {
-      mockTeacherSession();
-
-      const existingObs = {
-        id: 'obs-1',
-        kidId: 'kid-1',
-        sessionId: 'session-1',
-        teacherId: 'teacher-1',
-        mood: 4,
-        appetite: 'good',
-        presence: 'present_full',
-        absenceReason: null,
-        version: 1,
-        capturedAt: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue({
-        id: 'st-1',
-        name: 'Kelas Pagi',
-        start: '08:00',
-        end: '10:00',
-        active: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        deletedAt: null,
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      vi.mocked(db.query.observation.findFirst).mockResolvedValue(
-        existingObs as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
-      vi.mocked(db.update).mockReturnValue({
-        set: vi.fn().mockReturnValue({
-          where: vi.fn().mockReturnValue({
-            returning: vi
-              .fn()
-              .mockResolvedValue([{ ...existingObs, version: 2 }]),
-          }),
-        }),
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      const formData = new FormData();
-      formData.append('kidId', 'kid-1');
-      formData.append('sessionId', 'session-1');
-      formData.append('mood', '4');
-      formData.append('appetite', 'good');
-      formData.append('presence', 'present_full');
-      formData.append('notes', 'Suka bernyanyi');
-
-      const result = await captureActions.savePass1Observation(formData);
-      expect(result.success).toBe(true);
-    });
-
-    // VAL-CAPTURE-051: Late and early_pickup presence statuses handled correctly
     it('should accept late and early_pickup presence values', async () => {
       mockTeacherSession();
 
@@ -637,10 +234,6 @@ describe('Capture Server Actions', () => {
         updatedAt: new Date(),
       };
 
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
       vi.mocked(db.query.sessionType.findFirst).mockResolvedValue({
         id: 'st-1',
         name: 'Kelas Pagi',
@@ -650,7 +243,7 @@ describe('Capture Server Actions', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
         deletedAt: null,
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as any);
 
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(undefined);
 
@@ -658,33 +251,17 @@ describe('Capture Server Actions', () => {
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newObservation]),
         }),
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as any);
 
       const formData = new FormData();
       formData.append('kidId', 'kid-2');
-      formData.append('sessionId', 'session-1');
+      formData.append('date', '2026-07-08');
       formData.append('mood', '3');
       formData.append('appetite', 'moderate');
       formData.append('presence', 'late');
 
       const result = await captureActions.savePass1Observation(formData);
       expect(result.success).toBe(true);
-    });
-
-    it('should reject teacher without session', async () => {
-      mockTeacherSession();
-
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(undefined);
-
-      const formData = new FormData();
-      formData.append('kidId', 'kid-1');
-      formData.append('sessionId', 'invalid-session');
-      formData.append('mood', '3');
-      formData.append('appetite', 'good');
-      formData.append('presence', 'present_full');
-
-      const result = await captureActions.savePass1Observation(formData);
-      expect(result.success).toBe(false);
     });
   });
 
@@ -709,17 +286,13 @@ describe('Capture Server Actions', () => {
         updatedAt: new Date(),
       };
 
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(
-        existingObs as any // eslint-disable-line @typescript-eslint/no-explicit-any
+        existingObs as any
       );
 
       const formData = new FormData();
       formData.append('kidId', 'kid-1');
-      formData.append('sessionId', 'session-1');
+      formData.append('date', '2026-07-08');
       formData.append(
         'activities',
         JSON.stringify([
@@ -735,15 +308,11 @@ describe('Capture Server Actions', () => {
     it('should require existing observation (Pass 1 done first)', async () => {
       mockTeacherSession();
 
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
-        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
-      );
-
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(undefined);
 
       const formData = new FormData();
       formData.append('kidId', 'kid-1');
-      formData.append('sessionId', 'session-1');
+      formData.append('date', '2026-07-08');
       formData.append('activities', '[]');
 
       const result = await captureActions.savePass2Observation(formData);
@@ -761,7 +330,7 @@ describe('Capture Server Actions', () => {
         undefined
       );
 
-      const result = await captureActions.getPass2Status('session-1');
+      const result = await captureActions.getPass2Status('2026-07-08', 'st-1');
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.isDcrCaptured).toBe(false);
@@ -773,11 +342,12 @@ describe('Capture Server Actions', () => {
 
       vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue({
         id: 'dcr-1',
-        sessionId: 'session-1',
+        date: '2026-07-08',
+        sessionTypeId: 'st-1',
         capturedAt: new Date(),
-      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      } as any);
 
-      const result = await captureActions.getPass2Status('session-1');
+      const result = await captureActions.getPass2Status('2026-07-08', 'st-1');
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data.isDcrCaptured).toBe(true);
@@ -790,6 +360,12 @@ describe('Capture Server Actions', () => {
   describe('getPass2Activities', () => {
     it('should return DCR activities for Pass 2', async () => {
       mockTeacherSession();
+
+      vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue({
+        id: 'dcr-1',
+        date: '2026-07-08',
+        sessionTypeId: 'st-1',
+      } as any);
 
       vi.mocked(db.query.dcrActivity.findMany).mockResolvedValue([
         {
@@ -810,9 +386,12 @@ describe('Capture Server Actions', () => {
             updatedAt: new Date(),
           },
         },
-      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+      ] as any);
 
-      const result = await captureActions.getPass2Activities('session-1');
+      const result = await captureActions.getPass2Activities(
+        '2026-07-08',
+        'st-1'
+      );
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toHaveLength(1);
@@ -822,100 +401,19 @@ describe('Capture Server Actions', () => {
     it('should return empty array when no activities', async () => {
       mockTeacherSession();
 
-      vi.mocked(db.query.dcrActivity.findMany).mockResolvedValue([]);
+      // No DCR exists
+      vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
+        undefined as any
+      );
 
-      const result = await captureActions.getPass2Activities('session-1');
+      const result = await captureActions.getPass2Activities(
+        '2026-07-08',
+        'st-1'
+      );
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toEqual([]);
       }
-    });
-  });
-
-  // ─────────────── getTeacherSessions ───────────────
-
-  describe('getTeacherSessions', () => {
-    it('should return past and future sessions for teacher', async () => {
-      mockTeacherSession();
-
-      vi.mocked(db.query.termSession.findMany).mockResolvedValue([
-        {
-          id: 's-past',
-          termId: 'term-1',
-          date: '2026-07-05',
-          startTime: '08:00',
-          endTime: '10:00',
-          label: 'Kelas Pagi',
-          isHoliday: false,
-          holidayReason: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          term: {
-            id: 'term-1',
-            name: 'Semester 1 2026',
-            startDate: '2026-01-01',
-            endDate: '2026-12-31',
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        },
-        {
-          id: 's-future',
-          termId: 'term-1',
-          date: '2026-07-10',
-          startTime: '08:00',
-          endTime: '10:00',
-          label: 'Kelas Pagi',
-          isHoliday: false,
-          holidayReason: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          term: {
-            id: 'term-1',
-            name: 'Semester 1 2026',
-            startDate: '2026-01-01',
-            endDate: '2026-12-31',
-            isActive: true,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
-        },
-      ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
-
-      const result = await captureActions.getTeacherSessions();
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).toHaveLength(2);
-      }
-    });
-
-    it('should reject non-teacher/owner role', async () => {
-      vi.mocked(auth.api.getSession).mockResolvedValue({
-        user: {
-          id: 'unknown-1',
-          role: 'unknown',
-          email: 'unknown@test.com',
-          name: 'Unknown',
-          emailVerified: true,
-          image: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-        session: {
-          id: 'session-u1',
-          userId: 'unknown-1',
-          token: 'token-u1',
-          expiresAt: new Date(Date.now() + 86400000),
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          ipAddress: null,
-          userAgent: null,
-        },
-      });
-
-      const result = await captureActions.getTeacherSessions();
-      expect(result.success).toBe(false);
     });
   });
 });

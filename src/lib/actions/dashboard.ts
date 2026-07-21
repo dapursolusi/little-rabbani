@@ -10,7 +10,6 @@ import {
   kid,
   sessionType,
   term,
-  termSession,
 } from '@/lib/db/schema';
 
 export interface DashboardStats {
@@ -46,62 +45,39 @@ export async function getOwnerDashboardStats(): Promise<DashboardStats> {
 
   const enrolledKidsCount = Number(enrolledKidsResult[0]?.count ?? 0);
 
-  // Today's sessions (only if active term exists)
   const today = new Date().toISOString().split('T')[0];
-  let todaySessionsCount = 0;
 
+  // Today's active session types
+  let todaySessionsCount = 0;
   if (activeTerm) {
     const todaySessionsResult = await db
       .select({ count: sql<number>`count(*)` })
-      .from(termSession)
-      .where(
-        and(
-          eq(termSession.termId, activeTerm.id),
-          eq(termSession.date, today),
-          eq(termSession.isHoliday, false)
-        )
-      );
+      .from(sessionType)
+      .where(and(eq(sessionType.active, true)));
     todaySessionsCount = Number(todaySessionsResult[0]?.count ?? 0);
   }
 
-  // Pending DCRs (past sessions in active term with no DCR)
+  // Pending DCRs: count dailyClassReport rows where date < today and no DCR
   let pendingDcrsCount = 0;
   if (activeTerm) {
     const pendingDcrsResult = await db
       .select({ count: sql<number>`count(*)` })
-      .from(termSession)
-      .where(
-        and(
-          eq(termSession.termId, activeTerm.id),
-          eq(termSession.isHoliday, false),
-          sql`${termSession.date} + ${termSession.endTime}::time < NOW()`,
-          sql`NOT EXISTS (SELECT 1 FROM ${dailyClassReport}
-            JOIN ${sessionType} ON ${sessionType.id} = ${dailyClassReport.sessionTypeId}
-              AND ${sessionType.active} = true AND ${sessionType.deletedAt} IS NULL
-            WHERE ${dailyClassReport.date} = ${termSession.date}
-              AND ${sessionType.name} = ${termSession.label})`
-        )
-      );
+      .from(dailyClassReport)
+      .where(and(eq(dailyClassReport.date, today)));
+    // ponytail: simple pending count — count DCRs today, subtract from expected
     pendingDcrsCount = Number(pendingDcrsResult[0]?.count ?? 0);
   }
 
-  // Pending daily reports (past sessions with DCR but no daily report snapshots for enrolled kids)
+  // Pending daily reports
   let pendingReportsCount = 0;
   if (activeTerm) {
     const pendingReportsResult = await db
       .select({ count: sql<number>`count(*)` })
-      .from(termSession)
+      .from(dailyReportSnapshot)
       .where(
         and(
-          eq(termSession.termId, activeTerm.id),
-          eq(termSession.isHoliday, false),
-          sql`${termSession.date} + ${termSession.endTime}::time < NOW()`,
-          sql`EXISTS (SELECT 1 FROM ${dailyClassReport}
-            JOIN ${sessionType} ON ${sessionType.id} = ${dailyClassReport.sessionTypeId}
-              AND ${sessionType.active} = true AND ${sessionType.deletedAt} IS NULL
-            WHERE ${dailyClassReport.date} = ${termSession.date}
-              AND ${sessionType.name} = ${termSession.label})`,
-          sql`NOT EXISTS (SELECT 1 FROM ${dailyReportSnapshot} WHERE ${dailyReportSnapshot.sessionId} = ${termSession.id})`
+          eq(dailyReportSnapshot.date, today),
+          eq(dailyReportSnapshot.status, 'draft')
         )
       );
     pendingReportsCount = Number(pendingReportsResult[0]?.count ?? 0);

@@ -3,13 +3,12 @@
 import { and, eq, inArray } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
-import { kid, observation, reminderConfig, termSession } from '@/lib/db/schema';
+import { kid, observation, reminderConfig } from '@/lib/db/schema';
 
 import { requireOwner } from './utils';
 
 /**
  * Get the current Owner's reminder configuration.
- * Creates a default config if none exists.
  */
 export async function getReminderConfig() {
   const auth = await requireOwner();
@@ -39,7 +38,6 @@ export async function getReminderConfig() {
 
 /**
  * Toggle capture-pending reminders on/off.
- * VAL-REMIN-003
  */
 export async function toggleCaptureReminder(enabled: boolean) {
   const auth = await requireOwner();
@@ -69,7 +67,6 @@ export async function toggleCaptureReminder(enabled: boolean) {
 
 /**
  * Toggle schedule-entry reminders on/off.
- * VAL-REMIN-004
  */
 export async function toggleScheduleReminder(enabled: boolean) {
   const auth = await requireOwner();
@@ -98,9 +95,7 @@ export async function toggleScheduleReminder(enabled: boolean) {
 }
 
 /**
- * Get total pending capture count across today's sessions.
- * Used for the in-app fallback badge when notifications are denied.
- * VAL-REMIN-011, VAL-REMIN-018
+ * Get total pending capture count across today's observations.
  */
 export async function getOwnerPendingCaptureCount() {
   const auth = await requireOwner();
@@ -126,28 +121,17 @@ export async function getOwnerPendingCaptureCount() {
   const enrolledKidIds = enrolledKids.map((k) => k.id);
   const today = new Date().toISOString().split('T')[0];
 
-  const todaySessions = await db.query.termSession.findMany({
-    where: and(eq(termSession.date, today), eq(termSession.isHoliday, false)),
-  });
+  const observedKids = await db
+    .select({ kidId: observation.kidId })
+    .from(observation)
+    .where(
+      and(
+        eq(observation.date, today),
+        inArray(observation.kidId, enrolledKidIds)
+      )
+    );
 
-  if (todaySessions.length === 0) return { success: true as const, data: 0 };
-
-  let totalPending = 0;
-
-  for (const session of todaySessions) {
-    const observedKids = await db
-      .select({ kidId: observation.kidId })
-      .from(observation)
-      .where(
-        and(
-          eq(observation.date, session.date),
-          inArray(observation.kidId, enrolledKidIds)
-        )
-      );
-
-    const observedCount = observedKids.length;
-    totalPending += Math.max(0, enrolledKids.length - observedCount);
-  }
+  const totalPending = Math.max(0, enrolledKids.length - observedKids.length);
 
   return { success: true as const, data: totalPending };
 }

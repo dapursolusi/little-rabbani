@@ -178,11 +178,9 @@ export async function createScheduleItem(formData: FormData) {
       : 0;
 
   try {
-    // ponytail: sessionId still written to maintain FK until contract phase (ticket #8)
     const [newItem] = await db
       .insert(scheduleItem)
       .values({
-        sessionId: data.sessionId,
         date: data.date,
         sessionTypeId: data.sessionTypeId,
         activityId: data.activityId || null,

@@ -63,17 +63,6 @@ export const termColumns: ColumnDef<Term>[] = [
     },
   },
   {
-    accessorFn: (row) => row.sessions.length,
-    id: 'sessionCount',
-    meta: { title: 'Sesi' },
-    header: ({ column }) => {
-      return <DataTableColumnHeader column={column} title="Sesi" />;
-    },
-    cell: ({ row }) => {
-      return <span>{row.getValue('sessionCount') ?? 0}</span>;
-    },
-  },
-  {
     id: 'actions',
     header: 'Aksi',
     enableHiding: false,

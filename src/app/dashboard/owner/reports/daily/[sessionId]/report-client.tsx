@@ -56,6 +56,7 @@ interface IDailyReportClientProps {
   sessionId: string;
   kids: IKid[];
   initialReports: IReport[];
+  sessionDate?: string;
 }
 
 // ─────────────── Helpers ───────────────
@@ -106,6 +107,7 @@ export function DailyReportClient({
   sessionId,
   kids,
   initialReports,
+  sessionDate,
 }: IDailyReportClientProps) {
   const router = useRouter();
   const [reports, setReports] = useState<IReport[]>(initialReports);
@@ -123,6 +125,8 @@ export function DailyReportClient({
   const [isSaving, setIsSaving] = useState(false);
   const [showClipboardModal, setShowClipboardModal] = useState(false);
   const [clipboardText, setClipboardText] = useState('');
+
+  const resolvedDate = sessionDate ?? new Date().toISOString().split('T')[0];
 
   // ────────────────── Pagination + Filter ──────────────────
 
@@ -164,7 +168,7 @@ export function DailyReportClient({
     setIsGenerating(true);
 
     try {
-      const result = await generateDailyReports(sessionId);
+      const result = await generateDailyReports(resolvedDate, sessionId);
 
       if (!result.success) {
         toast.error(result.error);
@@ -236,7 +240,7 @@ export function DailyReportClient({
 
       setExpandedKidId(kidId);
 
-      const detailResult = await getDailyReportDetail(kidId, sessionId);
+      const detailResult = await getDailyReportDetail(kidId, resolvedDate);
       if (!detailResult.success) {
         toast.error(detailResult.error);
         setExpandedKidId(null);
@@ -268,7 +272,7 @@ export function DailyReportClient({
     try {
       const result = await updateDailyReportNarrative(
         expandedReportDetail.kidId,
-        sessionId,
+        resolvedDate,
         editNarrative
       );
 
@@ -385,7 +389,7 @@ export function DailyReportClient({
     try {
       const result = await markDailyReportSent(
         expandedReportDetail.kidId,
-        sessionId
+        resolvedDate
       );
 
       if (result.success) {

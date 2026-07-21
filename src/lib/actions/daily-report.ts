@@ -1,6 +1,6 @@
 'use server';
 
-import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -12,20 +12,19 @@ import {
   observation,
   observationNote,
   sessionType,
-  termSession,
 } from '@/lib/db/schema';
 
 // ─────────────── Zod Schemas ───────────────
 
 const UpdateNarrativeSchema = z.object({
   kidId: z.string().min(1),
-  sessionId: z.string().min(1),
+  date: z.string().min(1),
   narrative: z.string().min(1, 'Narasi tidak boleh kosong'),
 });
 
 const MarkSentSchema = z.object({
   kidId: z.string().min(1),
-  sessionId: z.string().min(1),
+  date: z.string().min(1),
 });
 
 // ─────────────── Types ───────────────
@@ -48,30 +47,6 @@ export interface IReportResult {
 }
 
 // ─────────────── Query Helpers ───────────────
-
-/**
- * Get all enrolled kids for a session (via the term's enrolled kids).
- */
-async function getEnrolledKidsForSession(
-  sessionId: string
-): Promise<{ id: string; name: string }[]> {
-  const sessionData = await db.query.termSession.findFirst({
-    where: eq(termSession.id, sessionId),
-    columns: { termId: true },
-  });
-
-  if (!sessionData) return [];
-
-  const kids = await db.query.kid.findMany({
-    where: and(
-      eq(kid.enrolledTermId, sessionData.termId),
-      eq(kid.status, 'enrolled')
-    ),
-    columns: { id: true, name: true },
-  });
-
-  return kids;
-}
 
 /**
  * Get structured observation data for a kid on a given date.
@@ -125,36 +100,10 @@ async function getObservationData(
   };
 }
 
-/**
- * Resolve sessionId to date and sessionTypeId by matching termSession.label
- * to sessionType.name (active, not deleted).
- */
-async function resolveSession(
-  sessionId: string
-): Promise<{ date: string; sessionTypeId: string } | null> {
-  const ts = await db.query.termSession.findFirst({
-    where: eq(termSession.id, sessionId),
-    columns: { date: true, label: true },
-  });
-  if (!ts) return null;
-
-  const st = await db.query.sessionType.findFirst({
-    where: and(
-      eq(sessionType.name, ts.label),
-      eq(sessionType.active, true),
-      isNull(sessionType.deletedAt)
-    ),
-    columns: { id: true },
-  });
-  if (!st) return null;
-
-  return { date: ts.date, sessionTypeId: st.id };
-}
-
 // ─────────────── Read Operations ───────────────
 
 /**
- * Get all sessions with their daily report counts.
+ * Get all session types with daily report counts.
  * Used for the session picker page.
  */
 export async function getSessionsForDailyReports() {
@@ -163,66 +112,54 @@ export async function getSessionsForDailyReports() {
     return { success: false as const, error: auth.error };
   }
 
-  const sessions = await db.query.termSession.findMany({
-    orderBy: [desc(termSession.date), desc(termSession.startTime)],
-    with: {
-      term: true,
-    },
+  const types = await db.query.sessionType.findMany({
+    where: and(eq(sessionType.active, true)),
+    orderBy: [asc(sessionType.name)],
   });
 
-  // Count reports per session
+  // Count reports per (date, sessionTypeId)
   const reportCounts = await db
     .select({
-      sessionId: dailyReportSnapshot.sessionId,
+      date: dailyReportSnapshot.date,
+      sessionTypeId: dailyReportSnapshot.sessionTypeId,
       count: sql<number>`count(*)::int`.mapWith(Number),
     })
     .from(dailyReportSnapshot)
-    .groupBy(dailyReportSnapshot.sessionId);
+    .groupBy(dailyReportSnapshot.date, dailyReportSnapshot.sessionTypeId);
 
-  const reportCountBySession = new Map(
-    reportCounts.map((r) => [r.sessionId, r.count])
+  const reportCountByKey = new Map(
+    reportCounts.map((r) => [`${r.date}:${r.sessionTypeId}`, r.count])
   );
 
-  const sessionsWithCounts = sessions.map((session) => ({
-    ...session,
-    reportCount: reportCountBySession.get(session.id) ?? 0,
+  const sessionsWithCounts = types.map((t) => ({
+    ...t,
+    reportCount: reportCountByKey.get(`${''}:${t.id}`) ?? 0,
   }));
 
   return { success: true as const, data: sessionsWithCounts };
 }
 
 /**
- * Get all daily reports for a session.
- * VAL-DAILY-001: Returns report entries per kid.
+ * Get all daily reports for a date + sessionTypeId.
  */
-export async function getDailyReportsForSession(sessionId: string) {
+export async function getDailyReportsForSession(
+  date: string,
+  sessionTypeId: string
+) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const resolved = await resolveSession(sessionId);
-  if (!resolved) {
-    return {
-      success: false as const,
-      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
-    };
-  }
-
-  const sessionData = await db.query.termSession.findFirst({
-    where: eq(termSession.id, sessionId),
+  const kids = await db.query.kid.findMany({
+    where: eq(kid.status, 'enrolled'),
+    columns: { id: true, name: true },
   });
-
-  if (!sessionData) {
-    return { success: false as const, error: 'Sesi tidak ditemukan' };
-  }
-
-  const kids = await getEnrolledKidsForSession(sessionId);
 
   const reports = await db.query.dailyReportSnapshot.findMany({
     where: and(
-      eq(dailyReportSnapshot.date, resolved.date),
-      eq(dailyReportSnapshot.sessionTypeId, resolved.sessionTypeId)
+      eq(dailyReportSnapshot.date, date),
+      eq(dailyReportSnapshot.sessionTypeId, sessionTypeId)
     ),
     with: {
       kid: {
@@ -235,7 +172,8 @@ export async function getDailyReportsForSession(sessionId: string) {
   return {
     success: true as const,
     data: {
-      session: sessionData,
+      date,
+      sessionTypeId,
       kids,
       reports,
     },
@@ -243,26 +181,18 @@ export async function getDailyReportsForSession(sessionId: string) {
 }
 
 /**
- * Get a single daily report for a kid in a session.
+ * Get a single daily report for a kid on a given date.
  */
-export async function getDailyReport(kidId: string, sessionId: string) {
+export async function getDailyReport(kidId: string, date: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const resolved = await resolveSession(sessionId);
-  if (!resolved) {
-    return {
-      success: false as const,
-      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
-    };
-  }
-
   const report = await db.query.dailyReportSnapshot.findFirst({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      eq(dailyReportSnapshot.date, resolved.date)
+      eq(dailyReportSnapshot.date, date)
     ),
   });
 
@@ -271,26 +201,17 @@ export async function getDailyReport(kidId: string, sessionId: string) {
 
 /**
  * Get the status of a daily report.
- * VAL-DAILY-008: Status check for draft/sent/stale.
  */
-export async function getDailyReportStatus(kidId: string, sessionId: string) {
+export async function getDailyReportStatus(kidId: string, date: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const resolved = await resolveSession(sessionId);
-  if (!resolved) {
-    return {
-      success: false as const,
-      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
-    };
-  }
-
   const report = await db.query.dailyReportSnapshot.findFirst({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      eq(dailyReportSnapshot.date, resolved.date)
+      eq(dailyReportSnapshot.date, date)
     ),
     columns: { status: true, narrativeAiDraft: true, narrativeFinal: true },
   });
@@ -301,58 +222,35 @@ export async function getDailyReportStatus(kidId: string, sessionId: string) {
 // ─────────────── Generation ───────────────
 
 /**
- * Generate daily reports for all kids in a session.
- * Runs in parallel for all kids with observations.
- * VAL-DAILY-001: Parallel generation with per-kid progress.
- * VAL-DAILY-012: Kid with no observations skipped with notice.
- * VAL-DAILY-013: Absent kid narrative reflects absence reason.
- * VAL-DAILY-015: Zero activities: generation proceeds with mood/appetite only.
- * VAL-DAILY-010: Snapshot saved on every generation.
- * VAL-DAILY-011: Re-generation upserts existing row, transitions to draft.
+ * Generate daily reports for all kids on a given date + sessionTypeId.
  */
-export async function generateDailyReports(sessionId: string) {
+export async function generateDailyReports(
+  date: string,
+  sessionTypeId: string
+) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const resolved = await resolveSession(sessionId);
-  if (!resolved) {
-    return {
-      success: false as const,
-      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
-    };
-  }
-
-  const sessionData = await db.query.termSession.findFirst({
-    where: eq(termSession.id, sessionId),
+  const kids = await db.query.kid.findMany({
+    where: and(eq(kid.status, 'enrolled')),
+    columns: { id: true, name: true },
   });
-
-  if (!sessionData) {
-    return { success: false as const, error: 'Sesi tidak ditemukan' };
-  }
-
-  const kids = await getEnrolledKidsForSession(sessionId);
 
   if (kids.length === 0) {
     return {
       success: false as const,
-      error: 'Tidak ada murid terdaftar untuk sesi ini',
+      error: 'Tidak ada murid terdaftar',
     };
   }
-
-  const sessionDate = resolved.date;
 
   // Generate reports in parallel for all kids
   const results: IReportResult[] = await Promise.all(
     kids.map(async (kidData) => {
       try {
-        const structuredData = await getObservationData(
-          kidData.id,
-          sessionDate
-        );
+        const structuredData = await getObservationData(kidData.id, date);
 
-        // Skip if no observations
         if (!structuredData) {
           return {
             kidId: kidData.id,
@@ -362,7 +260,6 @@ export async function generateDailyReports(sessionId: string) {
           };
         }
 
-        // Generate AI narrative
         const narrativeContext = {
           kidName: kidData.name,
           mood: structuredData.mood,
@@ -387,11 +284,10 @@ export async function generateDailyReports(sessionId: string) {
               })
             : await generateNarrative(narrativeContext);
 
-        // Upsert snapshot
         const existing = await db.query.dailyReportSnapshot.findFirst({
           where: and(
             eq(dailyReportSnapshot.kidId, kidData.id),
-            eq(dailyReportSnapshot.date, resolved.date)
+            eq(dailyReportSnapshot.date, date)
           ),
           columns: { id: true },
         });
@@ -422,9 +318,8 @@ export async function generateDailyReports(sessionId: string) {
             .insert(dailyReportSnapshot)
             .values({
               kidId: kidData.id,
-              date: resolved.date,
-              sessionTypeId: resolved.sessionTypeId,
-              sessionId,
+              date,
+              sessionTypeId,
               structuredJson: structuredData,
               narrativeAiDraft: narrativeAiDraft || null,
               status: 'draft',
@@ -460,13 +355,10 @@ export async function generateDailyReports(sessionId: string) {
 
 /**
  * Update the narrative of a daily report.
- * If status is 'sent', transitions to 'stale'.
- * VAL-DAILY-005: Owner edits narrative textarea.
- * VAL-DAILY-009: Re-editing after sent changes status to stale.
  */
 export async function updateDailyReportNarrative(
   kidId: string,
-  sessionId: string,
+  date: string,
   narrative: string
 ) {
   const auth = await requireOwner();
@@ -476,7 +368,7 @@ export async function updateDailyReportNarrative(
 
   const parsed = UpdateNarrativeSchema.safeParse({
     kidId,
-    sessionId,
+    date,
     narrative,
   });
   if (!parsed.success) {
@@ -486,18 +378,10 @@ export async function updateDailyReportNarrative(
     };
   }
 
-  const resolved = await resolveSession(sessionId);
-  if (!resolved) {
-    return {
-      success: false as const,
-      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
-    };
-  }
-
   const report = await db.query.dailyReportSnapshot.findFirst({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      eq(dailyReportSnapshot.date, resolved.date)
+      eq(dailyReportSnapshot.date, date)
     ),
     columns: { id: true, status: true },
   });
@@ -506,7 +390,6 @@ export async function updateDailyReportNarrative(
     return { success: false as const, error: 'Laporan tidak ditemukan' };
   }
 
-  // Determine new status: editing a sent report makes it stale
   const newStatus = report.status === 'sent' ? 'stale' : report.status;
 
   const [updatedReport] = await db
@@ -521,7 +404,7 @@ export async function updateDailyReportNarrative(
     .returning({
       id: dailyReportSnapshot.id,
       kidId: dailyReportSnapshot.kidId,
-      sessionId: dailyReportSnapshot.sessionId,
+      date: dailyReportSnapshot.date,
       status: dailyReportSnapshot.status,
       narrativeFinal: dailyReportSnapshot.narrativeFinal,
       editedBy: dailyReportSnapshot.editedBy,
@@ -539,15 +422,14 @@ export async function updateDailyReportNarrative(
 
 /**
  * Mark a daily report as sent (draft → sent).
- * VAL-DAILY-008: Mark as sent transitions status to sent.
  */
-export async function markDailyReportSent(kidId: string, sessionId: string) {
+export async function markDailyReportSent(kidId: string, date: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const parsed = MarkSentSchema.safeParse({ kidId, sessionId });
+  const parsed = MarkSentSchema.safeParse({ kidId, date });
   if (!parsed.success) {
     return {
       success: false as const,
@@ -555,18 +437,10 @@ export async function markDailyReportSent(kidId: string, sessionId: string) {
     };
   }
 
-  const resolved = await resolveSession(sessionId);
-  if (!resolved) {
-    return {
-      success: false as const,
-      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
-    };
-  }
-
   const report = await db.query.dailyReportSnapshot.findFirst({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      eq(dailyReportSnapshot.date, resolved.date)
+      eq(dailyReportSnapshot.date, date)
     ),
     columns: { id: true, status: true, narrativeFinal: true },
   });
@@ -597,7 +471,7 @@ export async function markDailyReportSent(kidId: string, sessionId: string) {
     .returning({
       id: dailyReportSnapshot.id,
       kidId: dailyReportSnapshot.kidId,
-      sessionId: dailyReportSnapshot.sessionId,
+      date: dailyReportSnapshot.date,
       status: dailyReportSnapshot.status,
       narrativeFinal: dailyReportSnapshot.narrativeFinal,
       editedBy: dailyReportSnapshot.editedBy,
@@ -613,24 +487,16 @@ export async function markDailyReportSent(kidId: string, sessionId: string) {
 /**
  * Get daily report detail for viewing/editing.
  */
-export async function getDailyReportDetail(kidId: string, sessionId: string) {
+export async function getDailyReportDetail(kidId: string, date: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const resolved = await resolveSession(sessionId);
-  if (!resolved) {
-    return {
-      success: false as const,
-      error: 'Sesi tidak ditemukan atau tipe sesi tidak dikenal',
-    };
-  }
-
   const report = await db.query.dailyReportSnapshot.findFirst({
     where: and(
       eq(dailyReportSnapshot.kidId, kidId),
-      eq(dailyReportSnapshot.date, resolved.date)
+      eq(dailyReportSnapshot.date, date)
     ),
     with: {
       kid: {
@@ -643,7 +509,6 @@ export async function getDailyReportDetail(kidId: string, sessionId: string) {
     return { success: false as const, error: 'Laporan tidak ditemukan' };
   }
 
-  // structuredJson is jsonb — Drizzle returns it as a parsed object
   const structuredData =
     report.structuredJson as unknown as IStructuredData | null;
 

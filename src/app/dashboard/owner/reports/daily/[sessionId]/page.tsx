@@ -1,8 +1,6 @@
 import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
-import { Badge } from '@/components/ui/badge';
 
 import { getDailyReportsForSession } from '@/lib/actions/daily-report';
-import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 
 import { DailyReportClient } from './report-client';
@@ -20,7 +18,10 @@ export default async function DailyReportSessionPage({
   params,
 }: IDailyReportSessionPageProps) {
   const { sessionId } = await params;
-  const result = await getDailyReportsForSession(sessionId);
+
+  // ponytail: [sessionId] route — sessionId is used as sessionTypeId with today's date
+  const today = new Date().toISOString().split('T')[0];
+  const result = await getDailyReportsForSession(today, sessionId);
 
   if (!result.success) {
     return (
@@ -28,7 +29,7 @@ export default async function DailyReportSessionPage({
     );
   }
 
-  const { session, kids, reports } = result.data;
+  const { date, sessionTypeId, kids, reports } = result.data;
 
   return (
     <div className="p-4 sm:p-6">
@@ -39,47 +40,21 @@ export default async function DailyReportSessionPage({
             label: 'Laporan Wali Murid',
             href: '/dashboard/owner/reports/daily',
           },
-          { label: session ? formatDate(session.date) : 'Sesi' },
+          { label: date },
         ]}
       />
-      {/* Header */}
       <div className="mb-6">
         <h1 className="mt-1 text-2xl font-semibold text-foreground">
           Laporan Wali Murid
         </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {session && (
-            <>
-              {formatDate(session.date)} — {session.startTime} —{' '}
-              {session.endTime}
-              {session.label && ` • ${session.label}`}
-              {session.isHoliday && (
-                <Badge variant="destructive" className="ml-2">
-                  Libur: {session.holidayReason ?? 'Hari libur'}
-                </Badge>
-              )}
-            </>
-          )}
-        </p>
+        <p className="mt-1 text-sm text-muted-foreground">{date}</p>
       </div>
 
-      {/* Holiday session */}
-      {session?.isHoliday && (
-        <div className="rounded-lg border-destructive/30 bg-destructive/10 p-6 text-center">
-          <p className="font-medium text-destructive">
-            Sesi ini adalah hari libur — tidak dapat membuat laporan
-          </p>
-        </div>
-      )}
-
-      {/* No holiday session — render client component */}
-      {!session?.isHoliday && (
-        <DailyReportClient
-          sessionId={sessionId}
-          kids={kids}
-          initialReports={reports}
-        />
-      )}
+      <DailyReportClient
+        sessionId={sessionTypeId}
+        kids={kids}
+        initialReports={reports}
+      />
     </div>
   );
 }
