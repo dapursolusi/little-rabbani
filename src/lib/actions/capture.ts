@@ -63,7 +63,7 @@ const SavePass2Schema = z.object({
  * Resolve the sessionTypeId from a termSession's label.
  * Looks up the active sessionType whose name matches the session label.
  */
-async function resolveSessionType(
+async function resolveSessionTypeByLabel(
   sessionLabel: string
 ): Promise<{ id: string } | null> {
   const st = await db.query.sessionType.findFirst({
@@ -471,7 +471,7 @@ export async function savePass1Observation(formData: FormData) {
     // Resolve date from form param or session
     const resolvedDate = rawDate || validation.session.date;
     // Resolve sessionTypeId from session label
-    const st = await resolveSessionType(validation.session.label);
+    const st = await resolveSessionTypeByLabel(validation.session.label);
     if (!st) {
       return {
         success: false as const,
