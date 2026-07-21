@@ -1,6 +1,6 @@
 {
-  "id": "eb2d8b32-2df5-4ed2-a326-8ce806b8fd16",
-  "prevId": "e615bfeb-68fa-441a-9fb8-7d8dc265c415",
+  "id": "ae1dfc76-30f3-40cb-82cd-6c5b94db043b",
+  "prevId": "ae1dfc76-30f3-40cb-82cd-6c5b94db043b",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1551,6 +1551,18 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "session_type_id": {
+          "name": "session_type_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -1569,6 +1581,15 @@
           "tableFrom": "reminder_log",
           "tableTo": "term_session",
           "columnsFrom": ["session_id"],
+          "columnsTo": ["id"],
+          "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "reminder_log_session_type_id_session_type_id_fk": {
+          "name": "reminder_log_session_type_id_session_type_id_fk",
+          "tableFrom": "reminder_log",
+          "tableTo": "session_type",
+          "columnsFrom": ["session_type_id"],
           "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"

@@ -2,7 +2,7 @@
 // Checks conditions and fires push notifications for:
 // - Capture-pending: 15 min after session end if observations pending
 // - Schedule-entry: Thursday morning if next week's schedule is empty
-import { and, eq, gte, inArray, lte } from 'drizzle-orm';
+import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
 
 import { db } from '@/lib/db';
 import {
@@ -11,6 +11,7 @@ import {
   pushSubscription,
   reminderConfig,
   reminderLog,
+  sessionType,
   termSession,
   user,
 } from '@/lib/db/schema';
@@ -303,9 +304,22 @@ async function processCapturePendingReminders(): Promise<number> {
         const scheduledAt = new Date(
           `${session.sessionDate}T${session.endTime}`
         );
+
+        // Resolve session type from session label
+        const st = await db.query.sessionType.findFirst({
+          where: and(
+            eq(sessionType.name, session.sessionLabel),
+            eq(sessionType.active, true),
+            isNull(sessionType.deletedAt)
+          ),
+          columns: { id: true },
+        });
+
         await db.insert(reminderLog).values({
           userId: sub.userId,
           type: 'capture_pending',
+          date: session.sessionDate,
+          sessionTypeId: st?.id ?? null,
           sessionId: session.sessionId,
           scheduledAt: scheduledAt,
           sentAt: new Date(),
