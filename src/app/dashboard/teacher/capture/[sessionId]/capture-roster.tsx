@@ -67,6 +67,7 @@ interface IKidData {
 
 interface ICaptureRosterClientProps {
   sessionId: string;
+  sessionDate: string;
   kids: IKidData[];
   isPass2Unlocked: boolean;
 }
@@ -135,6 +136,7 @@ const PRESENCE_LABELS: Record<TPresence, string> = {
 
 export function CaptureRosterClient({
   sessionId,
+  sessionDate,
   kids: initialKids,
   isPass2Unlocked: initialPass2Unlocked,
 }: ICaptureRosterClientProps) {
@@ -249,7 +251,7 @@ export function CaptureRosterClient({
       // Fetch existing Pass 2 participations
       try {
         const participationResult = await fetch(
-          `/api/capture/participation?kidId=${kid.id}&sessionId=${sessionId}`
+          `/api/capture/participation?kidId=${kid.id}&date=${sessionDate}`
         );
         const pData = await participationResult.json();
         if (pData.success && pData.data) {
@@ -356,6 +358,8 @@ export function CaptureRosterClient({
         await saveObservationOffline({
           kidId: selectedKid!.id,
           sessionId,
+          date: sessionDate,
+          sessionTypeId: '', // resolved server-side on sync
           teacherId: 'local',
           mood,
           appetite,
@@ -405,6 +409,7 @@ export function CaptureRosterClient({
       const formData = new FormData();
       formData.append('kidId', selectedKid!.id);
       formData.append('sessionId', sessionId);
+      formData.append('date', sessionDate);
       formData.append('mood', String(mood));
       formData.append('appetite', appetite);
       formData.append('presence', presence);

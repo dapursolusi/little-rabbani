@@ -149,6 +149,8 @@ describe('Offline Queue (Dexie Store)', () => {
       const offlineObservation = {
         kidId: 'kid-1',
         sessionId: 'session-1',
+        date: '2026-07-08',
+        sessionTypeId: 'st-pagi',
         teacherId: 'teacher-1',
         mood: 4,
         appetite: 'good' as const,
@@ -169,6 +171,8 @@ describe('Offline Queue (Dexie Store)', () => {
       const offlineObservation = {
         kidId: 'kid-1',
         sessionId: 'session-1',
+        date: '2026-07-08',
+        sessionTypeId: 'st-pagi',
         teacherId: 'teacher-1',
         mood: 4,
         appetite: 'good' as const,
@@ -199,6 +203,8 @@ describe('Offline Queue (Dexie Store)', () => {
           id: 1,
           kidId: 'kid-1',
           sessionId: 'session-1',
+          date: '2026-07-08',
+          sessionTypeId: 'st-pagi',
           teacherId: 'teacher-1',
           mood: 4,
           appetite: 'good',

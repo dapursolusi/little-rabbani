@@ -1,6 +1,6 @@
 'use server';
 
-import { and, asc, desc, eq, ilike, inArray, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gte, ilike, inArray, lte, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -120,7 +120,8 @@ async function getSessionsInMonth(termId: string, year: number, month: number) {
  */
 async function computeMonthlyStats(
   kidId: string,
-  sessionIds: string[]
+  sessionIds: string[],
+  sessions: { id: string; date: string }[]
 ): Promise<IMonthlyStats> {
   // If no sessions, return empty stats
   if (sessionIds.length === 0) {
@@ -135,11 +136,17 @@ async function computeMonthlyStats(
     };
   }
 
-  // Get all observations for this kid in these sessions
+  // Derive date range from the sessions
+  const dates = sessions.map((s) => s.date).filter(Boolean);
+  const startDate = dates.length > 0 ? dates[0] : '';
+  const endDate = dates.length > 0 ? dates[dates.length - 1] : '';
+
+  // Get all observations for this kid within the date range
   const observations = await db.query.observation.findMany({
     where: and(
       eq(observation.kidId, kidId),
-      inArray(observation.sessionId, sessionIds)
+      gte(observation.date, startDate),
+      lte(observation.date, endDate)
     ),
     columns: {
       id: true,
@@ -576,7 +583,8 @@ export async function generateMonthlyReport(
   // Compute stats
   const stats = await computeMonthlyStats(
     kidId,
-    sessions.map((s) => s.id)
+    sessions.map((s) => s.id),
+    sessions
   );
 
   // Get daily narratives for AI
@@ -650,12 +658,15 @@ ${narrativeAiDraft}`;
     narrativeAiDraft = '';
   }
 
-  // Get all observation IDs to lock
-  const sessionIds = sessions.map((s) => s.id);
+  // Get all observation IDs to lock (by date range)
+  const dates = sessions.map((s) => s.date).filter(Boolean);
+  const monthStart = dates.length > 0 ? dates[0] : '';
+  const monthEnd = dates.length > 0 ? dates[dates.length - 1] : '';
   const observationsInMonth = await db.query.observation.findMany({
     where: and(
       eq(observation.kidId, kidId),
-      inArray(observation.sessionId, sessionIds)
+      gte(observation.date, monthStart),
+      lte(observation.date, monthEnd)
     ),
     columns: { id: true },
   });

@@ -4,21 +4,21 @@ import { and, eq } from 'drizzle-orm';
 
 import { auth } from '@/lib/auth';
 import { db } from '@/lib/db';
-import { observation, observationActivity } from '@/lib/db/schema';
+import { observation, observationActivity, termSession } from '@/lib/db/schema';
 
 /**
- * GET /api/capture/participation?kidId=xxx&sessionId=yyy
+ * GET /api/capture/participation?kidId=xxx&date=yyyy-mm-dd
  *
- * Returns existing Pass 2 participation data for a kid in a session.
+ * Returns existing Pass 2 participation data for a kid on a given date.
  */
 export async function GET(request: NextRequest) {
   try {
     // Require authentication
-    const session = await auth.api.getSession({
+    const userSession = await auth.api.getSession({
       headers: request.headers,
     });
 
-    if (!session) {
+    if (!userSession) {
       return NextResponse.json(
         { success: false, error: 'Tidak terautentikasi' },
         { status: 401 }
@@ -26,20 +26,44 @@ export async function GET(request: NextRequest) {
     }
 
     const kidId = request.nextUrl.searchParams.get('kidId');
+    const dateParam = request.nextUrl.searchParams.get('date');
     const sessionId = request.nextUrl.searchParams.get('sessionId');
 
-    if (!kidId || !sessionId) {
+    if (!kidId) {
       return NextResponse.json(
-        { success: false, error: 'Parameter kidId dan sessionId wajib diisi' },
+        { success: false, error: 'Parameter kidId wajib diisi' },
         { status: 400 }
       );
     }
 
-    // Find the observation
+    // Resolve date from explicit date param or from sessionId
+    let resolvedDate: string;
+    if (dateParam) {
+      resolvedDate = dateParam;
+    } else if (sessionId) {
+      const session = await db.query.termSession.findFirst({
+        where: eq(termSession.id, sessionId),
+        columns: { date: true },
+      });
+      if (!session) {
+        return NextResponse.json(
+          { success: false, error: 'Sesi tidak ditemukan' },
+          { status: 400 }
+        );
+      }
+      resolvedDate = session.date;
+    } else {
+      return NextResponse.json(
+        { success: false, error: 'Parameter date atau sessionId wajib diisi' },
+        { status: 400 }
+      );
+    }
+
+    // Find the observation by kidId + date
     const obs = await db.query.observation.findFirst({
       where: and(
         eq(observation.kidId, kidId),
-        eq(observation.sessionId, sessionId)
+        eq(observation.date, resolvedDate)
       ),
     });
 
