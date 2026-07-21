@@ -343,24 +343,37 @@ export const deviationEnum = pgEnum('deviation', [
   'modified',
 ]);
 
-export const dailyClassReport = pgTable('daily_class_report', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  sessionId: uuid('session_id')
-    .notNull()
-    .unique()
-    .references(() => termSession.id, { onDelete: 'cascade' }),
-  learningNotes: text('learning_notes'),
-  capturedBy: text('captured_by').references(() => user.id, {
-    onDelete: 'set null',
-  }),
-  capturedAt: timestamp('captured_at').notNull().defaultNow(),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .defaultNow()
-    .$onUpdateFn(() => new Date()),
-  deletedAt: timestamp('deleted_at'),
-});
+export const dailyClassReport = pgTable(
+  'daily_class_report',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    sessionId: uuid('session_id')
+      .notNull()
+      .unique()
+      .references(() => termSession.id, { onDelete: 'cascade' }),
+    // NEW: re-key columns (replaces sessionId FK at contract phase — Issue #36)
+    date: date('date').notNull(),
+    sessionTypeId: uuid('session_type_id')
+      .notNull()
+      .references(() => sessionType.id, { onDelete: 'cascade' }),
+    learningNotes: text('learning_notes'),
+    capturedBy: text('captured_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    capturedAt: timestamp('captured_at').notNull().defaultNow(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => ({
+    dcrDateSessionTypeUnique: unique(
+      'daily_class_report_date_session_type_id_unique'
+    ).on(table.date, table.sessionTypeId),
+  })
+);
 
 export const dcrActivity = pgTable('dcr_activity', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -385,6 +398,10 @@ export const dailyClassReportRelations = relations(
     session: one(termSession, {
       fields: [dailyClassReport.sessionId],
       references: [termSession.id],
+    }),
+    sessionType: one(sessionType, {
+      fields: [dailyClassReport.sessionTypeId],
+      references: [sessionType.id],
     }),
     capturedByUser: one(user, {
       fields: [dailyClassReport.capturedBy],

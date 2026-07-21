@@ -15,6 +15,25 @@ import {
 } from '@/lib/db/schema';
 import { resolveSessionType } from '@/lib/session-type-resolver';
 
+/**
+ * Resolve a sessionId to its (date, sessionTypeId) pair.
+ * Used internally by DCR actions to re-key lookups.
+ */
+async function resolveSessionKey(sessionId: string) {
+  const ts = await db.query.termSession.findFirst({
+    where: eq(termSession.id, sessionId),
+  });
+  if (!ts) return null;
+
+  const allTypes = await db.query.sessionType.findMany({
+    where: isNull(sessionType.deletedAt),
+  });
+  const resolved = resolveSessionType(allTypes, ts.label, ts.date);
+  if (!resolved) return null;
+
+  return { date: ts.date, sessionTypeId: resolved.id };
+}
+
 // ─────────────── Zod Schemas ───────────────
 
 const ActivityDeviationEnum = z.enum(['done', 'skipped', 'modified']);
@@ -47,8 +66,29 @@ export async function getDcrBySession(sessionId: string) {
     return { success: false as const, error: auth.error };
   }
 
+  const key = await resolveSessionKey(sessionId);
+  if (!key) {
+    // If session can't be resolved, fall back to sessionId lookup
+    const existing = await db.query.dailyClassReport.findFirst({
+      where: eq(dailyClassReport.sessionId, sessionId),
+      with: {
+        dcrActivities: {
+          orderBy: [asc(dcrActivity.createdAt)],
+          with: {
+            activity: true,
+          },
+        },
+        session: true,
+      },
+    });
+    return { success: true as const, data: existing ?? null };
+  }
+
   const existing = await db.query.dailyClassReport.findFirst({
-    where: eq(dailyClassReport.sessionId, sessionId),
+    where: and(
+      eq(dailyClassReport.date, key.date),
+      eq(dailyClassReport.sessionTypeId, key.sessionTypeId)
+    ),
     with: {
       dcrActivities: {
         orderBy: [asc(dcrActivity.createdAt)],
@@ -129,23 +169,40 @@ export async function getSessionsForDcr() {
     },
   });
 
-  const dcrMap = await db.query.dailyClassReport.findMany({
+  // Build a map of sessions resolved to (date, sessionTypeId) for DCR lookup
+  const allTypes = await db.query.sessionType.findMany({
+    where: isNull(sessionType.deletedAt),
+  });
+
+  const dcrRows = await db.query.dailyClassReport.findMany({
     columns: {
       id: true,
-      sessionId: true,
+      date: true,
+      sessionTypeId: true,
       capturedAt: true,
       learningNotes: true,
     },
   });
 
-  // Create a map of sessionId -> DCR
-  const dcrBySessionId = new Map(dcrMap.map((dcr) => [dcr.sessionId, dcr]));
+  // Key by date:sessionTypeId
+  const dcrByKey = new Map(
+    dcrRows.map((dcr) => [`${dcr.date}:${dcr.sessionTypeId}`, dcr])
+  );
+
+  // Pre-resolve session keys so we can look up by the new key
+  const sessionKeyMap = new Map(
+    sessions.map((s) => {
+      const resolved = resolveSessionType(allTypes, s.label, s.date);
+      return [s.id, resolved ? `${s.date}:${resolved.id}` : null];
+    })
+  );
 
   // Attach DCR info to each session
-  const sessionsWithDcr = sessions.map((session) => ({
-    ...session,
-    dcr: dcrBySessionId.get(session.id) ?? null,
-  }));
+  const sessionsWithDcr = sessions.map((session) => {
+    const key = sessionKeyMap.get(session.id);
+    const dcr = key ? (dcrByKey.get(key) ?? null) : null;
+    return { ...session, dcr };
+  });
 
   return { success: true as const, data: sessionsWithDcr };
 }
@@ -178,11 +235,29 @@ export async function getDcrActivitiesForPass2(dcrId: string) {
  * Returns null if no DCR exists.
  */
 export async function getDcrBySessionPublic(sessionId: string) {
+  const key = await resolveSessionKey(sessionId);
+  if (!key) {
+    // Fallback: sessionId lookup if session type can't be resolved
+    const existing = await db.query.dailyClassReport.findFirst({
+      where: eq(dailyClassReport.sessionId, sessionId),
+      columns: {
+        id: true,
+        sessionId: true,
+        capturedAt: true,
+      },
+    });
+    return { success: true as const, data: existing ?? null };
+  }
+
   const existing = await db.query.dailyClassReport.findFirst({
-    where: eq(dailyClassReport.sessionId, sessionId),
+    where: and(
+      eq(dailyClassReport.date, key.date),
+      eq(dailyClassReport.sessionTypeId, key.sessionTypeId)
+    ),
     columns: {
       id: true,
-      sessionId: true,
+      date: true,
+      sessionTypeId: true,
       capturedAt: true,
     },
   });
@@ -257,9 +332,21 @@ export async function saveDcr(formData: FormData) {
   }
 
   try {
-    // Check if DCR already exists for this session
+    // Resolve (date, sessionTypeId) from sessionId
+    const key = await resolveSessionKey(sessionId);
+    if (!key) {
+      return {
+        success: false as const,
+        error: 'Sesi tidak ditemukan atau tipe sesi tidak dapat diidentifikasi',
+      };
+    }
+
+    // Check if DCR already exists for this (date, sessionTypeId)
     const existingDcr = await db.query.dailyClassReport.findFirst({
-      where: eq(dailyClassReport.sessionId, sessionId),
+      where: and(
+        eq(dailyClassReport.date, key.date),
+        eq(dailyClassReport.sessionTypeId, key.sessionTypeId)
+      ),
     });
 
     let dcrId: string;
@@ -284,6 +371,8 @@ export async function saveDcr(formData: FormData) {
         .insert(dailyClassReport)
         .values({
           sessionId,
+          date: key.date,
+          sessionTypeId: key.sessionTypeId,
           learningNotes: learningNotes || null,
           capturedBy: auth.userId,
           capturedAt: new Date(),

@@ -82,8 +82,12 @@ vi.mock('@/lib/auth', () => ({
   },
 }));
 
+const mockGetSession = auth.api.getSession as unknown as ReturnType<
+  typeof vi.fn
+>;
+
 function mockOwnerSession() {
-  vi.mocked(auth.api.getSession).mockResolvedValue({
+  mockGetSession.mockResolvedValue({
     user: {
       id: 'owner-1',
       role: 'owner',
@@ -108,7 +112,7 @@ function mockOwnerSession() {
 }
 
 function mockTeacherSession() {
-  vi.mocked(auth.api.getSession).mockResolvedValue({
+  mockGetSession.mockResolvedValue({
     user: {
       id: 'teacher-1',
       role: 'teacher',
@@ -132,6 +136,68 @@ function mockTeacherSession() {
   });
 }
 
+/**
+ * Helper: mock the session-key resolution path so that
+ * resolveSessionKey('session-1') returns { date: '2026-07-08', sessionTypeId: 'st-1' }.
+ */
+const mockTermSessionFindFirst = db.query.termSession.findFirst as ReturnType<
+  typeof vi.fn
+>;
+const mockSessionTypeFindMany = db.query.sessionType.findMany as ReturnType<
+  typeof vi.fn
+>;
+const mockDcrFindFirst = db.query.dailyClassReport.findFirst as ReturnType<
+  typeof vi.fn
+>;
+const mockDcrFindMany = db.query.dailyClassReport.findMany as ReturnType<
+  typeof vi.fn
+>;
+const mockDcrActivityFindMany = db.query.dcrActivity.findMany as ReturnType<
+  typeof vi.fn
+>;
+const mockTermSessionFindMany = db.query.termSession.findMany as ReturnType<
+  typeof vi.fn
+>;
+const mockScheduleItemFindMany = db.query.scheduleItem.findMany as ReturnType<
+  typeof vi.fn
+>;
+const mockInsert = db.insert as ReturnType<typeof vi.fn>;
+const mockUpdate = db.update as ReturnType<typeof vi.fn>;
+const mockDelete = db.delete as ReturnType<typeof vi.fn>;
+
+function mockSessionResolution(
+  sessionId = 'session-1',
+  date = '2026-07-08',
+  label = 'Kelas Pagi'
+) {
+  mockTermSessionFindFirst.mockResolvedValue({
+    id: sessionId,
+    termId: 'term-1',
+    date,
+    startTime: '08:00',
+    endTime: '10:00',
+    label,
+    isHoliday: false,
+    holidayReason: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    deletedAt: null,
+  });
+
+  mockSessionTypeFindMany.mockResolvedValue([
+    {
+      id: 'st-1',
+      name: 'Kelas Pagi',
+      start: '08:00',
+      end: '10:00',
+      active: true,
+      createdAt: new Date(2025, 0, 1),
+      updatedAt: new Date(2025, 0, 1),
+      deletedAt: null,
+    },
+  ]);
+}
+
 describe('DCR Server Actions', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -142,15 +208,19 @@ describe('DCR Server Actions', () => {
   describe('getDcrBySession', () => {
     it('should return existing DCR with activities for a session', async () => {
       mockOwnerSession();
+      mockSessionResolution();
 
       const mockDcr = {
         id: 'dcr-1',
         sessionId: 'session-1',
+        date: '2026-07-08',
+        sessionTypeId: 'st-1',
         learningNotes: 'Hari yang menyenangkan',
         capturedBy: 'owner-1',
         capturedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
         dcrActivities: [
           {
             id: 'dca-1',
@@ -185,7 +255,7 @@ describe('DCR Server Actions', () => {
         },
       };
 
-      vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
+      mockDcrFindFirst.mockResolvedValue(
         mockDcr as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
@@ -199,10 +269,9 @@ describe('DCR Server Actions', () => {
 
     it('should return null when no DCR exists for the session', async () => {
       mockOwnerSession();
+      mockSessionResolution();
 
-      vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
-        undefined
-      );
+      mockDcrFindFirst.mockResolvedValue(undefined);
 
       const result = await dcrActions.getDcrBySession('session-new');
       expect(result.success).toBe(true);
@@ -226,8 +295,8 @@ describe('DCR Server Actions', () => {
     it('should return schedule activities for a session', async () => {
       mockOwnerSession();
 
-      // Mock the new resolution path: termSession → sessionType → scheduleItem by (date, sessionTypeId)
-      vi.mocked(db.query.termSession.findFirst).mockResolvedValue({
+      // Mock the resolution path: termSession -> sessionType -> scheduleItem by (date, sessionTypeId)
+      mockTermSessionFindFirst.mockResolvedValue({
         id: 'session-1',
         termId: 'term-1',
         date: '2099-12-30',
@@ -241,7 +310,7 @@ describe('DCR Server Actions', () => {
         deletedAt: null,
       });
 
-      vi.mocked(db.query.sessionType.findMany).mockResolvedValue([
+      mockSessionTypeFindMany.mockResolvedValue([
         {
           id: 'st-1',
           name: 'Sesi Pagi',
@@ -254,7 +323,7 @@ describe('DCR Server Actions', () => {
         },
       ]);
 
-      vi.mocked(db.query.scheduleItem.findMany).mockResolvedValue([
+      mockScheduleItemFindMany.mockResolvedValue([
         {
           id: 'si-1',
           sessionId: 'session-1',
@@ -318,22 +387,24 @@ describe('DCR Server Actions', () => {
     // VAL-CAPTURE-010: Owner captures DCR with activities prefilled from schedule
     it('should create a DCR with planned activities', async () => {
       mockOwnerSession();
+      mockSessionResolution();
 
       const newDcr = {
         id: 'dcr-new',
         sessionId: 'session-1',
+        date: '2026-07-08',
+        sessionTypeId: 'st-1',
         learningNotes: null,
         capturedBy: 'owner-1',
         capturedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       };
 
-      vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
-        undefined
-      );
+      mockDcrFindFirst.mockResolvedValue(undefined);
 
-      vi.mocked(db.insert).mockReturnValue({
+      mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newDcr]),
         }),
@@ -363,21 +434,23 @@ describe('DCR Server Actions', () => {
     // VAL-CAPTURE-011: Owner marks each deviation: done/skipped/modified
     it('should save deviation values correctly', async () => {
       mockOwnerSession();
+      mockSessionResolution('session-2', '2026-07-09');
 
       const newDcr = {
         id: 'dcr-deviations',
         sessionId: 'session-2',
+        date: '2026-07-09',
+        sessionTypeId: 'st-1',
         learningNotes: null,
         capturedBy: 'owner-1',
         capturedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       };
 
-      vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
-        undefined
-      );
-      vi.mocked(db.insert).mockReturnValue({
+      mockDcrFindFirst.mockResolvedValue(undefined);
+      mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newDcr]),
         }),
@@ -416,21 +489,23 @@ describe('DCR Server Actions', () => {
     // VAL-CAPTURE-012: Owner adds unplanned activity mid-capture
     it('should include unplanned activities in the DCR', async () => {
       mockOwnerSession();
+      mockSessionResolution('session-3', '2026-07-10');
 
       const newDcr = {
         id: 'dcr-unplanned',
         sessionId: 'session-3',
+        date: '2026-07-10',
+        sessionTypeId: 'st-1',
         learningNotes: null,
         capturedBy: 'owner-1',
         capturedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       };
 
-      vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
-        undefined
-      );
-      vi.mocked(db.insert).mockReturnValue({
+      mockDcrFindFirst.mockResolvedValue(undefined);
+      mockInsert.mockReturnValue({
         values: vi.fn().mockReturnValue({
           returning: vi.fn().mockResolvedValue([newDcr]),
         }),
@@ -457,25 +532,29 @@ describe('DCR Server Actions', () => {
       }
     });
 
-    // VAL-CAPTURE-015: One DCR per session (unique constraint)
+    // VAL-CAPTURE-015: One DCR per (date, sessionTypeId) — upsert
     it('should update existing DCR instead of creating duplicate', async () => {
       mockOwnerSession();
+      mockSessionResolution();
 
       const existingDcr = {
         id: 'dcr-existing',
         sessionId: 'session-1',
+        date: '2026-07-08',
+        sessionTypeId: 'st-1',
         learningNotes: 'Catatan sebelumnya',
         capturedBy: 'owner-1',
         capturedAt: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
+        deletedAt: null,
       };
 
-      vi.mocked(db.query.dailyClassReport.findFirst).mockResolvedValue(
+      mockDcrFindFirst.mockResolvedValue(
         existingDcr as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
-      vi.mocked(db.update).mockReturnValue({
+      mockUpdate.mockReturnValue({
         set: vi.fn().mockReturnValue({
           where: vi.fn().mockReturnValue({
             returning: vi
@@ -487,7 +566,7 @@ describe('DCR Server Actions', () => {
         }),
       } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-      vi.mocked(db.delete).mockReturnValue({
+      mockDelete.mockReturnValue({
         where: vi.fn().mockResolvedValue(undefined),
       } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
@@ -528,7 +607,7 @@ describe('DCR Server Actions', () => {
     it('should return all DCR activities (planned + unplanned) for Pass 2', async () => {
       mockOwnerSession();
 
-      vi.mocked(db.query.dcrActivity.findMany).mockResolvedValue([
+      mockDcrActivityFindMany.mockResolvedValue([
         {
           id: 'dca-p1',
           dcrId: 'dcr-1',
@@ -569,7 +648,7 @@ describe('DCR Server Actions', () => {
     it('should return empty array when no DCR activities exist', async () => {
       mockOwnerSession();
 
-      vi.mocked(db.query.dcrActivity.findMany).mockResolvedValue([]);
+      mockDcrActivityFindMany.mockResolvedValue([]);
 
       const result = await dcrActions.getDcrActivitiesForPass2('dcr-empty');
       expect(result.success).toBe(true);
@@ -592,7 +671,7 @@ describe('DCR Server Actions', () => {
     it('should return all sessions with DCR status', async () => {
       mockOwnerSession();
 
-      vi.mocked(db.query.termSession.findMany).mockResolvedValue([
+      mockTermSessionFindMany.mockResolvedValue([
         {
           id: 's1',
           termId: 'term-1',
@@ -616,13 +695,28 @@ describe('DCR Server Actions', () => {
         },
       ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
-      vi.mocked(db.query.dailyClassReport.findMany).mockResolvedValue([
+      // Mock sessionType for resolution
+      mockSessionTypeFindMany.mockResolvedValue([
+        {
+          id: 'st-1',
+          name: 'Kelas Pagi',
+          start: '08:00',
+          end: '10:00',
+          active: true,
+          createdAt: new Date(2025, 0, 1),
+          updatedAt: new Date(2025, 0, 1),
+          deletedAt: null,
+        },
+      ]);
+
+      mockDcrFindMany.mockResolvedValue([
         {
           id: 'dcr-s1',
-          sessionId: 's1',
-          learningNotes: null,
+          date: '2026-07-08',
+          sessionTypeId: 'st-1',
           capturedBy: 'owner-1',
           capturedAt: new Date(),
+          learningNotes: null,
         },
       ] as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
