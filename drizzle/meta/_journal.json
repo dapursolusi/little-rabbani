@@ -145,8 +145,8 @@
     {
       "idx": 20,
       "version": "7",
-      "when": 1784774400000,
-      "tag": "0020_drop_term_session",
+      "when": 1784689450000,
+      "tag": "0020_complete_rekey",
       "breakpoints": true
     }
   ]

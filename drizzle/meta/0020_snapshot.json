@@ -1,5 +1,5 @@
 {
-  "id": "d137ad05-48e7-4603-9a9d-8a84fe31c83c",
+  "id": "d36593d4-79d3-4cc9-8c77-54e9bb0fe47f",
   "prevId": "d652bed6-3089-4895-b7e3-c90dd95878d9",
   "version": "7",
   "dialect": "postgresql",
@@ -217,19 +217,31 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "session_type_id": {
+          "name": "session_type_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "daily_class_report_date_session_type_id_unique": {
+          "name": "daily_class_report_date_session_type_id_unique",
+          "columns": ["date", "session_type_id"],
+          "isUnique": true,
+          "nullsNotDistinct": false,
+          "type": "unique",
+          "concurrently": false
+        }
+      },
       "foreignKeys": {
-        "daily_class_report_session_id_term_session_id_fk": {
-          "name": "daily_class_report_session_id_term_session_id_fk",
-          "tableFrom": "daily_class_report",
-          "tableTo": "term_session",
-          "columnsFrom": ["session_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
         "daily_class_report_captured_by_user_id_fk": {
           "name": "daily_class_report_captured_by_user_id_fk",
           "tableFrom": "daily_class_report",
@@ -237,6 +249,15 @@
           "columnsFrom": ["captured_by"],
           "columnsTo": ["id"],
           "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "daily_class_report_session_type_id_fk": {
+          "name": "daily_class_report_session_type_id_fk",
+          "tableFrom": "daily_class_report",
+          "tableTo": "session_type",
+          "columnsFrom": ["session_type_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -327,24 +348,36 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "session_type_id": {
+          "name": "session_type_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "daily_report_snapshot_kid_id_date_unique": {
+          "name": "daily_report_snapshot_kid_id_date_unique",
+          "columns": ["kid_id", "date"],
+          "isUnique": true,
+          "nullsNotDistinct": false,
+          "type": "unique",
+          "concurrently": false
+        }
+      },
       "foreignKeys": {
         "daily_report_snapshot_kid_id_kid_id_fk": {
           "name": "daily_report_snapshot_kid_id_kid_id_fk",
           "tableFrom": "daily_report_snapshot",
           "tableTo": "kid",
           "columnsFrom": ["kid_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "daily_report_snapshot_session_id_term_session_id_fk": {
-          "name": "daily_report_snapshot_session_id_term_session_id_fk",
-          "tableFrom": "daily_report_snapshot",
-          "tableTo": "term_session",
-          "columnsFrom": ["session_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -356,6 +389,15 @@
           "columnsFrom": ["edited_by"],
           "columnsTo": ["id"],
           "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "daily_report_snapshot_session_type_id_fk": {
+          "name": "daily_report_snapshot_session_type_id_fk",
+          "tableFrom": "daily_report_snapshot",
+          "tableTo": "session_type",
+          "columnsFrom": ["session_type_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -978,24 +1020,36 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "session_type_id": {
+          "name": "session_type_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
         }
       },
-      "indexes": {},
+      "indexes": {
+        "observation_kid_id_date_unique": {
+          "name": "observation_kid_id_date_unique",
+          "columns": ["kid_id", "date"],
+          "isUnique": true,
+          "nullsNotDistinct": false,
+          "type": "unique",
+          "concurrently": false
+        }
+      },
       "foreignKeys": {
         "observation_kid_id_kid_id_fk": {
           "name": "observation_kid_id_kid_id_fk",
           "tableFrom": "observation",
           "tableTo": "kid",
           "columnsFrom": ["kid_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
-        "observation_session_id_term_session_id_fk": {
-          "name": "observation_session_id_term_session_id_fk",
-          "tableFrom": "observation",
-          "tableTo": "term_session",
-          "columnsFrom": ["session_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
@@ -1007,6 +1061,15 @@
           "columnsFrom": ["teacher_id"],
           "columnsTo": ["id"],
           "onDelete": "set null",
+          "onUpdate": "no action"
+        },
+        "observation_session_type_id_fk": {
+          "name": "observation_session_type_id_fk",
+          "tableFrom": "observation",
+          "tableTo": "session_type",
+          "columnsFrom": ["session_type_id"],
+          "columnsTo": ["id"],
+          "onDelete": "cascade",
           "onUpdate": "no action"
         }
       },
@@ -1497,6 +1560,18 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "date": {
+          "name": "date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "session_type_id": {
+          "name": "session_type_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {},
@@ -1510,11 +1585,11 @@
           "onDelete": "cascade",
           "onUpdate": "no action"
         },
-        "reminder_log_session_id_term_session_id_fk": {
-          "name": "reminder_log_session_id_term_session_id_fk",
+        "reminder_log_session_type_id_fk": {
+          "name": "reminder_log_session_type_id_fk",
           "tableFrom": "reminder_log",
-          "tableTo": "term_session",
-          "columnsFrom": ["session_id"],
+          "tableTo": "session_type",
+          "columnsFrom": ["session_type_id"],
           "columnsTo": ["id"],
           "onDelete": "set null",
           "onUpdate": "no action"
@@ -1691,15 +1766,6 @@
         }
       },
       "foreignKeys": {
-        "schedule_item_session_id_term_session_id_fk": {
-          "name": "schedule_item_session_id_term_session_id_fk",
-          "tableFrom": "schedule_item",
-          "tableTo": "term_session",
-          "columnsFrom": ["session_id"],
-          "columnsTo": ["id"],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        },
         "schedule_item_session_type_id_session_type_id_fk": {
           "name": "schedule_item_session_type_id_session_type_id_fk",
           "tableFrom": "schedule_item",
