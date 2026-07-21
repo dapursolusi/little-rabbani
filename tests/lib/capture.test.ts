@@ -59,6 +59,10 @@ vi.mock('@/lib/db', () => {
         term: {
           findFirst: vi.fn(),
         },
+        sessionType: {
+          findFirst: vi.fn(),
+          findMany: vi.fn(),
+        },
       },
     },
   };
@@ -414,6 +418,17 @@ describe('Capture Server Actions', () => {
         mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue({
+        id: 'st-1',
+        name: 'Kelas Pagi',
+        start: '08:00',
+        end: '10:00',
+        active: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(undefined);
 
       vi.mocked(db.insert).mockReturnValue({
@@ -507,6 +522,17 @@ describe('Capture Server Actions', () => {
         mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
 
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue({
+        id: 'st-1',
+        name: 'Kelas Pagi',
+        start: '08:00',
+        end: '10:00',
+        active: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
+
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(
         existingObs as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
@@ -554,6 +580,17 @@ describe('Capture Server Actions', () => {
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
         mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
+
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue({
+        id: 'st-1',
+        name: 'Kelas Pagi',
+        start: '08:00',
+        end: '10:00',
+        active: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(
         existingObs as any // eslint-disable-line @typescript-eslint/no-explicit-any
@@ -603,6 +640,17 @@ describe('Capture Server Actions', () => {
       vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
         mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
+
+      vi.mocked(db.query.sessionType.findFirst).mockResolvedValue({
+        id: 'st-1',
+        name: 'Kelas Pagi',
+        start: '08:00',
+        end: '10:00',
+        active: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        deletedAt: null,
+      } as any); // eslint-disable-line @typescript-eslint/no-explicit-any
 
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(undefined);
 
@@ -661,6 +709,10 @@ describe('Capture Server Actions', () => {
         updatedAt: new Date(),
       };
 
+      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
+        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
+      );
+
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(
         existingObs as any // eslint-disable-line @typescript-eslint/no-explicit-any
       );
@@ -682,6 +734,10 @@ describe('Capture Server Actions', () => {
 
     it('should require existing observation (Pass 1 done first)', async () => {
       mockTeacherSession();
+
+      vi.mocked(db.query.termSession.findFirst).mockResolvedValue(
+        mockSession() as any // eslint-disable-line @typescript-eslint/no-explicit-any
+      );
 
       vi.mocked(db.query.observation.findFirst).mockResolvedValue(undefined);
 

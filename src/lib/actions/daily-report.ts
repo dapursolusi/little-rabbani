@@ -73,17 +73,14 @@ async function getEnrolledKidsForSession(
 }
 
 /**
- * Get structured observation data for a kid in a session.
+ * Get structured observation data for a kid on a given date.
  */
 async function getObservationData(
   kidId: string,
-  sessionId: string
+  date: string
 ): Promise<IStructuredData | null> {
   const obs = await db.query.observation.findFirst({
-    where: and(
-      eq(observation.kidId, kidId),
-      eq(observation.sessionId, sessionId)
-    ),
+    where: and(eq(observation.kidId, kidId), eq(observation.date, date)),
     with: {
       notes: {
         orderBy: [asc(observationNote.createdAt)],
@@ -282,11 +279,16 @@ export async function generateDailyReports(sessionId: string) {
     };
   }
 
+  const sessionDate = sessionData.date;
+
   // Generate reports in parallel for all kids
   const results: IReportResult[] = await Promise.all(
     kids.map(async (kidData) => {
       try {
-        const structuredData = await getObservationData(kidData.id, sessionId);
+        const structuredData = await getObservationData(
+          kidData.id,
+          sessionDate
+        );
 
         // Skip if no observations
         if (!structuredData) {

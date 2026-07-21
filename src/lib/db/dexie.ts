@@ -6,6 +6,8 @@ export interface IOfflineObservation {
   id?: number;
   kidId: string;
   sessionId: string;
+  date: string;
+  sessionTypeId: string;
   teacherId: string;
   mood: number;
   appetite: 'good' | 'moderate' | 'poor';
@@ -22,6 +24,8 @@ export interface ISyncQueueItem {
   id?: number;
   kidId: string;
   sessionId: string;
+  date: string;
+  sessionTypeId: string;
   teacherId: string;
   mood: number;
   appetite: string;
@@ -52,10 +56,11 @@ class CaptureDatabase extends Dexie {
   constructor() {
     super('LittleRabbaniCapture');
 
-    this.version(1).stores({
+    this.version(2).stores({
       observations:
-        '++id, kidId, sessionId, teacherId, idempotencyKey, createdAt',
-      syncQueue: '++id, kidId, sessionId, idempotencyKey, status, createdAt',
+        '++id, kidId, sessionId, date, teacherId, idempotencyKey, createdAt',
+      syncQueue:
+        '++id, kidId, sessionId, date, idempotencyKey, status, createdAt',
       idempotencyKeys: 'key, createdAt',
     });
   }
@@ -81,6 +86,8 @@ export async function saveObservationOffline(
   await captureDb.syncQueue.add({
     kidId: observation.kidId,
     sessionId: observation.sessionId,
+    date: observation.date,
+    sessionTypeId: observation.sessionTypeId,
     teacherId: observation.teacherId,
     mood: observation.mood,
     appetite: observation.appetite,

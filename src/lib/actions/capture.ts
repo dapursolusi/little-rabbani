@@ -36,6 +36,7 @@ const AbsenceReasonSchema = z.enum(['sick', 'family', 'permission', 'other']);
 const SavePass1Schema = z.object({
   kidId: z.string().min(1, 'Anak wajib dipilih'),
   sessionId: z.string().min(1, 'Sesi wajib dipilih'),
+  date: z.string().optional(), // resolved from session if not provided
   mood: MoodSchema,
   appetite: AppetiteSchema,
   presence: PresenceSchema,
@@ -57,6 +58,23 @@ const SavePass2Schema = z.object({
 });
 
 // ─────────────── Helpers ───────────────
+
+/**
+ * Resolve the sessionTypeId from a termSession's label.
+ * Looks up the active sessionType whose name matches the session label.
+ */
+async function resolveSessionType(
+  sessionLabel: string
+): Promise<{ id: string } | null> {
+  const st = await db.query.sessionType.findFirst({
+    where: and(
+      eq(sessionType.name, sessionLabel),
+      eq(sessionType.active, true)
+    ),
+    columns: { id: true },
+  });
+  return st ?? null;
+}
 
 /**
  * Check if session exists, is not holiday, and has started.
@@ -209,9 +227,9 @@ export async function getSessionWithKids(sessionId: string) {
     orderBy: [asc(kid.name)],
   });
 
-  // Get existing observations for this session
+  // Get existing observations for this session's date
   const existingObservations = await db.query.observation.findMany({
-    where: eq(observation.sessionId, sessionId),
+    where: eq(observation.date, session.date),
     with: {
       notes: true,
     },
@@ -333,19 +351,16 @@ export async function getPass2Activities(sessionId: string) {
 }
 
 /**
- * Get existing observation for a kid in a session (for editing).
+ * Get existing observation for a kid on a given date (for editing).
  */
-export async function getKidObservation(kidId: string, sessionId: string) {
+export async function getKidObservation(kidId: string, date: string) {
   const auth = await requireTeacher();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
   const obs = await db.query.observation.findFirst({
-    where: and(
-      eq(observation.kidId, kidId),
-      eq(observation.sessionId, sessionId)
-    ),
+    where: and(eq(observation.kidId, kidId), eq(observation.date, date)),
     with: {
       notes: true,
     },
@@ -355,19 +370,16 @@ export async function getKidObservation(kidId: string, sessionId: string) {
 }
 
 /**
- * Get existing Pass 2 activities for a kid in a session.
+ * Get existing Pass 2 activities for a kid on a given date.
  */
-export async function getKidPass2Activities(kidId: string, sessionId: string) {
+export async function getKidPass2Activities(kidId: string, date: string) {
   const auth = await requireTeacher();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
   const obs = await db.query.observation.findFirst({
-    where: and(
-      eq(observation.kidId, kidId),
-      eq(observation.sessionId, sessionId)
-    ),
+    where: and(eq(observation.kidId, kidId), eq(observation.date, date)),
   });
 
   if (!obs) {
@@ -407,7 +419,15 @@ export async function savePass1Observation(formData: FormData) {
     return { success: false as const, error: firstError };
   }
 
-  const { kidId, sessionId, mood, appetite, presence, notes } = parsed.data;
+  const {
+    kidId,
+    sessionId,
+    date: rawDate,
+    mood,
+    appetite,
+    presence,
+    notes,
+  } = parsed.data;
   const absenceReason = parsed.data.absenceReason || null;
   const idempotencyKeyValue = parsed.data.idempotencyKey || null;
   // Client-provided version for optimistic locking (the version the client had when it loaded the data)
@@ -448,11 +468,23 @@ export async function savePass1Observation(formData: FormData) {
   }
 
   try {
-    // Check if observation already exists for this kid + session
+    // Resolve date from form param or session
+    const resolvedDate = rawDate || validation.session.date;
+    // Resolve sessionTypeId from session label
+    const st = await resolveSessionType(validation.session.label);
+    if (!st) {
+      return {
+        success: false as const,
+        error:
+          'Tipe sesi tidak ditemukan untuk label: ' + validation.session.label,
+      };
+    }
+
+    // Check if observation already exists for this kid + date
     const existing = await db.query.observation.findFirst({
       where: and(
         eq(observation.kidId, kidId),
-        eq(observation.sessionId, sessionId)
+        eq(observation.date, resolvedDate)
       ),
     });
 
@@ -504,6 +536,8 @@ export async function savePass1Observation(formData: FormData) {
         .values({
           kidId,
           sessionId,
+          date: resolvedDate,
+          sessionTypeId: st.id,
           teacherId: auth.userId,
           mood,
           appetite,
@@ -583,11 +617,20 @@ export async function savePass2Observation(formData: FormData) {
   }
 
   try {
+    // Resolve the session's date for the lookup
+    const pass2Session = await db.query.termSession.findFirst({
+      where: eq(termSession.id, sessionId),
+      columns: { date: true },
+    });
+    if (!pass2Session) {
+      return { success: false as const, error: 'Sesi tidak ditemukan' };
+    }
+
     // Find the observation (must exist - Pass 1 must be done first)
     const obs = await db.query.observation.findFirst({
       where: and(
         eq(observation.kidId, kidId),
-        eq(observation.sessionId, sessionId)
+        eq(observation.date, pass2Session.date)
       ),
     });
 
@@ -681,13 +724,13 @@ export async function getTeacherPendingCaptureCount() {
   let totalPending = 0;
 
   for (const session of todaySessions) {
-    // Count how many enrolled kids already have observations for this session
+    // Count how many enrolled kids already have observations for this session's date
     const observedKids = await db
       .select({ kidId: observation.kidId })
       .from(observation)
       .where(
         and(
-          eq(observation.sessionId, session.id),
+          eq(observation.date, session.date),
           inArray(observation.kidId, enrolledKidIds)
         )
       );

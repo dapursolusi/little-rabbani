@@ -449,6 +449,10 @@ export const observation = pgTable(
     sessionId: uuid('session_id')
       .notNull()
       .references(() => termSession.id, { onDelete: 'cascade' }),
+    date: date('date').notNull(),
+    sessionTypeId: uuid('session_type_id')
+      .notNull()
+      .references(() => sessionType.id, { onDelete: 'cascade' }),
     teacherId: text('teacher_id').references(() => user.id, {
       onDelete: 'set null',
     }),
@@ -467,6 +471,7 @@ export const observation = pgTable(
   },
   (table) => ({
     uniqueKidSession: unique().on(table.kidId, table.sessionId),
+    uniqueKidDate: unique().on(table.kidId, table.date),
   })
 );
 
@@ -727,6 +732,10 @@ export const observationRelations = relations(observation, ({ one, many }) => ({
   session: one(termSession, {
     fields: [observation.sessionId],
     references: [termSession.id],
+  }),
+  sessionType: one(sessionType, {
+    fields: [observation.sessionTypeId],
+    references: [sessionType.id],
   }),
   teacher: one(user, {
     fields: [observation.teacherId],

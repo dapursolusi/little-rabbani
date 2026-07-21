@@ -82,6 +82,7 @@ export default async function CaptureSessionPage({
         {/* VAL-CAPTURE-017: Roster with per-kid capture state */}
         <CaptureRosterClient
           sessionId={sessionId}
+          sessionDate={session.date}
           kids={kids.map((k) => ({
             id: k.id,
             name: k.name,

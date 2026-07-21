@@ -100,7 +100,7 @@ export async function findPendingCaptureSessions(): Promise<IPendingSession[]> {
       .from(observation)
       .where(
         and(
-          eq(observation.sessionId, session.id),
+          eq(observation.date, session.date),
           inArray(observation.kidId, enrolledKidIds)
         )
       );

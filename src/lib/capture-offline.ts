@@ -136,6 +136,8 @@ export async function flushOfflineQueue(): Promise<{
         const formData = new FormData();
         formData.append('kidId', item.kidId);
         formData.append('sessionId', item.sessionId);
+        formData.append('date', item.date);
+        formData.append('sessionTypeId', item.sessionTypeId);
         formData.append('mood', String(item.mood));
         formData.append('appetite', item.appetite);
         formData.append('presence', item.presence);
@@ -167,10 +169,7 @@ export async function flushOfflineQueue(): Promise<{
           // Fetch server values to surface in conflict UI
           try {
             const { getKidObservation } = await import('@/lib/actions/capture');
-            const serverObs = await getKidObservation(
-              item.kidId,
-              item.sessionId
-            );
+            const serverObs = await getKidObservation(item.kidId, item.date);
 
             if (serverObs.success && serverObs.data) {
               const conflictData: IConflictData = {

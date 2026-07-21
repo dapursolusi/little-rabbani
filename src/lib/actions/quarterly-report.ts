@@ -1,6 +1,17 @@
 'use server';
 
-import { and, asc, desc, eq, ilike, inArray, not, sql } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  desc,
+  eq,
+  gte,
+  ilike,
+  inArray,
+  lte,
+  not,
+  sql,
+} from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -88,7 +99,8 @@ async function getTermSessions(termId: string) {
  */
 async function computeTermStats(
   kidId: string,
-  sessionIds: string[]
+  sessionIds: string[],
+  sessions: { id: string; date: string }[]
 ): Promise<IQuarterlyStats> {
   if (sessionIds.length === 0) {
     return {
@@ -102,10 +114,16 @@ async function computeTermStats(
     };
   }
 
+  // Derive date range from the sessions
+  const dates = sessions.map((s) => s.date).filter(Boolean);
+  const startDate = dates.length > 0 ? dates[0] : '';
+  const endDate = dates.length > 0 ? dates[dates.length - 1] : '';
+
   const observations = await db.query.observation.findMany({
     where: and(
       eq(observation.kidId, kidId),
-      inArray(observation.sessionId, sessionIds)
+      gte(observation.date, startDate),
+      lte(observation.date, endDate)
     ),
     columns: { id: true, mood: true, appetite: true, presence: true },
   });
@@ -603,7 +621,7 @@ export async function generateQuarterlyReport(kidId: string, termId: string) {
   const sessionIds = sessions.map((s) => s.id);
 
   // Compute stats
-  const stats = await computeTermStats(kidId, sessionIds);
+  const stats = await computeTermStats(kidId, sessionIds, sessions);
 
   // Get daily narratives
   const dailyNarratives = await getDailyNarrativesForTerm(
