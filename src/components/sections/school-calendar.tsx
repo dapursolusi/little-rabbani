@@ -7,6 +7,7 @@ import { holidayFields } from '@/features/holiday/fields';
 import { Holiday } from '@/features/holiday/types';
 import { Add02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
+import { format } from 'date-fns';
 import { id } from 'date-fns/locale/id';
 
 import {
@@ -26,9 +27,11 @@ import { ButtonGroup } from '../ui/button-group';
 import { Calendar } from '../ui/calendar';
 import { Card, CardContent, CardFooter } from '../ui/card';
 import { DialogClose, DialogFooter } from '../ui/dialog';
+import ScheduleItemList from './schedule-item-list';
 
 interface SchoolCalendarProps {
   holidays: Holiday[];
+  onDateSelect?: (date: string) => void;
 }
 
 function getMatchingHolidays(date: Date, holidays: Holiday[]): Holiday[] {
@@ -122,7 +125,10 @@ function HolidayForm() {
   );
 }
 
-export default function SchoolCalendar({ holidays }: SchoolCalendarProps) {
+export default function SchoolCalendar({
+  holidays,
+  onDateSelect,
+}: SchoolCalendarProps) {
   const [date, setDate] = useState(new Date());
 
   const modifiers = useMemo(
@@ -149,6 +155,7 @@ export default function SchoolCalendar({ holidays }: SchoolCalendarProps) {
   const handleDaySelect = (day: Date | undefined) => {
     if (!day) return;
     setDate(day);
+    onDateSelect?.(format(day, 'yyyy-MM-dd'));
   };
 
   return (
@@ -223,6 +230,7 @@ export default function SchoolCalendar({ holidays }: SchoolCalendarProps) {
                 ))}
             </ItemGroup>
           )}
+          <ScheduleItemList date={format(date, 'yyyy-MM-dd')} />
         </CardFooter>
       </Card>
     </div>
