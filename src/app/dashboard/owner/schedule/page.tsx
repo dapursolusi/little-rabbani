@@ -1,38 +1,47 @@
-import Link from 'next/link';
-
+import { getHolidays } from '@/features/holiday/actions';
 import { getTerms } from '@/features/term/actions';
 
-import { EmptyState } from '@/components/shared/empty-state';
-import { Badge } from '@/components/ui/badge';
+import SchoolCalendar from '@/components/sections/school-calendar';
 
-import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Jadwal Mingguan' };
 
 export default async function ScheduleSelectorPage() {
-  const result = await getTerms();
+  const termResult = await getTerms();
 
-  if (!result.success) {
+  if (!termResult.success) {
     return (
-      <div className="p-4 text-center text-destructive">{result.error}</div>
+      <div className="p-4 text-center text-destructive">{termResult.error}</div>
     );
   }
 
-  const terms = result.data;
+  const terms = termResult.data;
+
+  const holidayResult = await getHolidays();
+
+  if (!holidayResult.success) {
+    return (
+      <div className="p-4 text-center text-destructive">
+        {holidayResult.error}
+      </div>
+    );
+  }
+
+  const holidays = holidayResult.data;
 
   return (
-    <div className="p-4 sm:p-6">
-      <div className="mb-6">
+    <div className="px-4 sm:px-6">
+      {/* <div className="mb-6">
         <h1 className="text-2xl font-semibold text-foreground">
           Jadwal Mingguan
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Atur jadwal aktivitas dan outing untuk setiap sesi
         </p>
-      </div>
+      </div> */}
 
-      {terms.length === 0 ? (
+      {/* {terms.length === 0 ? (
         <EmptyState
           title="Belum ada term. Buat term terlebih dahulu."
           actionLabel="Tambah Term"
@@ -63,7 +72,10 @@ export default async function ScheduleSelectorPage() {
             </Link>
           ))}
         </div>
-      )}
+      )} */}
+
+      {/* Calendar */}
+      <SchoolCalendar holidays={holidays} />
     </div>
   );
 }
