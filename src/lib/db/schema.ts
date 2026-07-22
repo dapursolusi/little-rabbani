@@ -259,7 +259,8 @@ export const scheduleItem = pgTable(
   'schedule_item',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    date: date('date'),
+    startDate: date('start_date').notNull(),
+    endDate: date('end_date').notNull(),
     sessionTypeId: uuid('session_type_id').references(() => sessionType.id, {
       onDelete: 'cascade',
     }),
@@ -282,7 +283,7 @@ export const scheduleItem = pgTable(
     // ponytail: regular index, not unique — multiple items share a (date, sessionTypeId) group
     scheduleItemDateSessionTypeIdx: index(
       'schedule_item_date_session_type_idx'
-    ).on(table.date, table.sessionTypeId),
+    ).on(table.startDate, table.sessionTypeId),
   })
 );
 

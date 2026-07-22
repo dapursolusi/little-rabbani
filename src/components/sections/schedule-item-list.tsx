@@ -9,7 +9,7 @@ import { Item, ItemGroup, ItemHeader } from '../ui/item';
 
 interface ScheduleItem {
   id: string;
-  date: string | null;
+  startDate: string | null;
   sessionTypeId: string | null;
   activityId: string | null;
   type: 'activity' | 'outing';

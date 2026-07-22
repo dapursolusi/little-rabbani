@@ -41,7 +41,7 @@ import type { ResolvedSessionType } from '@/lib/session-type-resolver';
 
 interface IScheduleItem {
   id: string;
-  date: string | null;
+  startDate: string | null;
   sessionTypeId: string | null;
   activityId: string | null;
   type: 'activity' | 'outing';

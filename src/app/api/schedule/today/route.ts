@@ -34,7 +34,7 @@ export async function GET() {
     for (const session of sessions) {
       const items = await db.query.scheduleItem.findMany({
         where: and(
-          eq(scheduleItem.date, today),
+          eq(scheduleItem.startDate, today),
           eq(scheduleItem.sessionTypeId, session.id),
           isNull(scheduleItem.deletedAt)
         ),

@@ -125,6 +125,40 @@ function HolidayForm() {
   );
 }
 
+function AddScheduledActivity() {
+  return (
+    <Modal
+      title="Tambah Aktivitas"
+      trigger={{
+        text: 'Aktivitas',
+        icon: Add02Icon,
+      }}
+      content={<ScheduledActivityForm />}
+    />
+  );
+}
+
+function ScheduledActivityForm() {
+  return (
+    <DefaultFormFields
+      formFields={holidayFields()}
+      schemaKey="holiday"
+      initialData={{
+        reason: '',
+        startDate: '',
+        endDate: '',
+        scope: 'custom',
+      }}
+      onSubmit={createHoliday}
+    >
+      <DialogFooter>
+        <DialogClose render={<Button variant="outline">Batal</Button>} />
+        <Button type="submit">Simpan</Button>
+      </DialogFooter>
+    </DefaultFormFields>
+  );
+}
+
 export default function SchoolCalendar({
   holidays,
   onDateSelect,
@@ -185,9 +219,9 @@ export default function SchoolCalendar({
             })}
           </span>
           <ButtonGroup className="w-full">
-            <Button variant="default">+ Kegiatan</Button>
+            <AddScheduledActivity />
             <AddCustomHoliday hasExisting={matchingHolidays.length > 0} />
-            <Button variant="default">+ Rencana</Button>
+            <Button variant="default">+ Rencana Belajar</Button>
           </ButtonGroup>
           {matchingHolidays.length > 0 && (
             <ItemGroup className="w-full gap-1!">

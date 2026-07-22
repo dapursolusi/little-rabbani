@@ -124,7 +124,8 @@ const PAST_TYPE = {
 };
 
 const SCHEDULE_ITEM_BASE = {
-  date: null,
+  startDate: null,
+  endDate: null,
   sessionTypeId: null,
   location: null,
   bringItems: null,
@@ -157,7 +158,8 @@ describe('Schedule Server Actions', () => {
             {
               id: 'si-1',
               ...SCHEDULE_ITEM_BASE,
-              date: '2099-12-30',
+              startDate: '2099-12-30',
+              endDate: '2099-12-30',
               sessionTypeId: 'st-future-1',
               activityId: 'activity-1',
               type: 'activity',
@@ -169,7 +171,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
-          date: '2099-12-30',
+          startDate: '2099-12-30',
+          endDate: '2099-12-30',
           sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           activityId: 'activity-1',
@@ -181,7 +184,7 @@ describe('Schedule Server Actions', () => {
       if (result.success) {
         expect(result.data.type).toBe('activity');
         expect(result.data.activityId).toBe('activity-1');
-        expect(result.data.date).toBe('2099-12-30');
+        expect(result.data.startDate).toBe('2099-12-30');
         expect(result.data.sessionTypeId).toBe('st-future-1');
       }
     });
@@ -191,7 +194,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
-          date: '2099-12-30',
+          startDate: '2099-12-30',
+          endDate: '2099-12-30',
           sessionTypeId: 'nonexistent',
           sessionId: 'session-future-1',
           activityId: 'activity-1',
@@ -209,7 +213,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
-          date: '2020-01-15',
+          startDate: '2020-01-15',
+          endDate: '2020-01-15',
           sessionTypeId: 'st-past-1',
           sessionId: 'session-past-1',
           activityId: 'activity-1',
@@ -247,7 +252,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
-          date: '2099-12-30',
+          startDate: '2099-12-30',
+          endDate: '2099-12-30',
           sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           activityId: 'activity-1',
@@ -288,7 +294,8 @@ describe('Schedule Server Actions', () => {
             {
               id: 'si-2',
               ...SCHEDULE_ITEM_BASE,
-              date: '2099-12-30',
+              startDate: '2099-12-30',
+              endDate: '2099-12-30',
               sessionTypeId: 'st-future-1',
               activityId: null,
               type: 'outing',
@@ -303,7 +310,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
-          date: '2099-12-30',
+          startDate: '2099-12-30',
+          endDate: '2099-12-30',
           sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           type: 'outing',
@@ -341,7 +349,8 @@ describe('Schedule Server Actions', () => {
             {
               id: 'si-3',
               ...SCHEDULE_ITEM_BASE,
-              date: '2099-12-30',
+              startDate: '2099-12-30',
+              endDate: '2099-12-30',
               sessionTypeId: 'st-future-1',
               activityId: 'activity-1',
               type: 'activity',
@@ -353,7 +362,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
-          date: '2099-12-30',
+          startDate: '2099-12-30',
+          endDate: '2099-12-30',
           sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           activityId: 'activity-1',
@@ -371,7 +381,8 @@ describe('Schedule Server Actions', () => {
       vi.mocked(db.query.scheduleItem.findFirst).mockResolvedValue({
         id: 'si-1',
         ...SCHEDULE_ITEM_BASE,
-        date: '2099-12-30',
+        startDate: '2099-12-30',
+        endDate: '2099-12-30',
         sessionTypeId: 'st-future-1',
         activityId: 'activity-1',
         type: 'activity',
@@ -399,7 +410,8 @@ describe('Schedule Server Actions', () => {
       vi.mocked(db.query.scheduleItem.findFirst).mockResolvedValue({
         id: 'si-past',
         ...SCHEDULE_ITEM_BASE,
-        date: '2020-01-15',
+        startDate: '2020-01-15',
+        endDate: '2020-01-15',
         sessionTypeId: 'st-past-1',
         activityId: 'activity-1',
         type: 'activity',
@@ -453,7 +465,8 @@ describe('Schedule Server Actions', () => {
       vi.mocked(db.query.scheduleItem.findFirst).mockResolvedValue({
         id: 'si-1',
         ...SCHEDULE_ITEM_BASE,
-        date: '2099-12-30',
+        startDate: '2099-12-30',
+        endDate: '2099-12-30',
         sessionTypeId: 'st-future-1',
         activityId: 'activity-1',
         type: 'activity',
@@ -467,7 +480,8 @@ describe('Schedule Server Actions', () => {
               {
                 id: 'si-1',
                 ...SCHEDULE_ITEM_BASE,
-                date: '2099-12-30',
+                startDate: '2099-12-30',
+                endDate: '2099-12-30',
                 sessionTypeId: 'st-future-1',
                 activityId: 'activity-2',
                 type: 'activity',
@@ -510,7 +524,8 @@ describe('Schedule Server Actions', () => {
             {
               id: 'si-outing',
               ...SCHEDULE_ITEM_BASE,
-              date: '2099-12-30',
+              startDate: '2099-12-30',
+              endDate: '2099-12-30',
               sessionTypeId: 'st-future-1',
               activityId: null,
               type: 'outing',
@@ -525,7 +540,8 @@ describe('Schedule Server Actions', () => {
 
       const result = await scheduleActions.createScheduleItem(
         toFormData({
-          date: '2099-12-30',
+          startDate: '2099-12-30',
+          endDate: '2099-12-30',
           sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           type: 'outing',

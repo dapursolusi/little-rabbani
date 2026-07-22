@@ -77,7 +77,7 @@ export async function getScheduleActivitiesForDcr(
 
   const items = await db.query.scheduleItem.findMany({
     where: and(
-      eq(scheduleItem.date, date),
+      eq(scheduleItem.startDate, date),
       eq(scheduleItem.sessionTypeId, sessionTypeId),
       isNull(scheduleItem.deletedAt)
     ),

@@ -1,6 +1,6 @@
 {
-  "id": "8355364e-8337-44f4-9d00-c9be4d70a6cf",
-  "prevId": "d36593d4-79d3-4cc9-8c77-54e9bb0fe47f",
+  "id": "d36593d4-79d3-4cc9-8c77-54e9bb0fe47f",
+  "prevId": "d652bed6-3089-4895-b7e3-c90dd95878d9",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1616,12 +1616,6 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
-        "date": {
-          "name": "date",
-          "type": "date",
-          "primaryKey": false,
-          "notNull": false
-        },
         "session_type_id": {
           "name": "session_type_id",
           "type": "uuid",
@@ -1640,6 +1634,25 @@
           "typeSchema": "public",
           "primaryKey": false,
           "notNull": true
+        },
+        "outing_location": {
+          "name": "outing_location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outing_bring_items": {
+          "name": "outing_bring_items",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "outing_permission_required": {
+          "name": "outing_permission_required",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         },
         "sort_order": {
           "name": "sort_order",
@@ -1668,24 +1681,17 @@
           "primaryKey": false,
           "notNull": false
         },
-        "location": {
-          "name": "location",
-          "type": "text",
+        "start_date": {
+          "name": "start_date",
+          "type": "date",
           "primaryKey": false,
           "notNull": false
         },
-        "bring_items": {
-          "name": "bring_items",
-          "type": "text",
+        "end_date": {
+          "name": "end_date",
+          "type": "date",
           "primaryKey": false,
-          "notNull": false
-        },
-        "permission_required": {
-          "name": "permission_required",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
+          "notNull": true
         }
       },
       "indexes": {

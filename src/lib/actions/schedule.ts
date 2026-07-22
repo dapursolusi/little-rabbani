@@ -77,7 +77,7 @@ export async function getScheduleItems(date: string, sessionTypeId: string) {
 
   const items = await db.query.scheduleItem.findMany({
     where: and(
-      eq(scheduleItem.date, date),
+      eq(scheduleItem.startDate, date),
       eq(scheduleItem.sessionTypeId, sessionTypeId),
       isNull(scheduleItem.deletedAt)
     ),
@@ -101,7 +101,10 @@ export async function getScheduleItemsByDate(date: string) {
   }
 
   const items = await db.query.scheduleItem.findMany({
-    where: and(eq(scheduleItem.date, date), isNull(scheduleItem.deletedAt)),
+    where: and(
+      eq(scheduleItem.startDate, date),
+      isNull(scheduleItem.deletedAt)
+    ),
     orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
     with: {
       activity: true,
@@ -120,7 +123,10 @@ export async function getTodaySchedule() {
   const today = new Date().toISOString().split('T')[0];
 
   const items = await db.query.scheduleItem.findMany({
-    where: and(eq(scheduleItem.date, today), isNull(scheduleItem.deletedAt)),
+    where: and(
+      eq(scheduleItem.startDate, today),
+      isNull(scheduleItem.deletedAt)
+    ),
     orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
     with: {
       activity: true,
@@ -139,7 +145,7 @@ export async function getUpcomingSchedule() {
 
   const items = await db.query.scheduleItem.findMany({
     where: isNull(scheduleItem.deletedAt),
-    orderBy: [asc(scheduleItem.date), asc(scheduleItem.sortOrder)],
+    orderBy: [asc(scheduleItem.startDate), asc(scheduleItem.sortOrder)],
     with: {
       activity: true,
       sessionType: true,
@@ -147,7 +153,7 @@ export async function getUpcomingSchedule() {
   });
 
   // Filter by date range
-  const filtered = items.filter((i) => i.date && i.date >= today);
+  const filtered = items.filter((i) => i.startDate && i.startDate >= today);
 
   return { success: true as const, data: filtered.slice(0, 20) };
 }
@@ -160,13 +166,15 @@ export async function getUpcomingSchedule() {
  * VAL-CAPTURE-002: Owner creates schedule item with outing.
  * VAL-CAPTURE-004: Schedule editable until session start time.
  */
-export async function createScheduleItem(formData: FormData) {
+export async function createScheduleItem(
+  input: FormData | Record<string, unknown>
+) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const rawData = Object.fromEntries(formData);
+  const rawData = input instanceof FormData ? Object.fromEntries(input) : input;
   const parsed = CreateScheduleItemSchema.safeParse(rawData);
 
   if (!parsed.success) {
@@ -188,7 +196,7 @@ export async function createScheduleItem(formData: FormData) {
     .from(scheduleItem)
     .where(
       and(
-        eq(scheduleItem.date, data.date),
+        eq(scheduleItem.startDate, data.date),
         eq(scheduleItem.sessionTypeId, data.sessionTypeId)
       )
     )
@@ -203,7 +211,8 @@ export async function createScheduleItem(formData: FormData) {
     const [newItem] = await db
       .insert(scheduleItem)
       .values({
-        date: data.date,
+        startDate: data.date,
+        endDate: data.date,
         sessionTypeId: data.sessionTypeId,
         activityId: data.activityId || null,
         type: data.type,
@@ -253,7 +262,7 @@ export async function updateScheduleItem(formData: FormData) {
     return { success: false as const, error: 'Item jadwal tidak ditemukan' };
   }
 
-  if (!existingItem.date || !existingItem.sessionTypeId) {
+  if (!existingItem.startDate || !existingItem.sessionTypeId) {
     return {
       success: false as const,
       error: 'Item jadwal belum memiliki data tanggal',
@@ -262,7 +271,7 @@ export async function updateScheduleItem(formData: FormData) {
 
   // Check schedule lock
   const lockError = await checkScheduleLock(
-    existingItem.date,
+    existingItem.startDate,
     existingItem.sessionTypeId
   );
   if (lockError) {
@@ -324,7 +333,7 @@ export async function deleteScheduleItem(formData: FormData) {
     return { success: false as const, error: 'Item jadwal tidak ditemukan' };
   }
 
-  if (!existingItem.date || !existingItem.sessionTypeId) {
+  if (!existingItem.startDate || !existingItem.sessionTypeId) {
     return {
       success: false as const,
       error: 'Item jadwal belum memiliki data tanggal',
@@ -333,7 +342,7 @@ export async function deleteScheduleItem(formData: FormData) {
 
   // Check schedule lock
   const lockError = await checkScheduleLock(
-    existingItem.date,
+    existingItem.startDate,
     existingItem.sessionTypeId
   );
   if (lockError) {
@@ -378,7 +387,7 @@ export async function reorderScheduleItems(
     return { success: false as const, error: 'Item jadwal tidak ditemukan' };
   }
 
-  if (!firstItem.date || !firstItem.sessionTypeId) {
+  if (!firstItem.startDate || !firstItem.sessionTypeId) {
     return {
       success: false as const,
       error: 'Item jadwal belum memiliki data tanggal',
@@ -386,7 +395,7 @@ export async function reorderScheduleItems(
   }
 
   const lockError = await checkScheduleLock(
-    firstItem.date,
+    firstItem.startDate,
     firstItem.sessionTypeId
   );
   if (lockError) {
