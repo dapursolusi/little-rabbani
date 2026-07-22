@@ -135,13 +135,20 @@ function googleToHolidayRows(events: GoogleEvent[]) {
     .filter((e) => e?.start?.date && e?.summary)
     .map((e) => {
       const rawEnd = e.end?.date ?? e.start!.date!;
-      const exclusiveEnd = new Date(rawEnd + 'T00:00:00');
-      exclusiveEnd.setDate(exclusiveEnd.getDate() - 1);
-      const adjustedEnd = exclusiveEnd.toISOString().slice(0, 10);
+      let endDate: string;
+      if (rawEnd === e.start!.date!) {
+        endDate = rawEnd;
+      } else {
+        const yr = Number(rawEnd.slice(0, 4));
+        const mo = Number(rawEnd.slice(5, 7)) - 1;
+        const dy = Number(rawEnd.slice(8, 10));
+        const d = new Date(Date.UTC(yr, mo, dy - 1));
+        endDate = d.toISOString().slice(0, 10);
+      }
 
       return {
         startDate: e.start!.date!,
-        endDate: adjustedEnd,
+        endDate,
         reason: e.summary!.trim(),
         source: 'synced' as const,
         scope: 'national' as const,
