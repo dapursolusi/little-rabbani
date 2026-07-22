@@ -91,6 +91,28 @@ export async function getScheduleItems(date: string, sessionTypeId: string) {
 }
 
 /**
+ * Get all schedule items for a specific date (for owner schedule overview).
+ * Returns items across all session types for the given date.
+ */
+export async function getScheduleItemsByDate(date: string) {
+  const auth = await requireOwner();
+  if (!auth.authorized) {
+    return { success: false as const, error: auth.error };
+  }
+
+  const items = await db.query.scheduleItem.findMany({
+    where: and(eq(scheduleItem.date, date), isNull(scheduleItem.deletedAt)),
+    orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
+    with: {
+      activity: true,
+      sessionType: true,
+    },
+  });
+
+  return { success: true as const, data: items };
+}
+
+/**
  * Get schedule items for teacher dashboard (no role guard - accessible by both).
  * Returns schedule items for sessions happening today keyed by date directly.
  */
