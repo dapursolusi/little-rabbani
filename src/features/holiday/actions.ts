@@ -134,20 +134,13 @@ function googleToHolidayRows(events: GoogleEvent[]) {
     .filter((e) => e?.start?.date && e?.summary)
     .map((e) => {
       const rawEnd = e.end?.date ?? e.start!.date!;
-      let endDate: string;
-      if (rawEnd === e.start!.date!) {
-        endDate = rawEnd;
-      } else {
-        const yr = Number(rawEnd.slice(0, 4));
-        const mo = Number(rawEnd.slice(5, 7)) - 1;
-        const dy = Number(rawEnd.slice(8, 10));
-        const d = new Date(Date.UTC(yr, mo, dy - 1));
-        endDate = d.toISOString().slice(0, 10);
-      }
+      const exclusiveEnd = new Date(rawEnd + 'T00:00:00');
+      exclusiveEnd.setDate(exclusiveEnd.getDate() - 1);
+      const adjustedEnd = exclusiveEnd.toISOString().slice(0, 10);
 
       return {
         startDate: e.start!.date!,
-        endDate,
+        endDate: adjustedEnd,
         reason: e.summary!.trim(),
         source: 'synced' as const,
         scope: 'national' as const,
@@ -157,13 +150,18 @@ function googleToHolidayRows(events: GoogleEvent[]) {
 }
 
 export async function syncHolidays() {
+  const authCheck = await requireOwner();
+  if (!authCheck.authorized) {
+    return { success: false as const, error: authCheck.error };
+  }
+
   try {
     const events = await fetchGoogleHolidays(2026);
 
     if (events.length === 0) {
       return {
-        success: true as const,
-        data: { inserted: 0, deleted: 0 },
+        success: false as const,
+        error: 'Google Calendar returned 0 events — sync aborted',
       };
     }
 
