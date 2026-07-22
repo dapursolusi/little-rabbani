@@ -82,3 +82,107 @@ export async function deleteHoliday(id: string) {
     return { success: false as const, error: 'Gagal menghapus hari libur' };
   }
 }
+
+// ── Google Calendar Sync ──────────────────────────────────────────
+
+const HOLIDAY_CALENDAR_ID =
+  'id.indonesian%23holiday%40group.v.calendar.google.com';
+const HOLIDAY_API_URL = `https://www.googleapis.com/calendar/v3/calendars/${HOLIDAY_CALENDAR_ID}/events`;
+
+interface GoogleEvent {
+  summary?: string;
+  start?: { date?: string };
+  end?: { date?: string };
+}
+
+async function fetchGoogleHolidays(year: number): Promise<GoogleEvent[]> {
+  const apiKey = process.env.GOOGLE_CALENDAR_API_KEY;
+  if (!apiKey) throw new Error('GOOGLE_CALENDAR_API_KEY not set');
+
+  const events: GoogleEvent[] = [];
+  let pageToken: string | undefined;
+
+  do {
+    const params = new URLSearchParams({
+      key: apiKey,
+      timeMin: `${year}-01-01T00:00:00+07:00`,
+      singleEvents: 'true',
+      orderBy: 'startTime',
+      maxResults: '2500',
+    });
+    if (pageToken) params.set('pageToken', pageToken);
+
+    const res = await fetch(`${HOLIDAY_API_URL}?${params}`);
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(`Google Calendar API error ${res.status}: ${text}`);
+    }
+
+    const json = (await res.json()) as {
+      items?: GoogleEvent[];
+      nextPageToken?: string;
+    };
+
+    if (json.items) events.push(...json.items);
+    pageToken = json.nextPageToken;
+  } while (pageToken);
+
+  return events;
+}
+
+function googleToHolidayRows(events: GoogleEvent[]) {
+  return events
+    .filter((e) => e?.start?.date && e?.summary)
+    .map((e) => {
+      const rawEnd = e.end?.date ?? e.start!.date!;
+      const exclusiveEnd = new Date(rawEnd + 'T00:00:00');
+      exclusiveEnd.setDate(exclusiveEnd.getDate() - 1);
+      const adjustedEnd = exclusiveEnd.toISOString().slice(0, 10);
+
+      return {
+        startDate: e.start!.date!,
+        endDate: adjustedEnd,
+        reason: e.summary!.trim(),
+        source: 'synced' as const,
+        scope: 'national' as const,
+        termId: null,
+      };
+    });
+}
+
+export async function syncHolidays() {
+  const authCheck = await requireOwner();
+  if (!authCheck.authorized) {
+    return { success: false as const, error: authCheck.error };
+  }
+
+  try {
+    const events = await fetchGoogleHolidays(2026);
+
+    if (events.length === 0) {
+      return {
+        success: false as const,
+        error: 'Google Calendar returned 0 events — sync aborted',
+      };
+    }
+
+    const rows = googleToHolidayRows(events);
+
+    const deletedResult = await db
+      .delete(holiday)
+      .where(and(eq(holiday.source, 'synced'), isNull(holiday.termId)));
+
+    const inserted = await db.insert(holiday).values(rows).returning();
+
+    return {
+      success: true as const,
+      data: {
+        inserted: inserted.length,
+        deleted: deletedResult.rowCount ?? 0,
+      },
+    };
+  } catch (error) {
+    console.error('[syncHolidays]', error);
+    return { success: false as const, error: 'Gagal sinkronisasi hari libur' };
+  }
+}
