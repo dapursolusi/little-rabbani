@@ -1,27 +1,31 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 
+import { createHoliday } from '@/features/holiday/actions';
+import { holidayFields } from '@/features/holiday/fields';
 import { Holiday } from '@/features/holiday/types';
+import { Add02Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+import { id } from 'date-fns/locale/id';
 
 import {
   Item,
   ItemActions,
-  ItemContent,
-  ItemDescription,
   ItemFooter,
   ItemGroup,
   ItemHeader,
-  ItemMedia,
   ItemSeparator,
-  ItemTitle,
 } from '@/components/ui/item';
 
+import DefaultFormFields from '../shared/form/default-form-field';
+import { Modal } from '../shared/modal';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { ButtonGroup } from '../ui/button-group';
 import { Calendar } from '../ui/calendar';
 import { Card, CardContent, CardFooter } from '../ui/card';
+import { DialogClose, DialogFooter } from '../ui/dialog';
 
 interface SchoolCalendarProps {
   holidays: Holiday[];
@@ -37,15 +41,114 @@ function getMatchingHolidays(date: Date, holidays: Holiday[]): Holiday[] {
   });
 }
 
+function isHoliday(date: Date, holidays: Holiday[]): boolean {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return holidays.some((h) => {
+    const start = new Date(h.startDate + 'T00:00:00');
+    const end = new Date(h.endDate + 'T00:00:00');
+    return d >= start && d <= end;
+  });
+}
+
+function AddCustomHoliday({ hasExisting }: { hasExisting: boolean }) {
+  const [open, setOpen] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+
+  if (!hasExisting) {
+    return (
+      <Modal
+        title="Tambah Hari Libur"
+        description="Tambahkan hari libur baru di luar hari libur nasional."
+        trigger={{
+          text: 'Hari Libur',
+          icon: Add02Icon,
+        }}
+        content={<HolidayForm />}
+      />
+    );
+  }
+
+  return (
+    <>
+      <Button onClick={() => setOpen(true)}>
+        <HugeiconsIcon icon={Add02Icon} />
+        Hari Libur
+      </Button>
+      <Modal
+        title="Sudah ada hari libur"
+        description="Hari ini sudah terdapat hari libur, anda yakin ingin menambahkan hari libur baru di luar hari libur nasional?"
+        open={!showForm && open}
+        onOpenChange={(v) => {
+          setOpen(v);
+          if (!v) setShowForm(false);
+        }}
+        footer={
+          <DialogFooter>
+            <DialogClose render={<Button variant="outline">Batal</Button>} />
+            <Button onClick={() => setShowForm(true)}>Lanjutkan</Button>
+          </DialogFooter>
+        }
+      />
+      <Modal
+        title="Tambah Hari Libur"
+        description="Tambahkan hari libur baru di luar hari libur nasional."
+        open={showForm}
+        onOpenChange={setShowForm}
+        content={<HolidayForm />}
+      />
+    </>
+  );
+}
+
+function HolidayForm() {
+  return (
+    <DefaultFormFields
+      formFields={holidayFields()}
+      schemaKey="holiday"
+      initialData={{
+        reason: '',
+        startDate: '',
+        endDate: '',
+        scope: 'custom',
+      }}
+      onSubmit={createHoliday}
+    >
+      <DialogFooter>
+        <DialogClose render={<Button variant="outline">Batal</Button>} />
+        <Button type="submit">Simpan</Button>
+      </DialogFooter>
+    </DefaultFormFields>
+  );
+}
+
 export default function SchoolCalendar({ holidays }: SchoolCalendarProps) {
   const [date, setDate] = useState(new Date());
-  const [matchingHolidays, setMatchingHolidays] = useState<Holiday[]>([]);
+
+  const modifiers = useMemo(
+    () => ({
+      weekend: { dayOfWeek: [0, 6] },
+      holiday: (day: Date) => isHoliday(day, holidays),
+    }),
+    [holidays]
+  );
+
+  const modifiersClassNames = useMemo(
+    () => ({
+      weekend: 'text-red-500!',
+      holiday: 'text-red-500!',
+    }),
+    []
+  );
+
+  const matchingHolidays = useMemo(
+    () => getMatchingHolidays(date, holidays),
+    [date, holidays]
+  );
 
   const handleDaySelect = (day: Date | undefined) => {
     if (!day) return;
     setDate(day);
-    const matching = getMatchingHolidays(day, holidays);
-    setMatchingHolidays(matching);
   };
 
   return (
@@ -53,21 +156,20 @@ export default function SchoolCalendar({ holidays }: SchoolCalendarProps) {
       <Card className="md:flex md:flex-row md:p-0 mx-auto">
         <CardContent className="md:pb-4 md:pt-4 md:pr-0">
           <Calendar
+            key={`calendar-${holidays.length}`}
             mode="single"
             selected={date}
             onSelect={handleDaySelect}
-            className="rounded-lg border-2 [--cell-size:2.5rem] md:[--cell-size:5rem]"
+            className="rounded-lg border-2 [--cell-size:2.5rem] md:[--cell-size:5rem] [&_td]:border [&_th]:border"
             required
             fixedWeeks
+            locale={id}
+            modifiers={modifiers}
+            modifiersClassNames={modifiersClassNames}
           />
         </CardContent>
         <CardFooter className="rounded-bl-none md:items-start flex flex-col">
-          <ButtonGroup className="w-full">
-            <Button variant="default">+ Kegiatan</Button>
-            <Button variant="default">+ Hari Libur</Button>
-            <Button variant="default">+ Rencana</Button>
-          </ButtonGroup>
-          <span>
+          <span className="text-lg font-semibold my-2 w-full text-center">
             {date.toLocaleDateString('id-ID', {
               weekday: 'long',
               day: 'numeric',
@@ -75,26 +177,50 @@ export default function SchoolCalendar({ holidays }: SchoolCalendarProps) {
               year: 'numeric',
             })}
           </span>
+          <ButtonGroup className="w-full">
+            <Button variant="default">+ Kegiatan</Button>
+            <AddCustomHoliday hasExisting={matchingHolidays.length > 0} />
+            <Button variant="default">+ Rencana</Button>
+          </ButtonGroup>
           {holidays.length > 0 && (
-            <ItemGroup className="w-full gap-0!">
+            <ItemGroup className="w-full gap-1!">
               <ItemSeparator></ItemSeparator>
               <Item>
                 <ItemHeader>
-                  <Badge>Hari Libur:</Badge>
+                  <span className="font-semibold text-lg text-destructive/80">
+                    Hari Libur:
+                  </span>
                 </ItemHeader>
               </Item>
-              {matchingHolidays.map((holiday) => (
-                <Item key={holiday.id} variant="outline">
-                  <ItemHeader>{holiday.reason}</ItemHeader>
-                  <ItemMedia></ItemMedia>
-                  <ItemContent>
-                    <ItemTitle></ItemTitle>
-                    <ItemDescription></ItemDescription>
-                  </ItemContent>
-                  <ItemActions></ItemActions>
-                  <ItemFooter></ItemFooter>
-                </Item>
-              ))}
+              {matchingHolidays
+                .filter((h) => h.scope === 'national' && h.source === 'synced')
+                .map((holiday) => (
+                  <Item
+                    key={holiday.id}
+                    variant="outline"
+                    className="cursor-not-allowed"
+                  >
+                    <ItemHeader className="font-semibold">
+                      {holiday.reason}
+                    </ItemHeader>
+                    <ItemFooter>
+                      <Badge variant="secondary">Libur Nasional</Badge>
+                    </ItemFooter>
+                  </Item>
+                ))}
+              {matchingHolidays
+                .filter((h) => h.scope !== 'national' && h.source !== 'synced')
+                .map((holiday) => (
+                  <Item key={holiday.id} variant="outline">
+                    <ItemHeader className="font-semibold">
+                      {holiday.reason}
+                    </ItemHeader>
+                    <ItemActions>Edit</ItemActions>
+                    <ItemFooter>
+                      <Badge variant="default">Kustom</Badge>
+                    </ItemFooter>
+                  </Item>
+                ))}
             </ItemGroup>
           )}
         </CardFooter>

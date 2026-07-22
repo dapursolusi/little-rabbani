@@ -81,7 +81,7 @@ export function Modal({
             )}
           </DialogDescription>
         </DialogHeader>
-        {content ?? <div>Dialog content</div>}
+        {content}
         {footer}
       </DialogContent>
     </Dialog>

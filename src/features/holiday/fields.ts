@@ -24,7 +24,6 @@ export const holidayFields = (): FormField[] => [
     label: 'Cakupan',
     type: 'select',
     selectOptions: [
-      { label: 'Nasional', value: 'national' },
       { label: 'Kustom', value: 'custom' },
       { label: 'Term', value: 'term' },
     ],
