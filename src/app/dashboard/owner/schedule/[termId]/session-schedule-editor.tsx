@@ -45,9 +45,9 @@ interface IScheduleItem {
   sessionTypeId: string | null;
   activityId: string | null;
   type: 'activity' | 'outing';
-  outingLocation: string | null;
-  outingBringItems: string | null;
-  outingPermissionRequired: boolean;
+  location: string | null;
+  bringItems: string | null;
+  permissionRequired: boolean;
   sortOrder: number;
   activity?: {
     id: string;
@@ -90,10 +90,9 @@ export function SessionScheduleEditor({
   const [isProcessing, setIsProcessing] = useState(false);
 
   // Add outing form
-  const [outingLocation, setOutingLocation] = useState('');
-  const [outingBringItems, setOutingBringItems] = useState('');
-  const [outingPermissionRequired, setOutingPermissionRequired] =
-    useState(false);
+  const [location, setLocation] = useState('');
+  const [bringItems, setBringItems] = useState('');
+  const [permissionRequired, setPermissionRequired] = useState(false);
 
   // Add activity form
   const [selectedActivityId, setSelectedActivityId] = useState('');
@@ -167,7 +166,7 @@ export function SessionScheduleEditor({
   }
 
   async function handleAddOuting() {
-    if (!outingLocation.trim()) {
+    if (!location.trim()) {
       toast.error('Lokasi outing wajib diisi');
       return;
     }
@@ -179,20 +178,17 @@ export function SessionScheduleEditor({
       formData.set('sessionTypeId', sessionTypeId);
       formData.set('sessionId', sessionId);
       formData.set('type', 'outing');
-      formData.set('outingLocation', outingLocation);
-      formData.set('outingBringItems', outingBringItems);
-      formData.set(
-        'outingPermissionRequired',
-        outingPermissionRequired ? 'true' : 'false'
-      );
+      formData.set('location', location);
+      formData.set('bringItems', bringItems);
+      formData.set('permissionRequired', permissionRequired ? 'true' : 'false');
 
       const result = await createScheduleItem(formData);
       if (result.success) {
         toast.success('Outing berhasil ditambahkan');
         setShowOutingDialog(false);
-        setOutingLocation('');
-        setOutingBringItems('');
-        setOutingPermissionRequired(false);
+        setLocation('');
+        setBringItems('');
+        setPermissionRequired(false);
         await setRefreshKey((k) => k + 1);
         router.refresh();
       } else {
@@ -267,15 +263,15 @@ export function SessionScheduleEditor({
                         Outing
                       </span>
                       <span className="font-medium text-foreground">
-                        {item.outingLocation || 'Lokasi tidak ditentukan'}
+                        {item.location || 'Lokasi tidak ditentukan'}
                       </span>
                     </div>
-                    {item.outingBringItems && (
+                    {item.bringItems && (
                       <p className="text-xs text-muted-foreground">
-                        Bawaan: {item.outingBringItems}
+                        Bawaan: {item.bringItems}
                       </p>
                     )}
-                    {item.outingPermissionRequired && (
+                    {item.permissionRequired && (
                       <p className="text-xs text-warning flex items-center gap-1">
                         <HugeiconsIcon icon={Alert01Icon} className="size-3" />
                         Izin orang tua diperlukan
@@ -395,8 +391,8 @@ export function SessionScheduleEditor({
                   </Label>
                   <Input
                     id="outing-location"
-                    value={outingLocation}
-                    onChange={(e) => setOutingLocation(e.target.value)}
+                    value={location}
+                    onChange={(e) => setLocation(e.target.value)}
                     placeholder="Cth: Kebun Binatang, Taman Kota"
                   />
                 </div>
@@ -404,8 +400,8 @@ export function SessionScheduleEditor({
                   <Label htmlFor="outing-bring-items">Barang Bawaan</Label>
                   <Textarea
                     id="outing-bring-items"
-                    value={outingBringItems}
-                    onChange={(e) => setOutingBringItems(e.target.value)}
+                    value={bringItems}
+                    onChange={(e) => setBringItems(e.target.value)}
                     placeholder="Cth: Topi, bekal, air minum"
                     rows={2}
                   />
@@ -413,10 +409,8 @@ export function SessionScheduleEditor({
                 <div className="flex items-center gap-2">
                   <Switch
                     id="outing-permission"
-                    checked={outingPermissionRequired}
-                    onCheckedChange={(v: boolean) =>
-                      setOutingPermissionRequired(v)
-                    }
+                    checked={permissionRequired}
+                    onCheckedChange={(v: boolean) => setPermissionRequired(v)}
                   />
                   <Label htmlFor="outing-permission">
                     Izin orang tua diperlukan
@@ -433,7 +427,7 @@ export function SessionScheduleEditor({
                 </Button>
                 <Button
                   onClick={handleAddOuting}
-                  disabled={isProcessing || !outingLocation.trim()}
+                  disabled={isProcessing || !location.trim()}
                 >
                   {isProcessing ? 'Menambahkan...' : 'Tambah'}
                 </Button>

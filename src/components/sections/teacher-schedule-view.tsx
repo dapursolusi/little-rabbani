@@ -21,9 +21,9 @@ interface IScheduleItem {
   sessionId: string;
   activityId: string | null;
   type: 'activity' | 'outing';
-  outingLocation: string | null;
-  outingBringItems: string | null;
-  outingPermissionRequired: boolean;
+  location: string | null;
+  bringItems: string | null;
+  permissionRequired: boolean;
   sortOrder: number;
   activity: IActivityInfo | null;
 }
@@ -130,15 +130,15 @@ export function TeacherScheduleView() {
                         Outing
                       </Badge>
                       <span className="font-medium text-foreground">
-                        {item.outingLocation || 'Lokasi tidak ditentukan'}
+                        {item.location || 'Lokasi tidak ditentukan'}
                       </span>
                     </div>
-                    {item.outingBringItems && (
+                    {item.bringItems && (
                       <p className="text-xs text-muted-foreground">
-                        Bawaan: {item.outingBringItems}
+                        Bawaan: {item.bringItems}
                       </p>
                     )}
-                    {item.outingPermissionRequired && (
+                    {item.permissionRequired && (
                       <div className="flex items-center gap-1 text-xs text-warning">
                         <HugeiconsIcon
                           icon={SecurityIcon}

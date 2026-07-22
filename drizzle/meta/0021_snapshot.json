@@ -1,6 +1,6 @@
 {
-  "id": "d36593d4-79d3-4cc9-8c77-54e9bb0fe47f",
-  "prevId": "d652bed6-3089-4895-b7e3-c90dd95878d9",
+  "id": "8355364e-8337-44f4-9d00-c9be4d70a6cf",
+  "prevId": "d36593d4-79d3-4cc9-8c77-54e9bb0fe47f",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1641,25 +1641,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "outing_location": {
-          "name": "outing_location",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "outing_bring_items": {
-          "name": "outing_bring_items",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "outing_permission_required": {
-          "name": "outing_permission_required",
-          "type": "boolean",
-          "primaryKey": false,
-          "notNull": true,
-          "default": false
-        },
         "sort_order": {
           "name": "sort_order",
           "type": "integer",
@@ -1686,6 +1667,25 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        },
+        "location": {
+          "name": "location",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "bring_items": {
+          "name": "bring_items",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "permission_required": {
+          "name": "permission_required",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
         }
       },
       "indexes": {

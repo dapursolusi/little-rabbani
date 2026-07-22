@@ -267,11 +267,9 @@ export const scheduleItem = pgTable(
       onDelete: 'set null',
     }),
     type: scheduleItemTypeEnum('type').notNull(),
-    outingLocation: text('outing_location'),
-    outingBringItems: text('outing_bring_items'),
-    outingPermissionRequired: boolean('outing_permission_required')
-      .notNull()
-      .default(false),
+    location: text('location'),
+    bringItems: text('bring_items'),
+    permissionRequired: boolean('permission_required').notNull().default(false),
     sortOrder: integer('sort_order').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')

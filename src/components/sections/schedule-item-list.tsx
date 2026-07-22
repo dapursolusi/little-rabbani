@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import { getScheduleItemsByDate } from '@/lib/actions/schedule';
 import { getCategoryLabel } from '@/lib/activity-utils';
 
-import { Item, ItemGroup, ItemHeader, ItemSeparator } from '../ui/item';
+import { Item, ItemGroup, ItemHeader } from '../ui/item';
 
 interface ScheduleItem {
   id: string;
@@ -13,9 +13,9 @@ interface ScheduleItem {
   sessionTypeId: string | null;
   activityId: string | null;
   type: 'activity' | 'outing';
-  outingLocation: string | null;
-  outingBringItems: string | null;
-  outingPermissionRequired: boolean;
+  location: string | null;
+  bringItems: string | null;
+  permissionRequired: boolean;
   sortOrder: number;
   activity: { id: string; name: string; category: string } | null;
   sessionType: { id: string; name: string; start: string; end: string } | null;
@@ -63,14 +63,23 @@ export default function ScheduleItemList({ date }: ScheduleItemListProps) {
   }
 
   return (
-    <ItemGroup className="w-full">
-      <ItemSeparator />
+    <ItemGroup className="w-full gap-1">
+      <Item>
+        <ItemHeader>
+          <span className="font-semibold text-lg text-destructive/80">
+            {new Date(date) > new Date()
+              ? 'Rencana Kegiatan:'
+              : 'Jadwal Kegiatan:'}
+          </span>
+        </ItemHeader>
+      </Item>
+
       {items.map((item) => (
         <Item key={item.id} variant="outline">
           <ItemHeader>
             <span className="font-medium">
               {item.type === 'outing'
-                ? item.outingLocation
+                ? item.location
                 : (item.activity?.name ?? '—')}
             </span>
             <span className="text-xs text-muted-foreground">
@@ -89,9 +98,9 @@ export default function ScheduleItemList({ date }: ScheduleItemListProps) {
               {item.sessionType.end})
             </span>
           )}
-          {item.type === 'outing' && item.outingBringItems && (
+          {item.type === 'outing' && item.bringItems && (
             <span className="text-xs text-muted-foreground">
-              Bawaan: {item.outingBringItems}
+              Bawaan: {item.bringItems}
             </span>
           )}
         </Item>

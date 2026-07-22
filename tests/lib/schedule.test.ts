@@ -126,9 +126,9 @@ const PAST_TYPE = {
 const SCHEDULE_ITEM_BASE = {
   date: null,
   sessionTypeId: null,
-  outingLocation: null,
-  outingBringItems: null,
-  outingPermissionRequired: false,
+  location: null,
+  bringItems: null,
+  permissionRequired: false,
   createdAt: new Date(),
   updatedAt: new Date(),
   deletedAt: null,
@@ -292,9 +292,9 @@ describe('Schedule Server Actions', () => {
               sessionTypeId: 'st-future-1',
               activityId: null,
               type: 'outing',
-              outingLocation: 'Kebun Binatang',
-              outingBringItems: 'Topi, bekal',
-              outingPermissionRequired: true,
+              location: 'Kebun Binatang',
+              bringItems: 'Topi, bekal',
+              permissionRequired: true,
               sortOrder: 0,
             },
           ]),
@@ -307,9 +307,9 @@ describe('Schedule Server Actions', () => {
           sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           type: 'outing',
-          outingLocation: 'Kebun Binatang',
-          outingBringItems: 'Topi, bekal',
-          outingPermissionRequired: 'true',
+          location: 'Kebun Binatang',
+          bringItems: 'Topi, bekal',
+          permissionRequired: 'true',
         })
       );
 
@@ -317,9 +317,9 @@ describe('Schedule Server Actions', () => {
       if (result.success) {
         expect(result.data.type).toBe('outing');
         expect(result.data.activityId).toBeNull();
-        expect(result.data.outingLocation).toBe('Kebun Binatang');
-        expect(result.data.outingBringItems).toBe('Topi, bekal');
-        expect(result.data.outingPermissionRequired).toBe(true);
+        expect(result.data.location).toBe('Kebun Binatang');
+        expect(result.data.bringItems).toBe('Topi, bekal');
+        expect(result.data.permissionRequired).toBe(true);
       }
     });
   });
@@ -514,9 +514,9 @@ describe('Schedule Server Actions', () => {
               sessionTypeId: 'st-future-1',
               activityId: null,
               type: 'outing',
-              outingLocation: 'Taman Kota',
-              outingBringItems: 'Topi, air minum',
-              outingPermissionRequired: true,
+              location: 'Taman Kota',
+              bringItems: 'Topi, air minum',
+              permissionRequired: true,
               sortOrder: 0,
             },
           ]),
@@ -529,9 +529,9 @@ describe('Schedule Server Actions', () => {
           sessionTypeId: 'st-future-1',
           sessionId: 'session-future-1',
           type: 'outing',
-          outingLocation: 'Taman Kota',
-          outingBringItems: 'Topi, air minum',
-          outingPermissionRequired: 'true',
+          location: 'Taman Kota',
+          bringItems: 'Topi, air minum',
+          permissionRequired: 'true',
         })
       );
 
@@ -539,8 +539,8 @@ describe('Schedule Server Actions', () => {
       if (result.success) {
         expect(result.data.type).toBe('outing');
         expect(result.data.activityId).toBeNull();
-        expect(result.data.outingLocation).toBe('Taman Kota');
-        expect(result.data.outingPermissionRequired).toBe(true);
+        expect(result.data.location).toBe('Taman Kota');
+        expect(result.data.permissionRequired).toBe(true);
       }
     });
   });

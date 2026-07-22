@@ -16,9 +16,9 @@ const CreateScheduleItemSchema = z.object({
   sessionId: z.string().min(1),
   activityId: z.string().optional().or(z.literal('')),
   type: z.enum(['activity', 'outing']),
-  outingLocation: z.string().optional().or(z.literal('')),
-  outingBringItems: z.string().optional().or(z.literal('')),
-  outingPermissionRequired: z.string().optional(),
+  location: z.string().optional().or(z.literal('')),
+  bringItems: z.string().optional().or(z.literal('')),
+  permissionRequired: z.string().optional(),
   sortOrder: z.string().optional(),
 });
 
@@ -26,9 +26,9 @@ const UpdateScheduleItemSchema = z.object({
   id: z.string().min(1),
   activityId: z.string().optional().or(z.literal('')),
   type: z.enum(['activity', 'outing']),
-  outingLocation: z.string().optional().or(z.literal('')),
-  outingBringItems: z.string().optional().or(z.literal('')),
-  outingPermissionRequired: z.string().optional(),
+  location: z.string().optional().or(z.literal('')),
+  bringItems: z.string().optional().or(z.literal('')),
+  permissionRequired: z.string().optional(),
   sortOrder: z.string().optional(),
 });
 
@@ -207,9 +207,9 @@ export async function createScheduleItem(formData: FormData) {
         sessionTypeId: data.sessionTypeId,
         activityId: data.activityId || null,
         type: data.type,
-        outingLocation: data.outingLocation || null,
-        outingBringItems: data.outingBringItems || null,
-        outingPermissionRequired: data.outingPermissionRequired === 'true',
+        location: data.location || null,
+        bringItems: data.bringItems || null,
+        permissionRequired: data.permissionRequired === 'true',
         sortOrder: data.sortOrder ? parseInt(data.sortOrder) : nextSortOrder,
       })
       .returning();
@@ -275,9 +275,9 @@ export async function updateScheduleItem(formData: FormData) {
       .set({
         activityId: data.activityId || null,
         type: data.type,
-        outingLocation: data.outingLocation || null,
-        outingBringItems: data.outingBringItems || null,
-        outingPermissionRequired: data.outingPermissionRequired === 'true',
+        location: data.location || null,
+        bringItems: data.bringItems || null,
+        permissionRequired: data.permissionRequired === 'true',
         sortOrder: data.sortOrder
           ? parseInt(data.sortOrder)
           : existingItem.sortOrder,

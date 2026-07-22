@@ -159,8 +159,8 @@ export default function SchoolCalendar({
   };
 
   return (
-    <div className="w-full my-2 flex items-center justify-center">
-      <Card className="md:flex md:flex-row md:p-0 mx-auto">
+    <div className="w-full my-2 md:px-6 px-2   flex items-center justify-center">
+      <Card className="md:flex md:flex-row md:p-0 mx-auto w-full max-md:items-center  ">
         <CardContent className="md:pb-4 md:pt-4 md:pr-0">
           <Calendar
             key={`calendar-${holidays.length}`}
@@ -175,7 +175,7 @@ export default function SchoolCalendar({
             modifiersClassNames={modifiersClassNames}
           />
         </CardContent>
-        <CardFooter className="rounded-bl-none md:items-start flex flex-col">
+        <CardFooter className="rounded-bl-none md:items-start flex flex-col w-full md:max-h-[705]! md:overflow-x-hidden md:overflow-y-auto">
           <span className="text-lg font-semibold my-2 w-full text-center">
             {date.toLocaleDateString('id-ID', {
               weekday: 'long',
@@ -189,7 +189,7 @@ export default function SchoolCalendar({
             <AddCustomHoliday hasExisting={matchingHolidays.length > 0} />
             <Button variant="default">+ Rencana</Button>
           </ButtonGroup>
-          {holidays.length > 0 && (
+          {matchingHolidays.length > 0 && (
             <ItemGroup className="w-full gap-1!">
               <ItemSeparator></ItemSeparator>
               <Item>

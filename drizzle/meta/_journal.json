@@ -148,6 +148,13 @@
       "when": 1784689450000,
       "tag": "0020_complete_rekey",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1784715209196,
+      "tag": "0021_outing_rename",
+      "breakpoints": true
     }
   ]
 }
