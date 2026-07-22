@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/seed-holidays",
+      "schedule": "0 0 1 * *"
+    }
+  ]
+}

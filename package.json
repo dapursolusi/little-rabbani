@@ -36,7 +36,8 @@
     "db:push": "bun --env-file=.env.local drizzle-kit push",
     "db:migrate": "bun --env-file=.env.local drizzle-kit migrate",
     "db:studio": "bun --env-file=.env.local drizzle-kit studio",
-    "db:drop": "bun --env-file=.env.local drizzle-kit drop"
+    "db:drop": "bun --env-file=.env.local drizzle-kit drop",
+    "seed:holidays": "bun --env-file=.env.local run scripts/seed-holidays.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
