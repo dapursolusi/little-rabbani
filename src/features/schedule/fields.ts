@@ -1,18 +1,18 @@
-import { scheduleItemTypeEnum } from '@/db/schema';
 import { FormField } from '@/types/field';
 
-import { getCategoryOptions } from '@/lib/activity-utils';
-
 import { SessionType } from '../sessionType/types';
+import { SubTheme } from '../theme/types';
 
 interface ScheduleActivityFieldsArgs {
   isMultipleDays: boolean;
   sessions: SessionType[];
+  subThemes: SubTheme[];
 }
 
 export const scheduledActivityFields = ({
   isMultipleDays = false,
   sessions,
+  subThemes,
 }: ScheduleActivityFieldsArgs): FormField[] => {
   return [
     {
@@ -69,20 +69,19 @@ export const scheduledActivityFields = ({
       required: true,
     },
     {
-      name: 'type',
-      label: 'Tipe Kegiatan',
+      name: 'subThemeId',
+      label: 'Sub Tema',
       type: 'select',
-      selectOptions: scheduleItemTypeEnum.enumValues.map((v) => ({
-        value: v,
-        label: v === 'activity' ? 'Aktivitas' : 'Outing',
+      selectOptions: subThemes.map((st) => ({
+        value: st.id,
+        label: st.name,
       })),
       required: true,
     },
     {
-      name: 'category',
-      label: 'Kategori Kegiatan',
-      type: 'select',
-      selectOptions: getCategoryOptions(),
+      name: 'indoor',
+      label: 'Kegiatan Indoor',
+      type: 'switch',
       required: true,
     },
     {

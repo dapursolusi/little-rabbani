@@ -4,22 +4,25 @@ import { useEffect, useState } from 'react';
 
 import { getScheduleItemsByDate } from '@/features/schedule/actions';
 
-import { getCategoryLabel } from '@/lib/activity-utils';
-
 import { Item, ItemGroup, ItemHeader } from '../ui/item';
 
 interface ScheduleItem {
   id: string;
   startDate: string | null;
   sessionTypeId: string | null;
-  activityId: string | null;
+  subThemeId: string | null;
   name: string | null;
-  type: 'activity' | 'outing';
+  indoor: boolean;
   location: string | null;
   itemsToBring: string | null;
   permissionRequired: boolean;
   sortOrder: number;
-  activity: { id: string; name: string; category: string } | null;
+  subTheme: {
+    id: string;
+    name: string;
+    themeId: string;
+    theme: { id: string; name: string; color: string | null };
+  } | null;
   sessionType: { id: string; name: string; start: string; end: string } | null;
 }
 
@@ -79,18 +82,16 @@ export default function ScheduleItemList({ date }: ScheduleItemListProps) {
       {items.map((item) => (
         <Item key={item.id} variant="outline">
           <ItemHeader>
-            <span className="font-medium">
-              {item.type === 'outing'
-                ? item.location
-                : (item.activity?.name ?? '—')}
-            </span>
+            <span className="font-medium">{item.subTheme?.name ?? '—'}</span>
             <span className="text-xs text-muted-foreground">
-              {item.type === 'outing' ? (
-                <span className="rounded bg-blue-100 px-1.5 py-0.5 text-xs text-blue-700">
-                  Outing
+              {item.indoor ? (
+                <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-700">
+                  Indoor
                 </span>
               ) : (
-                item.activity && getCategoryLabel(item.activity.category)
+                <span className="rounded bg-amber-100 px-1.5 py-0.5 text-xs text-amber-700">
+                  Outdoor
+                </span>
               )}
             </span>
           </ItemHeader>
@@ -100,7 +101,7 @@ export default function ScheduleItemList({ date }: ScheduleItemListProps) {
               {item.sessionType.end})
             </span>
           )}
-          {item.type === 'outing' && item.itemsToBring && (
+          {item.itemsToBring && (
             <span className="text-xs text-muted-foreground">
               Bawaan: {item.itemsToBring}
             </span>

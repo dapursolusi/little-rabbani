@@ -1,1 +1,1 @@
-export type ScheduleItemType = 'activity' | 'outing';
+export type ScheduleItemType = never;

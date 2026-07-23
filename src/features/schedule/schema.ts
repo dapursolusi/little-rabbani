@@ -1,4 +1,3 @@
-import { activityCategoryEnum, scheduleItemTypeEnum } from '@/db/schema';
 import z from 'zod';
 
 const scheduledActivitySchema = z
@@ -7,9 +6,9 @@ const scheduledActivitySchema = z
     isMultipleDays: z.boolean(),
     startDate: z.string().min(1, 'Tanggal mulai wajib diisi'),
     endDate: z.string().nullish(),
-    category: z.enum(activityCategoryEnum.enumValues),
+    subThemeId: z.string().uuid('Sub tema wajib dipilih'),
     sessionTypeId: z.uuid(),
-    type: z.enum(scheduleItemTypeEnum.enumValues),
+    indoor: z.boolean(),
     location: z.string().nullish(),
     itemsToBring: z.string().nullish(),
     permissionRequired: z.boolean().nullish(),

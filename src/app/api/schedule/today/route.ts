@@ -39,7 +39,11 @@ export async function GET() {
         ),
         orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
         with: {
-          activity: true,
+          subTheme: {
+            with: {
+              theme: true,
+            },
+          },
         },
       });
       session.scheduleItems = items;

@@ -13,8 +13,8 @@ const CreateScheduleItemSchema = z.object({
   date: z.string().min(1, 'Tanggal wajib dipilih'),
   sessionTypeId: z.string().min(1, 'Tipe sesi wajib dipilih'),
   sessionId: z.string().min(1),
-  activityId: z.string().optional().or(z.literal('')),
-  type: z.enum(['activity', 'outing']),
+  subThemeId: z.string().uuid().optional().or(z.literal('')),
+  indoor: z.string().optional(),
   name: z.string().optional().or(z.literal('')),
   location: z.string().optional().or(z.literal('')),
   itemsToBring: z.string().optional().or(z.literal('')),
@@ -24,8 +24,8 @@ const CreateScheduleItemSchema = z.object({
 
 const UpdateScheduleItemSchema = z.object({
   id: z.string().min(1),
-  activityId: z.string().optional().or(z.literal('')),
-  type: z.enum(['activity', 'outing']),
+  subThemeId: z.string().uuid().optional().or(z.literal('')),
+  indoor: z.string().optional(),
   name: z.string().optional().or(z.literal('')),
   location: z.string().optional().or(z.literal('')),
   itemsToBring: z.string().optional().or(z.literal('')),
@@ -84,7 +84,11 @@ export async function getScheduleItems(date: string, sessionTypeId: string) {
     ),
     orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
     with: {
-      activity: true,
+      subTheme: {
+        with: {
+          theme: true,
+        },
+      },
     },
   });
 
@@ -108,7 +112,11 @@ export async function getScheduleItemsByDate(date: string) {
     ),
     orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
     with: {
-      activity: true,
+      subTheme: {
+        with: {
+          theme: true,
+        },
+      },
       sessionType: true,
     },
   });
@@ -130,7 +138,11 @@ export async function getTodaySchedule() {
     ),
     orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
     with: {
-      activity: true,
+      subTheme: {
+        with: {
+          theme: true,
+        },
+      },
       sessionType: true,
     },
   });
@@ -148,7 +160,11 @@ export async function getUpcomingSchedule() {
     where: isNull(scheduleItem.deletedAt),
     orderBy: [asc(scheduleItem.startDate), asc(scheduleItem.sortOrder)],
     with: {
-      activity: true,
+      subTheme: {
+        with: {
+          theme: true,
+        },
+      },
       sessionType: true,
     },
   });
@@ -215,8 +231,8 @@ export async function createScheduleItem(
         startDate: data.date,
         endDate: data.date,
         sessionTypeId: data.sessionTypeId,
-        activityId: data.activityId || null,
-        type: data.type,
+        subThemeId: data.subThemeId || null,
+        indoor: data.indoor === 'true',
         name: data.name || '',
         location: data.location || null,
         itemsToBring: data.itemsToBring || null,
@@ -284,8 +300,8 @@ export async function updateScheduleItem(formData: FormData) {
     const [updated] = await db
       .update(scheduleItem)
       .set({
-        activityId: data.activityId || null,
-        type: data.type,
+        subThemeId: data.subThemeId || null,
+        indoor: data.indoor === 'true',
         location: data.location || null,
         itemsToBring: data.itemsToBring || null,
         permissionRequired: data.permissionRequired === 'true',

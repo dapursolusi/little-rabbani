@@ -2,26 +2,30 @@
 
 import { useEffect, useState } from 'react';
 
-import { scheduleItemTypeEnum } from '@/db/schema';
 import { scheduledActivityFields } from '@/features/schedule/fields';
 import { getSessionTypes } from '@/features/sessionType/actions';
 import { SessionType } from '@/features/sessionType/types';
+import { getSubThemes } from '@/features/theme/actions';
+import { SubTheme } from '@/features/theme/types';
 
 import DefaultFormFields from '@/components/shared/form/default-form-field';
 import { Button } from '@/components/ui/button';
 
 export default function CreateSchedulePage() {
   const [sessions, setSessions] = useState<SessionType[]>([]);
+  const [subThemes, setSubThemes] = useState<SubTheme[]>([]);
 
   useEffect(() => {
-    const fetchSessions = async () => {
-      const response = await getSessionTypes();
-      if (response.success) {
-        setSessions(response.data);
-      }
+    const fetchData = async () => {
+      const [sessionsRes, subThemesRes] = await Promise.all([
+        getSessionTypes(),
+        getSubThemes(),
+      ]);
+      if (sessionsRes.success) setSessions(sessionsRes.data);
+      if (subThemesRes.success) setSubThemes(subThemesRes.data);
     };
 
-    fetchSessions();
+    fetchData();
   }, []);
   return (
     <div className="w-full mx-auto max-w-[600]">
@@ -30,6 +34,7 @@ export default function CreateSchedulePage() {
           scheduledActivityFields({
             isMultipleDays: watch('isMultipleDays') as boolean,
             sessions,
+            subThemes,
           })
         }
         schemaKey="scheduledActivity"
@@ -38,9 +43,9 @@ export default function CreateSchedulePage() {
           isMultipleDays: false,
           startDate: '',
           endDate: '',
-          cateogory: '',
+          subThemeId: '',
           sessionTypeId: '',
-          type: scheduleItemTypeEnum.enumValues[1],
+          indoor: false,
           location: '',
           itemsToBring: '',
           permissionRequired: '',
