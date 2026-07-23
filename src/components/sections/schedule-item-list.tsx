@@ -12,6 +12,7 @@ interface ScheduleItem {
   date: string | null;
   sessionTypeId: string | null;
   activityId: string | null;
+  name: string | null;
   type: 'activity' | 'outing';
   outingLocation: string | null;
   outingBringItems: string | null;
