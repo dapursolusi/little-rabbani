@@ -82,7 +82,7 @@ export async function getScheduleActivitiesForDcr(
       isNull(scheduleItem.deletedAt)
     ),
     orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
-    with: { activity: true },
+    with: { subTheme: { with: { theme: true } } },
   });
 
   return { success: true as const, data: items };

@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { activity, guardian, kid, user } from '@/db/schema';
+import { guardian, kid, user } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -492,96 +492,5 @@ export async function importWaitingListCsv(
     errors,
     warnings,
     message: `${importedCount} murid (waiting list) berhasil diimpor${warnings.length > 0 ? `, ${warnings.length} peringatan (dilewati)` : ''}${errors.length > 0 ? `, ${errors.length} baris error` : ''}`,
-  };
-}
-
-/**
- * CSV Import for Activity Catalog (name, category)
- */
-export async function importActivitiesCsv(
-  rows: Array<Record<string, string>>
-): Promise<CsvImportResult> {
-  const auth = await requireOwner();
-  if (!auth.authorized) {
-    return {
-      success: false,
-      importedCount: 0,
-      errors: [{ line: 0, message: auth.error }],
-      warnings: [],
-      message: auth.error,
-    };
-  }
-
-  if (rows.length === 0) {
-    return {
-      success: false,
-      importedCount: 0,
-      errors: [],
-      warnings: [],
-      message: 'File CSV kosong',
-    };
-  }
-
-  const VALID_CATEGORIES = [
-    'seni',
-    'olahraga',
-    'musik',
-    'bahasa',
-    'matematika',
-    'sains',
-    'agama',
-    'bermain',
-    'outing',
-    'lainnya',
-  ] as const;
-
-  const errors: CsvImportRowError[] = [];
-  const warnings: CsvImportRowError[] = [];
-  let importedCount = 0;
-
-  for (let i = 0; i < rows.length; i++) {
-    const lineNum = i + 2;
-    const row = rows[i];
-    const name = row.name?.trim();
-    const category = (row.category?.trim() || 'lainnya').toLowerCase();
-
-    if (!name) {
-      errors.push({ line: lineNum, message: 'Nama aktivitas kosong' });
-      continue;
-    }
-
-    const normalizedCategory = (VALID_CATEGORIES as readonly string[]).includes(
-      category
-    )
-      ? category
-      : 'lainnya';
-
-    if (category !== normalizedCategory && category !== 'lainnya') {
-      warnings.push({
-        line: lineNum,
-        message: `Kategori "${row.category}" tidak valid, menggunakan "Lainnya"`,
-      });
-    }
-
-    try {
-      await db.insert(activity).values({
-        name,
-        category: normalizedCategory as (typeof VALID_CATEGORIES)[number],
-      });
-      importedCount++;
-    } catch {
-      errors.push({
-        line: lineNum,
-        message: 'Gagal membuat aktivitas',
-      });
-    }
-  }
-
-  return {
-    success: errors.length === 0 || importedCount > 0,
-    importedCount,
-    errors,
-    warnings,
-    message: `${importedCount} aktivitas berhasil diimpor${warnings.length > 0 ? `, ${warnings.length} peringatan` : ''}${errors.length > 0 ? `, ${errors.length} baris error` : ''}`,
   };
 }

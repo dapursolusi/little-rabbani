@@ -8,24 +8,22 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { EmptyState } from '@/components/shared/empty-state';
 import { Badge } from '@/components/ui/badge';
 
-import { getCategoryLabel } from '@/lib/activity-utils';
-
-interface IActivityInfo {
+interface ISubThemeInfo {
   id: string;
   name: string;
-  category: string;
+  theme: { name: string } | null;
 }
 
 interface IScheduleItem {
   id: string;
   sessionId: string;
-  activityId: string | null;
-  type: 'activity' | 'outing';
+  subThemeId: string | null;
+  indoor: boolean;
   location: string | null;
   itemsToBring: string | null;
   permissionRequired: boolean;
   sortOrder: number;
-  activity: IActivityInfo | null;
+  subTheme: ISubThemeInfo | null;
 }
 
 interface ISession {
@@ -123,15 +121,42 @@ export function TeacherScheduleView() {
           <div className="divide-y">
             {session.scheduleItems.map((item) => (
               <div key={item.id} className="px-4 py-2.5">
-                {item.type === 'outing' ? (
+                {item.indoor ? (
+                  <div className="flex items-center gap-2">
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 text-green-700 text-xs"
+                    >
+                      Indoor
+                    </Badge>
+                    <span className="font-medium text-foreground">
+                      {item.subTheme?.name || 'Kegiatan'}
+                    </span>
+                    {item.subTheme?.theme && (
+                      <span className="text-xs text-muted-foreground">
+                        {item.subTheme.theme.name}
+                      </span>
+                    )}
+                  </div>
+                ) : (
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-2">
-                      <Badge variant="secondary" className="text-xs">
-                        Outing
+                      <Badge
+                        variant="secondary"
+                        className="bg-amber-100 text-amber-700 text-xs"
+                      >
+                        Outdoor
                       </Badge>
                       <span className="font-medium text-foreground">
-                        {item.location || 'Lokasi tidak ditentukan'}
+                        {item.subTheme?.name ||
+                          item.location ||
+                          'Lokasi tidak ditentukan'}
                       </span>
+                      {item.subTheme?.theme && (
+                        <span className="text-xs text-muted-foreground">
+                          {item.subTheme.theme.name}
+                        </span>
+                      )}
                     </div>
                     {item.itemsToBring && (
                       <p className="text-xs text-muted-foreground">
@@ -146,23 +171,6 @@ export function TeacherScheduleView() {
                         />
                         Izin orang tua diperlukan
                       </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="flex items-center gap-2">
-                    <Badge
-                      variant="secondary"
-                      className="bg-success/10 text-success text-xs"
-                    >
-                      Aktivitas
-                    </Badge>
-                    <span className="font-medium text-foreground">
-                      {item.activity?.name || 'Aktivitas tidak tersedia'}
-                    </span>
-                    {item.activity && (
-                      <span className="text-xs text-muted-foreground">
-                        {getCategoryLabel(item.activity.category)}
-                      </span>
                     )}
                   </div>
                 )}

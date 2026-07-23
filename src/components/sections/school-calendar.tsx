@@ -127,19 +127,6 @@ function HolidayForm() {
   );
 }
 
-function AddScheduledActivity() {
-  return (
-    <Modal
-      title="Tambah Aktivitas"
-      trigger={{
-        href: '/dashboard/owner/schedule/create',
-        text: 'Aktivitas',
-        icon: Add02Icon,
-      }}
-    />
-  );
-}
-
 export default function SchoolCalendar({
   holidays,
   onDateSelect,

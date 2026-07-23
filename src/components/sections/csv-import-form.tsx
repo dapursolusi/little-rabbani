@@ -12,7 +12,6 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import {
-  importActivitiesCsv,
   importGuardiansCsv,
   importKidsCsv,
   importTeachersCsv,
@@ -74,18 +73,6 @@ Dewi Sartika,dewi@littlerabbani.com`,
 Citra Ayu,2021-03-10,Dewi Ayu,08123456792
 Dimas Adi,2020-11-25,Adi Saputra,08123456793`,
     importFn: importWaitingListCsv,
-  },
-  {
-    id: 'activities',
-    title: 'Import Katalog Aktivitas',
-    description:
-      'Kolom: name, category (seni, olahraga, musik, bahasa, matematika, sains, agama, bermain, outing, lainnya)',
-    sampleFilename: 'contoh-aktivitas.csv',
-    sampleContent: `name,category
-Mewarnai,seni
-Futsal,olahraga
-Menyanyi,musik`,
-    importFn: importActivitiesCsv,
   },
 ];
 

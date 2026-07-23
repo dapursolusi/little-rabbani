@@ -4,6 +4,7 @@ import { KidFormSchema } from '@/features/kid/schema';
 import { scheduledActivitySchema } from '@/features/schedule/schema';
 import { SessionTypeFormSchema } from '@/features/sessionType/schema';
 import { TermFormSchema } from '@/features/term/schema';
+import { ThemeFormSchema } from '@/features/theme/schema';
 import z from 'zod';
 
 const schemas = {
@@ -12,6 +13,7 @@ const schemas = {
   term: TermFormSchema,
   sessionType: SessionTypeFormSchema,
   holiday: HolidayFormSchema,
+  theme: ThemeFormSchema,
   scheduledActivity: scheduledActivitySchema,
 } as const satisfies Record<string, z.ZodObject<z.ZodRawShape>>;
 
