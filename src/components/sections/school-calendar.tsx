@@ -2,6 +2,8 @@
 
 import { useMemo, useState } from 'react';
 
+import Link from 'next/link';
+
 import { createHoliday } from '@/features/holiday/actions';
 import { holidayFields } from '@/features/holiday/fields';
 import { Holiday } from '@/features/holiday/types';
@@ -130,32 +132,11 @@ function AddScheduledActivity() {
     <Modal
       title="Tambah Aktivitas"
       trigger={{
+        href: '/dashboard/owner/schedule/create',
         text: 'Aktivitas',
         icon: Add02Icon,
       }}
-      content={<ScheduledActivityForm />}
     />
-  );
-}
-
-function ScheduledActivityForm() {
-  return (
-    <DefaultFormFields
-      formFields={holidayFields()}
-      schemaKey="holiday"
-      initialData={{
-        reason: '',
-        startDate: '',
-        endDate: '',
-        scope: 'custom',
-      }}
-      onSubmit={createHoliday}
-    >
-      <DialogFooter>
-        <DialogClose render={<Button variant="outline">Batal</Button>} />
-        <Button type="submit">Simpan</Button>
-      </DialogFooter>
-    </DefaultFormFields>
   );
 }
 
@@ -219,7 +200,15 @@ export default function SchoolCalendar({
             })}
           </span>
           <ButtonGroup className="w-full">
-            <AddScheduledActivity />
+            <Button
+              variant="default"
+              render={
+                <Link href="/dashboard/owner/schedule/create">
+                  <HugeiconsIcon icon={Add02Icon} />
+                  Kegiatan
+                </Link>
+              }
+            ></Button>
             <AddCustomHoliday hasExisting={matchingHolidays.length > 0} />
             <Button variant="default">+ Rencana Belajar</Button>
           </ButtonGroup>

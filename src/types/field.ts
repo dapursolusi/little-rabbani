@@ -12,11 +12,18 @@ type FormFieldBase = {
 export type FormField = FormFieldBase & CustomHTMLInputType;
 
 export type CustomHTMLInputType =
-  CustomHTMLInputTypeBasic | CustomHTMLInputTypeSelect;
+  | CustomHTMLInputTypeBasic
+  | CustomHTMLInputTypeSelect
+  | CustomHTMLInputTypeSwitch;
 
 export type CustomHTMLInputTypeSelect = {
   type: 'select';
   selectOptions: { value: string; label: string }[];
+};
+
+export type CustomHTMLInputTypeSwitch = {
+  type: 'switch';
+  selectOptions?: never;
 };
 
 export type CustomHTMLInputTypeBasic = {
@@ -27,12 +34,12 @@ export type CustomHTMLInputTypeBasic = {
 export type StrictHTMLInputType =
   | 'button'
   | 'checkbox'
+  | 'hidden'
   | 'color'
   | 'date'
   | 'datetime-local'
   | 'email'
   | 'file'
-  | 'hidden'
   | 'image'
   | 'month'
   | 'number'

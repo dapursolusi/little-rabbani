@@ -21,7 +21,7 @@ import { type SchemaKey, getZodSchema } from './schema-registry';
 export interface CreateUpdateFormProps {
   schemaKey?: SchemaKey;
   initialData: Record<string, unknown>;
-  formFields: FormField[];
+  formFields: FormField[] | ((watch: (name: string) => unknown) => FormField[]);
   actionHref?: string;
   onSubmit?: (data: Record<string, unknown>) => unknown | Promise<unknown>;
   children?: ReactNode | ((ctx: { isSubmitting: boolean }) => ReactNode);
@@ -53,6 +53,11 @@ export default function DefaultFormFields({
     mode: 'onChange',
   });
 
+  const fields =
+    typeof formFields === 'function'
+      ? formFields((name) => form.watch(name as Path<TForm>))
+      : formFields;
+
   async function onSubmit(data: z.output<typeof schema>) {
     if (onSubmitProp) {
       setIsSubmitting(true);
@@ -79,17 +84,19 @@ export default function DefaultFormFields({
   }
 
   return (
-    <form onSubmit={form.handleSubmit(onSubmit)}>
-      {formFields.map((formField) => (
+    <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
+      {fields.map((formField) => (
         <Controller
           key={formField.name}
           name={formField.name as Path<TForm>}
           control={form.control}
           render={({ field, fieldState }) => (
             <Field data-invalid={fieldState.invalid}>
-              <FieldLabel htmlFor={formField.name}>
-                {formField.label ?? 'Default Label'}
-              </FieldLabel>
+              {formField.type !== 'switch' && (
+                <FieldLabel htmlFor={formField.name}>
+                  {formField.label ?? 'Default Label'}
+                </FieldLabel>
+              )}
               <InputFieldRenderer
                 fieldConfig={formField}
                 field={field}

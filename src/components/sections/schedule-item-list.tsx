@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 
-import { getScheduleItemsByDate } from '@/lib/actions/schedule';
+import { getScheduleItemsByDate } from '@/features/schedule/actions';
+
 import { getCategoryLabel } from '@/lib/activity-utils';
 
 import { Item, ItemGroup, ItemHeader } from '../ui/item';

@@ -50,6 +50,7 @@ export function Modal({
                 href={trigger.href}
                 className={cn(buttonVariants({ variant: 'default' }))}
               >
+                {trigger.icon && <HugeiconsIcon icon={trigger.icon} />}
                 {trigger.text ?? 'Open Dialog'}
               </Link>
             ) : (
