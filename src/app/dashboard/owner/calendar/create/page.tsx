@@ -11,7 +11,7 @@ import { SubTheme } from '@/features/theme/types';
 import DefaultFormFields from '@/components/shared/form/default-form-field';
 import { Button } from '@/components/ui/button';
 
-export default function CreateSchedulePage() {
+export default function CreateCalendarEventPage() {
   const [sessions, setSessions] = useState<SessionType[]>([]);
   const [subThemes, setSubThemes] = useState<SubTheme[]>([]);
 
@@ -37,7 +37,7 @@ export default function CreateSchedulePage() {
             subThemes,
           })
         }
-        schemaKey="scheduledActivity"
+        schemaKey="calendarEvent"
         initialData={{
           name: '',
           isMultipleDays: false,

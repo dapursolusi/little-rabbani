@@ -125,7 +125,7 @@ const navGroups: SidebarNavItem[] = [
     title: 'Operasional',
     icon: WorkIcon,
     subItems: [
-      { title: 'Jadwal', href: '/dashboard/owner/schedule', icon: Clock01Icon },
+      { title: 'Jadwal', href: '/dashboard/owner/calendar', icon: Clock01Icon },
       {
         title: 'DCR / Observasi Kelas',
         href: '/dashboard/owner/dcr',

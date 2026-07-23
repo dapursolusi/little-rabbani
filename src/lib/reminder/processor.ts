@@ -307,7 +307,7 @@ async function processScheduleEntryReminders(): Promise<number> {
     const result = await sendPushNotification(sub, {
       title: 'Jadwal Minggu Depan Kosong',
       body: 'Jadwal minggu depan belum diisi. Masukkan sekarang.',
-      url: '/dashboard/owner/schedule',
+      url: '/dashboard/owner/calendar',
     });
 
     if (result.success) fired++;

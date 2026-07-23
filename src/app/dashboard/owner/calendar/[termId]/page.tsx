@@ -15,17 +15,17 @@ import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';
 
-import { SessionScheduleEditor } from './session-schedule-editor';
+import { SessionCalendarEditor } from './session-calendar-editor';
 
 export const metadata = { ...baseMetadata, title: 'Jadwal Mingguan' };
 
-interface IScheduleTermPageProps {
+interface ICalendarTermPageProps {
   params: Promise<{ termId: string }>;
 }
 
-export default async function ScheduleTermPage({
+export default async function CalendarTermPage({
   params,
-}: IScheduleTermPageProps) {
+}: ICalendarTermPageProps) {
   const { termId } = await params;
 
   const termResult = await getTerm(termId);
@@ -56,7 +56,7 @@ export default async function ScheduleTermPage({
         <div className="mb-6">
           <div className="flex items-center gap-2">
             <Link
-              href="/dashboard/owner/schedule"
+              href="/dashboard/owner/calendar"
               className="flex items-center gap-1 text-sm text-primary hover:underline"
             >
               <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -105,7 +105,7 @@ export default async function ScheduleTermPage({
                     <Badge variant="outline">Aktif</Badge>
                   </div>
                   <div className="px-4 py-3">
-                    <SessionScheduleEditor
+                    <SessionCalendarEditor
                       sessionId={st.id}
                       date={today}
                       sessionTypeId={st.id}

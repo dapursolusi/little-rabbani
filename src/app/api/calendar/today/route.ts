@@ -5,7 +5,7 @@ import { calendarEvent, sessionType } from '@/db/schema';
 import { and, asc, eq, isNull } from 'drizzle-orm';
 
 /**
- * GET /api/schedule/today
+ * GET /api/calendar/today
  *
  * Returns today's schedule items from active session types.
  * Used by the Teacher dashboard for polling (5-10s interval).
@@ -26,7 +26,7 @@ export async function GET() {
       startTime: st.start,
       endTime: st.end,
       label: st.name,
-      scheduleItems: [] as Array<Record<string, unknown>>,
+      calendarEvents: [] as Array<Record<string, unknown>>,
     }));
 
     // Load schedule items for each session
@@ -46,12 +46,12 @@ export async function GET() {
           },
         },
       });
-      session.scheduleItems = items;
+      session.calendarEvents = items;
     }
 
     return NextResponse.json({ success: true, data: sessions });
   } catch (error) {
-    console.error('Failed to fetch today schedule:', error);
+    console.error('Failed to fetch today calendar:', error);
     return NextResponse.json(
       { success: false, error: 'Gagal memuat jadwal' },
       { status: 500 }

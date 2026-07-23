@@ -6,7 +6,7 @@ import { getCalendarEventsByDate } from '@/features/calendar/actions';
 
 import { Item, ItemGroup, ItemHeader } from '../ui/item';
 
-interface ScheduleItem {
+interface CalendarEvent {
   id: string;
   startDate: string | null;
   sessionTypeId: string | null;
@@ -26,12 +26,12 @@ interface ScheduleItem {
   sessionType: { id: string; name: string; start: string; end: string } | null;
 }
 
-interface ScheduleItemListProps {
+interface CalendarEventListProps {
   date: string;
 }
 
-export default function ScheduleItemList({ date }: ScheduleItemListProps) {
-  const [items, setItems] = useState<ScheduleItem[]>([]);
+export default function CalendarEventList({ date }: CalendarEventListProps) {
+  const [items, setItems] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -41,7 +41,7 @@ export default function ScheduleItemList({ date }: ScheduleItemListProps) {
       setLoading(true);
       const result = await getCalendarEventsByDate(date);
       if (cancelled) return;
-      if (result.success) setItems(result.data as ScheduleItem[]);
+      if (result.success) setItems(result.data as CalendarEvent[]);
       setLoading(false);
     }
 

@@ -14,7 +14,7 @@ interface ISubThemeInfo {
   theme: { name: string } | null;
 }
 
-interface IScheduleItem {
+interface ICalendarEvent {
   id: string;
   sessionId: string;
   subThemeId: string | null;
@@ -26,21 +26,21 @@ interface IScheduleItem {
   subTheme: ISubThemeInfo | null;
 }
 
-interface ISession {
+interface ICalendarSession {
   id: string;
   date: string;
   startTime: string;
   endTime: string;
   label: string;
-  scheduleItems: IScheduleItem[];
+  calendarEvents: ICalendarEvent[];
 }
 
 function formatTime(time: string) {
   return time.slice(0, 5);
 }
 
-export function TeacherScheduleView() {
-  const [sessions, setSessions] = useState<ISession[]>([]);
+export function TeacherCalendarView() {
+  const [sessions, setSessions] = useState<ICalendarSession[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const fetchRef = useRef<() => void>(() => {});
@@ -48,7 +48,7 @@ export function TeacherScheduleView() {
   useEffect(() => {
     fetchRef.current = async () => {
       try {
-        const response = await fetch('/api/schedule/today');
+        const response = await fetch('/api/calendar/today');
         const json = await response.json();
 
         if (json.success) {
@@ -113,13 +113,13 @@ export function TeacherScheduleView() {
               </span>
             </div>
             <Badge variant="outline" className="text-xs">
-              {session.scheduleItems.length} aktivitas
+              {session.calendarEvents.length} aktivitas
             </Badge>
           </div>
 
-          {/* Schedule items */}
+          {/* Calendar events */}
           <div className="divide-y">
-            {session.scheduleItems.map((item) => (
+            {session.calendarEvents.map((item) => (
               <div key={item.id} className="px-4 py-2.5">
                 {item.indoor ? (
                   <div className="flex items-center gap-2">

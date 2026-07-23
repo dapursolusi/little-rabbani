@@ -1,5 +1,5 @@
+import { TeacherCalendarView } from '@/components/sections/teacher-calendar-view';
 import { TeacherPendingCaptureBanner } from '@/components/sections/teacher-pending-capture-banner';
-import { TeacherScheduleView } from '@/components/sections/teacher-schedule-view';
 
 import { baseMetadata } from '@/lib/metadata';
 
@@ -16,7 +16,7 @@ export default function TeacherDashboardPage() {
         <h2 className="mb-4 text-base font-medium text-muted-foreground">
           Jadwal Hari Ini
         </h2>
-        <TeacherScheduleView />
+        <TeacherCalendarView />
       </main>
     </>
   );

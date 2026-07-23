@@ -38,7 +38,7 @@ import { Textarea } from '@/components/ui/textarea';
 
 import type { ResolvedSessionType } from '@/lib/session-type-resolver';
 
-interface IScheduleItem {
+interface ICalendarEvent {
   id: string;
   startDate: string | null;
   sessionTypeId: string | null;
@@ -63,7 +63,7 @@ interface ISubTheme {
   theme?: { name: string };
 }
 
-interface ISessionScheduleEditorProps {
+interface ISessionCalendarEditorProps {
   sessionId: string;
   date: string;
   sessionTypeId: string;
@@ -71,15 +71,15 @@ interface ISessionScheduleEditorProps {
   isLocked: boolean;
 }
 
-export function SessionScheduleEditor({
+export function SessionCalendarEditor({
   sessionId,
   date,
   sessionTypeId,
   sessionType,
   isLocked,
-}: ISessionScheduleEditorProps) {
+}: ISessionCalendarEditorProps) {
   const router = useRouter();
-  const [items, setItems] = useState<IScheduleItem[]>([]);
+  const [items, setItems] = useState<ICalendarEvent[]>([]);
   const [subThemes, setSubThemes] = useState<ISubTheme[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
@@ -110,7 +110,7 @@ export function SessionScheduleEditor({
         if (cancelled) return;
 
         if (itemsResult.success) {
-          setItems(itemsResult.data as IScheduleItem[]);
+          setItems(itemsResult.data as ICalendarEvent[]);
         }
 
         if (subThemesResult.success) {

@@ -29,7 +29,7 @@ import { ButtonGroup } from '../ui/button-group';
 import { Calendar } from '../ui/calendar';
 import { Card, CardContent, CardFooter } from '../ui/card';
 import { DialogClose, DialogFooter } from '../ui/dialog';
-import ScheduleItemList from './schedule-item-list';
+import CalendarEventList from './calendar-event-list';
 
 interface SchoolCalendarProps {
   holidays: Holiday[];
@@ -190,7 +190,7 @@ export default function SchoolCalendar({
             <Button
               variant="default"
               render={
-                <Link href="/dashboard/owner/schedule/create">
+                <Link href="/dashboard/owner/calendar/create">
                   <HugeiconsIcon icon={Add02Icon} />
                   Kegiatan
                 </Link>
@@ -240,7 +240,7 @@ export default function SchoolCalendar({
                 ))}
             </ItemGroup>
           )}
-          <ScheduleItemList date={format(date, 'yyyy-MM-dd')} />
+          <CalendarEventList date={format(date, 'yyyy-MM-dd')} />
         </CardFooter>
       </Card>
     </div>

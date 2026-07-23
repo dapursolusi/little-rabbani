@@ -14,7 +14,7 @@ const schemas = {
   sessionType: SessionTypeFormSchema,
   holiday: HolidayFormSchema,
   theme: ThemeFormSchema,
-  scheduledActivity: calendarEventSchema,
+  calendarEvent: calendarEventSchema,
 } as const satisfies Record<string, z.ZodObject<z.ZodRawShape>>;
 
 export type SchemaKey = keyof typeof schemas;
