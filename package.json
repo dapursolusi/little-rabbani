@@ -32,12 +32,12 @@
     "analyze:bundle": "ANALYZE=true bun run build",
     "prepare": "husky",
     "postinstall": "node scripts/patch-eslint-plugin-react.mjs",
-    "db:generate": "bun --env-file=.env.local drizzle-kit generate",
-    "db:push": "bun --env-file=.env.local drizzle-kit push",
-    "db:migrate": "bun --env-file=.env.local drizzle-kit migrate",
-    "db:studio": "bun --env-file=.env.local drizzle-kit studio",
-    "db:drop": "bun --env-file=.env.local drizzle-kit drop",
-    "seed:holidays": "bun --env-file=.env.local run scripts/seed-holidays.ts"
+    "db:generate": "drizzle-kit generate",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "drizzle-kit migrate",
+    "db:studio": "drizzle-kit studio",
+    "db:drop": "drizzle-kit drop",
+    "seed:holidays": "DOTENV_CONFIG_PATH=.env.local bun -r dotenv/config run scripts/seed-holidays.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.6.0",
