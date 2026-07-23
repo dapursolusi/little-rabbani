@@ -37,6 +37,7 @@ export async function getThemes(params?: {
         orderBy: (t, { asc }) => [asc(t.name)],
         limit,
         offset,
+        with: { subThemes: true },
       }),
       db
         .select({ count: sql<number>`count(*)` })

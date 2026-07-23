@@ -6,6 +6,7 @@ import type { SubThemeFormSchema, ThemeFormSchema } from './schema';
 export interface Theme extends BaseDataResponse {
   name: string;
   color: string | null;
+  subThemes?: Array<{ id: string; name: string }>;
 }
 
 export interface SubTheme extends BaseDataResponse {
