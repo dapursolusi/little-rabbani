@@ -183,6 +183,13 @@
       "when": 1784781926435,
       "tag": "0025_sour_lady_deathstrike",
       "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1784786722932,
+      "tag": "0026_rename_schedule_item_to_calendar_event",
+      "breakpoints": true
     }
   ]
 }

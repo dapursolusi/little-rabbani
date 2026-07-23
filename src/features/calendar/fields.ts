@@ -3,17 +3,17 @@ import { FormField } from '@/types/field';
 import { SessionType } from '../sessionType/types';
 import { SubTheme } from '../theme/types';
 
-interface ScheduleActivityFieldsArgs {
+interface CalendarEventFieldsArgs {
   isMultipleDays: boolean;
   sessions: SessionType[];
   subThemes: SubTheme[];
 }
 
-export const scheduledActivityFields = ({
+export const calendarEventFields = ({
   isMultipleDays = false,
   sessions,
   subThemes,
-}: ScheduleActivityFieldsArgs): FormField[] => {
+}: CalendarEventFieldsArgs): FormField[] => {
   return [
     {
       name: 'name',

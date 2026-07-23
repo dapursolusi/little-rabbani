@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { getScheduleItemsByDate } from '@/features/schedule/actions';
+import { getCalendarEventsByDate } from '@/features/calendar/actions';
 
 import { Item, ItemGroup, ItemHeader } from '../ui/item';
 
@@ -39,7 +39,7 @@ export default function ScheduleItemList({ date }: ScheduleItemListProps) {
 
     async function fetch() {
       setLoading(true);
-      const result = await getScheduleItemsByDate(date);
+      const result = await getCalendarEventsByDate(date);
       if (cancelled) return;
       if (result.success) setItems(result.data as ScheduleItem[]);
       setLoading(false);

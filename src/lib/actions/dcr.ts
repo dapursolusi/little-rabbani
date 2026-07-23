@@ -2,9 +2,9 @@
 
 import { db } from '@/db';
 import {
+  calendarEvent,
   dailyClassReport,
   dcrActivity,
-  scheduleItem,
   sessionType,
 } from '@/db/schema';
 import { and, asc, eq, isNull } from 'drizzle-orm';
@@ -71,13 +71,13 @@ export async function getScheduleActivitiesForDcr(
     return { success: false as const, error: auth.error };
   }
 
-  const items = await db.query.scheduleItem.findMany({
+  const items = await db.query.calendarEvent.findMany({
     where: and(
-      eq(scheduleItem.startDate, date),
-      eq(scheduleItem.sessionTypeId, sessionTypeId),
-      isNull(scheduleItem.deletedAt)
+      eq(calendarEvent.startDate, date),
+      eq(calendarEvent.sessionTypeId, sessionTypeId),
+      isNull(calendarEvent.deletedAt)
     ),
-    orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
+    orderBy: [asc(calendarEvent.sortOrder), asc(calendarEvent.createdAt)],
     with: { subTheme: { with: { theme: true } } },
   });
 

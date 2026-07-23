@@ -122,7 +122,7 @@ describe('DCR Server Actions', () => {
 
   describe('getScheduleActivitiesForDcr', () => {
     it('should return schedule activities', async () => {
-      const mockScheduleItemFindMany = db.query.scheduleItem
+      const mockScheduleItemFindMany = db.query.calendarEvent
         .findMany as ReturnType<typeof vi.fn>;
       mockScheduleItemFindMany.mockResolvedValue([
         {

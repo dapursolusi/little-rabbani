@@ -5,10 +5,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import {
-  createScheduleItem,
-  deleteScheduleItem,
-  getScheduleItems,
-} from '@/features/schedule/actions';
+  createCalendarEvent,
+  deleteCalendarEvent,
+  getCalendarEvents,
+} from '@/features/calendar/actions';
 import { getActiveSubThemes } from '@/features/theme/actions';
 import { Alert01Icon, Delete04Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -103,7 +103,7 @@ export function SessionScheduleEditor({
       setIsLoading(true);
       try {
         const [itemsResult, subThemesResult] = await Promise.all([
-          getScheduleItems(date, sessionTypeId),
+          getCalendarEvents(date, sessionTypeId),
           getActiveSubThemes(),
         ]);
 
@@ -158,7 +158,7 @@ export function SessionScheduleEditor({
       formData.set('itemsToBring', itemsToBring);
       formData.set('permissionRequired', permissionRequired ? 'true' : 'false');
 
-      const result = await createScheduleItem(formData);
+      const result = await createCalendarEvent(formData);
       if (result.success) {
         toast.success('Kegiatan berhasil ditambahkan');
         setShowAddDialog(false);
@@ -181,7 +181,7 @@ export function SessionScheduleEditor({
       const formData = new FormData();
       formData.set('id', itemId);
 
-      const result = await deleteScheduleItem(formData);
+      const result = await deleteCalendarEvent(formData);
       if (result.success) {
         toast.success('Item jadwal berhasil dihapus');
         setShowDeleteConfirm(null);

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 
-import { scheduledActivityFields } from '@/features/schedule/fields';
+import { calendarEventFields } from '@/features/calendar/fields';
 import { getSessionTypes } from '@/features/sessionType/actions';
 import { SessionType } from '@/features/sessionType/types';
 import { getSubThemes } from '@/features/theme/actions';
@@ -31,7 +31,7 @@ export default function CreateSchedulePage() {
     <div className="w-full mx-auto max-w-[600]">
       <DefaultFormFields
         formFields={(watch) =>
-          scheduledActivityFields({
+          calendarEventFields({
             isMultipleDays: watch('isMultipleDays') as boolean,
             sessions,
             subThemes,

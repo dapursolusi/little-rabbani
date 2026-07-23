@@ -215,6 +215,10 @@ Agent-only docs (.md files consumed only by agents, not humans) are compressed b
 
 ## Agent skills
 
+## Subagent Driven Development
+
+Always use subagent driven development. Use `/cavecrew` skills for fetching subagents.
+
 ### Issue tracker
 
 Issues live as GitHub issues in `narasena/little-rabbani` via the `gh` CLI. External PRs are not a triage surface. See `docs/agents/issue-tracker.md`.

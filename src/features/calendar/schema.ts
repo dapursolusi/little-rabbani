@@ -1,6 +1,6 @@
 import { z } from 'zod/v4';
 
-const scheduledActivitySchema = z
+const calendarEventSchema = z
   .object({
     name: z.string().min(1, 'Nama wajib diisi'),
     isMultipleDays: z.boolean(),
@@ -24,6 +24,6 @@ const scheduledActivitySchema = z
     }
   );
 
-export { scheduledActivitySchema };
+export { calendarEventSchema };
 
-export type ScheduleActivity = z.infer<typeof scheduledActivitySchema>;
+export type CalendarEvent = z.infer<typeof calendarEventSchema>;

@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { scheduleItem, sessionType } from '@/db/schema';
+import { calendarEvent, sessionType } from '@/db/schema';
 import { and, asc, eq, gte, isNull } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
@@ -9,7 +9,7 @@ import { requireOwner } from '@/lib/actions/utils';
 
 // ─────────────── Zod Schemas ───────────────
 
-const CreateScheduleItemSchema = z.object({
+const CreateCalendarEventSchema = z.object({
   date: z.string().min(1, 'Tanggal wajib dipilih'),
   sessionTypeId: z.string().min(1, 'Tipe sesi wajib dipilih'),
   sessionId: z.string().min(1),
@@ -22,7 +22,7 @@ const CreateScheduleItemSchema = z.object({
   sortOrder: z.string().optional(),
 });
 
-const UpdateScheduleItemSchema = z.object({
+const UpdateCalendarEventSchema = z.object({
   id: z.string().min(1),
   subThemeId: z.string().uuid().optional().or(z.literal('')),
   indoor: z.string().optional(),
@@ -33,15 +33,15 @@ const UpdateScheduleItemSchema = z.object({
   sortOrder: z.string().optional(),
 });
 
-const DeleteScheduleItemSchema = z.object({
+const DeleteCalendarEventSchema = z.object({
   id: z.string().min(1),
 });
 
 // ─────────────── Helpers ───────────────
 
 /**
- * Check if a schedule is locked for the given date + session type.
- * Schedule edits are only allowed before the session start time.
+ * Check if a calendar event is locked for the given date + session type.
+ * Edits are only allowed before the session start time.
  */
 async function checkScheduleLock(
   date: string,
@@ -68,21 +68,21 @@ async function checkScheduleLock(
 // ─────────────── Read Operations ───────────────
 
 /**
- * Get all schedule items for a given date + session type, ordered by sort_order.
+ * Get all calendar events for a given date + session type, ordered by sort_order.
  */
-export async function getScheduleItems(date: string, sessionTypeId: string) {
+export async function getCalendarEvents(date: string, sessionTypeId: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const items = await db.query.scheduleItem.findMany({
+  const items = await db.query.calendarEvent.findMany({
     where: and(
-      eq(scheduleItem.startDate, date),
-      eq(scheduleItem.sessionTypeId, sessionTypeId),
-      isNull(scheduleItem.deletedAt)
+      eq(calendarEvent.startDate, date),
+      eq(calendarEvent.sessionTypeId, sessionTypeId),
+      isNull(calendarEvent.deletedAt)
     ),
-    orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
+    orderBy: [asc(calendarEvent.sortOrder), asc(calendarEvent.createdAt)],
     with: {
       subTheme: {
         with: {
@@ -96,21 +96,21 @@ export async function getScheduleItems(date: string, sessionTypeId: string) {
 }
 
 /**
- * Get all schedule items for a specific date (for owner schedule overview).
- * Returns items across all session types for the given date.
+ * Get all calendar events for a specific date (for owner schedule overview).
+ * Returns events across all session types for the given date.
  */
-export async function getScheduleItemsByDate(date: string) {
+export async function getCalendarEventsByDate(date: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const items = await db.query.scheduleItem.findMany({
+  const items = await db.query.calendarEvent.findMany({
     where: and(
-      eq(scheduleItem.startDate, date),
-      isNull(scheduleItem.deletedAt)
+      eq(calendarEvent.startDate, date),
+      isNull(calendarEvent.deletedAt)
     ),
-    orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
+    orderBy: [asc(calendarEvent.sortOrder), asc(calendarEvent.createdAt)],
     with: {
       subTheme: {
         with: {
@@ -125,18 +125,18 @@ export async function getScheduleItemsByDate(date: string) {
 }
 
 /**
- * Get schedule items for teacher dashboard (no role guard - accessible by both).
- * Returns schedule items for sessions happening today keyed by date directly.
+ * Get calendar events for teacher dashboard (no role guard - accessible by both).
+ * Returns events for sessions happening today keyed by date directly.
  */
-export async function getTodaySchedule() {
+export async function getTodayCalendar() {
   const today = new Date().toISOString().split('T')[0];
 
-  const items = await db.query.scheduleItem.findMany({
+  const items = await db.query.calendarEvent.findMany({
     where: and(
-      eq(scheduleItem.startDate, today),
-      isNull(scheduleItem.deletedAt)
+      eq(calendarEvent.startDate, today),
+      isNull(calendarEvent.deletedAt)
     ),
-    orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
+    orderBy: [asc(calendarEvent.sortOrder), asc(calendarEvent.createdAt)],
     with: {
       subTheme: {
         with: {
@@ -151,17 +151,17 @@ export async function getTodaySchedule() {
 }
 
 /**
- * Get upcoming schedule items (next N days) for teacher dashboard.
+ * Get upcoming calendar events (next N days) for teacher dashboard.
  */
-export async function getUpcomingSchedule() {
+export async function getUpcomingCalendar() {
   const today = new Date().toISOString().split('T')[0];
 
-  const items = await db.query.scheduleItem.findMany({
+  const items = await db.query.calendarEvent.findMany({
     where: and(
-      isNull(scheduleItem.deletedAt),
-      gte(scheduleItem.startDate, today)
+      isNull(calendarEvent.deletedAt),
+      gte(calendarEvent.startDate, today)
     ),
-    orderBy: [asc(scheduleItem.startDate), asc(scheduleItem.sortOrder)],
+    orderBy: [asc(calendarEvent.startDate), asc(calendarEvent.sortOrder)],
     with: {
       subTheme: {
         with: {
@@ -178,12 +178,12 @@ export async function getUpcomingSchedule() {
 // ─────────────── Mutations (Owner-only) ───────────────
 
 /**
- * Create a schedule item for a (date, sessionTypeId) pair.
- * VAL-CAPTURE-001: Owner creates schedule item with sub-theme.
- * VAL-CAPTURE-002: Owner creates schedule item with indoor/outdoor setting.
- * VAL-CAPTURE-004: Schedule editable until session start time.
+ * Create a calendar event for a (date, sessionTypeId) pair.
+ * VAL-CAPTURE-001: Owner creates calendar event with sub-theme.
+ * VAL-CAPTURE-002: Owner creates calendar event with indoor/outdoor setting.
+ * VAL-CAPTURE-004: Event editable until session start time.
  */
-export async function createScheduleItem(
+export async function createCalendarEvent(
   input: FormData | Record<string, unknown>
 ) {
   const auth = await requireOwner();
@@ -192,7 +192,7 @@ export async function createScheduleItem(
   }
 
   const rawData = input instanceof FormData ? Object.fromEntries(input) : input;
-  const parsed = CreateScheduleItemSchema.safeParse(rawData);
+  const parsed = CreateCalendarEventSchema.safeParse(rawData);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
@@ -209,15 +209,15 @@ export async function createScheduleItem(
 
   // Get the next sort order
   const existingItems = await db
-    .select({ sortOrder: scheduleItem.sortOrder })
-    .from(scheduleItem)
+    .select({ sortOrder: calendarEvent.sortOrder })
+    .from(calendarEvent)
     .where(
       and(
-        eq(scheduleItem.startDate, data.date),
-        eq(scheduleItem.sessionTypeId, data.sessionTypeId)
+        eq(calendarEvent.startDate, data.date),
+        eq(calendarEvent.sessionTypeId, data.sessionTypeId)
       )
     )
-    .orderBy(asc(scheduleItem.sortOrder));
+    .orderBy(asc(calendarEvent.sortOrder));
 
   const nextSortOrder =
     existingItems.length > 0
@@ -226,7 +226,7 @@ export async function createScheduleItem(
 
   try {
     const [newItem] = await db
-      .insert(scheduleItem)
+      .insert(calendarEvent)
       .values({
         startDate: data.date,
         endDate: data.date,
@@ -251,18 +251,18 @@ export async function createScheduleItem(
 }
 
 /**
- * Update a schedule item.
- * VAL-CAPTURE-005: Owner adds activity to schedule item mid-week.
- * VAL-CAPTURE-006: Owner swaps activity between schedule slots.
+ * Update a calendar event.
+ * VAL-CAPTURE-005: Owner adds activity to calendar event mid-week.
+ * VAL-CAPTURE-006: Owner swaps activity between calendar slots.
  */
-export async function updateScheduleItem(formData: FormData) {
+export async function updateCalendarEvent(formData: FormData) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
   const rawData = Object.fromEntries(formData);
-  const parsed = UpdateScheduleItemSchema.safeParse(rawData);
+  const parsed = UpdateCalendarEventSchema.safeParse(rawData);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
@@ -272,8 +272,8 @@ export async function updateScheduleItem(formData: FormData) {
   const data = parsed.data;
 
   // Get the existing item to find date + sessionTypeId for lock check
-  const existingItem = await db.query.scheduleItem.findFirst({
-    where: eq(scheduleItem.id, data.id),
+  const existingItem = await db.query.calendarEvent.findFirst({
+    where: eq(calendarEvent.id, data.id),
   });
 
   if (!existingItem) {
@@ -298,7 +298,7 @@ export async function updateScheduleItem(formData: FormData) {
 
   try {
     const [updated] = await db
-      .update(scheduleItem)
+      .update(calendarEvent)
       .set({
         subThemeId: data.subThemeId || null,
         indoor: data.indoor === 'true',
@@ -311,7 +311,7 @@ export async function updateScheduleItem(formData: FormData) {
           : existingItem.sortOrder,
         updatedAt: new Date(),
       })
-      .where(eq(scheduleItem.id, data.id))
+      .where(eq(calendarEvent.id, data.id))
       .returning();
 
     return { success: true as const, data: updated };
@@ -324,17 +324,17 @@ export async function updateScheduleItem(formData: FormData) {
 }
 
 /**
- * Delete a schedule item.
- * VAL-CAPTURE-007: Owner deletes schedule item.
+ * Delete a calendar event.
+ * VAL-CAPTURE-007: Owner deletes calendar event.
  */
-export async function deleteScheduleItem(formData: FormData) {
+export async function deleteCalendarEvent(formData: FormData) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
   const rawData = Object.fromEntries(formData);
-  const parsed = DeleteScheduleItemSchema.safeParse(rawData);
+  const parsed = DeleteCalendarEventSchema.safeParse(rawData);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
@@ -344,8 +344,8 @@ export async function deleteScheduleItem(formData: FormData) {
   const { id } = parsed.data;
 
   // Get the existing item to check lock
-  const existingItem = await db.query.scheduleItem.findFirst({
-    where: eq(scheduleItem.id, id),
+  const existingItem = await db.query.calendarEvent.findFirst({
+    where: eq(calendarEvent.id, id),
   });
 
   if (!existingItem) {
@@ -370,9 +370,9 @@ export async function deleteScheduleItem(formData: FormData) {
 
   try {
     await db
-      .update(scheduleItem)
+      .update(calendarEvent)
       .set({ deletedAt: new Date() })
-      .where(eq(scheduleItem.id, id));
+      .where(eq(calendarEvent.id, id));
     return { success: true as const, data: undefined };
   } catch {
     return {
@@ -383,9 +383,9 @@ export async function deleteScheduleItem(formData: FormData) {
 }
 
 /**
- * Reorder schedule items (swap sort orders).
+ * Reorder calendar events (swap sort orders).
  */
-export async function reorderScheduleItems(
+export async function reorderCalendarEvents(
   items: Array<{ id: string; sortOrder: number }>
 ) {
   const auth = await requireOwner();
@@ -398,8 +398,8 @@ export async function reorderScheduleItems(
   }
 
   // Check schedule lock for the first item
-  const firstItem = await db.query.scheduleItem.findFirst({
-    where: eq(scheduleItem.id, items[0].id),
+  const firstItem = await db.query.calendarEvent.findFirst({
+    where: eq(calendarEvent.id, items[0].id),
   });
 
   if (!firstItem) {
@@ -424,9 +424,9 @@ export async function reorderScheduleItems(
   try {
     for (const item of items) {
       await db
-        .update(scheduleItem)
+        .update(calendarEvent)
         .set({ sortOrder: item.sortOrder, updatedAt: new Date() })
-        .where(eq(scheduleItem.id, item.id));
+        .where(eq(calendarEvent.id, item.id));
     }
 
     return { success: true as const, data: undefined };

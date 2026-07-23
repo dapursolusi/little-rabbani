@@ -252,8 +252,8 @@ export const holidayRelations = relations(holiday, ({ one }) => ({
   }),
 }));
 
-export const scheduleItem = pgTable(
-  'schedule_item',
+export const calendarEvent = pgTable(
+  'calendar_event',
   {
     id: uuid('id').defaultRandom().primaryKey(),
     startDate: date('start_date').notNull(),
@@ -279,19 +279,19 @@ export const scheduleItem = pgTable(
   },
   (table) => ({
     // ponytail: regular index, not unique — multiple items share a (date, sessionTypeId) group
-    scheduleItemDateSessionTypeIdx: index(
-      'schedule_item_date_session_type_idx'
+    calendarEventDateSessionTypeIdx: index(
+      'calendar_event_date_session_type_idx'
     ).on(table.startDate, table.sessionTypeId),
   })
 );
 
-export const scheduleItemRelations = relations(scheduleItem, ({ one }) => ({
+export const calendarEventRelations = relations(calendarEvent, ({ one }) => ({
   sessionType: one(sessionType, {
-    fields: [scheduleItem.sessionTypeId],
+    fields: [calendarEvent.sessionTypeId],
     references: [sessionType.id],
   }),
   subTheme: one(subTheme, {
-    fields: [scheduleItem.subThemeId],
+    fields: [calendarEvent.subThemeId],
     references: [subTheme.id],
   }),
 }));

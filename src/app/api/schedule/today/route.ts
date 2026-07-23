@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { db } from '@/db';
-import { scheduleItem, sessionType } from '@/db/schema';
+import { calendarEvent, sessionType } from '@/db/schema';
 import { and, asc, eq, isNull } from 'drizzle-orm';
 
 /**
@@ -31,13 +31,13 @@ export async function GET() {
 
     // Load schedule items for each session
     for (const session of sessions) {
-      const items = await db.query.scheduleItem.findMany({
+      const items = await db.query.calendarEvent.findMany({
         where: and(
-          eq(scheduleItem.startDate, today),
-          eq(scheduleItem.sessionTypeId, session.id),
-          isNull(scheduleItem.deletedAt)
+          eq(calendarEvent.startDate, today),
+          eq(calendarEvent.sessionTypeId, session.id),
+          isNull(calendarEvent.deletedAt)
         ),
-        orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
+        orderBy: [asc(calendarEvent.sortOrder), asc(calendarEvent.createdAt)],
         with: {
           subTheme: {
             with: {
