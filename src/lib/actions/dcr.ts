@@ -60,9 +60,9 @@ export async function getDcrBySession(date: string, sessionTypeId: string) {
 }
 
 /**
- * Get schedule activities for a (date, sessionTypeId).
+ * Get calendar events for a (date, sessionTypeId).
  */
-export async function getScheduleActivitiesForDcr(
+export async function getCalendarEventsForDcr(
   date: string,
   sessionTypeId: string
 ) {
