@@ -14,19 +14,6 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-export const activityCategoryEnum = pgEnum('activity_category', [
-  'seni',
-  'olahraga',
-  'musik',
-  'bahasa',
-  'matematika',
-  'sains',
-  'agama',
-  'bermain',
-  'outing',
-  'lainnya',
-]);
-
 export const roleEnum = pgEnum('role', ['owner', 'teacher']);
 export const kidStatusEnum = pgEnum('kid_status', [
   'waiting',
@@ -193,17 +180,32 @@ export const termRelations = relations(term, ({ many }) => ({
   kids: many(kid),
 }));
 
-export const activity = pgTable('activity', {
+// ─────────────── Theme / Sub-Theme ───────────────
+
+export const theme = pgTable('theme', {
   id: uuid('id').defaultRandom().primaryKey(),
   name: text('name').notNull(),
-  category: activityCategoryEnum('category').notNull().default('lainnya'),
-  isDeleted: boolean('is_deleted').notNull().default(false),
-  deletedAt: timestamp('deleted_at'),
+  color: text('color'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
+});
+
+export const subTheme = pgTable('sub_theme', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  name: text('name').notNull(),
+  themeId: uuid('theme_id')
+    .notNull()
+    .references(() => theme.id, { onDelete: 'restrict' }),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
 
 // ─────────────── Holiday ───────────────
@@ -250,12 +252,6 @@ export const holidayRelations = relations(holiday, ({ one }) => ({
   }),
 }));
 
-// export for drizzle schema and zod validation only
-export const scheduleItemTypeEnum = pgEnum('schedule_item_type', [
-  'activity',
-  'outing',
-]);
-
 export const scheduleItem = pgTable(
   'schedule_item',
   {
@@ -265,11 +261,11 @@ export const scheduleItem = pgTable(
     sessionTypeId: uuid('session_type_id').references(() => sessionType.id, {
       onDelete: 'cascade',
     }),
-    activityId: uuid('activity_id').references(() => activity.id, {
+    subThemeId: uuid('sub_theme_id').references(() => subTheme.id, {
       onDelete: 'set null',
     }),
+    indoor: boolean('indoor').notNull().default(false),
     name: text('name').notNull().default(''),
-    type: scheduleItemTypeEnum('type').notNull(),
     location: text('location'),
     itemsToBring: text('items_to_bring'),
     permissionRequired: boolean('permission_required').notNull().default(false),
@@ -294,9 +290,20 @@ export const scheduleItemRelations = relations(scheduleItem, ({ one }) => ({
     fields: [scheduleItem.sessionTypeId],
     references: [sessionType.id],
   }),
-  activity: one(activity, {
-    fields: [scheduleItem.activityId],
-    references: [activity.id],
+  subTheme: one(subTheme, {
+    fields: [scheduleItem.subThemeId],
+    references: [subTheme.id],
+  }),
+}));
+
+export const themeRelations = relations(theme, ({ many }) => ({
+  subThemes: many(subTheme),
+}));
+
+export const subThemeRelations = relations(subTheme, ({ one }) => ({
+  theme: one(theme, {
+    fields: [subTheme.themeId],
+    references: [theme.id],
   }),
 }));
 
@@ -340,9 +347,6 @@ export const dcrActivity = pgTable('dcr_activity', {
   dcrId: uuid('dcr_id')
     .notNull()
     .references(() => dailyClassReport.id, { onDelete: 'cascade' }),
-  activityId: uuid('activity_id').references(() => activity.id, {
-    onDelete: 'set null',
-  }),
   activityNameOther: text('activity_name_other'),
   deviation: deviationEnum('deviation').notNull().default('done'),
   wasPlanned: boolean('was_planned').notNull().default(true),
@@ -371,10 +375,6 @@ export const dcrActivityRelations = relations(dcrActivity, ({ one }) => ({
   dcr: one(dailyClassReport, {
     fields: [dcrActivity.dcrId],
     references: [dailyClassReport.id],
-  }),
-  activity: one(activity, {
-    fields: [dcrActivity.activityId],
-    references: [activity.id],
   }),
 }));
 

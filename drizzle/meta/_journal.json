@@ -176,6 +176,13 @@
       "when": 1784765000000,
       "tag": "0024_items_to_bring",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1784781926435,
+      "tag": "0025_sour_lady_deathstrike",
+      "breakpoints": true
     }
   ]
 }

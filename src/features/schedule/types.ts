@@ -1,3 +1,1 @@
-import { scheduleItemTypeEnum } from '@/db/schema';
-
-export type ScheduleItemType = (typeof scheduleItemTypeEnum.enumValues)[number];
+export type ScheduleItemType = 'activity' | 'outing';
