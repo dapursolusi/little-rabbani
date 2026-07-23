@@ -167,11 +167,7 @@ async function computeTermStats(
         eq(observationActivity.participated, 'yes')
       ),
       with: {
-        dcrActivity: {
-          with: {
-            activity: true,
-          },
-        },
+        dcrActivity: true,
       },
     });
 
@@ -179,18 +175,7 @@ async function computeTermStats(
       const dcrAct = Array.isArray(act.dcrActivity)
         ? act.dcrActivity[0]
         : act.dcrActivity;
-      const activityData =
-        dcrAct && 'activity' in dcrAct
-          ? Array.isArray(dcrAct.activity)
-            ? dcrAct.activity[0]
-            : dcrAct.activity
-          : null;
-      const name =
-        activityData?.name ??
-        (dcrAct && 'activityNameOther' in dcrAct
-          ? dcrAct.activityNameOther
-          : null) ??
-        'Aktivitas';
+      const name = dcrAct?.activityNameOther ?? 'Aktivitas';
       activityParticipation[name] = (activityParticipation[name] ?? 0) + 1;
     }
   }

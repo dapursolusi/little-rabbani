@@ -208,9 +208,6 @@ export async function getPass2Activities(date: string, sessionTypeId: string) {
   const activities = await db.query.dcrActivity.findMany({
     where: eq(dcrActivity.dcrId, dcr.id),
     orderBy: [asc(dcrActivity.createdAt)],
-    with: {
-      activity: true,
-    },
   });
 
   return { success: true as const, data: activities };

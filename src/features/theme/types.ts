@@ -12,6 +12,7 @@ export interface Theme extends BaseDataResponse {
 export interface SubTheme extends BaseDataResponse {
   name: string;
   themeId: string;
+  theme?: { id: string; name: string; color: string | null };
 }
 
 export type ThemeFormData = z.infer<typeof ThemeFormSchema>;

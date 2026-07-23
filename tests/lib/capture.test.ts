@@ -370,20 +370,10 @@ describe('Capture Server Actions', () => {
         {
           id: 'dca-1',
           dcrId: 'dcr-1',
-          activityId: 'activity-1',
-          activityNameOther: null,
+          activityNameOther: 'Mewarnai',
           deviation: 'done',
           wasPlanned: true,
           createdAt: new Date(),
-          activity: {
-            id: 'activity-1',
-            name: 'Mewarnai',
-            category: 'seni',
-            isDeleted: false,
-            deletedAt: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
         },
       ] as any);
 

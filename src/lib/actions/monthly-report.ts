@@ -186,19 +186,12 @@ async function computeMonthlyStats(
         eq(observationActivity.participated, 'yes')
       ),
       with: {
-        dcrActivity: {
-          with: {
-            activity: true,
-          },
-        },
+        dcrActivity: true,
       },
     });
 
     for (const act of activities) {
-      const name =
-        act.dcrActivity?.activity?.name ??
-        act.dcrActivity?.activityNameOther ??
-        'Aktivitas';
+      const name = act.dcrActivity?.activityNameOther ?? 'Aktivitas';
       activityParticipation[name] = (activityParticipation[name] ?? 0) + 1;
     }
   }

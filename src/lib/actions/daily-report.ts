@@ -63,11 +63,7 @@ async function getObservationData(
       },
       activities: {
         with: {
-          dcrActivity: {
-            with: {
-              activity: true,
-            },
-          },
+          dcrActivity: true,
         },
       },
     },
@@ -86,14 +82,11 @@ async function getObservationData(
         const dcrAct = (
           a as {
             dcrActivity: {
-              activity: { name: string } | null;
               activityNameOther: string | null;
-            };
+            } | null;
           }
         ).dcrActivity;
-        return (
-          dcrAct?.activity?.name ?? dcrAct?.activityNameOther ?? 'Aktivitas'
-        );
+        return dcrAct?.activityNameOther ?? 'Aktivitas';
       })
       .filter(Boolean),
     notes: obs.notes.map((n: { text: string }) => n.text),

@@ -23,11 +23,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
-import { createActivityFromUnplanned, saveDcr } from '@/lib/actions/dcr';
+import { saveDcr } from '@/lib/actions/dcr';
 
 interface IDcrActivity {
   id: string;
-  activityId: string | null;
   activityName: string;
   activityNameOther: string | null;
   deviation: 'done' | 'skipped' | 'modified';
@@ -64,10 +63,6 @@ export function DcrForm({
   const [isProcessing, setIsProcessing] = useState(false);
   const [showAddUnplanned, setShowAddUnplanned] = useState(false);
   const [unplannedName, setUnplannedName] = useState('');
-  const [showCatalogPrompt, setShowCatalogPrompt] = useState<{
-    name: string;
-  } | null>(null);
-  const [isAddingToCatalog, setIsAddingToCatalog] = useState(false);
   const [showCreateSuccess, setShowCreateSuccess] = useState(false);
 
   // Handle deviation change for an activity
@@ -91,7 +86,6 @@ export function DcrForm({
 
     const newActivity: IDcrActivity = {
       id: `unplanned-${Date.now()}`,
-      activityId: null,
       activityName: unplannedName.trim(),
       activityNameOther: unplannedName.trim(),
       deviation: 'done',
@@ -123,7 +117,6 @@ export function DcrForm({
       formData.append('learningNotes', learningNotes);
 
       const activitiesPayload = activities.map((a) => ({
-        activityId: a.activityId,
         activityNameOther: a.activityNameOther,
         deviation: a.deviation,
         wasPlanned: a.wasPlanned,
@@ -139,16 +132,7 @@ export function DcrForm({
             : 'Laporan harian berhasil disimpan'
         );
 
-        // Check for unplanned activities to prompt add-to-catalog
-        const unplanned = result.data.unplannedActivities;
-        if (unplanned && unplanned.length > 0) {
-          setShowCatalogPrompt({
-            name: unplanned[0].activityNameOther ?? '',
-          });
-        } else {
-          setShowCreateSuccess(true);
-        }
-
+        setShowCreateSuccess(true);
         router.refresh();
       } else {
         toast.error(result.error);
@@ -159,35 +143,6 @@ export function DcrForm({
       setIsProcessing(false);
     }
   }, [activities, sessionId, learningNotes, isEditing, router]);
-
-  // Handle adding unplanned activity to catalog
-  const handleAddToCatalog = useCallback(async () => {
-    if (!showCatalogPrompt) return;
-
-    setIsAddingToCatalog(true);
-    try {
-      const result = await createActivityFromUnplanned(showCatalogPrompt.name);
-      if (result.success) {
-        toast.success(
-          `"${showCatalogPrompt.name}" berhasil ditambahkan ke katalog`
-        );
-      } else {
-        toast.error(result.error);
-      }
-    } catch {
-      toast.error('Gagal menambahkan ke katalog');
-    } finally {
-      setIsAddingToCatalog(false);
-      setShowCatalogPrompt(null);
-      setShowCreateSuccess(true);
-    }
-  }, [showCatalogPrompt]);
-
-  // Handle dismissing catalog prompt
-  const handleDismissCatalogPrompt = useCallback(() => {
-    setShowCatalogPrompt(null);
-    setShowCreateSuccess(true);
-  }, []);
 
   return (
     <div className="space-y-6">
@@ -346,38 +301,6 @@ export function DcrForm({
               : 'Simpan Laporan'}
         </Button>
       </div>
-
-      {/* Prompt to add to catalog dialog */}
-      <Dialog
-        open={!!showCatalogPrompt}
-        onOpenChange={(open) => !open && handleDismissCatalogPrompt()}
-      >
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Tambahkan ke Katalog?</DialogTitle>
-            <DialogDescription>
-              Aktivitas &quot;{showCatalogPrompt?.name}&quot; belum ada di
-              katalog aktivitas. Apakah Anda ingin menambahkannya?
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
-            <Button
-              variant="outline"
-              onClick={handleDismissCatalogPrompt}
-              disabled={isAddingToCatalog}
-            >
-              Tidak
-            </Button>
-            <Button
-              variant="default"
-              onClick={handleAddToCatalog}
-              disabled={isAddingToCatalog}
-            >
-              {isAddingToCatalog ? 'Menambahkan...' : 'Ya, Tambahkan'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Success dialog */}
       <Dialog open={showCreateSuccess} onOpenChange={setShowCreateSuccess}>

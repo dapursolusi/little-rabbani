@@ -2,7 +2,6 @@
 
 import { db } from '@/db';
 import {
-  activity,
   dailyClassReport,
   dcrActivity,
   scheduleItem,
@@ -52,9 +51,6 @@ export async function getDcrBySession(date: string, sessionTypeId: string) {
     with: {
       dcrActivities: {
         orderBy: [asc(dcrActivity.createdAt)],
-        with: {
-          activity: true,
-        },
       },
       sessionType: true,
     },
@@ -132,9 +128,6 @@ export async function getDcrActivitiesForPass2(dcrId: string) {
   const activities = await db.query.dcrActivity.findMany({
     where: eq(dcrActivity.dcrId, dcrId),
     orderBy: [asc(dcrActivity.createdAt)],
-    with: {
-      activity: true,
-    },
   });
 
   return { success: true as const, data: activities };
@@ -170,9 +163,6 @@ export async function getDcrActivitiesForPass2Public(dcrId: string) {
   const activities = await db.query.dcrActivity.findMany({
     where: eq(dcrActivity.dcrId, dcrId),
     orderBy: [asc(dcrActivity.createdAt)],
-    with: {
-      activity: true,
-    },
   });
 
   return { success: true as const, data: activities };
@@ -296,40 +286,6 @@ export async function saveDcr(formData: FormData) {
     return {
       success: false as const,
       error: 'Gagal menyimpan laporan kelas',
-    };
-  }
-}
-
-/**
- * Create an activity from an unplanned DCR activity name.
- */
-export async function createActivityFromUnplanned(
-  name: string,
-  category: string = 'lainnya'
-) {
-  const auth = await requireOwner();
-  if (!auth.authorized) {
-    return { success: false as const, error: auth.error };
-  }
-
-  if (!name.trim()) {
-    return { success: false as const, error: 'Nama aktivitas wajib diisi' };
-  }
-
-  try {
-    const [newActivity] = await db
-      .insert(activity)
-      .values({
-        name: name.trim(),
-        category: category as (typeof activity.$inferInsert)['category'],
-      })
-      .returning();
-
-    return { success: true as const, data: newActivity };
-  } catch {
-    return {
-      success: false as const,
-      error: 'Gagal menambahkan aktivitas ke katalog',
     };
   }
 }

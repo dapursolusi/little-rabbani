@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { scheduleItem, sessionType } from '@/db/schema';
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, gte, isNull } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -157,7 +157,10 @@ export async function getUpcomingSchedule() {
   const today = new Date().toISOString().split('T')[0];
 
   const items = await db.query.scheduleItem.findMany({
-    where: isNull(scheduleItem.deletedAt),
+    where: and(
+      isNull(scheduleItem.deletedAt),
+      gte(scheduleItem.startDate, today)
+    ),
     orderBy: [asc(scheduleItem.startDate), asc(scheduleItem.sortOrder)],
     with: {
       subTheme: {
@@ -169,18 +172,15 @@ export async function getUpcomingSchedule() {
     },
   });
 
-  // Filter by date range
-  const filtered = items.filter((i) => i.startDate && i.startDate >= today);
-
-  return { success: true as const, data: filtered.slice(0, 20) };
+  return { success: true as const, data: items.slice(0, 20) };
 }
 
 // ─────────────── Mutations (Owner-only) ───────────────
 
 /**
  * Create a schedule item for a (date, sessionTypeId) pair.
- * VAL-CAPTURE-001: Owner creates schedule item with catalog activity.
- * VAL-CAPTURE-002: Owner creates schedule item with outing.
+ * VAL-CAPTURE-001: Owner creates schedule item with sub-theme.
+ * VAL-CAPTURE-002: Owner creates schedule item with indoor/outdoor setting.
  * VAL-CAPTURE-004: Schedule editable until session start time.
  */
 export async function createScheduleItem(
@@ -302,6 +302,7 @@ export async function updateScheduleItem(formData: FormData) {
       .set({
         subThemeId: data.subThemeId || null,
         indoor: data.indoor === 'true',
+        name: data.name || '',
         location: data.location || null,
         itemsToBring: data.itemsToBring || null,
         permissionRequired: data.permissionRequired === 'true',
