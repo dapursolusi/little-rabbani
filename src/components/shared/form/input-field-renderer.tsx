@@ -6,6 +6,7 @@ import {
   Path,
 } from 'react-hook-form';
 
+import { FieldLabel } from '@/components/ui/field';
 import { Input } from '@/components/ui/input';
 import {
   Select,
@@ -14,6 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Switch } from '@/components/ui/switch';
 
 interface InputFieldRendererProps<TFormAttributes extends FieldValues> {
   fieldConfig: FormField;
@@ -58,6 +60,23 @@ export default function InputFieldRenderer<
           </SelectContent>
         </Select>
       );
+
+    case 'switch':
+      return (
+        <div className="flex gap-2 items-center">
+          <Switch
+            id="switch-options"
+            size="sm"
+            checked={field.value}
+            onCheckedChange={field.onChange}
+          />
+          <FieldLabel htmlFor="switch-options">{fieldConfig.label}</FieldLabel>
+        </div>
+      );
+
+    case 'hidden':
+      return null;
+
     default:
       return (
         <Input

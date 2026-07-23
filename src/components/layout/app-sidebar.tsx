@@ -8,7 +8,6 @@ import { usePathname } from 'next/navigation';
 import { User } from '@/features/auth/types';
 import {
   Calendar01Icon,
-  CalendarCheckIcon,
   ChevronRightIcon,
   ClipboardIcon,
   Clock01Icon,
@@ -17,8 +16,10 @@ import {
   File01Icon,
   File02Icon,
   Folder01Icon,
+  HierarchyCircle03Icon,
   NoteIcon,
   Settings01Icon,
+  Settings04Icon,
   UserGroup02Icon,
   UserMultipleIcon,
   WorkIcon,
@@ -104,11 +105,6 @@ const navGroups: SidebarNavItem[] = [
       { title: 'Murid', href: '/dashboard/owner/kid', icon: UserMultipleIcon },
       { title: 'Term', href: '/dashboard/owner/term', icon: Calendar01Icon },
       {
-        title: 'Sesi',
-        href: '/dashboard/owner/session',
-        icon: CalendarCheckIcon,
-      },
-      {
         title: 'Tipe Sesi',
         href: '/dashboard/owner/session-type',
         icon: Calendar01Icon,
@@ -125,7 +121,7 @@ const navGroups: SidebarNavItem[] = [
     title: 'Operasional',
     icon: WorkIcon,
     subItems: [
-      { title: 'Jadwal', href: '/dashboard/owner/schedule', icon: Clock01Icon },
+      { title: 'Jadwal', href: '/dashboard/owner/calendar', icon: Clock01Icon },
       {
         title: 'DCR / Observasi Kelas',
         href: '/dashboard/owner/dcr',
@@ -152,6 +148,18 @@ const navGroups: SidebarNavItem[] = [
         title: 'Laporan Triwulanan',
         href: '/dashboard/owner/reports/quarterly',
         icon: File01Icon,
+      },
+    ],
+  },
+  {
+    slug: 'configuration',
+    title: 'Konfigurasi',
+    icon: Settings04Icon,
+    subItems: [
+      {
+        title: 'Tema & Subtema',
+        href: '/dashboard/owner/theme',
+        icon: HierarchyCircle03Icon,
       },
     ],
   },

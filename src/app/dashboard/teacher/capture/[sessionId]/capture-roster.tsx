@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { estimateStorageUsage, saveObservationOffline } from '@/db/dexie';
 import {
   ArrowLeft01Icon,
   BoltIcon,
@@ -31,9 +32,8 @@ import {
   savePass1Observation,
   savePass2Observation,
 } from '@/lib/actions/capture';
-import { isBrowserOnline, setOnConflictCallback } from '@/lib/capture-offline';
 import type { IConflictData } from '@/lib/capture-offline';
-import { estimateStorageUsage, saveObservationOffline } from '@/lib/db/dexie';
+import { isBrowserOnline, setOnConflictCallback } from '@/lib/capture-offline';
 import { generateIdempotencyKey } from '@/lib/idempotency';
 
 // ─────────────── Types ───────────────
@@ -74,15 +74,9 @@ interface ICaptureRosterClientProps {
 
 interface IDcrActivity {
   id: string;
-  activityId: string | null;
   activityNameOther: string | null;
   deviation: string;
   wasPlanned: boolean;
-  activity: {
-    id: string;
-    name: string;
-    category: string;
-  } | null;
 }
 
 // ─────────────── Constants ───────────────
@@ -884,10 +878,7 @@ export function CaptureRosterClient({
                   <div className="space-y-2">
                     {dcrActivities.map((act) => {
                       const dcaId = act.id;
-                      const activityName =
-                        act.activity?.name ??
-                        act.activityNameOther ??
-                        'Aktivitas';
+                      const activityName = act.activityNameOther ?? 'Aktivitas';
                       const currentValue = participations[dcaId];
 
                       return (

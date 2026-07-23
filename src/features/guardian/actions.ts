@@ -1,10 +1,9 @@
 'use server';
 
+import { db } from '@/db';
+import { guardian, kid } from '@/db/schema';
 import { GuardianFormSchema } from '@/features/guardian/schema';
 import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
-
-import { db } from '@/lib/db';
-import { guardian, kid } from '@/lib/db/schema';
 
 import { requireOwner } from '../../lib/actions/utils';
 

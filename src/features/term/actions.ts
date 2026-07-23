@@ -1,9 +1,8 @@
 'use server';
 
+import { db } from '@/db';
+import { kid, term } from '@/db/schema';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
-
-import { db } from '@/lib/db';
-import { kid, term } from '@/lib/db/schema';
 
 import { requireOwner } from '../../lib/actions/utils';
 import { TermFormSchema } from './schema';

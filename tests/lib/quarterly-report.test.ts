@@ -59,7 +59,7 @@ vi.mock('@/lib/db', () => {
   };
 });
 
-const { db } = await import('@/lib/db');
+const { db } = await import('@/db');
 const mockDb = db as unknown as {
   select: ReturnType<typeof vi.fn>;
   query: {
@@ -240,22 +240,19 @@ describe('Quarterly Report - Server Actions', () => {
         {
           participated: 'yes',
           dcrActivity: {
-            activity: { name: 'Mewarnai' },
-            activityNameOther: null,
+            activityNameOther: 'Mewarnai',
           },
         },
         {
           participated: 'yes',
           dcrActivity: {
-            activity: { name: 'Mewarnai' },
-            activityNameOther: null,
+            activityNameOther: 'Mewarnai',
           },
         },
         {
           participated: 'yes',
           dcrActivity: {
-            activity: { name: 'Menggambar' },
-            activityNameOther: null,
+            activityNameOther: 'Menggambar',
           },
         },
       ]);

@@ -232,7 +232,6 @@ function DataTableFilter<TData, TValue>({
   children,
 }: DataTableFilterProps<TData, TValue>) {
   const filterableColumns = getFilterableColumns(columns);
-  if (filterableColumns.length === 0) return null;
 
   // Columns not currently active as filters
   const inactiveColumns = filterableColumns.filter(

@@ -28,7 +28,7 @@ export const sessionTypeColumns: ColumnDef<SessionType>[] = [
     },
     cell: ({ row }) => {
       const start = row.getValue('start') as string;
-      const end = row.getValue('end') as string;
+      const end = row.original.end;
       return (
         <span>
           {start} - {end}

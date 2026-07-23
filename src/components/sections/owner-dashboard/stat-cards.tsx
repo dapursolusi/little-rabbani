@@ -71,7 +71,7 @@ export function DashboardStatCards({
         title="Sesi Hari Ini"
         value={todaySessionsCount}
         icon={<HugeiconsIcon icon={CalendarCheckIcon} strokeWidth={2} />}
-        href="/dashboard/owner/schedule"
+        href="/dashboard/owner/calendar"
       />
       <StatCard
         title="DCR Tertunda"

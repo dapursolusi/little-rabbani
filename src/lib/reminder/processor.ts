@@ -2,9 +2,7 @@
 // Checks conditions and fires push notifications for:
 // - Capture-pending: count pending observations for today
 // - Schedule-entry: Thursday morning if next week's schedule is empty
-import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
-
-import { db } from '@/lib/db';
+import { db } from '@/db';
 import {
   holiday,
   kid,
@@ -14,7 +12,8 @@ import {
   reminderLog,
   sessionType,
   user,
-} from '@/lib/db/schema';
+} from '@/db/schema';
+import { and, eq, gte, inArray, isNull, lte } from 'drizzle-orm';
 
 import { sendPushNotification } from './push';
 
@@ -308,7 +307,7 @@ async function processScheduleEntryReminders(): Promise<number> {
     const result = await sendPushNotification(sub, {
       title: 'Jadwal Minggu Depan Kosong',
       body: 'Jadwal minggu depan belum diisi. Masukkan sekarang.',
-      url: '/dashboard/owner/schedule',
+      url: '/dashboard/owner/calendar',
     });
 
     if (result.success) fired++;

@@ -2,13 +2,14 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { getPendingObservations } from '@/db/dexie';
+
 import {
   flushOfflineQueue,
   initOnlineStatus,
   isBrowserOnline,
   subscribeOnlineStatus,
 } from '@/lib/capture-offline';
-import { getPendingObservations } from '@/lib/db/dexie';
 
 // ─────────────── Online Status Hook ───────────────
 // VAL-CAPTURE-039: Offline indicator visible to teacher

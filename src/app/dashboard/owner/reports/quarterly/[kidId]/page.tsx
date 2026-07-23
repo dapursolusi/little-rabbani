@@ -1,12 +1,12 @@
 import Link from 'next/link';
 
+import { db } from '@/db';
+import { kid, term } from '@/db/schema';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { eq } from 'drizzle-orm';
 
 import { getQuarterlyReport } from '@/lib/actions/quarterly-report';
-import { db } from '@/lib/db';
-import { kid, term } from '@/lib/db/schema';
 import { baseMetadata } from '@/lib/metadata';
 
 import { QuarterlyReportClient } from './report-client';

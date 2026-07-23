@@ -2,6 +2,7 @@
 
 import * as React from 'react';
 
+import { FormField } from '@/types/field';
 import { Add02Icon } from '@hugeicons/core-free-icons';
 import {
   ColumnDef,
@@ -206,7 +207,10 @@ export function DataTable<TData, TValue>({
 
   return (
     <EditFormContext.Provider
-      value={{ schemaKey: form.schemaKey, formFields: form.formFields }}
+      value={{
+        schemaKey: form.schemaKey,
+        formFields: form.formFields as FormField[],
+      }}
     >
       <SortingStateContext.Provider value={sorting}>
         <DataTableFilter

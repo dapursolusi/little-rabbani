@@ -148,6 +148,48 @@
       "when": 1784689450000,
       "tag": "0020_complete_rekey",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1784715209196,
+      "tag": "0021_outing_rename",
+      "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1784717691168,
+      "tag": "0022_rename_date_to_start_date",
+      "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1784764411537,
+      "tag": "0023_add_schedule_item_name",
+      "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1784765000000,
+      "tag": "0024_items_to_bring",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1784781926435,
+      "tag": "0025_sour_lady_deathstrike",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1784786722932,
+      "tag": "0026_rename_schedule_item_to_calendar_event",
+      "breakpoints": true
     }
   ]
 }

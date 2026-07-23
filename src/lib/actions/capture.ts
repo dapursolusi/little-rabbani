@@ -3,11 +3,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
-import { z } from 'zod/v4';
-
-import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
+import { db } from '@/db';
 import {
   dailyClassReport,
   dcrActivity,
@@ -17,7 +13,11 @@ import {
   observationActivity,
   observationNote,
   sessionType,
-} from '@/lib/db/schema';
+} from '@/db/schema';
+import { and, asc, eq, inArray, isNull } from 'drizzle-orm';
+import { z } from 'zod/v4';
+
+import { auth } from '@/lib/auth';
 
 // ─────────────── Zod Schemas ───────────────
 
@@ -208,9 +208,6 @@ export async function getPass2Activities(date: string, sessionTypeId: string) {
   const activities = await db.query.dcrActivity.findMany({
     where: eq(dcrActivity.dcrId, dcr.id),
     orderBy: [asc(dcrActivity.createdAt)],
-    with: {
-      activity: true,
-    },
   });
 
   return { success: true as const, data: activities };

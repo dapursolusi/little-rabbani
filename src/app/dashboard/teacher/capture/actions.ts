@@ -2,11 +2,11 @@
 
 import { headers } from 'next/headers';
 
+import { db } from '@/db';
+import { sessionType } from '@/db/schema';
 import { and, asc, count, eq, ilike } from 'drizzle-orm';
 
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { sessionType } from '@/lib/db/schema';
 
 /**
  * Get all session types for the teacher capture session picker.

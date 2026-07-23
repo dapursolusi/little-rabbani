@@ -1,9 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { db } from '@/db';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import * as dcrActions from '@/lib/actions/dcr';
-import { db } from '@/lib/db';
 
 vi.mock('@/lib/db', () => {
   return {
@@ -92,12 +91,10 @@ describe('DCR Server Actions', () => {
           {
             id: 'dca-1',
             dcrId: 'dcr-1',
-            activityId: 'activity-1',
-            activityNameOther: null,
+            activityNameOther: 'Mewarnai',
             deviation: 'done',
             wasPlanned: true,
             createdAt: new Date(),
-            activity: { id: 'activity-1', name: 'Mewarnai', category: 'seni' },
           },
         ],
       };
@@ -125,20 +122,26 @@ describe('DCR Server Actions', () => {
 
   describe('getScheduleActivitiesForDcr', () => {
     it('should return schedule activities', async () => {
-      const mockScheduleItemFindMany = db.query.scheduleItem
+      const mockScheduleItemFindMany = db.query.calendarEvent
         .findMany as ReturnType<typeof vi.fn>;
       mockScheduleItemFindMany.mockResolvedValue([
         {
           id: 'si-1',
-          date: '2026-07-08',
+          startDate: '2026-07-08',
+          endDate: '2026-07-08',
           sessionTypeId: 'st-1',
-          activityId: 'activity-1',
-          type: 'activity',
-          outingLocation: null,
-          outingBringItems: null,
-          outingPermissionRequired: false,
+          subThemeId: 'sub-theme-1',
+          indoor: false,
+          name: 'Mewarnai',
+          location: null,
+          itemsToBring: null,
+          permissionRequired: false,
           sortOrder: 0,
-          activity: { id: 'activity-1', name: 'Mewarnai', category: 'seni' },
+          subTheme: {
+            id: 'sub-theme-1',
+            name: 'Mewarnai',
+            theme: { id: 'theme-1', name: 'Seni' },
+          },
         },
       ] as any);
 
@@ -159,10 +162,9 @@ describe('DCR Server Actions', () => {
         {
           id: 'dca-1',
           dcrId: 'dcr-1',
-          activityId: 'activity-1',
+          activityNameOther: 'Mewarnai',
           deviation: 'done',
           wasPlanned: true,
-          activity: { id: 'activity-1', name: 'Mewarnai', category: 'seni' },
         },
       ] as any);
 

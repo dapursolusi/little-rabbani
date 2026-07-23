@@ -1,17 +1,16 @@
 'use server';
 
+import { db } from '@/db';
+import {
+  calendarEvent,
+  dailyClassReport,
+  dcrActivity,
+  sessionType,
+} from '@/db/schema';
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
-import { db } from '@/lib/db';
-import {
-  activity,
-  dailyClassReport,
-  dcrActivity,
-  scheduleItem,
-  sessionType,
-} from '@/lib/db/schema';
 
 // ─────────────── Zod Schemas ───────────────
 
@@ -52,9 +51,6 @@ export async function getDcrBySession(date: string, sessionTypeId: string) {
     with: {
       dcrActivities: {
         orderBy: [asc(dcrActivity.createdAt)],
-        with: {
-          activity: true,
-        },
       },
       sessionType: true,
     },
@@ -64,9 +60,9 @@ export async function getDcrBySession(date: string, sessionTypeId: string) {
 }
 
 /**
- * Get schedule activities for a (date, sessionTypeId).
+ * Get calendar events for a (date, sessionTypeId).
  */
-export async function getScheduleActivitiesForDcr(
+export async function getCalendarEventsForDcr(
   date: string,
   sessionTypeId: string
 ) {
@@ -75,14 +71,14 @@ export async function getScheduleActivitiesForDcr(
     return { success: false as const, error: auth.error };
   }
 
-  const items = await db.query.scheduleItem.findMany({
+  const items = await db.query.calendarEvent.findMany({
     where: and(
-      eq(scheduleItem.date, date),
-      eq(scheduleItem.sessionTypeId, sessionTypeId),
-      isNull(scheduleItem.deletedAt)
+      eq(calendarEvent.startDate, date),
+      eq(calendarEvent.sessionTypeId, sessionTypeId),
+      isNull(calendarEvent.deletedAt)
     ),
-    orderBy: [asc(scheduleItem.sortOrder), asc(scheduleItem.createdAt)],
-    with: { activity: true },
+    orderBy: [asc(calendarEvent.sortOrder), asc(calendarEvent.createdAt)],
+    with: { subTheme: { with: { theme: true } } },
   });
 
   return { success: true as const, data: items };
@@ -132,9 +128,6 @@ export async function getDcrActivitiesForPass2(dcrId: string) {
   const activities = await db.query.dcrActivity.findMany({
     where: eq(dcrActivity.dcrId, dcrId),
     orderBy: [asc(dcrActivity.createdAt)],
-    with: {
-      activity: true,
-    },
   });
 
   return { success: true as const, data: activities };
@@ -170,9 +163,6 @@ export async function getDcrActivitiesForPass2Public(dcrId: string) {
   const activities = await db.query.dcrActivity.findMany({
     where: eq(dcrActivity.dcrId, dcrId),
     orderBy: [asc(dcrActivity.createdAt)],
-    with: {
-      activity: true,
-    },
   });
 
   return { success: true as const, data: activities };
@@ -296,40 +286,6 @@ export async function saveDcr(formData: FormData) {
     return {
       success: false as const,
       error: 'Gagal menyimpan laporan kelas',
-    };
-  }
-}
-
-/**
- * Create an activity from an unplanned DCR activity name.
- */
-export async function createActivityFromUnplanned(
-  name: string,
-  category: string = 'lainnya'
-) {
-  const auth = await requireOwner();
-  if (!auth.authorized) {
-    return { success: false as const, error: auth.error };
-  }
-
-  if (!name.trim()) {
-    return { success: false as const, error: 'Nama aktivitas wajib diisi' };
-  }
-
-  try {
-    const [newActivity] = await db
-      .insert(activity)
-      .values({
-        name: name.trim(),
-        category: category as (typeof activity.$inferInsert)['category'],
-      })
-      .returning();
-
-    return { success: true as const, data: newActivity };
-  } catch {
-    return {
-      success: false as const,
-      error: 'Gagal menambahkan aktivitas ke katalog',
     };
   }
 }

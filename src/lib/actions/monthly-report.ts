@@ -1,11 +1,6 @@
 'use server';
 
-import { and, asc, desc, eq, gte, ilike, inArray, lte, sql } from 'drizzle-orm';
-import { z } from 'zod/v4';
-
-import { requireOwner } from '@/lib/actions/utils';
-import { generateNarrative } from '@/lib/ai';
-import { db } from '@/lib/db';
+import { db } from '@/db';
 import {
   dailyReportSnapshot,
   kid,
@@ -13,7 +8,12 @@ import {
   observation,
   observationActivity,
   term,
-} from '@/lib/db/schema';
+} from '@/db/schema';
+import { and, asc, desc, eq, gte, ilike, inArray, lte, sql } from 'drizzle-orm';
+import { z } from 'zod/v4';
+
+import { requireOwner } from '@/lib/actions/utils';
+import { generateNarrative } from '@/lib/ai';
 
 // ─────────────── Zod Schemas ───────────────
 
@@ -186,19 +186,12 @@ async function computeMonthlyStats(
         eq(observationActivity.participated, 'yes')
       ),
       with: {
-        dcrActivity: {
-          with: {
-            activity: true,
-          },
-        },
+        dcrActivity: true,
       },
     });
 
     for (const act of activities) {
-      const name =
-        act.dcrActivity?.activity?.name ??
-        act.dcrActivity?.activityNameOther ??
-        'Aktivitas';
+      const name = act.dcrActivity?.activityNameOther ?? 'Aktivitas';
       activityParticipation[name] = (activityParticipation[name] ?? 0) + 1;
     }
   }

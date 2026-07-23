@@ -1,10 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { db } from '@/db';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as captureActions from '@/lib/actions/capture';
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
 
 vi.mock('@/lib/db', () => {
   return {
@@ -371,20 +370,10 @@ describe('Capture Server Actions', () => {
         {
           id: 'dca-1',
           dcrId: 'dcr-1',
-          activityId: 'activity-1',
-          activityNameOther: null,
+          activityNameOther: 'Mewarnai',
           deviation: 'done',
           wasPlanned: true,
           createdAt: new Date(),
-          activity: {
-            id: 'activity-1',
-            name: 'Mewarnai',
-            category: 'seni',
-            isDeleted: false,
-            deletedAt: null,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-          },
         },
       ] as any);
 

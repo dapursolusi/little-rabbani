@@ -1,18 +1,18 @@
 'use server';
 
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
-import { z } from 'zod/v4';
-
-import { requireOwner } from '@/lib/actions/utils';
-import { generateNarrative } from '@/lib/ai';
-import { db } from '@/lib/db';
+import { db } from '@/db';
 import {
   dailyReportSnapshot,
   kid,
   observation,
   observationNote,
   sessionType,
-} from '@/lib/db/schema';
+} from '@/db/schema';
+import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { z } from 'zod/v4';
+
+import { requireOwner } from '@/lib/actions/utils';
+import { generateNarrative } from '@/lib/ai';
 
 // ─────────────── Zod Schemas ───────────────
 
@@ -63,11 +63,7 @@ async function getObservationData(
       },
       activities: {
         with: {
-          dcrActivity: {
-            with: {
-              activity: true,
-            },
-          },
+          dcrActivity: true,
         },
       },
     },
@@ -86,14 +82,11 @@ async function getObservationData(
         const dcrAct = (
           a as {
             dcrActivity: {
-              activity: { name: string } | null;
               activityNameOther: string | null;
-            };
+            } | null;
           }
         ).dcrActivity;
-        return (
-          dcrAct?.activity?.name ?? dcrAct?.activityNameOther ?? 'Aktivitas'
-        );
+        return dcrAct?.activityNameOther ?? 'Aktivitas';
       })
       .filter(Boolean),
     notes: obs.notes.map((n: { text: string }) => n.text),

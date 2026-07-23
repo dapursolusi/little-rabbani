@@ -1,9 +1,8 @@
 'use server';
 
+import { db } from '@/db';
+import { kid, observation, reminderConfig } from '@/db/schema';
 import { and, eq, inArray } from 'drizzle-orm';
-
-import { db } from '@/lib/db';
-import { kid, observation, reminderConfig } from '@/lib/db/schema';
 
 import { requireOwner } from './utils';
 

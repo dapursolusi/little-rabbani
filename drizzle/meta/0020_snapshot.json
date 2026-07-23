@@ -98,14 +98,12 @@
           "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
     "public.activity": {
       "name": "activity",
@@ -163,10 +161,7 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
     "public.daily_class_report": {
       "name": "daily_class_report",
@@ -231,16 +226,7 @@
           "notNull": true
         }
       },
-      "indexes": {
-        "daily_class_report_date_session_type_id_unique": {
-          "name": "daily_class_report_date_session_type_id_unique",
-          "columns": ["date", "session_type_id"],
-          "isUnique": true,
-          "nullsNotDistinct": false,
-          "type": "unique",
-          "concurrently": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "daily_class_report_captured_by_user_id_fk": {
           "name": "daily_class_report_captured_by_user_id_fk",
@@ -249,29 +235,28 @@
           "columnsFrom": ["captured_by"],
           "columnsTo": ["id"],
           "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
-        "daily_class_report_session_type_id_fk": {
-          "name": "daily_class_report_session_type_id_fk",
+        "daily_class_report_session_type_id_session_type_id_fk": {
+          "name": "daily_class_report_session_type_id_session_type_id_fk",
           "tableFrom": "daily_class_report",
           "tableTo": "session_type",
           "columnsFrom": ["session_type_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "daily_class_report_session_id_unique": {
-          "name": "daily_class_report_session_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["session_id"]
+        "daily_class_report_date_session_type_id_unique": {
+          "name": "daily_class_report_date_session_type_id_unique",
+          "columns": ["date", "session_type_id"],
+          "nullsNotDistinct": false
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.daily_report_snapshot": {
       "name": "daily_report_snapshot",
@@ -362,16 +347,7 @@
           "notNull": true
         }
       },
-      "indexes": {
-        "daily_report_snapshot_kid_id_date_unique": {
-          "name": "daily_report_snapshot_kid_id_date_unique",
-          "columns": ["kid_id", "date"],
-          "isUnique": true,
-          "nullsNotDistinct": false,
-          "type": "unique",
-          "concurrently": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "daily_report_snapshot_kid_id_kid_id_fk": {
           "name": "daily_report_snapshot_kid_id_kid_id_fk",
@@ -380,7 +356,8 @@
           "columnsFrom": ["kid_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
         "daily_report_snapshot_edited_by_user_id_fk": {
           "name": "daily_report_snapshot_edited_by_user_id_fk",
@@ -389,29 +366,28 @@
           "columnsFrom": ["edited_by"],
           "columnsTo": ["id"],
           "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
-        "daily_report_snapshot_session_type_id_fk": {
-          "name": "daily_report_snapshot_session_type_id_fk",
+        "daily_report_snapshot_session_type_id_session_type_id_fk": {
+          "name": "daily_report_snapshot_session_type_id_session_type_id_fk",
           "tableFrom": "daily_report_snapshot",
           "tableTo": "session_type",
           "columnsFrom": ["session_type_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "daily_report_snapshot_kid_id_session_id_unique": {
-          "name": "daily_report_snapshot_kid_id_session_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["kid_id", "session_id"]
+        "daily_report_snapshot_kid_id_date_unique": {
+          "name": "daily_report_snapshot_kid_id_date_unique",
+          "columns": ["kid_id", "date"],
+          "nullsNotDistinct": false
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.dcr_activity": {
       "name": "dcr_activity",
@@ -480,7 +456,8 @@
           "columnsFrom": ["dcr_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
         "dcr_activity_activity_id_activity_id_fk": {
           "name": "dcr_activity_activity_id_activity_id_fk",
@@ -489,14 +466,12 @@
           "columnsFrom": ["activity_id"],
           "columnsTo": ["id"],
           "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
     "public.guardian": {
       "name": "guardian",
@@ -563,10 +538,7 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
     "public.holiday": {
       "name": "holiday",
@@ -649,7 +621,8 @@
           "columnsFrom": ["term_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
@@ -659,10 +632,7 @@
           "nullsNotDistinct": false,
           "columns": ["term_id", "start_date", "end_date", "reason", "source"]
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.idempotency_key": {
       "name": "idempotency_key",
@@ -704,10 +674,7 @@
           "nullsNotDistinct": false,
           "columns": ["key"]
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.kid": {
       "name": "kid",
@@ -782,7 +749,8 @@
           "columnsFrom": ["guardian_id"],
           "columnsTo": ["id"],
           "onDelete": "restrict",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
         "kid_enrolled_term_id_term_id_fk": {
           "name": "kid_enrolled_term_id_term_id_fk",
@@ -791,14 +759,12 @@
           "columnsFrom": ["enrolled_term_id"],
           "columnsTo": ["id"],
           "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
     "public.monthly_report_snapshot": {
       "name": "monthly_report_snapshot",
@@ -904,7 +870,8 @@
           "columnsFrom": ["kid_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
         "monthly_report_snapshot_term_id_term_id_fk": {
           "name": "monthly_report_snapshot_term_id_term_id_fk",
@@ -913,7 +880,8 @@
           "columnsFrom": ["term_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
         "monthly_report_snapshot_edited_by_user_id_fk": {
           "name": "monthly_report_snapshot_edited_by_user_id_fk",
@@ -922,7 +890,8 @@
           "columnsFrom": ["edited_by"],
           "columnsTo": ["id"],
           "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
@@ -932,10 +901,7 @@
           "nullsNotDistinct": false,
           "columns": ["kid_id", "month"]
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.observation": {
       "name": "observation",
@@ -1034,16 +1000,7 @@
           "notNull": true
         }
       },
-      "indexes": {
-        "observation_kid_id_date_unique": {
-          "name": "observation_kid_id_date_unique",
-          "columns": ["kid_id", "date"],
-          "isUnique": true,
-          "nullsNotDistinct": false,
-          "type": "unique",
-          "concurrently": false
-        }
-      },
+      "indexes": {},
       "foreignKeys": {
         "observation_kid_id_kid_id_fk": {
           "name": "observation_kid_id_kid_id_fk",
@@ -1052,7 +1009,8 @@
           "columnsFrom": ["kid_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
         "observation_teacher_id_user_id_fk": {
           "name": "observation_teacher_id_user_id_fk",
@@ -1061,29 +1019,28 @@
           "columnsFrom": ["teacher_id"],
           "columnsTo": ["id"],
           "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
-        "observation_session_type_id_fk": {
-          "name": "observation_session_type_id_fk",
+        "observation_session_type_id_session_type_id_fk": {
+          "name": "observation_session_type_id_session_type_id_fk",
           "tableFrom": "observation",
           "tableTo": "session_type",
           "columnsFrom": ["session_type_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {
-        "observation_kid_id_session_id_unique": {
-          "name": "observation_kid_id_session_id_unique",
-          "nullsNotDistinct": false,
-          "columns": ["kid_id", "session_id"]
+        "observation_kid_id_date_unique": {
+          "name": "observation_kid_id_date_unique",
+          "columns": ["kid_id", "date"],
+          "nullsNotDistinct": false
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.observation_activity": {
       "name": "observation_activity",
@@ -1132,7 +1089,8 @@
           "columnsFrom": ["observation_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
         "observation_activity_dcr_activity_id_dcr_activity_id_fk": {
           "name": "observation_activity_dcr_activity_id_dcr_activity_id_fk",
@@ -1141,7 +1099,8 @@
           "columnsFrom": ["dcr_activity_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
@@ -1151,10 +1110,7 @@
           "nullsNotDistinct": false,
           "columns": ["observation_id", "dcr_activity_id"]
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.observation_note": {
       "name": "observation_note",
@@ -1202,14 +1158,12 @@
           "columnsFrom": ["observation_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
     "public.push_subscription": {
       "name": "push_subscription",
@@ -1283,14 +1237,12 @@
           "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
     "public.quarterly_report_snapshot": {
       "name": "quarterly_report_snapshot",
@@ -1402,7 +1354,8 @@
           "columnsFrom": ["kid_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
         "quarterly_report_snapshot_term_id_term_id_fk": {
           "name": "quarterly_report_snapshot_term_id_term_id_fk",
@@ -1411,7 +1364,8 @@
           "columnsFrom": ["term_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
         "quarterly_report_snapshot_edited_by_user_id_fk": {
           "name": "quarterly_report_snapshot_edited_by_user_id_fk",
@@ -1420,7 +1374,8 @@
           "columnsFrom": ["edited_by"],
           "columnsTo": ["id"],
           "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
@@ -1430,10 +1385,7 @@
           "nullsNotDistinct": false,
           "columns": ["kid_id", "term_id"]
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.reminder_config": {
       "name": "reminder_config",
@@ -1496,7 +1448,8 @@
           "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
@@ -1506,10 +1459,7 @@
           "nullsNotDistinct": false,
           "columns": ["user_id"]
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.reminder_log": {
       "name": "reminder_log",
@@ -1583,23 +1533,22 @@
           "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
-        "reminder_log_session_type_id_fk": {
-          "name": "reminder_log_session_type_id_fk",
+        "reminder_log_session_type_id_session_type_id_fk": {
+          "name": "reminder_log_session_type_id_session_type_id_fk",
           "tableFrom": "reminder_log",
           "tableTo": "session_type",
           "columnsFrom": ["session_type_id"],
           "columnsTo": ["id"],
           "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
     "public.report_template": {
       "name": "report_template",
@@ -1654,10 +1603,7 @@
           "nullsNotDistinct": false,
           "columns": ["key"]
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.schedule_item": {
       "name": "schedule_item",
@@ -1773,7 +1719,8 @@
           "columnsFrom": ["session_type_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         },
         "schedule_item_activity_id_activity_id_fk": {
           "name": "schedule_item_activity_id_activity_id_fk",
@@ -1782,14 +1729,12 @@
           "columnsFrom": ["activity_id"],
           "columnsTo": ["id"],
           "onDelete": "set null",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
     "public.session": {
       "name": "session",
@@ -1855,7 +1800,8 @@
           "columnsFrom": ["user_id"],
           "columnsTo": ["id"],
           "onDelete": "cascade",
-          "onUpdate": "no action"
+          "onUpdate": "no action",
+          "schemaTo": ""
         }
       },
       "compositePrimaryKeys": {},
@@ -1865,10 +1811,7 @@
           "nullsNotDistinct": false,
           "columns": ["token"]
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.session_type": {
       "name": "session_type",
@@ -1953,10 +1896,7 @@
           "nullsNotDistinct": false,
           "columns": ["name", "start", "end"]
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.term": {
       "name": "term",
@@ -2018,10 +1958,7 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     },
     "public.user": {
       "name": "user",
@@ -2090,10 +2027,7 @@
           "nullsNotDistinct": false,
           "columns": ["email"]
         }
-      },
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      }
     },
     "public.verification": {
       "name": "verification",
@@ -2141,10 +2075,7 @@
       "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
+      "uniqueConstraints": {}
     }
   },
   "enums": {

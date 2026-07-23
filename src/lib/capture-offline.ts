@@ -1,6 +1,5 @@
 'use client';
 
-import { savePass1Observation } from '@/lib/actions/capture';
 import {
   estimateStorageUsage,
   getPendingObservations,
@@ -8,7 +7,9 @@ import {
   removeSyncedObservation,
   storeIdempotencyKey,
   updateSyncStatus,
-} from '@/lib/db/dexie';
+} from '@/db/dexie';
+
+import { savePass1Observation } from '@/lib/actions/capture';
 import { generateIdempotencyKey } from '@/lib/idempotency';
 
 // ─────────────── Types ───────────────

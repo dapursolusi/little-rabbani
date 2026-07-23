@@ -2,10 +2,7 @@ import { notFound } from 'next/navigation';
 
 import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
 
-import {
-  getDcrBySession,
-  getScheduleActivitiesForDcr,
-} from '@/lib/actions/dcr';
+import { getCalendarEventsForDcr, getDcrBySession } from '@/lib/actions/dcr';
 import { baseMetadata } from '@/lib/metadata';
 
 import { DcrForm } from './dcr-form';
@@ -25,7 +22,7 @@ export default async function DcrCapturePage({ params }: IDcrCapturePageProps) {
 
   const [dcrResult, scheduleResult] = await Promise.all([
     getDcrBySession(today, sessionId),
-    getScheduleActivitiesForDcr(today, sessionId),
+    getCalendarEventsForDcr(today, sessionId),
   ]);
 
   if (!dcrResult.success) {
