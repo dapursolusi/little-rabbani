@@ -271,7 +271,7 @@ export const scheduleItem = pgTable(
     name: text('name').notNull().default(''),
     type: scheduleItemTypeEnum('type').notNull(),
     location: text('location'),
-    bringItems: text('bring_items'),
+    itemsToBring: text('items_to_bring'),
     permissionRequired: boolean('permission_required').notNull().default(false),
     sortOrder: integer('sort_order').notNull().default(0),
     createdAt: timestamp('created_at').notNull().defaultNow(),

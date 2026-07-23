@@ -17,7 +17,7 @@ const CreateScheduleItemSchema = z.object({
   type: z.enum(['activity', 'outing']),
   name: z.string().optional().or(z.literal('')),
   location: z.string().optional().or(z.literal('')),
-  bringItems: z.string().optional().or(z.literal('')),
+  itemsToBring: z.string().optional().or(z.literal('')),
   permissionRequired: z.string().optional(),
   sortOrder: z.string().optional(),
 });
@@ -28,7 +28,7 @@ const UpdateScheduleItemSchema = z.object({
   type: z.enum(['activity', 'outing']),
   name: z.string().optional().or(z.literal('')),
   location: z.string().optional().or(z.literal('')),
-  bringItems: z.string().optional().or(z.literal('')),
+  itemsToBring: z.string().optional().or(z.literal('')),
   permissionRequired: z.string().optional(),
   sortOrder: z.string().optional(),
 });
@@ -219,7 +219,7 @@ export async function createScheduleItem(
         type: data.type,
         name: data.name || '',
         location: data.location || null,
-        bringItems: data.bringItems || null,
+        itemsToBring: data.itemsToBring || null,
         permissionRequired: data.permissionRequired === 'true',
         sortOrder: data.sortOrder ? parseInt(data.sortOrder) : nextSortOrder,
       })
@@ -287,7 +287,7 @@ export async function updateScheduleItem(formData: FormData) {
         activityId: data.activityId || null,
         type: data.type,
         location: data.location || null,
-        bringItems: data.bringItems || null,
+        itemsToBring: data.itemsToBring || null,
         permissionRequired: data.permissionRequired === 'true',
         sortOrder: data.sortOrder
           ? parseInt(data.sortOrder)

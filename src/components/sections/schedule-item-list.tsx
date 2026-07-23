@@ -15,7 +15,7 @@ interface ScheduleItem {
   name: string | null;
   type: 'activity' | 'outing';
   location: string | null;
-  bringItems: string | null;
+  itemsToBring: string | null;
   permissionRequired: boolean;
   sortOrder: number;
   activity: { id: string; name: string; category: string } | null;
@@ -99,9 +99,9 @@ export default function ScheduleItemList({ date }: ScheduleItemListProps) {
               {item.sessionType.end})
             </span>
           )}
-          {item.type === 'outing' && item.bringItems && (
+          {item.type === 'outing' && item.itemsToBring && (
             <span className="text-xs text-muted-foreground">
-              Bawaan: {item.bringItems}
+              Bawaan: {item.itemsToBring}
             </span>
           )}
         </Item>

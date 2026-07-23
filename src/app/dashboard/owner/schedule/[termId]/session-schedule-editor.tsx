@@ -47,7 +47,7 @@ interface IScheduleItem {
   name: string | null;
   type: 'activity' | 'outing';
   location: string | null;
-  bringItems: string | null;
+  itemsToBring: string | null;
   permissionRequired: boolean;
   sortOrder: number;
   activity?: {
@@ -92,7 +92,7 @@ export function SessionScheduleEditor({
 
   // Add outing form
   const [location, setLocation] = useState('');
-  const [bringItems, setBringItems] = useState('');
+  const [itemsToBring, setItemsToBring] = useState('');
   const [permissionRequired, setPermissionRequired] = useState(false);
 
   // Add activity form
@@ -180,7 +180,7 @@ export function SessionScheduleEditor({
       formData.set('sessionId', sessionId);
       formData.set('type', 'outing');
       formData.set('location', location);
-      formData.set('bringItems', bringItems);
+      formData.set('itemsToBring', itemsToBring);
       formData.set('permissionRequired', permissionRequired ? 'true' : 'false');
 
       const result = await createScheduleItem(formData);
@@ -188,7 +188,7 @@ export function SessionScheduleEditor({
         toast.success('Outing berhasil ditambahkan');
         setShowOutingDialog(false);
         setLocation('');
-        setBringItems('');
+        setItemsToBring('');
         setPermissionRequired(false);
         await setRefreshKey((k) => k + 1);
         router.refresh();
@@ -267,9 +267,9 @@ export function SessionScheduleEditor({
                         {item.location || 'Lokasi tidak ditentukan'}
                       </span>
                     </div>
-                    {item.bringItems && (
+                    {item.itemsToBring && (
                       <p className="text-xs text-muted-foreground">
-                        Bawaan: {item.bringItems}
+                        Bawaan: {item.itemsToBring}
                       </p>
                     )}
                     {item.permissionRequired && (
@@ -401,8 +401,8 @@ export function SessionScheduleEditor({
                   <Label htmlFor="outing-bring-items">Barang Bawaan</Label>
                   <Textarea
                     id="outing-bring-items"
-                    value={bringItems}
-                    onChange={(e) => setBringItems(e.target.value)}
+                    value={itemsToBring}
+                    onChange={(e) => setItemsToBring(e.target.value)}
                     placeholder="Cth: Topi, bekal, air minum"
                     rows={2}
                   />

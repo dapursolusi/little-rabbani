@@ -22,7 +22,7 @@ interface IScheduleItem {
   activityId: string | null;
   type: 'activity' | 'outing';
   location: string | null;
-  bringItems: string | null;
+  itemsToBring: string | null;
   permissionRequired: boolean;
   sortOrder: number;
   activity: IActivityInfo | null;
@@ -133,9 +133,9 @@ export function TeacherScheduleView() {
                         {item.location || 'Lokasi tidak ditentukan'}
                       </span>
                     </div>
-                    {item.bringItems && (
+                    {item.itemsToBring && (
                       <p className="text-xs text-muted-foreground">
-                        Bawaan: {item.bringItems}
+                        Bawaan: {item.itemsToBring}
                       </p>
                     )}
                     {item.permissionRequired && (
