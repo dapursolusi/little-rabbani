@@ -27,8 +27,9 @@ export async function getThemes(params?: {
 
   try {
     const { search, limit = 50, offset = 0 } = params ?? {};
-    const conditions = search ? [ilike(theme.name, `%${search}%`)] : [];
-    const where = conditions.length > 0 ? and(...conditions) : undefined;
+    const conditions = [isNull(theme.deletedAt)];
+    if (search) conditions.push(ilike(theme.name, `%${search}%`));
+    const where = and(...conditions);
 
     const [items, totalResult] = await Promise.all([
       db.query.theme.findMany({
@@ -178,11 +179,13 @@ type SubThemeActionResult =
 
 // ──────── SubTheme actions ────────
 
-export async function getSubThemes(themeId?: string) {
+export async function getSubThemes(params?: { themeId?: string }) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
+
+  const { themeId } = params ?? {};
 
   try {
     const conditions = [isNull(subTheme.deletedAt)];
@@ -305,11 +308,13 @@ export async function deleteSubTheme(
   }
 }
 
-export async function getActiveSubThemes(themeId?: string) {
+export async function getActiveSubThemes(params?: { themeId?: string }) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
+
+  const { themeId } = params ?? {};
 
   try {
     const conditions = [isNull(subTheme.deletedAt)];
