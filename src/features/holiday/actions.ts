@@ -1,10 +1,9 @@
 'use server';
 
+import { db } from '@/db';
+import { holiday } from '@/db/schema';
 import { HolidayFormSchema } from '@/features/holiday/schema';
 import { and, eq, isNull, sql } from 'drizzle-orm';
-
-import { db } from '@/lib/db';
-import { holiday } from '@/lib/db/schema';
 
 import { requireOwner } from '../../lib/actions/utils';
 

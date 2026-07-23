@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 
+import { db } from '@/db';
+import { session, user } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 import crypto from 'node:crypto';
-
-import { db } from '@/lib/db';
-import { session, user } from '@/lib/db/schema';
 
 /**
  * Dev-mode only session bypass for testing authenticated routes without OAuth.

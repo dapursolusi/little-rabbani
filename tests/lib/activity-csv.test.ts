@@ -1,9 +1,9 @@
+import { db } from '@/db';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as activityActions from '@/lib/actions/activity';
 import * as csvImportActions from '@/lib/actions/csv-import';
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
 
 // Mock the db module
 vi.mock('@/lib/db', () => {

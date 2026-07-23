@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 
+import { estimateStorageUsage, saveObservationOffline } from '@/db/dexie';
 import {
   ArrowLeft01Icon,
   BoltIcon,
@@ -31,9 +32,8 @@ import {
   savePass1Observation,
   savePass2Observation,
 } from '@/lib/actions/capture';
-import { isBrowserOnline, setOnConflictCallback } from '@/lib/capture-offline';
 import type { IConflictData } from '@/lib/capture-offline';
-import { estimateStorageUsage, saveObservationOffline } from '@/lib/db/dexie';
+import { isBrowserOnline, setOnConflictCallback } from '@/lib/capture-offline';
 import { generateIdempotencyKey } from '@/lib/idempotency';
 
 // ─────────────── Types ───────────────

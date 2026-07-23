@@ -1,17 +1,17 @@
 'use server';
 
-import { and, asc, eq, isNull } from 'drizzle-orm';
-import { z } from 'zod/v4';
-
-import { requireOwner } from '@/lib/actions/utils';
-import { db } from '@/lib/db';
+import { db } from '@/db';
 import {
   activity,
   dailyClassReport,
   dcrActivity,
   scheduleItem,
   sessionType,
-} from '@/lib/db/schema';
+} from '@/db/schema';
+import { and, asc, eq, isNull } from 'drizzle-orm';
+import { z } from 'zod/v4';
+
+import { requireOwner } from '@/lib/actions/utils';
 
 // ─────────────── Zod Schemas ───────────────
 

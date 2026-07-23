@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { db } from '@/db';
+import { kid } from '@/db/schema';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { eq } from 'drizzle-orm';
@@ -8,8 +10,6 @@ import {
   getActiveTerm,
   getMonthlyReportForKidMonth,
 } from '@/lib/actions/monthly-report';
-import { db } from '@/lib/db';
-import { kid } from '@/lib/db/schema';
 import { baseMetadata } from '@/lib/metadata';
 
 import { MonthlyReportClient } from './report-client';

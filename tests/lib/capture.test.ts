@@ -1,10 +1,9 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { db } from '@/db';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as captureActions from '@/lib/actions/capture';
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
 
 vi.mock('@/lib/db', () => {
   return {

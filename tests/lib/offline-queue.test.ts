@@ -1,5 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 // Re-import after mocks
 import {
   estimateStorageUsage,
@@ -8,7 +6,9 @@ import {
   removeSyncedObservation,
   saveObservationOffline,
   storeIdempotencyKey,
-} from '@/lib/db/dexie';
+} from '@/db/dexie';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
 import { IdempotencyService } from '@/lib/idempotency';
 
 // ─────────────── Dexie Mock ───────────────

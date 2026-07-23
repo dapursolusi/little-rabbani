@@ -59,7 +59,7 @@ vi.mock('@/lib/db', () => {
   };
 });
 
-const { db } = await import('@/lib/db');
+const { db } = await import('@/db');
 const mockDb = db as unknown as {
   select: ReturnType<typeof vi.fn>;
   query: {

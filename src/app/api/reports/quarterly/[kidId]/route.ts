@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { db } from '@/db';
+import { kid, quarterlyReportSnapshot, term } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { kid, quarterlyReportSnapshot, term } from '@/lib/db/schema';
 import { formatTermPeriod, generateQuarterlyPdf } from '@/lib/pdf/generate-pdf';
 
 /**

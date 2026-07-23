@@ -1,11 +1,10 @@
 'use server';
 
+import { db } from '@/db';
+import { kid, term } from '@/db/schema';
 import { KidFormSchema } from '@/features/kid/schema';
 import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
 import z from 'zod';
-
-import { db } from '@/lib/db';
-import { kid, term } from '@/lib/db/schema';
 
 import { requireOwner } from '../../lib/actions/utils';
 

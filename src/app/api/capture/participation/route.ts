@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+import { db } from '@/db';
+import { observation, observationActivity } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { observation, observationActivity } from '@/lib/db/schema';
 
 /**
  * GET /api/capture/participation?kidId=xxx&date=yyyy-mm-dd

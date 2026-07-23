@@ -1,10 +1,9 @@
 'use server';
 
+import { db } from '@/db';
+import { sessionType } from '@/db/schema';
 import { SessionTypeFormSchema } from '@/features/sessionType/schema';
 import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
-
-import { db } from '@/lib/db';
-import { sessionType } from '@/lib/db/schema';
 
 import { requireOwner } from '../../lib/actions/utils';
 

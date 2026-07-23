@@ -44,6 +44,7 @@ interface IScheduleItem {
   startDate: string | null;
   sessionTypeId: string | null;
   activityId: string | null;
+  name: string | null;
   type: 'activity' | 'outing';
   location: string | null;
   bringItems: string | null;

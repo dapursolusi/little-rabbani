@@ -1,5 +1,7 @@
 import Link from 'next/link';
 
+import { db } from '@/db';
+import { sessionType } from '@/db/schema';
 import { getTerm } from '@/features/term/actions';
 import { ArrowLeft01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
@@ -9,8 +11,6 @@ import { HolidayCalendarView } from '@/components/sections/holiday-calendar-view
 import { Badge } from '@/components/ui/badge';
 import { buttonVariants } from '@/components/ui/button';
 
-import { db } from '@/lib/db';
-import { sessionType } from '@/lib/db/schema';
 import { formatDate } from '@/lib/format';
 import { baseMetadata } from '@/lib/metadata';
 import { cn } from '@/lib/utils';

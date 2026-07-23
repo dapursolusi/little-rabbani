@@ -1,10 +1,9 @@
 'use server';
 
+import { db } from '@/db';
+import { scheduleItem, sessionType } from '@/db/schema';
 import { and, asc, eq, isNull } from 'drizzle-orm';
 import { z } from 'zod/v4';
-
-import { db } from '@/lib/db';
-import { scheduleItem, sessionType } from '@/lib/db/schema';
 
 import { requireOwner } from './utils';
 
@@ -16,6 +15,7 @@ const CreateScheduleItemSchema = z.object({
   sessionId: z.string().min(1),
   activityId: z.string().optional().or(z.literal('')),
   type: z.enum(['activity', 'outing']),
+  name: z.string().optional().or(z.literal('')),
   location: z.string().optional().or(z.literal('')),
   bringItems: z.string().optional().or(z.literal('')),
   permissionRequired: z.string().optional(),
@@ -26,6 +26,7 @@ const UpdateScheduleItemSchema = z.object({
   id: z.string().min(1),
   activityId: z.string().optional().or(z.literal('')),
   type: z.enum(['activity', 'outing']),
+  name: z.string().optional().or(z.literal('')),
   location: z.string().optional().or(z.literal('')),
   bringItems: z.string().optional().or(z.literal('')),
   permissionRequired: z.string().optional(),
@@ -216,6 +217,7 @@ export async function createScheduleItem(
         sessionTypeId: data.sessionTypeId,
         activityId: data.activityId || null,
         type: data.type,
+        name: data.name || '',
         location: data.location || null,
         bringItems: data.bringItems || null,
         permissionRequired: data.permissionRequired === 'true',

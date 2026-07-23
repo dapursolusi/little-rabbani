@@ -1,9 +1,9 @@
+import { db } from '@/db';
 import * as guardianActions from '@/features/guardian/actions';
 import * as kidActions from '@/features/kid/actions';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
 
 // Mock the db module
 vi.mock('@/lib/db', () => ({

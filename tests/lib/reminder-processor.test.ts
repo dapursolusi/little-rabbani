@@ -93,7 +93,7 @@ describe('findPendingCaptureSessions', () => {
   });
 
   it('returns empty array when no active session types', async () => {
-    const dbModule = await import('@/lib/db');
+    const dbModule = await import('@/db');
     vi.mocked(dbModule.db.query.sessionType.findMany).mockResolvedValue([]);
 
     const result = await findPendingCaptureSessions();

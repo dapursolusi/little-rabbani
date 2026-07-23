@@ -250,6 +250,7 @@ export const holidayRelations = relations(holiday, ({ one }) => ({
   }),
 }));
 
+// export for drizzle schema and zod validation only
 export const scheduleItemTypeEnum = pgEnum('schedule_item_type', [
   'activity',
   'outing',
@@ -267,6 +268,7 @@ export const scheduleItem = pgTable(
     activityId: uuid('activity_id').references(() => activity.id, {
       onDelete: 'set null',
     }),
+    name: text('name').notNull().default(''),
     type: scheduleItemTypeEnum('type').notNull(),
     location: text('location'),
     bringItems: text('bring_items'),

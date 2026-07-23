@@ -1,11 +1,11 @@
 'use server';
 
+import { db } from '@/db';
+import { activity } from '@/db/schema';
 import { and, eq, ilike, sql } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
-import { db } from '@/lib/db';
-import { activity } from '@/lib/db/schema';
 
 const ActivityFormSchema = z.object({
   name: z.string().min(1, 'Nama aktivitas wajib diisi'),

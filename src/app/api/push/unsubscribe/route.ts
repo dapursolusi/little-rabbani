@@ -3,11 +3,11 @@
 // VAL-CROSS-023: Push subscription stored and removed.
 import { NextResponse } from 'next/server';
 
+import { db } from '@/db';
+import { pushSubscription } from '@/db/schema';
 import { eq } from 'drizzle-orm';
 
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
-import { pushSubscription } from '@/lib/db/schema';
 
 export async function POST(request: Request) {
   try {

@@ -1,16 +1,16 @@
 'use server';
 
-import { and, eq, sql } from 'drizzle-orm';
-
-import { requireOwner } from '@/lib/actions/utils';
-import { db } from '@/lib/db';
+import { db } from '@/db';
 import {
   dailyClassReport,
   dailyReportSnapshot,
   kid,
   sessionType,
   term,
-} from '@/lib/db/schema';
+} from '@/db/schema';
+import { and, eq, sql } from 'drizzle-orm';
+
+import { requireOwner } from '@/lib/actions/utils';
 
 export interface DashboardStats {
   activeTerm: { id: string; name: string } | null;

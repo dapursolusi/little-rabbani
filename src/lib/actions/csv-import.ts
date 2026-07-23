@@ -1,10 +1,10 @@
 'use server';
 
+import { db } from '@/db';
+import { activity, guardian, kid, user } from '@/db/schema';
 import { and, eq } from 'drizzle-orm';
 
 import { requireOwner } from '@/lib/actions/utils';
-import { db } from '@/lib/db';
-import { activity, guardian, kid, user } from '@/lib/db/schema';
 
 export type CsvImportRowError = {
   line: number;

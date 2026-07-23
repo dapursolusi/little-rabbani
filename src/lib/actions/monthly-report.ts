@@ -1,11 +1,6 @@
 'use server';
 
-import { and, asc, desc, eq, gte, ilike, inArray, lte, sql } from 'drizzle-orm';
-import { z } from 'zod/v4';
-
-import { requireOwner } from '@/lib/actions/utils';
-import { generateNarrative } from '@/lib/ai';
-import { db } from '@/lib/db';
+import { db } from '@/db';
 import {
   dailyReportSnapshot,
   kid,
@@ -13,7 +8,12 @@ import {
   observation,
   observationActivity,
   term,
-} from '@/lib/db/schema';
+} from '@/db/schema';
+import { and, asc, desc, eq, gte, ilike, inArray, lte, sql } from 'drizzle-orm';
+import { z } from 'zod/v4';
+
+import { requireOwner } from '@/lib/actions/utils';
+import { generateNarrative } from '@/lib/ai';
 
 // ─────────────── Zod Schemas ───────────────
 

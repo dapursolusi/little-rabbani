@@ -13,7 +13,7 @@ import { drizzle } from 'drizzle-orm/neon-http';
 
 // We need holiday table schema. Since this script runs standalone (no @/ alias),
 // import the schema module directly.
-import * as schema from '../src/lib/db/schema';
+import * as schema from '../src/db/schema';
 
 const CALENDAR_ID = 'id.indonesian%23holiday%40group.v.calendar.google.com';
 const API_KEY = process.env.GOOGLE_CALENDAR_API_KEY;

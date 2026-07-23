@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 
+import { db } from '@/db';
+import { scheduleItem, sessionType } from '@/db/schema';
 import { and, asc, eq, isNull } from 'drizzle-orm';
-
-import { db } from '@/lib/db';
-import { scheduleItem, sessionType } from '@/lib/db/schema';
 
 /**
  * GET /api/schedule/today

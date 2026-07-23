@@ -1,9 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { db } from '@/db';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import * as dcrActions from '@/lib/actions/dcr';
-import { db } from '@/lib/db';
 
 vi.mock('@/lib/db', () => {
   return {

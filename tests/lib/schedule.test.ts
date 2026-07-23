@@ -1,8 +1,8 @@
+import { db } from '@/db';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as scheduleActions from '@/lib/actions/schedule';
 import { auth } from '@/lib/auth';
-import { db } from '@/lib/db';
 
 vi.mock('@/lib/db', () => {
   const createChain = (resolveValue: unknown[] = []) => {
@@ -126,6 +126,7 @@ const PAST_TYPE = {
 const SCHEDULE_ITEM_BASE = {
   startDate: null,
   endDate: null,
+  name: '',
   sessionTypeId: null,
   location: null,
   bringItems: null,

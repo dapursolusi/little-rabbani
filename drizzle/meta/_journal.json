@@ -162,6 +162,13 @@
       "when": 1784717691168,
       "tag": "0022_rename_date_to_start_date",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1784764411537,
+      "tag": "0023_add_schedule_item_name",
+      "breakpoints": true
     }
   ]
 }

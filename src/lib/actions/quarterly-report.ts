@@ -1,5 +1,14 @@
 'use server';
 
+import { db } from '@/db';
+import {
+  dailyReportSnapshot,
+  kid,
+  observation,
+  observationActivity,
+  quarterlyReportSnapshot,
+  term,
+} from '@/db/schema';
 import {
   and,
   asc,
@@ -16,15 +25,6 @@ import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
 import { type TQuarterlySectionType, generateNarrative } from '@/lib/ai';
-import { db } from '@/lib/db';
-import {
-  dailyReportSnapshot,
-  kid,
-  observation,
-  observationActivity,
-  quarterlyReportSnapshot,
-  term,
-} from '@/lib/db/schema';
 
 // ─────────────── Zod Schemas ───────────────
 
