@@ -6,7 +6,7 @@ import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Jadwal' };
 
-export default async function ScheduleSelectorPage() {
+export default async function ScheduleCalendarPage() {
   const holidayResult = await getHolidays();
 
   if (!holidayResult.success) {
