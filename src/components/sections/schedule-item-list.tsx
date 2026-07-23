@@ -14,9 +14,9 @@ interface ScheduleItem {
   activityId: string | null;
   name: string | null;
   type: 'activity' | 'outing';
-  outingLocation: string | null;
-  outingBringItems: string | null;
-  outingPermissionRequired: boolean;
+  location: string | null;
+  itemsToBring: string | null;
+  permissionRequired: boolean;
   sortOrder: number;
   activity: { id: string; name: string; category: string } | null;
   sessionType: { id: string; name: string; start: string; end: string } | null;
@@ -90,9 +90,12 @@ export default function ScheduleItemList({ date }: ScheduleItemListProps) {
               {item.sessionType.end})
             </span>
           )}
-          {item.type === 'outing' && item.outingBringItems && (
+          {item.type === outing\ && item.itemsToBring && (
             <span className="text-xs text-muted-foreground">
-              Bawaan: {item.outingBringItems}
+              Bawaan: {item.itemsToBring}
+          {item.type === 'outing' && item.itemsToBring && (
+            <span className="text-xs text-muted-foreground">
+              Bawaan: {item.itemsToBring}
             </span>
           )}
         </Item>
