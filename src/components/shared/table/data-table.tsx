@@ -3,7 +3,7 @@
 import * as React from 'react';
 
 import { FormField } from '@/types/field';
-import { Add02Icon } from '@hugeicons/core-free-icons';
+import { Add02Icon, SaveIcon } from '@hugeicons/core-free-icons';
 import {
   ColumnDef,
   ColumnFiltersState,
@@ -59,6 +59,10 @@ interface DataTableProps<TData, TValue> {
     label: string;
   };
   form: CreateUpdateFormProps;
+  emptyAction?: {
+    actionHref?: string;
+    action?: React.ReactNode;
+  };
 }
 
 export function DataTable<TData, TValue>({
@@ -66,6 +70,7 @@ export function DataTable<TData, TValue>({
   data,
   meta,
   form,
+  emptyAction,
 }: DataTableProps<TData, TValue>) {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [pagination, setPagination] = React.useState({
@@ -194,13 +199,38 @@ export function DataTable<TData, TValue>({
     canNextPage: pagination.pageIndex < pageCount - 1,
   };
 
+  function SaveModal() {
+    return (
+      <Modal
+        title={`Simpan ${meta.label}`}
+        trigger={{ icon: Add02Icon, text: `Tambah ${meta.label}` }}
+        open={modalOpen}
+        onOpenChange={setModalOpen}
+        content={
+          <DefaultFormFields
+            {...form}
+            meta={meta}
+            onSubmit={(data) => form.onSubmit?.(data)}
+            onSuccess={() => setModalOpen(false)}
+          >
+            <DialogFooter>
+              <DialogClose render={<Button variant="outline">Batal</Button>} />
+              <Button type="submit">Simpan</Button>
+            </DialogFooter>
+          </DefaultFormFields>
+        }
+      />
+    );
+  }
+
   if (data.length === 0) {
     return (
       <EmptyState
         title={`Belum ada ${meta.label.toLowerCase()}`}
         description={`Mulai dengan menambahkan ${meta.label.toLowerCase()} baru.`}
         actionLabel={`Tambah ${meta.label}`}
-        actionHref={form.actionHref ?? '/dashboard/owner/kid/create'}
+        actionHref={emptyAction?.actionHref}
+        action={emptyAction?.action ? emptyAction?.action : <SaveModal />}
       />
     );
   }
@@ -231,27 +261,7 @@ export function DataTable<TData, TValue>({
                 table={table}
                 columnVisibility={columnVisibility}
               />
-              <Modal
-                title={`Tambah ${meta.label}`}
-                trigger={{ icon: Add02Icon, text: `Tambah ${meta.label}` }}
-                open={modalOpen}
-                onOpenChange={setModalOpen}
-                content={
-                  <DefaultFormFields
-                    {...form}
-                    meta={meta}
-                    onSubmit={(data) => form.onSubmit?.(data)}
-                    onSuccess={() => setModalOpen(false)}
-                  >
-                    <DialogFooter>
-                      <DialogClose
-                        render={<Button variant="outline">Batal</Button>}
-                      />
-                      <Button type="submit">Simpan</Button>
-                    </DialogFooter>
-                  </DefaultFormFields>
-                }
-              />
+              <SaveModal />
             </div>
           </div>
           <DataTableFilter.Bar />
