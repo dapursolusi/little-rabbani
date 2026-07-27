@@ -165,7 +165,7 @@ export default function SchoolCalendar({
       weekend: 'text-red-500!',
       holiday: 'text-red-500!',
       hasEvent:
-        '[&_button]:after:absolute [&_button]:after:bottom-0.5 [&_button]:md:after:bottom-3.5 [&_button]:after:left-1/2 [&_button]:after:-translate-x-1/2 [&_button]:md:after:size-2 [&_button]:after:size-1.5 [&_button]:after:rounded-full [&_button]:after:bg-muted-foreground [&_button]:after:content-[""]',
+        '[&_button]:after:absolute [&_button]:after:bottom-0.75 [&_button]:md:after:bottom-3.5 [&_button]:after:left-1/2 [&_button]:after:-translate-x-1/2 [&_button]:md:after:h-2 [&_button]:after:h-1.5 [&_button]:after:w-[90%] [&_button]:after:rounded-full [&_button]:after:bg-muted-foreground/80 [&_button]:after:content-[""]',
     }),
     []
   );
@@ -224,7 +224,7 @@ export default function SchoolCalendar({
               }
             ></Button>
             <AddCustomHoliday hasExisting={matchingHolidays.length > 0} />
-            <Button variant="default">+ Rencana</Button>
+            <Button variant="default">+ Kurikulum</Button>
           </ButtonGroup>
           {matchingHolidays.length > 0 && (
             <ItemGroup className="w-full gap-1!">
