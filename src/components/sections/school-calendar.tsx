@@ -16,6 +16,7 @@ import { id } from 'date-fns/locale/id';
 import {
   Item,
   ItemActions,
+  ItemContent,
   ItemFooter,
   ItemGroup,
   ItemHeader,
@@ -186,15 +187,15 @@ export default function SchoolCalendar({
 
   return (
     <div className="w-full my-2 flex items-center justify-center">
-      <Card className="md:flex md:flex-row md:p-0 mx-auto">
-        <CardContent className="md:pb-4 md:pt-4 md:pr-0">
+      <Card className="md:flex md:flex-row w-full md:p-0 mx-auto">
+        <CardContent className="md:pb-4 md:pt-4 md:pr-0 flex items-center justify-center">
           <Calendar
             key={`calendar-${holidays.length}`}
             mode="single"
             selected={date}
             onSelect={handleDaySelect}
             onMonthChange={handleMonthChange}
-            className="rounded-lg border-2 [--cell-size:2.5rem] md:[--cell-size:5rem] [&_td]:border [&_th]:border"
+            className="rounded-lg border-2 w-full! [--cell-size:min(2.5rem, 100%)] md:[--cell-size:5rem] [&_td]:border [&_th]:border"
             required
             fixedWeeks
             locale={id}
@@ -211,7 +212,7 @@ export default function SchoolCalendar({
               year: 'numeric',
             })}
           </span>
-          <ButtonGroup className="w-full">
+          <ButtonGroup className="*:flex-1 [&_button]:w-full [&_button]:flex w-full!">
             <Button
               variant="default"
               nativeButton={false}
@@ -258,10 +259,10 @@ export default function SchoolCalendar({
                     <ItemHeader className="font-semibold">
                       {holiday.reason}
                     </ItemHeader>
-                    <ItemActions>Edit</ItemActions>
-                    <ItemFooter>
+                    <ItemContent>
                       <Badge variant="default">Kustom</Badge>
-                    </ItemFooter>
+                    </ItemContent>
+                    <ItemActions>Edit</ItemActions>
                   </Item>
                 ))}
             </ItemGroup>

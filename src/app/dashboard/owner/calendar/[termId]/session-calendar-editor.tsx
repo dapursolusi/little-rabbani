@@ -183,7 +183,7 @@ export function SessionCalendarEditor({
       const formData = new FormData();
       formData.set('id', itemId);
 
-      const result = await deleteCalendarEvent(formData);
+      const result = await deleteCalendarEvent(itemId);
       if (result.success) {
         toast.success('Item jadwal berhasil dihapus');
         setShowDeleteConfirm(null);

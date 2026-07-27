@@ -3,7 +3,6 @@
 import { db } from '@/db';
 import { calendarEvent, sessionType } from '@/db/schema';
 import { and, asc, eq, gte, isNull, lte } from 'drizzle-orm';
-import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
 
@@ -11,13 +10,6 @@ import { calendarEventSchema } from './schema';
 import { CalendarEventFormData } from './types';
 
 // ─────────────── Zod Schemas ───────────────
-
-// ponytail: FormData-compatible (all strings). Adapter layer strips isMultipleDays
-// before calling this action — see page.tsx onSubmit.
-
-const DeleteCalendarEventSchema = z.object({
-  id: z.string().min(1),
-});
 
 // ─────────────── Helpers ───────────────
 
