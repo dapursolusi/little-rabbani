@@ -41,15 +41,15 @@ export function ConfirmDialog({
           <DialogDescription>{description}</DialogDescription>
         </DialogHeader>
         <DialogFooter className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant={variant} onClick={onConfirm} disabled={loading}>
+            {loading ? 'Memproses...' : confirmText}
+          </Button>
           <Button
             variant="outline"
             onClick={() => onOpenChange(false)}
             disabled={loading}
           >
             {cancelText}
-          </Button>
-          <Button variant={variant} onClick={onConfirm} disabled={loading}>
-            {loading ? 'Memproses...' : confirmText}
           </Button>
         </DialogFooter>
       </DialogContent>

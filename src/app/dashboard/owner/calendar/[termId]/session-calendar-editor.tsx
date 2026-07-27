@@ -78,6 +78,8 @@ export function SessionCalendarEditor({
   sessionType,
   isLocked,
 }: ISessionCalendarEditorProps) {
+  // ponytail: sessionId passed by parent for context, not needed in insert
+  void sessionId;
   const router = useRouter();
   const [items, setItems] = useState<ICalendarEvent[]>([]);
   const [subThemes, setSubThemes] = useState<ISubTheme[]>([]);
@@ -148,17 +150,17 @@ export function SessionCalendarEditor({
 
     setIsProcessing(true);
     try {
-      const formData = new FormData();
-      formData.set('date', date);
-      formData.set('sessionTypeId', sessionTypeId);
-      formData.set('sessionId', sessionId);
-      formData.set('subThemeId', selectedSubThemeId);
-      formData.set('indoor', indoor ? 'true' : 'false');
-      formData.set('location', location);
-      formData.set('itemsToBring', itemsToBring);
-      formData.set('permissionRequired', permissionRequired ? 'true' : 'false');
-
-      const result = await createCalendarEvent(formData);
+      const result = await createCalendarEvent({
+        startDate: date,
+        sessionTypeId,
+        subThemeId: selectedSubThemeId,
+        // ponytail: session-calendar is always a single-day event
+        isMultipleDays: false,
+        endDate: date,
+        indoor,
+        location,
+        itemsToBring,
+      });
       if (result.success) {
         toast.success('Kegiatan berhasil ditambahkan');
         setShowAddDialog(false);

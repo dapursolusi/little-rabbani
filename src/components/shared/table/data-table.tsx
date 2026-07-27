@@ -17,6 +17,9 @@ import {
   useReactTable,
 } from '@tanstack/react-table';
 
+import DefaultFormFields, {
+  CreateUpdateFormProps,
+} from '@/components/shared/form/default-form-field';
 import { Button } from '@/components/ui/button';
 import { DialogClose, DialogFooter } from '@/components/ui/dialog';
 // Import-time side-effect: registers built-in filter types in the registry
@@ -32,9 +35,6 @@ import {
 } from '@/components/ui/table';
 
 import { EmptyState } from '../empty-state';
-import DefaultFormFields, {
-  CreateUpdateFormProps,
-} from '../form/default-form-field';
 import { Modal } from '../modal';
 import DataTableColumnVisibility from './data-table-column-visibility';
 import { EditFormContext } from './data-table-context';

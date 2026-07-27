@@ -24,6 +24,7 @@ export default function EditThemeForm({
       schemaKey="theme"
       formFields={themeFields()}
       initialData={initialData}
+      isEditing
       onSubmit={async (data) => {
         const result = await updateTheme(id, data);
         if (result.success) {

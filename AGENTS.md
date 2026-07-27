@@ -231,9 +231,16 @@ Agent-only docs (.md files consumed only by agents, not humans) are compressed b
 
 ## Agent skills
 
-## Subagent Driven Development
+## Subagent Driven Development (locked rule)
 
-Always use subagent driven development. Use `/cavecrew` skills for fetching subagents.
+**When calling the Agent tool for any code task, always pass `subagent_type` — never omit it.** The default `general-purpose` is reserved for non-code tasks only (architecture questions, research, multi-step non-code work).
+
+| Task                                           | `subagent_type`         |
+| ---------------------------------------------- | ----------------------- |
+| Code search / discovery / "where is X"         | `cavecrew-investigator` |
+| Edit (≤2 files, scope known)                   | `cavecrew-builder`      |
+| Diff/branch/file review for bugs               | `cavecrew-reviewer`     |
+| Everything else (research, planning, non-code) | `general-purpose`       |
 
 ### Issue tracker
 

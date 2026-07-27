@@ -1,8 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -38,22 +38,30 @@ interface DataTableRowActionsProps {
     };
   };
   actions?: {
-    edit: (id: string) => Promise<unknown> | void;
+    editHref?: string;
+    edit?: (id: string) => Promise<unknown> | void;
     delete: (id: string) => Promise<unknown> | void;
   };
   dialogMessage?: {
     delete: {
-      title: string;
-      description: string;
-      confirmText: string;
+      title?: string;
+      description?: string;
+      confirmText?: string;
     };
   };
-  rowName?: string;
+  dataName?: string;
   /** Extra dropdown menu items rendered between Edit and Hapus. */
   extendedActions?: ReactNode;
 }
 
-export function DataTableRowActions(props: DataTableRowActionsProps) {
+export function DataTableRowActions({
+  id,
+  toastMessage,
+  actions,
+  dialogMessage,
+  dataName,
+  extendedActions,
+}: DataTableRowActionsProps) {
   const router = useRouter();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -61,24 +69,18 @@ export function DataTableRowActions(props: DataTableRowActionsProps) {
   async function handleDelete() {
     setIsDeleting(true);
     try {
-      const result: Promise<unknown> = props.actions?.delete
-        ? (props.actions.delete(props.id) as Promise<unknown>)
+      const result: Promise<unknown> = actions?.delete
+        ? (actions.delete(id) as Promise<unknown>)
         : Promise.resolve(undefined);
       const resolvedResult = await result;
       if (resolvedResult) {
-        toast.success(
-          props.toastMessage?.success?.delete || 'Data berhasil dihapus'
-        );
+        toast.success(toastMessage?.success?.delete || 'Data berhasil dihapus');
         router.refresh();
       } else {
-        toast.error(
-          props.toastMessage?.failed?.delete || 'Gagal menghapus data'
-        );
+        toast.error(toastMessage?.failed?.delete || 'Gagal menghapus data');
       }
     } catch {
-      toast.error(
-        props.toastMessage?.failed?.system || 'Terjadi kesalahan sistem'
-      );
+      toast.error(toastMessage?.failed?.system || 'Terjadi kesalahan sistem');
     } finally {
       setIsDeleting(false);
       setShowDeleteConfirm(false);
@@ -101,11 +103,22 @@ export function DataTableRowActions(props: DataTableRowActionsProps) {
           align="end"
           className="min-w-max px-1.5 **:hover:font-semibold!"
         >
-          <DropdownMenuItem onClick={() => props.actions?.edit?.(props.id)}>
-            <HugeiconsIcon icon={Edit04Icon} />
-            Edit
-          </DropdownMenuItem>
-          {props.extendedActions}
+          {actions?.editHref ? (
+            <DropdownMenuItem
+              render={
+                <Link href={actions?.editHref}>
+                  <HugeiconsIcon icon={Edit04Icon} />
+                  Edit
+                </Link>
+              }
+            />
+          ) : (
+            <DropdownMenuItem onClick={() => actions?.edit?.(id)}>
+              <HugeiconsIcon icon={Edit04Icon} />
+              Edit
+            </DropdownMenuItem>
+          )}
+          {extendedActions}
           <DropdownMenuItem
             onClick={() => setShowDeleteConfirm(true)}
             className="text-destructive hover:bg-destructive! hover:text-white!"
@@ -119,15 +132,12 @@ export function DataTableRowActions(props: DataTableRowActionsProps) {
         open={showDeleteConfirm}
         onOpenChange={setShowDeleteConfirm}
         onConfirm={handleDelete}
-        title={
-          props.dialogMessage?.delete?.title ||
-          `Menghapus Data ${props.rowName}`
-        }
+        title={dialogMessage?.delete?.title || `Menghapus Data ${dataName}`}
         description={
-          props.dialogMessage?.delete?.description ||
-          `Yakin ingin menghapus data ${props.rowName}? Tindakan ini tidak bisa dibatalkan.`
+          dialogMessage?.delete?.description ||
+          `Yakin ingin menghapus data ${dataName}? Tindakan ini tidak bisa dibatalkan.`
         }
-        confirmText={props.dialogMessage?.delete?.confirmText || 'Ya, Hapus'}
+        confirmText={dialogMessage?.delete?.confirmText || 'Ya, Hapus'}
         variant="destructive"
         loading={isDeleting}
       />

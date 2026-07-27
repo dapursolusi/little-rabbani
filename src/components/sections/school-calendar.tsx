@@ -1,15 +1,16 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import Link from 'next/link';
 
+import { getCalendarEventDates } from '@/features/calendar/actions';
 import { createHoliday } from '@/features/holiday/actions';
 import { holidayFields } from '@/features/holiday/fields';
 import { Holiday } from '@/features/holiday/types';
 import { Add02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { format } from 'date-fns';
+import { endOfMonth, format, startOfMonth } from 'date-fns';
 import { id } from 'date-fns/locale/id';
 
 import {
@@ -29,7 +30,7 @@ import { ButtonGroup } from '../ui/button-group';
 import { Calendar } from '../ui/calendar';
 import { Card, CardContent, CardFooter } from '../ui/card';
 import { DialogClose, DialogFooter } from '../ui/dialog';
-import ScheduleItemList from './schedule-item-list';
+import CalendarEventList from './calendar-event-list';
 
 interface SchoolCalendarProps {
   holidays: Holiday[];
@@ -132,19 +133,35 @@ export default function SchoolCalendar({
   onDateSelect,
 }: SchoolCalendarProps) {
   const [date, setDate] = useState(new Date());
+  const [eventDates, setEventDates] = useState<Set<string>>(new Set());
+
+  // Fetch dates that have events for the displayed month
+  useEffect(() => {
+    const start = format(startOfMonth(date), 'yyyy-MM-dd');
+    const end = format(endOfMonth(date), 'yyyy-MM-dd');
+
+    getCalendarEventDates(start, end).then((result) => {
+      if (result.success) {
+        setEventDates(new Set(result.data));
+      }
+    });
+  }, [date]);
 
   const modifiers = useMemo(
     () => ({
       weekend: { dayOfWeek: [0, 6] },
       holiday: (day: Date) => isHoliday(day, holidays),
+      hasEvent: (day: Date) => eventDates.has(format(day, 'yyyy-MM-dd')),
     }),
-    [holidays]
+    [holidays, eventDates]
   );
 
   const modifiersClassNames = useMemo(
     () => ({
       weekend: 'text-red-500!',
       holiday: 'text-red-500!',
+      hasEvent:
+        '[&_button]:after:absolute [&_button]:after:bottom-0.5 [&_button]:md:after:bottom-3.5 [&_button]:after:left-1/2 [&_button]:after:-translate-x-1/2 [&_button]:md:after:size-2 [&_button]:after:size-1.5 [&_button]:after:rounded-full [&_button]:after:bg-muted-foreground [&_button]:after:content-[""]',
     }),
     []
   );
@@ -189,8 +206,9 @@ export default function SchoolCalendar({
           <ButtonGroup className="w-full">
             <Button
               variant="default"
+              nativeButton={false}
               render={
-                <Link href="/dashboard/owner/schedule/create">
+                <Link href="/dashboard/owner/calendar/create">
                   <HugeiconsIcon icon={Add02Icon} />
                   Kegiatan
                 </Link>
@@ -199,7 +217,7 @@ export default function SchoolCalendar({
             <AddCustomHoliday hasExisting={matchingHolidays.length > 0} />
             <Button variant="default">+ Rencana</Button>
           </ButtonGroup>
-          {holidays.length > 0 && (
+          {matchingHolidays.length > 0 && (
             <ItemGroup className="w-full gap-1!">
               <ItemSeparator></ItemSeparator>
               <Item>
@@ -240,7 +258,7 @@ export default function SchoolCalendar({
                 ))}
             </ItemGroup>
           )}
-          <ScheduleItemList date={format(date, 'yyyy-MM-dd')} />
+          <CalendarEventList date={format(date, 'yyyy-MM-dd')} />
         </CardFooter>
       </Card>
     </div>
