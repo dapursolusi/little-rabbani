@@ -3,7 +3,7 @@
 import * as React from 'react';
 
 import { FormField } from '@/types/field';
-import { Add02Icon, SaveIcon } from '@hugeicons/core-free-icons';
+import { Add02Icon } from '@hugeicons/core-free-icons';
 import {
   ColumnDef,
   ColumnFiltersState,
