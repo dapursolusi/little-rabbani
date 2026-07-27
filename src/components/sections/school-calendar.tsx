@@ -10,7 +10,7 @@ import { holidayFields } from '@/features/holiday/fields';
 import { Holiday } from '@/features/holiday/types';
 import { Add02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { endOfMonth, format, startOfMonth } from 'date-fns';
+import { addDays, endOfMonth, format, startOfMonth, subDays } from 'date-fns';
 import { id } from 'date-fns/locale/id';
 
 import {
@@ -133,19 +133,22 @@ export default function SchoolCalendar({
   onDateSelect,
 }: SchoolCalendarProps) {
   const [date, setDate] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [eventDates, setEventDates] = useState<Set<string>>(new Set());
 
-  // Fetch dates that have events for the displayed month
+  // Fetch dates that have events — cover overflow days from adjacent months
   useEffect(() => {
-    const start = format(startOfMonth(date), 'yyyy-MM-dd');
-    const end = format(endOfMonth(date), 'yyyy-MM-dd');
+    // Widen by ~6 days to catch the week overflow into prev/next month
+    // (fixedWeeks renders up to 6 weeks; 6 days covers the edge)
+    const start = format(subDays(startOfMonth(currentMonth), 6), 'yyyy-MM-dd');
+    const end = format(addDays(endOfMonth(currentMonth), 6), 'yyyy-MM-dd');
 
     getCalendarEventDates(start, end).then((result) => {
       if (result.success) {
         setEventDates(new Set(result.data));
       }
     });
-  }, [date]);
+  }, [currentMonth]);
 
   const modifiers = useMemo(
     () => ({
@@ -177,6 +180,10 @@ export default function SchoolCalendar({
     onDateSelect?.(format(day, 'yyyy-MM-dd'));
   };
 
+  const handleMonthChange = (month: Date) => {
+    setCurrentMonth(startOfMonth(month));
+  };
+
   return (
     <div className="w-full my-2 flex items-center justify-center">
       <Card className="md:flex md:flex-row md:p-0 mx-auto">
@@ -186,6 +193,7 @@ export default function SchoolCalendar({
             mode="single"
             selected={date}
             onSelect={handleDaySelect}
+            onMonthChange={handleMonthChange}
             className="rounded-lg border-2 [--cell-size:2.5rem] md:[--cell-size:5rem] [&_td]:border [&_th]:border"
             required
             fixedWeeks
