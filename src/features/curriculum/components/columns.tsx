@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { ArrowDown01Icon, ArrowUp01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ColumnDef } from '@tanstack/react-table';
+import { toast } from 'sonner';
 
 import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';
 import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
@@ -66,7 +67,16 @@ export const curriculumColumns: ColumnDef<Curriculum>[] = [
   },
   {
     accessorKey: 'indoor',
-    meta: { title: 'Lokasi', filter: { type: 'select' } },
+    meta: {
+      title: 'Lokasi',
+      filter: {
+        type: 'select',
+        options: [
+          { label: 'Indoor', value: 'true' },
+          { label: 'Outdoor', value: 'false' },
+        ],
+      },
+    },
     header: 'Lokasi',
     cell: ({ row }) => {
       const indoor = row.getValue('indoor') as boolean;
@@ -113,7 +123,10 @@ function CurriculumRowActions({ item }: { item: Curriculum }) {
             item.id,
             item.sortOrder - 1
           );
-          if (result.success) router.refresh();
+          if (result.success) {
+            toast.success('Urutan berhasil diubah');
+            router.refresh();
+          }
         }}
         disabled={item.sortOrder === 0}
         title="Naik"
@@ -128,9 +141,12 @@ function CurriculumRowActions({ item }: { item: Curriculum }) {
             item.id,
             item.sortOrder + 1
           );
-          if (result.success) router.refresh();
+          if (result.success) {
+            toast.success('Urutan berhasil diubah');
+            router.refresh();
+          }
         }}
-        // ponytail: no max check — clicking on last item just increments sortOrder harmlessly
+        // ponytail: no max check — last item clicking just won't find a swap target, no-op
         title="Turun"
       >
         <HugeiconsIcon icon={ArrowDown01Icon} className="h-4 w-4" />
