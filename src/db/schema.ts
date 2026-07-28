@@ -178,6 +178,7 @@ export const kidRelations = relations(kid, ({ one }) => ({
 
 export const termRelations = relations(term, ({ many }) => ({
   kids: many(kid),
+  curricula: many(curriculum),
 }));
 
 // ─────────────── Theme / Sub-Theme ───────────────
