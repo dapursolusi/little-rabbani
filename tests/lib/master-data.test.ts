@@ -6,7 +6,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { auth } from '@/lib/auth';
 
 // Mock the db module
-vi.mock('@/lib/db', () => ({
+vi.mock('@/db', () => ({
   db: {
     select: vi.fn(),
     insert: vi.fn(),

@@ -30,7 +30,7 @@ const mockCalls = {
   syncQueueDelete: vi.fn(),
 };
 
-vi.mock('@/lib/db/dexie', async () => {
+vi.mock('@/db/dexie', async () => {
   const mkResolve = (val: unknown) => vi.fn().mockResolvedValue(val);
 
   const commonMethods = {

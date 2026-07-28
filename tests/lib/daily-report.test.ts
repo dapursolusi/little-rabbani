@@ -19,7 +19,7 @@ vi.mock('@/lib/actions/utils', () => ({
   requireOwner: vi.fn(),
 }));
 
-vi.mock('@/lib/db', () => {
+vi.mock('@/db', () => {
   return {
     db: {
       query: {

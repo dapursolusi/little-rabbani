@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import * as dcrActions from '@/lib/actions/dcr';
 
-vi.mock('@/lib/db', () => {
+vi.mock('@/db', () => {
   return {
     db: {
       select: vi.fn(() => ({
@@ -39,6 +39,9 @@ vi.mock('@/lib/db', () => {
           findMany: vi.fn(),
         },
         dcrActivity: {
+          findMany: vi.fn(),
+        },
+        calendarEvent: {
           findMany: vi.fn(),
         },
       },

@@ -38,7 +38,7 @@ vi.mock('web-push', () => {
   };
 });
 
-vi.mock('@/lib/db', () => ({
+vi.mock('@/db', () => ({
   db: {
     query: {
       sessionType: {
