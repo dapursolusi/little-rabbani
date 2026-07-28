@@ -6,6 +6,10 @@ import { and, eq, isNull } from 'drizzle-orm';
 
 import { requireOwner } from '@/lib/actions/utils';
 
+// ──────── Batch Create ────────
+
+import { CurriculumItemSchema } from './schema';
+
 // ──────── Read ────────
 
 export async function getCurriculum(termId: string) {
@@ -35,7 +39,7 @@ export async function getCurriculumItem(id: string) {
 
   try {
     const item = await db.query.curriculum.findFirst({
-      where: eq(curriculum.id, id),
+      where: and(eq(curriculum.id, id), isNull(curriculum.deletedAt)),
     });
 
     if (!item) {
@@ -50,8 +54,6 @@ export async function getCurriculumItem(id: string) {
     return { success: false as const, error: 'Gagal mengambil item kurikulum' };
   }
 }
-
-// ──────── Batch Create ────────
 
 export type CreateCurriculumInput = {
   termId: string;
@@ -109,18 +111,24 @@ export async function updateCurriculumItem(
     return { success: false as const, error: auth.error };
   }
 
+  const parsed = CurriculumItemSchema.safeParse(data);
+  if (!parsed.success) {
+    const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
+    return { success: false as const, error: firstError };
+  }
+
   try {
     const [updated] = await db
       .update(curriculum)
       .set({
-        subThemeId: data.subThemeId as string,
-        name: data.name as string,
-        objective: (data.objective as string) ?? null,
-        indoor: (data.indoor === 'true') as boolean,
-        itemsToBring: (data.itemsToBring as string) ?? null,
+        subThemeId: parsed.data.subThemeId,
+        name: parsed.data.name,
+        objective: parsed.data.objective ?? null,
+        indoor: parsed.data.indoor === 'true',
+        itemsToBring: parsed.data.itemsToBring ?? null,
         updatedAt: new Date(),
       })
-      .where(eq(curriculum.id, id))
+      .where(and(eq(curriculum.id, id), isNull(curriculum.deletedAt)))
       .returning();
 
     if (!updated) {
@@ -145,7 +153,7 @@ export async function deleteCurriculumItem(id: string) {
     await db
       .update(curriculum)
       .set({ deletedAt: new Date(), updatedAt: new Date() })
-      .where(eq(curriculum.id, id));
+      .where(and(eq(curriculum.id, id), isNull(curriculum.deletedAt)));
 
     return { success: true as const, data: undefined };
   } catch {
@@ -162,17 +170,42 @@ export async function reorderCurriculumItem(id: string, newSortOrder: number) {
   }
 
   try {
-    const [updated] = await db
-      .update(curriculum)
-      .set({ sortOrder: newSortOrder, updatedAt: new Date() })
-      .where(eq(curriculum.id, id))
-      .returning();
-
-    if (!updated) {
+    const item = await db.query.curriculum.findFirst({
+      where: and(eq(curriculum.id, id), isNull(curriculum.deletedAt)),
+    });
+    if (!item) {
       return { success: false as const, error: 'Item tidak ditemukan' };
     }
 
-    return { success: true as const, data: updated };
+    // Swap sort_order with the adjacent item
+    await db.transaction(async (tx) => {
+      await tx
+        .update(curriculum)
+        .set({ sortOrder: newSortOrder, updatedAt: new Date() })
+        .where(eq(curriculum.id, id));
+
+      await tx
+        .update(curriculum)
+        .set({
+          sortOrder: item.sortOrder,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(curriculum.sortOrder, newSortOrder),
+            isNull(curriculum.deletedAt)
+            // ponytail: single-term — no unique constraint on sortOrder.
+            // A swap is atomic in the tx. If the "adjacent" item was already
+            // reordered by a concurrent call, this UPDATE sets it to the old
+            // sortOrder of this item, which is still a valid number. Worst
+            // case: two items share the same sortOrder until manually fixed.
+            // Upgrade to an optimistic-lock or queue-based reorder when
+            // concurrent owner edits are a real pattern.
+          )
+        );
+    });
+
+    return { success: true as const, data: undefined };
   } catch {
     return { success: false as const, error: 'Gagal mengubah urutan' };
   }
