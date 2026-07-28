@@ -37,6 +37,7 @@ interface IDcrFormProps {
   sessionId: string;
   initialActivities: IDcrActivity[];
   existingDcrId: string | null;
+  curriculumId?: string | null;
   learningNotes: string;
   isEditing: boolean;
 }
@@ -53,6 +54,7 @@ const DEVIATION_OPTIONS: Array<{
 export function DcrForm({
   sessionId,
   initialActivities,
+  curriculumId,
   learningNotes: initialNotes,
   isEditing,
 }: IDcrFormProps) {
@@ -114,6 +116,9 @@ export function DcrForm({
     try {
       const formData = new FormData();
       formData.append('sessionId', sessionId);
+      if (curriculumId) {
+        formData.append('curriculumId', curriculumId);
+      }
       formData.append('learningNotes', learningNotes);
 
       const activitiesPayload = activities.map((a) => ({
@@ -142,7 +147,7 @@ export function DcrForm({
     } finally {
       setIsProcessing(false);
     }
-  }, [activities, sessionId, learningNotes, isEditing, router]);
+  }, [activities, sessionId, curriculumId, learningNotes, isEditing, router]);
 
   return (
     <div className="space-y-6">
