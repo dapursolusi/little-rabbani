@@ -246,22 +246,19 @@ describe('Monthly Report - Server Actions', () => {
         {
           participated: 'yes',
           dcrActivity: {
-            activity: { name: 'Mewarnai' },
-            activityNameOther: null,
+            activityNameOther: 'Mewarnai',
           },
         },
         {
           participated: 'yes',
           dcrActivity: {
-            activity: { name: 'Mewarnai' },
-            activityNameOther: null,
+            activityNameOther: 'Mewarnai',
           },
         },
         {
           participated: 'yes',
           dcrActivity: {
-            activity: { name: 'Menggambar' },
-            activityNameOther: null,
+            activityNameOther: 'Menggambar',
           },
         },
       ]);
