@@ -309,13 +309,16 @@ export async function deleteSubTheme(
   }
 }
 
-export async function getActiveSubThemes(params?: { themeId?: string }) {
+export async function getActiveSubThemes(params?: {
+  themeId?: string;
+  withTheme?: boolean;
+}) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const { themeId } = params ?? {};
+  const { themeId, withTheme } = params ?? {};
 
   try {
     const conditions = [isNull(subTheme.deletedAt)];
@@ -325,6 +328,7 @@ export async function getActiveSubThemes(params?: { themeId?: string }) {
 
     const items = await db.query.subTheme.findMany({
       where: and(...conditions),
+      ...(withTheme ? { with: { theme: true } } : {}),
       orderBy: (st, { asc }) => [asc(st.name)],
     });
 

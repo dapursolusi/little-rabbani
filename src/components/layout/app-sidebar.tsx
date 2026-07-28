@@ -7,6 +7,7 @@ import { usePathname } from 'next/navigation';
 
 import { User } from '@/features/auth/types';
 import {
+  BookOpen01Icon,
   Calendar01Icon,
   ChevronRightIcon,
   ClipboardIcon,
@@ -113,6 +114,11 @@ const navGroups: SidebarNavItem[] = [
         title: 'Aktivitas',
         href: '/dashboard/owner/activity',
         icon: Folder01Icon,
+      },
+      {
+        title: 'Kurikulum',
+        href: '/dashboard/owner/curriculum',
+        icon: BookOpen01Icon,
       },
     ],
   },

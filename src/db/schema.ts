@@ -178,6 +178,7 @@ export const kidRelations = relations(kid, ({ one }) => ({
 
 export const termRelations = relations(term, ({ many }) => ({
   kids: many(kid),
+  curricula: many(curriculum),
 }));
 
 // ─────────────── Theme / Sub-Theme ───────────────
@@ -300,10 +301,45 @@ export const themeRelations = relations(theme, ({ many }) => ({
   subThemes: many(subTheme),
 }));
 
-export const subThemeRelations = relations(subTheme, ({ one }) => ({
+export const subThemeRelations = relations(subTheme, ({ one, many }) => ({
   theme: one(theme, {
     fields: [subTheme.themeId],
     references: [theme.id],
+  }),
+  curricula: many(curriculum),
+}));
+
+// ─────────────── Curriculum ───────────────
+
+export const curriculum = pgTable('curriculum', {
+  id: uuid('id').defaultRandom().primaryKey(),
+  termId: uuid('term_id')
+    .notNull()
+    .references(() => term.id, { onDelete: 'cascade' }),
+  sortOrder: integer('sort_order').notNull().default(0),
+  subThemeId: uuid('sub_theme_id')
+    .notNull()
+    .references(() => subTheme.id, { onDelete: 'restrict' }),
+  name: text('name').notNull(),
+  objective: text('objective'),
+  indoor: boolean('indoor').notNull().default(false),
+  itemsToBring: text('items_to_bring'),
+  createdAt: timestamp('created_at').notNull().defaultNow(),
+  updatedAt: timestamp('updated_at')
+    .notNull()
+    .defaultNow()
+    .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
+});
+
+export const curriculumRelations = relations(curriculum, ({ one }) => ({
+  term: one(term, {
+    fields: [curriculum.termId],
+    references: [term.id],
+  }),
+  subTheme: one(subTheme, {
+    fields: [curriculum.subThemeId],
+    references: [subTheme.id],
   }),
 }));
 
