@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { curriculum } from '@/db/schema';
+import { curriculum, dailyClassReport } from '@/db/schema';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -164,6 +164,24 @@ export async function deleteCurriculumItem(id: string) {
     return { success: false as const, error: auth.error };
   }
 
+  // Check if any DCR references this curriculum item
+  const referencingDcrs = await db.query.dailyClassReport.findMany({
+    where: and(
+      eq(dailyClassReport.curriculumId, id),
+      isNull(dailyClassReport.deletedAt)
+    ),
+    columns: { id: true },
+    limit: 1,
+  });
+
+  if (referencingDcrs.length > 0) {
+    return {
+      success: false as const,
+      error:
+        'Item kurikulum tidak dapat dihapus karena sudah digunakan oleh laporan harian kelas.',
+    };
+  }
+
   try {
     await db
       .update(curriculum)
@@ -190,6 +208,24 @@ export async function reorderCurriculumItem(id: string, newSortOrder: number) {
     });
     if (!item) {
       return { success: false as const, error: 'Item tidak ditemukan' };
+    }
+
+    // Check if any DCR references this curriculum item
+    const referencingDcrs = await db.query.dailyClassReport.findMany({
+      where: and(
+        eq(dailyClassReport.curriculumId, id),
+        isNull(dailyClassReport.deletedAt)
+      ),
+      columns: { id: true },
+      limit: 1,
+    });
+
+    if (referencingDcrs.length > 0) {
+      return {
+        success: false as const,
+        error:
+          'Item kurikulum tidak dapat diubah urutannya karena sudah digunakan oleh laporan harian kelas.',
+      };
     }
 
     // Swap sort_order with the adjacent item
