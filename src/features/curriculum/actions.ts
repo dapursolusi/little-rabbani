@@ -193,8 +193,9 @@ export async function reorderCurriculumItem(id: string, newSortOrder: number) {
         .where(
           and(
             eq(curriculum.sortOrder, newSortOrder),
+            eq(curriculum.termId, item.termId),
             isNull(curriculum.deletedAt)
-            // ponytail: single-term — no unique constraint on sortOrder.
+            // ponytail: no unique constraint on sortOrder per term.
             // A swap is atomic in the tx. If the "adjacent" item was already
             // reordered by a concurrent call, this UPDATE sets it to the old
             // sortOrder of this item, which is still a valid number. Worst
