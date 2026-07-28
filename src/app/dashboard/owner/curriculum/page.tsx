@@ -42,7 +42,7 @@ export default async function CurriculumPage() {
 
   const [curriculumResult, subThemesResult] = await Promise.all([
     getCurriculum(activeTerm.id),
-    getActiveSubThemes(),
+    getActiveSubThemes({ withTheme: true }),
   ]);
 
   const items = curriculumResult.success ? curriculumResult.data : [];

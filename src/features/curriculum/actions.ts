@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { curriculum } from '@/db/schema';
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, sql } from 'drizzle-orm';
 
 import { requireOwner } from '@/lib/actions/utils';
 
@@ -79,12 +79,27 @@ export async function createCurriculumItems(inputs: CreateCurriculumInput[]) {
   }
 
   try {
+    // Compute starting sort_order server-side to avoid client-racing on concurrent creates.
+    const [maxRow] = await db
+      .select({
+        maxSort: sql<number>`COALESCE(MAX(${curriculum.sortOrder}), -1)`,
+      })
+      .from(curriculum)
+      .where(
+        and(
+          eq(curriculum.termId, inputs[0].termId),
+          isNull(curriculum.deletedAt)
+        )
+      );
+
+    const startSort = (maxRow?.maxSort ?? -1) + 1;
+
     const created = await db
       .insert(curriculum)
       .values(
-        inputs.map((i) => ({
+        inputs.map((i, idx) => ({
           termId: i.termId,
-          sortOrder: i.sortOrder,
+          sortOrder: startSort + idx,
           subThemeId: i.subThemeId,
           name: i.name,
           objective: i.objective ?? null,
