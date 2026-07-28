@@ -30,6 +30,7 @@ type TDcrActivityInput = z.infer<typeof DcrActivityInputSchema>;
 const SaveDcrSchema = z.object({
   date: z.string().min(1, 'Tanggal wajib diisi'),
   sessionTypeId: z.string().min(1, 'Tipe sesi wajib diisi'),
+  curriculumId: z.string().optional(),
   learningNotes: z.string().optional().or(z.literal('')),
   activities: z.string().min(2, 'Aktivitas wajib diisi'), // JSON string
 });
@@ -250,6 +251,7 @@ export async function saveDcr(formData: FormData) {
   const {
     date,
     sessionTypeId,
+    curriculumId,
     learningNotes,
     activities: activitiesJson,
   } = parsed.data;
@@ -307,6 +309,7 @@ export async function saveDcr(formData: FormData) {
         .values({
           date,
           sessionTypeId,
+          curriculumId: curriculumId || null,
           learningNotes: learningNotes || null,
           capturedBy: auth.userId,
           capturedAt: new Date(),

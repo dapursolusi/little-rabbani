@@ -367,9 +367,6 @@ export const dailyClassReport = pgTable(
     capturedBy: text('captured_by').references(() => user.id, {
       onDelete: 'set null',
     }),
-    curriculumId: uuid('curriculum_id').references(() => curriculum.id, {
-      onDelete: 'set null',
-    }),
     capturedAt: timestamp('captured_at').notNull().defaultNow(),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
@@ -415,10 +412,6 @@ export const dailyClassReportRelations = relations(
       references: [curriculum.id],
     }),
     dcrActivities: many(dcrActivity),
-    curriculum: one(curriculum, {
-      fields: [dailyClassReport.curriculumId],
-      references: [curriculum.id],
-    }),
   })
 );
 
