@@ -1,32 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-
+import { createCalendarEvent } from '@/features/calendar/actions';
 import { calendarEventFields } from '@/features/calendar/fields';
-import { getSessionTypes } from '@/features/sessionType/actions';
-import { SessionType } from '@/features/sessionType/types';
-import { getSubThemes } from '@/features/theme/actions';
-import { SubTheme } from '@/features/theme/types';
+import { useCalendarFormData } from '@/features/calendar/hooks';
 
 import DefaultFormFields from '@/components/shared/form/default-form-field';
 import { Button } from '@/components/ui/button';
 
 export default function CreateCalendarEventPage() {
-  const [sessions, setSessions] = useState<SessionType[]>([]);
-  const [subThemes, setSubThemes] = useState<SubTheme[]>([]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      const [sessionsRes, subThemesRes] = await Promise.all([
-        getSessionTypes(),
-        getSubThemes(),
-      ]);
-      if (sessionsRes.success) setSessions(sessionsRes.data);
-      if (subThemesRes.success) setSubThemes(subThemesRes.data);
-    };
-
-    fetchData();
-  }, []);
+  const { sessions, subThemes } = useCalendarFormData();
   return (
     <div className="w-full mx-auto max-w-[600]">
       <DefaultFormFields
@@ -35,6 +17,7 @@ export default function CreateCalendarEventPage() {
             isMultipleDays: watch('isMultipleDays') as boolean,
             sessions,
             subThemes,
+            indoor: watch('indoor') as boolean,
           })
         }
         schemaKey="calendarEvent"
@@ -51,11 +34,11 @@ export default function CreateCalendarEventPage() {
           permissionRequired: '',
         }}
         onSubmit={async (data) => {
-          const payload = { ...data };
-          if (!payload.isMultipleDays) {
-            payload.endDate = payload.startDate;
-          }
-          console.log(payload);
+          // ponytail: pass action schema fields only (subThemeId differs: uuid|'' vs strict uuid)
+          return createCalendarEvent(data);
+        }}
+        onSuccess={() => {
+          window.location.href = '/dashboard/owner/calendar';
         }}
       >
         <Button type="submit" className="w-full">

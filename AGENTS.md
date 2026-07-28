@@ -85,6 +85,17 @@ bunx shadcn@latest add <component>   # Add base-nova component (NOT in package.j
 bunx playwright install              # First-time browser binary setup
 ```
 
+## Graphify
+
+This project has a knowledge graph at `graphify-out/` with god nodes, community structure, and cross-file relationships.
+
+Rules:
+
+- For codebase questions, first run `graphify query "<question>"` when `graphify-out/graph.json` exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than `GRAPH_REPORT.md` or raw grep output.
+- If `graphify-out/wiki/index.md` exists, use it for broad navigation instead of raw source browsing.
+- Read `graphify-out/GRAPH_REPORT.md` only for broad architecture review or when query/path/explain do not surface enough context.
+- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
+
 ## CodeGraph
 
 This project uses CodeGraph (`.codegraph/`) for code intelligence. Agents must ensure it's available before performing code exploration.
@@ -125,6 +136,11 @@ This is a one-time setup per clone. Skip if already indexed.
 - ⚠️ **TypeScript `^6` resolution in CI** — `^6` in `package.json` can resolve to TypeScript 7.x (e.g. `7.0.2`) in CI, but `@typescript-eslint/typescript-estree@8.x` doesn't support TypeScript 7's new `Extension` enum. Linter crashes with `TypeError: Cannot read properties of undefined (reading 'Cjs')`. **Pin to an exact version** (`"typescript": "6.0.3"`) instead of a range — don't use `^`.
 - ⚠️ **ESLint 10 + eslint-plugin-react 7.x incompatibility** — ESLint 10 removed `context.getFilename()`, but `eslint-plugin-react@7.x` still calls it in `lib/util/version.js`. Linter crashes on `.tsx` files with `TypeError: contextOrFilename.getFilename is not a function`. **Fix:** a postinstall patch (`scripts/patch-eslint-plugin-react.mjs`) replaces `contextOrFilename.getFilename()` → `contextOrFilename.filename`. Remove the patch when eslint-plugin-react ships 8.x.
 - ⚠️ **`env.mjs` env vars required in CI** — `@t3-oss/env-nextjs` validates ALL env vars at import time. Tests importing `@/lib/auth` (which imports `env.mjs`) must set every variable in `beforeEach`, including `OPENROUTER_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`. CI workflows running `next dev` (E2E, Preview) need a full `.env` or injected secrets — missing vars crash startup.
+- ⚠️ **DB schema changes require a migration, every time** — the Drizzle schema file and the live DB drift silently if you only edit `.ts`. After ANY schema change:
+  1. `bun run db:generate` — produces migration SQL + snapshot
+  2. `bun run db:migrate` — applies it to the DB
+  3. Verify with `drizzle-kit push --force` (non-interactive) or run the schema audit script
+  4. A 500 error on a relation query (`with: { ... }`) often means a column referenced in the schema doesn't exist in the DB
 
 ## When to Ask
 
@@ -215,9 +231,16 @@ Agent-only docs (.md files consumed only by agents, not humans) are compressed b
 
 ## Agent skills
 
-## Subagent Driven Development
+## Subagent Driven Development (locked rule)
 
-Always use subagent driven development. Use `/cavecrew` skills for fetching subagents.
+**When calling the Agent tool for any code task, always pass `subagent_type` — never omit it.** The default `general-purpose` is reserved for non-code tasks only (architecture questions, research, multi-step non-code work).
+
+| Task                                           | `subagent_type`         |
+| ---------------------------------------------- | ----------------------- |
+| Code search / discovery / "where is X"         | `cavecrew-investigator` |
+| Edit (≤2 files, scope known)                   | `cavecrew-builder`      |
+| Diff/branch/file review for bugs               | `cavecrew-reviewer`     |
+| Everything else (research, planning, non-code) | `general-purpose`       |
 
 ### Issue tracker
 

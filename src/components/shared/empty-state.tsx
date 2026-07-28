@@ -17,6 +17,7 @@ interface EmptyDataProps {
   description?: string;
   actionLabel?: string;
   actionHref?: string;
+  action?: React.ReactNode;
 }
 
 export function EmptyState({
@@ -25,6 +26,7 @@ export function EmptyState({
   description,
   actionLabel,
   actionHref,
+  action,
 }: EmptyDataProps) {
   return (
     <Empty>
@@ -38,8 +40,8 @@ export function EmptyState({
       <EmptyContent className="flex-row justify-center gap-2">
         {actionLabel && actionHref ? (
           <Button render={<a href={actionHref} />}>{actionLabel}</Button>
-        ) : actionLabel ? (
-          <Button>{actionLabel}</Button>
+        ) : action ? (
+          action
         ) : null}
       </EmptyContent>
       <Button

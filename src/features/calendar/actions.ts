@@ -2,40 +2,14 @@
 
 import { db } from '@/db';
 import { calendarEvent, sessionType } from '@/db/schema';
-import { and, asc, eq, gte, isNull } from 'drizzle-orm';
-import { z } from 'zod/v4';
+import { and, asc, eq, gte, isNull, lte } from 'drizzle-orm';
 
 import { requireOwner } from '@/lib/actions/utils';
 
+import { calendarEventSchema } from './schema';
+import { CalendarEventFormData } from './types';
+
 // ─────────────── Zod Schemas ───────────────
-
-const CreateCalendarEventSchema = z.object({
-  date: z.string().min(1, 'Tanggal wajib dipilih'),
-  sessionTypeId: z.string().min(1, 'Tipe sesi wajib dipilih'),
-  sessionId: z.string().min(1),
-  subThemeId: z.string().uuid().optional().or(z.literal('')),
-  indoor: z.string().optional(),
-  name: z.string().optional().or(z.literal('')),
-  location: z.string().optional().or(z.literal('')),
-  itemsToBring: z.string().optional().or(z.literal('')),
-  permissionRequired: z.string().optional(),
-  sortOrder: z.string().optional(),
-});
-
-const UpdateCalendarEventSchema = z.object({
-  id: z.string().min(1),
-  subThemeId: z.string().uuid().optional().or(z.literal('')),
-  indoor: z.string().optional(),
-  name: z.string().optional().or(z.literal('')),
-  location: z.string().optional().or(z.literal('')),
-  itemsToBring: z.string().optional().or(z.literal('')),
-  permissionRequired: z.string().optional(),
-  sortOrder: z.string().optional(),
-});
-
-const DeleteCalendarEventSchema = z.object({
-  id: z.string().min(1),
-});
 
 // ─────────────── Helpers ───────────────
 
@@ -95,6 +69,27 @@ export async function getCalendarEvents(date: string, sessionTypeId: string) {
   return { success: true as const, data: items };
 }
 
+export async function getCalendarEventById(id: string) {
+  const auth = await requireOwner();
+  if (!auth.authorized) {
+    return { success: false as const, error: auth.error };
+  }
+
+  const result = await db.query.calendarEvent.findFirst({
+    where: and(eq(calendarEvent.id, id), isNull(calendarEvent.deletedAt)),
+    with: {
+      subTheme: {
+        with: {
+          theme: true,
+        },
+      },
+      sessionType: true,
+    },
+  });
+
+  return { success: true as const, data: result };
+}
+
 /**
  * Get all calendar events for a specific date (for owner schedule overview).
  * Returns events across all session types for the given date.
@@ -105,7 +100,7 @@ export async function getCalendarEventsByDate(date: string) {
     return { success: false as const, error: auth.error };
   }
 
-  const items = await db.query.calendarEvent.findMany({
+  const events = await db.query.calendarEvent.findMany({
     where: and(
       eq(calendarEvent.startDate, date),
       isNull(calendarEvent.deletedAt)
@@ -121,7 +116,7 @@ export async function getCalendarEventsByDate(date: string) {
     },
   });
 
-  return { success: true as const, data: items };
+  return { success: true as const, data: events };
 }
 
 /**
@@ -183,16 +178,13 @@ export async function getUpcomingCalendar() {
  * VAL-CAPTURE-002: Owner creates calendar event with indoor/outdoor setting.
  * VAL-CAPTURE-004: Event editable until session start time.
  */
-export async function createCalendarEvent(
-  input: FormData | Record<string, unknown>
-) {
+export async function createCalendarEvent(input: Record<string, unknown>) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const rawData = input instanceof FormData ? Object.fromEntries(input) : input;
-  const parsed = CreateCalendarEventSchema.safeParse(rawData);
+  const parsed = calendarEventSchema.safeParse(input);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
@@ -202,7 +194,7 @@ export async function createCalendarEvent(
   const data = parsed.data;
 
   // Check schedule lock
-  const lockError = await checkScheduleLock(data.date, data.sessionTypeId);
+  const lockError = await checkScheduleLock(data.startDate, data.sessionTypeId);
   if (lockError) {
     return { success: false as const, error: lockError };
   }
@@ -213,7 +205,7 @@ export async function createCalendarEvent(
     .from(calendarEvent)
     .where(
       and(
-        eq(calendarEvent.startDate, data.date),
+        eq(calendarEvent.startDate, data.startDate),
         eq(calendarEvent.sessionTypeId, data.sessionTypeId)
       )
     )
@@ -228,16 +220,16 @@ export async function createCalendarEvent(
     const [newItem] = await db
       .insert(calendarEvent)
       .values({
-        startDate: data.date,
-        endDate: data.date,
+        startDate: data.startDate,
+        endDate: data.isMultipleDays ? data.endDate : data.startDate,
         sessionTypeId: data.sessionTypeId,
-        subThemeId: data.subThemeId || null,
-        indoor: data.indoor === 'true',
+        subThemeId: data.subThemeId,
+        indoor: data.indoor,
         name: data.name || '',
-        location: data.location || null,
-        itemsToBring: data.itemsToBring || null,
-        permissionRequired: data.permissionRequired === 'true',
-        sortOrder: data.sortOrder ? parseInt(data.sortOrder) : nextSortOrder,
+        location: data.location ?? null,
+        itemsToBring: data.itemsToBring ?? null,
+        permissionRequired: data.permissionRequired ?? false,
+        sortOrder: nextSortOrder,
       })
       .returning();
 
@@ -255,14 +247,16 @@ export async function createCalendarEvent(
  * VAL-CAPTURE-005: Owner adds activity to calendar event mid-week.
  * VAL-CAPTURE-006: Owner swaps activity between calendar slots.
  */
-export async function updateCalendarEvent(formData: FormData) {
+export async function updateCalendarEvent(
+  id: string,
+  input: CalendarEventFormData
+) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const rawData = Object.fromEntries(formData);
-  const parsed = UpdateCalendarEventSchema.safeParse(rawData);
+  const parsed = calendarEventSchema.safeParse(input);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
@@ -273,24 +267,17 @@ export async function updateCalendarEvent(formData: FormData) {
 
   // Get the existing item to find date + sessionTypeId for lock check
   const existingItem = await db.query.calendarEvent.findFirst({
-    where: eq(calendarEvent.id, data.id),
+    where: eq(calendarEvent.id, id),
   });
 
   if (!existingItem) {
-    return { success: false as const, error: 'Item jadwal tidak ditemukan' };
-  }
-
-  if (!existingItem.startDate || !existingItem.sessionTypeId) {
-    return {
-      success: false as const,
-      error: 'Item jadwal belum memiliki data tanggal',
-    };
+    return { success: false as const, error: 'Event kegiatan tidak ditemukan' };
   }
 
   // Check schedule lock
   const lockError = await checkScheduleLock(
     existingItem.startDate,
-    existingItem.sessionTypeId
+    existingItem.sessionTypeId || ''
   );
   if (lockError) {
     return { success: false as const, error: lockError };
@@ -301,17 +288,15 @@ export async function updateCalendarEvent(formData: FormData) {
       .update(calendarEvent)
       .set({
         subThemeId: data.subThemeId || null,
-        indoor: data.indoor === 'true',
+        indoor: data.indoor,
         name: data.name || '',
         location: data.location || null,
         itemsToBring: data.itemsToBring || null,
-        permissionRequired: data.permissionRequired === 'true',
-        sortOrder: data.sortOrder
-          ? parseInt(data.sortOrder)
-          : existingItem.sortOrder,
+        permissionRequired: data.permissionRequired || false,
+        sortOrder: data.sortOrder ? data.sortOrder : existingItem.sortOrder,
         updatedAt: new Date(),
       })
-      .where(eq(calendarEvent.id, data.id))
+      .where(eq(calendarEvent.id, id))
       .returning();
 
     return { success: true as const, data: updated };
@@ -324,24 +309,41 @@ export async function updateCalendarEvent(formData: FormData) {
 }
 
 /**
- * Delete a calendar event.
- * VAL-CAPTURE-007: Owner deletes calendar event.
+ * Get dates that have calendar events within a date range (for dot indicators).
+ * Returns deduplicated date strings.
  */
-export async function deleteCalendarEvent(formData: FormData) {
+export async function getCalendarEventDates(
+  startDate: string,
+  endDate: string
+) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const rawData = Object.fromEntries(formData);
-  const parsed = DeleteCalendarEventSchema.safeParse(rawData);
+  const rows = await db
+    .selectDistinct({ date: calendarEvent.startDate })
+    .from(calendarEvent)
+    .where(
+      and(
+        gte(calendarEvent.startDate, startDate),
+        lte(calendarEvent.startDate, endDate),
+        isNull(calendarEvent.deletedAt)
+      )
+    );
 
-  if (!parsed.success) {
-    const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
-    return { success: false as const, error: firstError };
+  return { success: true as const, data: rows.map((r) => r.date) };
+}
+
+/**
+ * Delete a calendar event.
+ * VAL-CAPTURE-007: Owner deletes calendar event.
+ */
+export async function deleteCalendarEvent(id: string) {
+  const auth = await requireOwner();
+  if (!auth.authorized) {
+    return { success: false as const, error: auth.error };
   }
-
-  const { id } = parsed.data;
 
   // Get the existing item to check lock
   const existingItem = await db.query.calendarEvent.findFirst({
@@ -349,23 +351,10 @@ export async function deleteCalendarEvent(formData: FormData) {
   });
 
   if (!existingItem) {
-    return { success: false as const, error: 'Item jadwal tidak ditemukan' };
-  }
-
-  if (!existingItem.startDate || !existingItem.sessionTypeId) {
     return {
       success: false as const,
-      error: 'Item jadwal belum memiliki data tanggal',
+      error: 'Kegiatan yang akan dihapus tidak ditemukan',
     };
-  }
-
-  // Check schedule lock
-  const lockError = await checkScheduleLock(
-    existingItem.startDate,
-    existingItem.sessionTypeId
-  );
-  if (lockError) {
-    return { success: false as const, error: lockError };
   }
 
   try {
@@ -377,7 +366,7 @@ export async function deleteCalendarEvent(formData: FormData) {
   } catch {
     return {
       success: false as const,
-      error: 'Gagal menghapus item jadwal',
+      error: 'Gagal menghapus item kegiatan',
     };
   }
 }

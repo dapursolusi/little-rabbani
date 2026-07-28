@@ -157,13 +157,18 @@ function googleToHolidayRows(events: GoogleEvent[]) {
 }
 
 export async function syncHolidays() {
+  const authCheck = await requireOwner();
+  if (!authCheck.authorized) {
+    return { success: false as const, error: authCheck.error };
+  }
+
   try {
     const events = await fetchGoogleHolidays(2026);
 
     if (events.length === 0) {
       return {
-        success: true as const,
-        data: { inserted: 0, deleted: 0 },
+        success: false as const,
+        error: 'Google Calendar returned 0 events — sync aborted',
       };
     }
 

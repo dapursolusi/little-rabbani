@@ -1,4 +1,4 @@
-import { type ReactNode, useState } from 'react';
+import { type ReactNode, useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -18,16 +18,23 @@ import {
 import InputFieldRenderer from './input-field-renderer';
 import { type SchemaKey, getZodSchema } from './schema-registry';
 
-export interface CreateUpdateFormProps {
+export type DefaultFormFieldsProps = {
   schemaKey?: SchemaKey;
   initialData: Record<string, unknown>;
   formFields: FormField[] | ((watch: (name: string) => unknown) => FormField[]);
-  actionHref?: string;
-  onSubmit?: (data: Record<string, unknown>) => unknown | Promise<unknown>;
   children?: ReactNode | ((ctx: { isSubmitting: boolean }) => ReactNode);
   meta?: { label: string; domain?: string };
   onSuccess?: () => void;
-}
+  onSubmit: (data: Record<string, unknown>) => unknown | Promise<unknown>;
+  isEditing?: boolean;
+};
+
+export type CreateUpdateFormProps = Pick<
+  DefaultFormFieldsProps,
+  'schemaKey' | 'initialData' | 'formFields' | 'isEditing'
+> & {
+  onSubmit?: (data: Record<string, unknown>) => unknown | Promise<unknown>;
+};
 
 export default function DefaultFormFields({
   schemaKey,
@@ -37,7 +44,8 @@ export default function DefaultFormFields({
   children,
   meta,
   onSuccess,
-}: CreateUpdateFormProps) {
+  isEditing,
+}: DefaultFormFieldsProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -53,20 +61,27 @@ export default function DefaultFormFields({
     mode: 'onChange',
   });
 
+  // Reset form when initialData changes (e.g. after async fetch resolves)
+  useEffect(() => {
+    form.reset(initialData as TForm);
+  }, [initialData, form]);
+
   const fields =
     typeof formFields === 'function'
       ? formFields((name) => form.watch(name as Path<TForm>))
       : formFields;
 
   async function onSubmit(data: z.output<typeof schema>) {
-    if (onSubmitProp) {
+    if (typeof onSubmitProp === 'function') {
       setIsSubmitting(true);
       try {
         const result = await onSubmitProp(data);
         if (result) {
           const r = result as { success: boolean; error?: string };
           if (r.success) {
-            toast.success(`${meta?.label ?? 'Data'} berhasil ditambahkan`);
+            toast.success(
+              `${meta?.label ?? 'Data'} berhasil ${isEditing ? 'diperbarui' : 'ditambahkan'}`
+            );
             router.refresh();
             onSuccess?.();
           } else {

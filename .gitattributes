@@ -9,3 +9,4 @@
 *.woff binary
 *.woff2 binary
 *.pdf binary
+graphify-out/graph.json merge=graphify

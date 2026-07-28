@@ -18,8 +18,15 @@ export type CustomHTMLInputType =
 
 export type CustomHTMLInputTypeSelect = {
   type: 'select';
-  selectOptions: { value: string; label: string }[];
+  selectOptions: SelectOption[];
 };
+
+export type SelectOption = { value: string; label: string } | SelectOptionGroup;
+
+export interface SelectOptionGroup {
+  group: string;
+  options: { value: string; label: string }[];
+}
 
 export type CustomHTMLInputTypeSwitch = {
   type: 'switch';

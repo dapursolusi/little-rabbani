@@ -51,7 +51,7 @@ export function RowActionsDialog({
           edit: () => setOpen(true),
           delete: deleteAction,
         }}
-        rowName={rowName}
+        dataName={rowName}
         extendedActions={extendedActions}
       />
       <Modal

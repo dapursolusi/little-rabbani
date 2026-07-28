@@ -120,13 +120,13 @@ describe('DCR Server Actions', () => {
     });
   });
 
-  describe('getScheduleActivitiesForDcr', () => {
-    it('should return schedule activities', async () => {
-      const mockScheduleItemFindMany = db.query.calendarEvent
+  describe('getCalendarEventsForDcr', () => {
+    it('should return calendar events', async () => {
+      const mockCalendarEventFindMany = db.query.calendarEvent
         .findMany as ReturnType<typeof vi.fn>;
-      mockScheduleItemFindMany.mockResolvedValue([
+      mockCalendarEventFindMany.mockResolvedValue([
         {
-          id: 'si-1',
+          id: 'ce-1',
           startDate: '2026-07-08',
           endDate: '2026-07-08',
           sessionTypeId: 'st-1',
@@ -140,12 +140,12 @@ describe('DCR Server Actions', () => {
           subTheme: {
             id: 'sub-theme-1',
             name: 'Mewarnai',
-            theme: { id: 'theme-1', name: 'Seni' },
+            theme: { id: 'theme-1', name: 'Seni', color: null },
           },
         },
       ] as any);
 
-      const result = await dcrActions.getScheduleActivitiesForDcr(
+      const result = await dcrActions.getCalendarEventsForDcr(
         '2026-07-08',
         'st-1'
       );

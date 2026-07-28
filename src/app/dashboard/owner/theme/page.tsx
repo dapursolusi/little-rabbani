@@ -1,39 +1,76 @@
-import { getThemes } from '@/features/theme/actions';
-import { themeColumns } from '@/features/theme/components/columns';
-import { themeFields } from '@/features/theme/fields';
+import {
+  createSubTheme,
+  createTheme,
+  getSubThemes,
+  getThemes,
+} from '@/features/theme/actions';
+import {
+  subThemeColumns,
+  themeColumns,
+} from '@/features/theme/components/columns';
+import { subThemeFields, themeFields } from '@/features/theme/fields';
+import { NodeAddIcon, SubnodeAddIcon } from '@hugeicons/core-free-icons';
 
+import ContentTabs from '@/components/shared/content-tabs';
 import { DataTable } from '@/components/shared/table/data-table';
 
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Tema' };
 
-const PAGE_SIZE = 50;
+export default async function ThemeListPage() {
+  const themeResult = await getThemes();
+  const subThemeResult = await getSubThemes();
 
-interface IThemeListPageProps {
-  searchParams: Promise<{ search?: string; page?: string }>;
-}
-
-export default async function ThemeListPage({
-  searchParams,
-}: IThemeListPageProps) {
-  const { search, page } = await searchParams;
-  const currentPage = Math.max(1, Number(page) || 1);
-  const offset = (currentPage - 1) * PAGE_SIZE;
-
-  const result = await getThemes({ search, limit: PAGE_SIZE, offset });
-
-  if (!result.success) {
+  if (!themeResult.success || !subThemeResult.success) {
     return (
       <section className="p-4 text-center text-destructive">
-        {result.error}
+        {themeResult.error && subThemeResult.error}
       </section>
     );
   }
 
-  const themes = result.data;
-  const totalItems = result.total ?? 0;
-  const totalPages = Math.ceil(totalItems / PAGE_SIZE);
+  const themes = themeResult.data;
+  const subThemes = subThemeResult.data;
+
+  const tabs = [
+    {
+      triggerValue: 'theme',
+      triggerLabel: 'Tema',
+      icon: NodeAddIcon,
+      children: (
+        <DataTable
+          columns={themeColumns}
+          data={themes}
+          meta={{ label: metadata.title }}
+          form={{
+            schemaKey: 'theme',
+            initialData: { name: '', color: '' },
+            formFields: themeFields(),
+            onSubmit: createTheme,
+          }}
+        />
+      ),
+    },
+    {
+      triggerValue: 'subTheme',
+      triggerLabel: 'Sub Tema',
+      icon: SubnodeAddIcon,
+      children: (
+        <DataTable
+          columns={subThemeColumns}
+          data={subThemes}
+          meta={{ label: metadata.title }}
+          form={{
+            schemaKey: 'subTheme',
+            initialData: { name: '', themeId: '' },
+            formFields: subThemeFields(themes),
+            onSubmit: createSubTheme,
+          }}
+        />
+      ),
+    },
+  ];
 
   return (
     <section className="p-4 sm:p-6">
@@ -46,16 +83,7 @@ export default async function ThemeListPage({
           </p>
         </div>
       </div>
-      <DataTable
-        columns={themeColumns}
-        data={themes}
-        meta={{ label: metadata.title }}
-        form={{
-          schemaKey: 'theme',
-          initialData: { name: '', color: '' },
-          formFields: themeFields(),
-        }}
-      />
+      <ContentTabs tabs={tabs} />
     </section>
   );
 }

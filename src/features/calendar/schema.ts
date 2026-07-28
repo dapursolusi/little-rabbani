@@ -5,13 +5,15 @@ const calendarEventSchema = z
     name: z.string().min(1, 'Nama wajib diisi'),
     isMultipleDays: z.boolean(),
     startDate: z.string().min(1, 'Tanggal mulai wajib diisi'),
-    endDate: z.string().nullish(),
-    subThemeId: z.string().uuid('Sub tema wajib dipilih'),
+    // ponytail: single-day events hide endDate from UI; adapter copies startDate -> endDate
+    endDate: z.string().min(1).or(z.literal('')),
+    subThemeId: z.uuid('Sub tema wajib dipilih'),
     sessionTypeId: z.uuid(),
     indoor: z.boolean(),
     location: z.string().nullish(),
     itemsToBring: z.string().nullish(),
     permissionRequired: z.boolean().nullish(),
+    sortOrder: z.number().nullish(),
   })
   .refine(
     (data) => {
@@ -25,5 +27,3 @@ const calendarEventSchema = z
   );
 
 export { calendarEventSchema };
-
-export type CalendarEvent = z.infer<typeof calendarEventSchema>;

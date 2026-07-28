@@ -6,8 +6,13 @@ import { DataTableColumnHeader } from '@/components/shared/table/data-table-colu
 import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
 import { Badge } from '@/components/ui/badge';
 
-import { deleteTheme, updateTheme } from '../actions';
-import { Theme } from '../types';
+import {
+  deleteSubTheme,
+  deleteTheme,
+  updateSubTheme,
+  updateTheme,
+} from '../actions';
+import { SubTheme, Theme } from '../types';
 
 export const themeColumns: ColumnDef<Theme>[] = [
   {
@@ -28,14 +33,14 @@ export const themeColumns: ColumnDef<Theme>[] = [
     },
     cell: ({ row }) => {
       return (
-        <div className="flex items-center gap-2">
+        <span className="flex items-center gap-2">
           <Badge
             variant="secondary"
             className="font-medium"
             style={{ backgroundColor: row.getValue('color') ?? undefined }}
           ></Badge>
           <span>{row.getValue('color') ?? '-'}</span>
-        </div>
+        </span>
       );
     },
   },
@@ -67,6 +72,57 @@ export const themeColumns: ColumnDef<Theme>[] = [
           }}
           updateAction={updateTheme}
           deleteAction={() => deleteTheme(theme.id)}
+        />
+      );
+    },
+  },
+];
+
+export const subThemeColumns: ColumnDef<SubTheme>[] = [
+  {
+    accessorKey: 'name',
+    meta: { title: 'Nama Sub Tema', enableSearch: true },
+    header: ({ column }) => {
+      return <DataTableColumnHeader column={column} title="Nama" />;
+    },
+    cell: ({ row }) => {
+      return <span className="font-medium">{row.getValue('name') ?? '-'}</span>;
+    },
+  },
+  {
+    accessorKey: 'theme',
+    meta: { title: 'Tema', enableSearch: false },
+    header: ({ column }) => {
+      return <DataTableColumnHeader column={column} title="Tema" />;
+    },
+    cell: ({ row }) => {
+      return (
+        <span
+          className="font-bold"
+          style={{ color: row.original.theme?.color ?? undefined }}
+        >
+          {row.original.theme?.name ?? '-'}
+        </span>
+      );
+    },
+  },
+  {
+    id: 'actions',
+    header: 'Aksi',
+    enableHiding: false,
+    cell: ({ row }) => {
+      const sub = row.original;
+      return (
+        <RowActionsDialog
+          id={sub.id}
+          rowName={sub.name}
+          title="Edit Tema"
+          description="Perbarui tema"
+          initialData={{
+            name: sub.name,
+          }}
+          updateAction={updateSubTheme}
+          deleteAction={() => deleteSubTheme(sub.id)}
         />
       );
     },

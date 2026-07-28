@@ -7,12 +7,14 @@ interface CalendarEventFieldsArgs {
   isMultipleDays: boolean;
   sessions: SessionType[];
   subThemes: SubTheme[];
+  indoor: boolean;
 }
 
 export const calendarEventFields = ({
   isMultipleDays = false,
   sessions,
   subThemes,
+  indoor = false,
 }: CalendarEventFieldsArgs): FormField[] => {
   return [
     {
@@ -72,15 +74,26 @@ export const calendarEventFields = ({
       name: 'subThemeId',
       label: 'Sub Tema',
       type: 'select',
-      selectOptions: subThemes.map((st) => ({
-        value: st.id,
-        label: st.name,
-      })),
+      selectOptions: Object.values(
+        subThemes.reduce<
+          Record<
+            string,
+            { group: string; options: { value: string; label: string }[] }
+          >
+        >((acc, st) => {
+          const themeName = st.theme?.name ?? 'Tanpa Tema';
+          (acc[themeName] ??= { group: themeName, options: [] }).options.push({
+            value: st.id,
+            label: st.name,
+          });
+          return acc;
+        }, {})
+      ),
       required: true,
     },
     {
       name: 'indoor',
-      label: 'Kegiatan Indoor',
+      label: `Kegiatan ${indoor ? 'Indoor / Dalam Kelas' : 'Outdoor / Luar Kelas'}`,
       type: 'switch',
       required: true,
     },

@@ -5,11 +5,14 @@ Auto-generated from `src/components/` directory structure.
 ## UI Primitives (shadcn base-nova)
 
 ```
+alert-dialog.tsx
 alert.tsx
 avatar.tsx
 badge.tsx
 breadcrumb.tsx
+button-group.tsx
 button.tsx
+calendar.tsx
 card.tsx
 checkbox.tsx
 collapsible.tsx
@@ -41,7 +44,7 @@ tooltip.tsx
 ## Sections
 
 ```
-activity-form.tsx
+calendar-event-list.tsx
 confirm-dialog.tsx
 conflict-dialog.tsx
 csv-import-form.tsx
@@ -52,9 +55,10 @@ offline-indicator.tsx
 owner-dashboard/
   quick-actions.tsx
   stat-cards.tsx
+school-calendar.tsx
 session-type-form-wrapper.tsx
+teacher-calendar-view.tsx
 teacher-pending-capture-banner.tsx
-teacher-schedule-view.tsx
 term-actions.tsx
 term-cohort-form.tsx
 term-form-wrapper.tsx

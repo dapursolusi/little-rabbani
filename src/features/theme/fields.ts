@@ -10,7 +10,6 @@ export function themeFields(): FormField[] {
 
 export function subThemeFields(themes: Theme[]): FormField[] {
   return [
-    { name: 'name', label: 'Nama Sub Tema', type: 'text', required: true },
     {
       name: 'themeId',
       label: 'Tema',
@@ -18,5 +17,6 @@ export function subThemeFields(themes: Theme[]): FormField[] {
       required: true,
       selectOptions: themes.map((t) => ({ value: t.id, label: t.name })),
     },
+    { name: 'name', label: 'Nama Sub Tema', type: 'text', required: true },
   ];
 }

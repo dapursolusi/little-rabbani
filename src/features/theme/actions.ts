@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { subTheme, theme } from '@/db/schema';
-import { SubThemeFormSchema, ThemeFormSchema } from '@/features/theme/schema';
+import { subThemeFormSchema, themeFormSchema } from '@/features/theme/schema';
 import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
 
 import { requireOwner } from '../../lib/actions/utils';
@@ -82,7 +82,7 @@ export async function createTheme(
     return { success: false as const, error: auth.error };
   }
 
-  const parsed = ThemeFormSchema.safeParse(input);
+  const parsed = themeFormSchema.safeParse(input);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
@@ -107,7 +107,7 @@ export async function updateTheme(
     return { success: false as const, error: auth.error };
   }
 
-  const parsed = ThemeFormSchema.safeParse(input);
+  const parsed = themeFormSchema.safeParse(input);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
@@ -235,7 +235,7 @@ export async function createSubTheme(
     return { success: false as const, error: auth.error };
   }
 
-  const parsed = SubThemeFormSchema.safeParse(input);
+  const parsed = subThemeFormSchema.safeParse(input);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
@@ -260,7 +260,7 @@ export async function updateSubTheme(
     return { success: false as const, error: auth.error };
   }
 
-  const parsed = SubThemeFormSchema.safeParse(input);
+  const parsed = subThemeFormSchema.safeParse(input);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';

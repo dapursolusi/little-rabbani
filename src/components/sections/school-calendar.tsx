@@ -1,20 +1,22 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import Link from 'next/link';
 
+import { getCalendarEventDates } from '@/features/calendar/actions';
 import { createHoliday } from '@/features/holiday/actions';
 import { holidayFields } from '@/features/holiday/fields';
 import { Holiday } from '@/features/holiday/types';
 import { Add02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
-import { format } from 'date-fns';
+import { addDays, endOfMonth, format, startOfMonth, subDays } from 'date-fns';
 import { id } from 'date-fns/locale/id';
 
 import {
   Item,
   ItemActions,
+  ItemContent,
   ItemFooter,
   ItemGroup,
   ItemHeader,
@@ -132,19 +134,38 @@ export default function SchoolCalendar({
   onDateSelect,
 }: SchoolCalendarProps) {
   const [date, setDate] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
+  const [eventDates, setEventDates] = useState<Set<string>>(new Set());
+
+  // Fetch dates that have events — cover overflow days from adjacent months
+  useEffect(() => {
+    // Widen by ~6 days to catch the week overflow into prev/next month
+    // (fixedWeeks renders up to 6 weeks; 6 days covers the edge)
+    const start = format(subDays(startOfMonth(currentMonth), 6), 'yyyy-MM-dd');
+    const end = format(addDays(endOfMonth(currentMonth), 6), 'yyyy-MM-dd');
+
+    getCalendarEventDates(start, end).then((result) => {
+      if (result.success) {
+        setEventDates(new Set(result.data));
+      }
+    });
+  }, [currentMonth]);
 
   const modifiers = useMemo(
     () => ({
       weekend: { dayOfWeek: [0, 6] },
       holiday: (day: Date) => isHoliday(day, holidays),
+      hasEvent: (day: Date) => eventDates.has(format(day, 'yyyy-MM-dd')),
     }),
-    [holidays]
+    [holidays, eventDates]
   );
 
   const modifiersClassNames = useMemo(
     () => ({
       weekend: 'text-red-500!',
       holiday: 'text-red-500!',
+      hasEvent:
+        '[&_button]:after:absolute [&_button]:after:bottom-0.75 [&_button]:md:after:bottom-3.5 [&_button]:after:left-1/2 [&_button]:after:-translate-x-1/2 [&_button]:md:after:h-2 [&_button]:after:h-1.5 [&_button]:after:w-[90%] [&_button]:after:rounded-full [&_button]:after:bg-muted-foreground/80 [&_button]:after:content-[""]',
     }),
     []
   );
@@ -160,16 +181,21 @@ export default function SchoolCalendar({
     onDateSelect?.(format(day, 'yyyy-MM-dd'));
   };
 
+  const handleMonthChange = (month: Date) => {
+    setCurrentMonth(startOfMonth(month));
+  };
+
   return (
-    <div className="w-full my-2 md:px-6 px-2   flex items-center justify-center">
-      <Card className="md:flex md:flex-row md:p-0 mx-auto w-full max-md:items-center  ">
-        <CardContent className="md:pb-4 md:pt-4 md:pr-0">
+    <div className="w-full my-2 flex items-center justify-center">
+      <Card className="md:flex md:flex-row w-full md:p-0 mx-auto">
+        <CardContent className="md:pb-4 md:pt-4 md:pr-0 flex items-center justify-center">
           <Calendar
             key={`calendar-${holidays.length}`}
             mode="single"
             selected={date}
             onSelect={handleDaySelect}
-            className="rounded-lg border-2 [--cell-size:2.5rem] md:[--cell-size:5rem] [&_td]:border [&_th]:border"
+            onMonthChange={handleMonthChange}
+            className="rounded-lg border-2 w-full! [--cell-size:min(2.5rem, 100%)] md:[--cell-size:5rem] [&_td]:border [&_th]:border"
             required
             fixedWeeks
             locale={id}
@@ -177,7 +203,7 @@ export default function SchoolCalendar({
             modifiersClassNames={modifiersClassNames}
           />
         </CardContent>
-        <CardFooter className="rounded-bl-none md:items-start flex flex-col w-full md:max-h-[705]! md:overflow-x-hidden md:overflow-y-auto">
+        <CardFooter className="rounded-bl-none md:items-start flex flex-col">
           <span className="text-lg font-semibold my-2 w-full text-center">
             {date.toLocaleDateString('id-ID', {
               weekday: 'long',
@@ -186,9 +212,10 @@ export default function SchoolCalendar({
               year: 'numeric',
             })}
           </span>
-          <ButtonGroup className="w-full">
+          <ButtonGroup className="*:flex-1 [&_button]:w-full [&_button]:flex w-full!">
             <Button
               variant="default"
+              nativeButton={false}
               render={
                 <Link href="/dashboard/owner/calendar/create">
                   <HugeiconsIcon icon={Add02Icon} />
@@ -197,7 +224,7 @@ export default function SchoolCalendar({
               }
             ></Button>
             <AddCustomHoliday hasExisting={matchingHolidays.length > 0} />
-            <Button variant="default">+ Rencana Belajar</Button>
+            <Button variant="default">+ Kurikulum</Button>
           </ButtonGroup>
           {matchingHolidays.length > 0 && (
             <ItemGroup className="w-full gap-1!">
@@ -232,10 +259,10 @@ export default function SchoolCalendar({
                     <ItemHeader className="font-semibold">
                       {holiday.reason}
                     </ItemHeader>
-                    <ItemActions>Edit</ItemActions>
-                    <ItemFooter>
+                    <ItemContent>
                       <Badge variant="default">Kustom</Badge>
-                    </ItemFooter>
+                    </ItemContent>
+                    <ItemActions>Edit</ItemActions>
                   </Item>
                 ))}
             </ItemGroup>

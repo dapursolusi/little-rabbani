@@ -13,11 +13,16 @@ api/
       route.ts
     dev-session/
       route.ts
+  calendar/
+    today/
+      route.ts
   capture/
     participation/
       route.ts
   cron/
     reminders/
+      route.ts
+    seed-holidays/
       route.ts
   push/
     subscribe/
@@ -28,21 +33,18 @@ api/
     quarterly/
       [kidId]/
         route.ts
-  schedule/
-    today/
-      route.ts
 dashboard/
   layout.tsx
   owner/
-    activity/
-      [id]/
-        edit/
-          page.tsx
-      activity-actions.tsx
+    calendar/
+      [termId]/
+        page.tsx
+        session-calendar-editor.tsx
       create/
         page.tsx
-      import/
-        page.tsx
+      edit/
+        [id]/
+          page.tsx
       loading.tsx
       page.tsx
     dcr/
@@ -90,12 +92,6 @@ dashboard/
           report-client.tsx
         loading.tsx
         page.tsx
-    schedule/
-      [termId]/
-        page.tsx
-        session-schedule-editor.tsx
-      loading.tsx
-      page.tsx
     session/
       [id]/
         edit/
@@ -126,6 +122,14 @@ dashboard/
       create/
         page.tsx
       loading.tsx
+      page.tsx
+    theme/
+      [id]/
+        edit/
+          edit-form.tsx
+          page.tsx
+      create/
+        page.tsx
       page.tsx
   teacher/
     capture/

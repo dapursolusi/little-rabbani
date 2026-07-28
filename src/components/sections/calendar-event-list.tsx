@@ -2,36 +2,30 @@
 
 import { useEffect, useState } from 'react';
 
-import { getCalendarEventsByDate } from '@/features/calendar/actions';
+import {
+  deleteCalendarEvent,
+  getCalendarEventsByDate,
+} from '@/features/calendar/actions';
+import { CalendarEvent } from '@/features/calendar/types';
 
-import { Item, ItemGroup, ItemHeader } from '../ui/item';
-
-interface CalendarEvent {
-  id: string;
-  startDate: string | null;
-  sessionTypeId: string | null;
-  subThemeId: string | null;
-  name: string | null;
-  indoor: boolean;
-  location: string | null;
-  itemsToBring: string | null;
-  permissionRequired: boolean;
-  sortOrder: number;
-  subTheme: {
-    id: string;
-    name: string;
-    themeId: string;
-    theme: { id: string; name: string; color: string | null };
-  } | null;
-  sessionType: { id: string; name: string; start: string; end: string } | null;
-}
+import { DataTableRowActions } from '../shared/table/data-table-row-action';
+import { Badge } from '../ui/badge';
+import {
+  Item,
+  ItemActions,
+  ItemContent,
+  ItemDescription,
+  ItemGroup,
+  ItemHeader,
+  ItemTitle,
+} from '../ui/item';
 
 interface CalendarEventListProps {
   date: string;
 }
 
 export default function CalendarEventList({ date }: CalendarEventListProps) {
-  const [items, setItems] = useState<CalendarEvent[]>([]);
+  const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -41,7 +35,7 @@ export default function CalendarEventList({ date }: CalendarEventListProps) {
       setLoading(true);
       const result = await getCalendarEventsByDate(date);
       if (cancelled) return;
-      if (result.success) setItems(result.data as CalendarEvent[]);
+      if (result.success) setEvents(result.data as CalendarEvent[]);
       setLoading(false);
     }
 
@@ -59,7 +53,7 @@ export default function CalendarEventList({ date }: CalendarEventListProps) {
     );
   }
 
-  if (items.length === 0) {
+  if (events.length === 0) {
     return (
       <div className="text-center text-sm text-muted-foreground py-8">
         Belum ada jadwal untuk tanggal ini
@@ -79,12 +73,14 @@ export default function CalendarEventList({ date }: CalendarEventListProps) {
         </ItemHeader>
       </Item>
 
-      {items.map((item) => (
-        <Item key={item.id} variant="outline">
+      {events.map((e) => (
+        <Item key={e.id} variant="outline">
           <ItemHeader>
-            <span className="font-medium">{item.subTheme?.name ?? '—'}</span>
+            <Badge className="font-medium">
+              {e.subTheme.theme?.name ?? '—'}: {e.subTheme?.name ?? '—'}
+            </Badge>
             <span className="text-xs text-muted-foreground">
-              {item.indoor ? (
+              {e.indoor ? (
                 <span className="rounded bg-green-100 px-1.5 py-0.5 text-xs text-green-700">
                   Indoor
                 </span>
@@ -95,17 +91,32 @@ export default function CalendarEventList({ date }: CalendarEventListProps) {
               )}
             </span>
           </ItemHeader>
-          {item.sessionType && (
-            <span className="text-xs text-muted-foreground">
-              {item.sessionType.name} ({item.sessionType.start} —{' '}
-              {item.sessionType.end})
-            </span>
-          )}
-          {item.itemsToBring && (
-            <span className="text-xs text-muted-foreground">
-              Bawaan: {item.itemsToBring}
-            </span>
-          )}
+          <ItemContent>
+            <ItemTitle>{e.name}</ItemTitle>
+            <ItemDescription className="flex flex-col gap-1">
+              {e.sessionType && (
+                <span className="text-xs text-muted-foreground">
+                  {e.sessionType.name} ({e.sessionType.start} —{' '}
+                  {e.sessionType.end})
+                </span>
+              )}
+              {e.itemsToBring && (
+                <span className="text-xs text-muted-foreground">
+                  Bawaan: {e.itemsToBring}
+                </span>
+              )}
+            </ItemDescription>
+          </ItemContent>
+          <ItemActions>
+            <DataTableRowActions
+              id={e.id}
+              actions={{
+                editHref: `/dashboard/owner/calendar/edit/${e.id}`,
+                delete: deleteCalendarEvent,
+              }}
+              dataName={e.name}
+            />
+          </ItemActions>
         </Item>
       ))}
     </ItemGroup>

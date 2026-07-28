@@ -1,5 +1,5 @@
-import { type FormField } from '@/types/field';
-import {
+import { type FormField, type SelectOptionGroup } from '@/types/field';
+import type {
   ControllerFieldState,
   ControllerRenderProps,
   FieldValues,
@@ -11,7 +11,9 @@ import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
@@ -31,7 +33,18 @@ export default function InputFieldRenderer<
   fieldState,
 }: InputFieldRendererProps<TFormAttributes>) {
   switch (fieldConfig.type) {
-    case 'select':
+    case 'select': {
+      const grouped = 'group' in (fieldConfig.selectOptions[0] ?? {});
+      const flatOpts = fieldConfig.selectOptions as {
+        value: string;
+        label: string;
+      }[];
+      const selectedLabel = grouped
+        ? (fieldConfig.selectOptions as SelectOptionGroup[])
+            .flatMap((g) => g.options)
+            .find((opt) => opt.value === field.value)?.label
+        : flatOpts.find((opt) => opt.value === field.value)?.label;
+
       return (
         <Select
           name={field.name}
@@ -44,22 +57,37 @@ export default function InputFieldRenderer<
             className="min-w-30"
           >
             <SelectValue placeholder={fieldConfig.placeholder ?? 'Select'}>
-              {
-                fieldConfig.selectOptions.find(
-                  (opt) => opt.value === field.value
-                )?.label
-              }
+              {selectedLabel}
             </SelectValue>
           </SelectTrigger>
           <SelectContent align="center">
-            {fieldConfig.selectOptions.map((opt) => (
-              <SelectItem key={opt.value} value={opt.value}>
-                {opt.label}
-              </SelectItem>
-            ))}
+            {grouped
+              ? (fieldConfig.selectOptions as SelectOptionGroup[]).map(
+                  (group) => (
+                    <SelectGroup key={group.group}>
+                      <SelectLabel>{group.group}</SelectLabel>
+                      {group.options.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
+                  )
+                )
+              : (
+                  fieldConfig.selectOptions as {
+                    value: string;
+                    label: string;
+                  }[]
+                ).map((opt) => (
+                  <SelectItem key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </SelectItem>
+                ))}
           </SelectContent>
         </Select>
       );
+    }
 
     case 'switch':
       return (
