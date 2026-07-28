@@ -1,4 +1,5 @@
 import { calendarEventSchema } from '@/features/calendar/schema';
+import { CurriculumItemSchema } from '@/features/curriculum/schema';
 import { GuardianFormSchema } from '@/features/guardian/schema';
 import { HolidayFormSchema } from '@/features/holiday/schema';
 import { KidFormSchema } from '@/features/kid/schema';
@@ -16,6 +17,7 @@ const schemas = {
   theme: themeFormSchema,
   subTheme: subThemeFormSchema,
   calendarEvent: calendarEventSchema,
+  curriculum: CurriculumItemSchema,
 } as const satisfies Record<string, z.ZodObject<z.ZodRawShape>>;
 
 export type SchemaKey = keyof typeof schemas;
