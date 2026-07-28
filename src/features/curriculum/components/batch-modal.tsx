@@ -50,29 +50,20 @@ export function BatchModal({
   nextSortOrder,
 }: BatchModalProps) {
   const router = useRouter();
-  const [rows, setRows] = React.useState<BatchRow[]>([
-    {
-      key: generateKey(),
-      subThemeId: '',
-      name: '',
-      objective: '',
-      indoor: false,
-      itemsToBring: '',
-    },
-  ]);
+  const [open, setOpen] = React.useState(false);
+  const [submitting, setSubmitting] = React.useState(false);
+  const blankRow = {
+    key: generateKey(),
+    subThemeId: '',
+    name: '',
+    objective: '',
+    indoor: false,
+    itemsToBring: '',
+  };
+  const [rows, setRows] = React.useState<BatchRow[]>([{ ...blankRow }]);
 
   function addRow() {
-    setRows((prev) => [
-      ...prev,
-      {
-        key: generateKey(),
-        subThemeId: '',
-        name: '',
-        objective: '',
-        indoor: false,
-        itemsToBring: '',
-      },
-    ]);
+    setRows((prev) => [...prev, { ...blankRow, key: generateKey() }]);
   }
 
   function removeRow(key: string) {
@@ -85,37 +76,58 @@ export function BatchModal({
     );
   }
 
+  function resetRows() {
+    setRows([{ ...blankRow, key: generateKey() }]);
+  }
+
   async function handleSubmit() {
-    const valid = rows.filter((r) => r.subThemeId && r.name.trim());
-    if (valid.length === 0) {
-      toast.error('Isi minimal satu baris dengan sub tema dan nama aktivitas');
-      return;
-    }
+    if (submitting) return;
+    setSubmitting(true);
+    try {
+      const valid = rows.filter((r) => r.subThemeId && r.name.trim());
+      if (valid.length === 0) {
+        toast.error(
+          'Isi minimal satu baris dengan sub tema dan nama aktivitas'
+        );
+        return;
+      }
 
-    const inputs = valid.map((r, i) => ({
-      termId,
-      sortOrder: nextSortOrder + i,
-      subThemeId: r.subThemeId,
-      name: r.name.trim(),
-      objective: r.objective.trim() || null,
-      indoor: r.indoor,
-      itemsToBring: r.itemsToBring.trim() || null,
-    }));
+      const inputs = valid.map((r, i) => ({
+        termId,
+        sortOrder: nextSortOrder + i,
+        subThemeId: r.subThemeId,
+        name: r.name.trim(),
+        objective: r.objective.trim() || null,
+        indoor: r.indoor,
+        itemsToBring: r.itemsToBring.trim() || null,
+      }));
 
-    const result = await createCurriculumItems(inputs);
-    if (result.success) {
-      toast.success(
-        `${result.data.length} item kurikulum berhasil ditambahkan`
-      );
-      router.refresh();
-    } else {
-      toast.error(result.error);
+      const result = await createCurriculumItems(inputs);
+      if (result.success) {
+        toast.success(
+          `${result.data.length} item kurikulum berhasil ditambahkan`
+        );
+        setOpen(false);
+        resetRows();
+        router.refresh();
+      } else {
+        toast.error(result.error);
+      }
+    } catch {
+      toast.error('Gagal menyimpan kurikulum');
+    } finally {
+      setSubmitting(false);
     }
   }
 
   return (
     <Modal
       title="Tambah Massal Kurikulum"
+      open={open}
+      onOpenChange={(v) => {
+        setOpen(v);
+        if (!v) resetRows();
+      }}
       trigger={{
         icon: Add02Icon,
         text: 'Tambah Massal',
@@ -123,12 +135,10 @@ export function BatchModal({
       content={
         <div className="space-y-4">
           {/* ponytail: simple controlled rows, no react-hook-form for batch */}
-          {rows.map((row) => (
+          {rows.map((row, index) => (
             <div key={row.key} className="space-y-2 rounded-lg border p-3">
               <div className="flex items-center justify-between">
-                <span className="text-sm font-medium">
-                  Baris {rows.indexOf(row) + 1}
-                </span>
+                <span className="text-sm font-medium">Baris {index + 1}</span>
                 {rows.length > 1 && (
                   <Button
                     variant="ghost"
@@ -213,7 +223,9 @@ export function BatchModal({
 
           <DialogFooter>
             <DialogClose render={<Button variant="outline">Batal</Button>} />
-            <Button onClick={handleSubmit}>Simpan Semua</Button>
+            <Button onClick={handleSubmit} disabled={submitting}>
+              {submitting ? 'Menyimpan…' : 'Simpan Semua'}
+            </Button>
           </DialogFooter>
         </div>
       }
