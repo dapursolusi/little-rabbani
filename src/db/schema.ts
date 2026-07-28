@@ -359,6 +359,9 @@ export const dailyClassReport = pgTable(
     sessionTypeId: uuid('session_type_id')
       .notNull()
       .references(() => sessionType.id, { onDelete: 'cascade' }),
+    curriculumId: uuid('curriculum_id').references(() => curriculum.id, {
+      onDelete: 'set null',
+    }),
     learningNotes: text('learning_notes'),
     capturedBy: text('captured_by').references(() => user.id, {
       onDelete: 'set null',
@@ -404,6 +407,10 @@ export const dailyClassReportRelations = relations(
       references: [user.id],
     }),
     dcrActivities: many(dcrActivity),
+    curriculum: one(curriculum, {
+      fields: [dailyClassReport.curriculumId],
+      references: [curriculum.id],
+    }),
   })
 );
 

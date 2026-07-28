@@ -1,0 +1,2 @@
+ALTER TABLE "daily_class_report" ADD COLUMN "curriculum_id" uuid;--> statement-breakpoint
+ALTER TABLE "daily_class_report" ADD CONSTRAINT "daily_class_report_curriculum_id_curriculum_id_fk" FOREIGN KEY ("curriculum_id") REFERENCES "public"."curriculum"("id") ON DELETE set null ON UPDATE no action;
