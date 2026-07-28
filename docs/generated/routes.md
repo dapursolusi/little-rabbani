@@ -47,6 +47,8 @@ dashboard/
           page.tsx
       loading.tsx
       page.tsx
+    curriculum/
+      page.tsx
     dcr/
       [sessionId]/
         dcr-form.tsx
