@@ -325,6 +325,7 @@ export async function getActiveSubThemes(params?: { themeId?: string }) {
 
     const items = await db.query.subTheme.findMany({
       where: and(...conditions),
+      with: { theme: true },
       orderBy: (st, { asc }) => [asc(st.name)],
     });
 

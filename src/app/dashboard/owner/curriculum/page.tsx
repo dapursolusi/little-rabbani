@@ -1,4 +1,7 @@
-import { getCurriculum } from '@/features/curriculum/actions';
+import {
+  createCurriculumItems,
+  getCurriculum,
+} from '@/features/curriculum/actions';
 import { BatchModal } from '@/features/curriculum/components/batch-modal';
 import { curriculumColumns } from '@/features/curriculum/components/columns';
 import { curriculumFields } from '@/features/curriculum/fields';
@@ -87,7 +90,20 @@ export default async function CurriculumPage() {
                 itemsToBring: '',
               },
               formFields: curriculumFields(subThemes),
-              onSubmit: async () => {},
+              onSubmit: async (data) => {
+                'use server';
+                return createCurriculumItems([
+                  {
+                    termId: activeTerm.id,
+                    sortOrder: nextSortOrder,
+                    subThemeId: data.subThemeId as string,
+                    name: data.name as string,
+                    objective: (data.objective as string) || null,
+                    indoor: (data.indoor as string) === 'true',
+                    itemsToBring: (data.itemsToBring as string) || null,
+                  },
+                ]);
+              },
             }}
           />
         </div>
