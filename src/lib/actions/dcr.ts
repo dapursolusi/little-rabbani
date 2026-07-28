@@ -3,11 +3,13 @@
 import { db } from '@/db';
 import {
   calendarEvent,
+  curriculum,
   dailyClassReport,
   dcrActivity,
   sessionType,
+  term,
 } from '@/db/schema';
-import { and, asc, eq, isNull } from 'drizzle-orm';
+import { and, asc, eq, isNotNull, isNull } from 'drizzle-orm';
 import { z } from 'zod/v4';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -28,6 +30,7 @@ type TDcrActivityInput = z.infer<typeof DcrActivityInputSchema>;
 const SaveDcrSchema = z.object({
   date: z.string().min(1, 'Tanggal wajib diisi'),
   sessionTypeId: z.string().min(1, 'Tipe sesi wajib diisi'),
+  curriculumId: z.string().optional(),
   learningNotes: z.string().optional().or(z.literal('')),
   activities: z.string().min(2, 'Aktivitas wajib diisi'), // JSON string
 });
@@ -82,6 +85,64 @@ export async function getCalendarEventsForDcr(
   });
 
   return { success: true as const, data: items };
+}
+
+/**
+ * Get the next unconsumed curriculum item for a session type.
+ * Position is derived: lowest-sortOrder curriculum item whose ID is not yet
+ * locked by any DCR for this session type.
+ */
+export async function getNextCurriculumForSession(sessionTypeId: string) {
+  const auth = await requireOwner();
+  if (!auth.authorized) {
+    return { success: false as const, error: auth.error };
+  }
+
+  try {
+    // 1. Find the active term
+    const activeTerm = await db.query.term.findFirst({
+      where: and(eq(term.isActive, true), isNull(term.deletedAt)),
+    });
+    if (!activeTerm) {
+      return { success: true as const, data: null };
+    }
+
+    // 2. Get all non-deleted curriculum items for the active term, ordered by sortOrder
+    const allItems = await db.query.curriculum.findMany({
+      where: and(
+        eq(curriculum.termId, activeTerm.id),
+        isNull(curriculum.deletedAt)
+      ),
+      orderBy: [asc(curriculum.sortOrder)],
+      with: { subTheme: { with: { theme: true } } },
+    });
+
+    if (allItems.length === 0) {
+      return { success: true as const, data: null };
+    }
+
+    // 3. Get IDs already consumed by this session type
+    const consumed = await db.query.dailyClassReport.findMany({
+      where: and(
+        eq(dailyClassReport.sessionTypeId, sessionTypeId),
+        isNotNull(dailyClassReport.curriculumId),
+        isNull(dailyClassReport.deletedAt)
+      ),
+      columns: { curriculumId: true },
+    });
+    const consumedIds = new Set(
+      consumed.map((c) => c.curriculumId).filter(Boolean)
+    );
+
+    // 4. Return first unconsumed item, or null if all consumed
+    const next = allItems.find((item) => !consumedIds.has(item.id));
+    return { success: true as const, data: next ?? null };
+  } catch {
+    return {
+      success: false as const,
+      error: 'Gagal mengambil item kurikulum berikutnya',
+    };
+  }
 }
 
 /**
@@ -190,6 +251,7 @@ export async function saveDcr(formData: FormData) {
   const {
     date,
     sessionTypeId,
+    curriculumId,
     learningNotes,
     activities: activitiesJson,
   } = parsed.data;
@@ -247,6 +309,7 @@ export async function saveDcr(formData: FormData) {
         .values({
           date,
           sessionTypeId,
+          curriculumId: curriculumId || null,
           learningNotes: learningNotes || null,
           capturedBy: auth.userId,
           capturedAt: new Date(),
