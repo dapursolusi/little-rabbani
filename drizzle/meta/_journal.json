@@ -190,6 +190,13 @@
       "when": 1784786722932,
       "tag": "0026_rename_schedule_item_to_calendar_event",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1785223631116,
+      "tag": "0027_quiet_zaladane",
+      "breakpoints": true
     }
   ]
 }
