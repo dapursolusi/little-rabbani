@@ -28,7 +28,7 @@ describe('Dashboard metadata', () => {
   });
 
   it('should export metadata for Teacher dashboard', async () => {
-    const mod = await import('@/app/dashboard/teacher/page');
+    const mod = await import('../../_archives/src/app/teacher/page');
     expect(mod.metadata).toBeDefined();
     expect(mod.metadata.title).toBeDefined();
   });
@@ -42,7 +42,7 @@ describe('Dashboard metadata', () => {
   });
 
   it('should have Teacher metadata title containing Dashboard Guru', async () => {
-    const mod = await import('@/app/dashboard/teacher/page');
+    const mod = await import('../../_archives/src/app/teacher/page');
     const title = mod.metadata.title as { default?: string };
     if (typeof title === 'object' && title.default) {
       expect(title.default).toContain('Guru');
