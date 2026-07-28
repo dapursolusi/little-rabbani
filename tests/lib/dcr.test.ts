@@ -28,6 +28,12 @@ vi.mock('@/db', () => {
         where: vi.fn().mockResolvedValue(undefined),
       })),
       query: {
+        term: {
+          findFirst: vi.fn(),
+        },
+        curriculum: {
+          findMany: vi.fn(),
+        },
         sessionType: {
           findMany: vi.fn(),
         },
@@ -175,6 +181,119 @@ describe('DCR Server Actions', () => {
       expect(result.success).toBe(true);
       if (result.success) {
         expect(result.data).toHaveLength(1);
+      }
+    });
+  });
+
+  describe('getNextCurriculumForSession', () => {
+    const mockTerm = { id: 'term-1', name: 'Term 1', isActive: true };
+    const mockItems = [
+      {
+        id: 'c1',
+        termId: 'term-1',
+        sortOrder: 0,
+        name: 'Item 1',
+        subTheme: { theme: { name: 'Theme 1' } },
+      },
+      {
+        id: 'c2',
+        termId: 'term-1',
+        sortOrder: 1,
+        name: 'Item 2',
+        subTheme: { theme: { name: 'Theme 1' } },
+      },
+      {
+        id: 'c3',
+        termId: 'term-1',
+        sortOrder: 2,
+        name: 'Item 3',
+        subTheme: { theme: { name: 'Theme 1' } },
+      },
+    ];
+
+    it('returns first curriculum item when no DCRs captured yet', async () => {
+      (db.query.term.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockTerm
+      );
+      (
+        db.query.curriculum.findMany as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(mockItems);
+      (
+        db.query.dailyClassReport.findMany as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([]);
+
+      const result = await dcrActions.getNextCurriculumForSession('session-1');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data?.id).toBe('c1');
+        expect(result.data?.name).toBe('Item 1');
+      }
+    });
+
+    it('returns next unconsumed item when some are consumed', async () => {
+      (db.query.term.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockTerm
+      );
+      (
+        db.query.curriculum.findMany as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(mockItems);
+      (
+        db.query.dailyClassReport.findMany as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([{ curriculumId: 'c1' }]);
+
+      const result = await dcrActions.getNextCurriculumForSession('session-1');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data?.id).toBe('c2');
+      }
+    });
+
+    it('returns null when all curriculum items are consumed', async () => {
+      (db.query.term.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockTerm
+      );
+      (
+        db.query.curriculum.findMany as ReturnType<typeof vi.fn>
+      ).mockResolvedValue(mockItems);
+      (
+        db.query.dailyClassReport.findMany as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([
+        { curriculumId: 'c1' },
+        { curriculumId: 'c2' },
+        { curriculumId: 'c3' },
+      ]);
+
+      const result = await dcrActions.getNextCurriculumForSession('session-1');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBeNull();
+      }
+    });
+
+    it('returns null when no curriculum exists for the active term', async () => {
+      (db.query.term.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
+        mockTerm
+      );
+      (
+        db.query.curriculum.findMany as ReturnType<typeof vi.fn>
+      ).mockResolvedValue([]);
+
+      const result = await dcrActions.getNextCurriculumForSession('session-1');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBeNull();
+      }
+    });
+
+    it('returns null when no active term exists', async () => {
+      (db.query.term.findFirst as ReturnType<typeof vi.fn>).mockResolvedValue(
+        null
+      );
+
+      const result = await dcrActions.getNextCurriculumForSession('session-1');
+      expect(result.success).toBe(true);
+      if (result.success) {
+        expect(result.data).toBeNull();
       }
     });
   });

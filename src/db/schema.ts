@@ -332,7 +332,7 @@ export const curriculum = pgTable('curriculum', {
   deletedAt: timestamp('deleted_at'),
 });
 
-export const curriculumRelations = relations(curriculum, ({ one }) => ({
+export const curriculumRelations = relations(curriculum, ({ one, many }) => ({
   term: one(term, {
     fields: [curriculum.termId],
     references: [term.id],
@@ -341,6 +341,7 @@ export const curriculumRelations = relations(curriculum, ({ one }) => ({
     fields: [curriculum.subThemeId],
     references: [subTheme.id],
   }),
+  dailyClassReports: many(dailyClassReport),
 }));
 
 // ─────────────── Daily Class Report (DCR) ───────────────
@@ -364,6 +365,9 @@ export const dailyClassReport = pgTable(
     }),
     learningNotes: text('learning_notes'),
     capturedBy: text('captured_by').references(() => user.id, {
+      onDelete: 'set null',
+    }),
+    curriculumId: uuid('curriculum_id').references(() => curriculum.id, {
       onDelete: 'set null',
     }),
     capturedAt: timestamp('captured_at').notNull().defaultNow(),
@@ -405,6 +409,10 @@ export const dailyClassReportRelations = relations(
     capturedByUser: one(user, {
       fields: [dailyClassReport.capturedBy],
       references: [user.id],
+    }),
+    curriculum: one(curriculum, {
+      fields: [dailyClassReport.curriculumId],
+      references: [curriculum.id],
     }),
     dcrActivities: many(dcrActivity),
     curriculum: one(curriculum, {
