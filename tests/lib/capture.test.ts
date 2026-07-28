@@ -5,7 +5,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import * as captureActions from '@/lib/actions/capture';
 import { auth } from '@/lib/auth';
 
-vi.mock('@/lib/db', () => {
+vi.mock('@/db', () => {
   return {
     db: {
       select: vi.fn(() => ({

@@ -29,7 +29,7 @@ vi.mock('@/lib/ai', () => ({
 }));
 
 // Mock the database
-vi.mock('@/lib/db', () => {
+vi.mock('@/db', () => {
   return {
     db: {
       query: {

@@ -2,7 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 // Mock the db module since importing login page and dashboard shells
 // triggers auth import which needs DATABASE_URL
-vi.mock('@/lib/db', () => ({
+vi.mock('@/db', () => ({
   db: {
     select: vi.fn(),
     insert: vi.fn(),
