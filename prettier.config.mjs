@@ -16,7 +16,6 @@ const config = {
     '^react$',
     '^next/(.*)$',
     '<THIRD_PARTY_MODULES>',
-    '^@/features/(.*)$',
     '^@/components/(.*)$',
     '^@/lib/(.*)$',
     '^[./]',
