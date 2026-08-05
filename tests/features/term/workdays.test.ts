@@ -87,9 +87,14 @@ describe('findEarliestTermCoveringDate', () => {
   });
 
   it('returns null for a date between two terms', () => {
-    expect(
-      findEarliestTermCoveringDate([termA, termB], '2026-09-01')
-    ).toBeNull();
+    const gap = {
+      id: 'g',
+      startDate: '2026-07-01',
+      endDate: '2026-07-15',
+      deletedAt: null,
+    };
+    // termB starts 08-01; 2026-07-20 falls in the gap between the two.
+    expect(findEarliestTermCoveringDate([gap, termB], '2026-07-20')).toBeNull();
   });
 
   it('returns the earliest startDate when terms overlap', () => {
