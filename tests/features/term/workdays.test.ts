@@ -1,4 +1,4 @@
-import { listTermWorkdays } from '@/features/term/workdays';
+import { countEmptyWorkdays, listTermWorkdays } from '@/features/term/workdays';
 import { describe, expect, it } from 'vitest';
 
 describe('listTermWorkdays', () => {
@@ -47,5 +47,18 @@ describe('listTermWorkdays', () => {
   it('returns an empty array when no session type is active', () => {
     const term = { startDate: '2026-07-13', endDate: '2026-07-17' };
     expect(listTermWorkdays(term, [], false)).toEqual([]);
+  });
+});
+
+describe('countEmptyWorkdays', () => {
+  const term = { startDate: '2026-07-13', endDate: '2026-07-17' }; // 5 workdays
+
+  it('subtracts filled curriculum items from workdays', () => {
+    expect(countEmptyWorkdays(term, [], true, 2)).toBe(3);
+  });
+
+  it('clamps to zero when filled items exceed workdays', () => {
+    expect(countEmptyWorkdays(term, [], true, 5)).toBe(0);
+    expect(countEmptyWorkdays(term, [], true, 99)).toBe(0);
   });
 });

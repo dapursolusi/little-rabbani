@@ -20,3 +20,17 @@ export function listTermWorkdays(
 
   return workdays;
 }
+
+export function countEmptyWorkdays(
+  term: { startDate: string; endDate: string },
+  holidays: Array<{ startDate: string; endDate: string }>,
+  hasActiveSessionType: boolean,
+  filledCount: number
+): number {
+  const workdayCount = listTermWorkdays(
+    term,
+    holidays,
+    hasActiveSessionType
+  ).length;
+  return Math.max(0, workdayCount - filledCount);
+}
