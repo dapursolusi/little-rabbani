@@ -8,7 +8,11 @@ import { getCalendarEventDates } from '@/features/calendar/actions';
 import { createHoliday, getHolidays } from '@/features/holiday/actions';
 import { holidayFields } from '@/features/holiday/fields';
 import { Holiday } from '@/features/holiday/types';
-import { Add02Icon } from '@hugeicons/core-free-icons';
+import {
+  Add02Icon,
+  ViewIcon,
+  ViewOffSlashIcon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { addDays, endOfMonth, format, startOfMonth, subDays } from 'date-fns';
 import { id } from 'date-fns/locale/id';
@@ -31,6 +35,7 @@ import { ButtonGroup } from '../ui/button-group';
 import { Calendar } from '../ui/calendar';
 import { Card, CardContent, CardFooter } from '../ui/card';
 import { DialogClose, DialogFooter } from '../ui/dialog';
+import { Toggle } from '../ui/toggle';
 import CalendarEventList from './calendar-event-list';
 
 interface SchoolCalendarProps {
@@ -133,6 +138,7 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
   const [date, setDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [eventDates, setEventDates] = useState<Set<string>>(new Set());
+  const [showCurriculums, setShowCurriculums] = useState(false);
 
   // Fetch holidays
   useEffect(() => {
@@ -157,21 +163,39 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
     });
   }, [currentMonth]);
 
-  const modifiers = useMemo(
-    () => ({
+  const modifiers = useMemo(() => {
+    const inCurrentMonth = (day: Date) =>
+      day.getMonth() === currentMonth.getMonth() &&
+      day.getFullYear() === currentMonth.getFullYear();
+    const isWorkday = (day: Date) => {
+      const dow = day.getDay();
+      return dow >= 1 && dow <= 5 && !isHoliday(day, holidays);
+    };
+
+    return {
       weekend: { dayOfWeek: [0, 6] },
       holiday: (day: Date) => isHoliday(day, holidays),
       hasEvent: (day: Date) => eventDates.has(format(day, 'yyyy-MM-dd')),
-    }),
-    [holidays, eventDates]
-  );
+      showCurriculums: showCurriculums,
+      showCurriculumWorkday:
+        showCurriculums &&
+        ((day: Date) => isWorkday(day) && inCurrentMonth(day)),
+      showCurriculumOverflow:
+        showCurriculums &&
+        ((day: Date) => isWorkday(day) && !inCurrentMonth(day)),
+    };
+  }, [holidays, eventDates, showCurriculums, currentMonth]);
 
   const modifiersClassNames = useMemo(
     () => ({
       weekend: 'text-red-500!',
-      holiday: 'text-red-500!',
+      holiday: 'bg-red-100 text-red-500!',
       hasEvent:
         '[&_button]:after:absolute [&_button]:after:bottom-0.75 [&_button]:md:after:bottom-3.5 [&_button]:after:left-1/2 [&_button]:after:-translate-x-1/2 [&_button]:md:after:h-2 [&_button]:after:h-1.5 [&_button]:after:w-[90%] [&_button]:after:rounded-full [&_button]:after:bg-muted-foreground/80 [&_button]:after:content-[""]',
+      showCurriculums:
+        '[&_button]:md:justify-start [&_button]:md:items-start [&_button]:md:text-left [&_button]:md:pl-1.5 [&_button]:md:pt-1.5',
+      showCurriculumWorkday: 'bg-warning/40',
+      showCurriculumOverflow: 'bg-warning/15',
     }),
     []
   );
@@ -230,8 +254,27 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
               }
             ></Button>
             <AddCustomHoliday hasExisting={matchingHolidays.length > 0} />
-            <Button variant="default">+ Kurikulum</Button>
+            <Button
+              render={
+                <Toggle
+                  pressed={showCurriculums}
+                  onPressedChange={setShowCurriculums}
+                  className="aria-pressed:bg-[color-mix(in_oklch,var(--primary),#000_15%)] aria-pressed:text-primary-foreground data-[state=on]:bg-[color-mix(in_oklch,var(--primary),#000_15%)] data-[state=on]:text-primary-foreground"
+                >
+                  <HugeiconsIcon
+                    icon={ViewOffSlashIcon}
+                    className="group-aria-pressed/toggle:hidden"
+                  />
+                  <HugeiconsIcon
+                    icon={ViewIcon}
+                    className="group-aria-pressed/toggle:block hidden"
+                  />
+                  Kurikulum
+                </Toggle>
+              }
+            />
           </ButtonGroup>
+          {showCurriculums && <div>Curriculum Edit?</div>}
           {matchingHolidays.length > 0 && (
             <ItemGroup className="w-full gap-1!">
               <ItemSeparator></ItemSeparator>
