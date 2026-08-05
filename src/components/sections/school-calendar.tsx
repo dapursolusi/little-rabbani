@@ -192,16 +192,16 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
   };
 
   return (
-    <div className="w-full my-2 flex items-center justify-center">
-      <Card className="md:flex md:flex-row w-full md:p-0 mx-auto">
-        <CardContent className="md:pb-4 md:pt-4 md:pr-0 flex items-center justify-center">
+    <div className="w-full my-2 md:px-6 md:h-[calc(100%-1rem)]">
+      <Card className="md:flex md:flex-row w-full md:h-full md:p-0 mx-auto">
+        <CardContent className="md:pb-4 md:pt-4 md:pr-0 md:basis-[65%] md:w-[65%] md:self-stretch flex items-center justify-center">
           <Calendar
             key={`calendar-${holidays.length}`}
             mode="single"
             selected={date}
             onSelect={handleDaySelect}
             onMonthChange={handleMonthChange}
-            className="rounded-lg border-2 w-full! [--cell-size:min(2.5rem, 100%)] md:[--cell-size:5rem] [&_td]:border [&_th]:border"
+            className="rounded-lg border-2 w-full! [--cell-size:min(2.5rem,100%)] [&_td]:border [&_th]:border md:h-full! md:[&_.rdp-months]:h-full! md:[&_.rdp-month]:h-full! md:[&_.rdp-month\_grid]:flex! md:[&_.rdp-month\_grid]:flex-1! md:[&_.rdp-month\_grid]:flex-col! md:[&_.rdp-weeks]:flex! md:[&_.rdp-weeks]:flex-1! md:[&_.rdp-weeks]:flex-col! md:[&_.rdp-week]:grow! md:[&_.rdp-week]:min-h-12! md:[&_.rdp-day]:aspect-auto! md:[&_.rdp-day\_button]:aspect-auto! md:[&_.rdp-day\_button]:h-full!"
             required
             fixedWeeks
             locale={id}
@@ -209,7 +209,7 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
             modifiersClassNames={modifiersClassNames}
           />
         </CardContent>
-        <CardFooter className="rounded-bl-none md:items-start flex flex-col">
+        <CardFooter className="rounded-bl-none md:items-start flex flex-col md:basis-[35%] md:w-[35%]">
           <span className="text-lg font-semibold my-2 w-full text-center">
             {date.toLocaleDateString('id-ID', {
               weekday: 'long',
