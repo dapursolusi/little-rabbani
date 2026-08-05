@@ -5,7 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { getCalendarEventDates } from '@/features/calendar/actions';
-import { createHoliday } from '@/features/holiday/actions';
+import { createHoliday, getHolidays } from '@/features/holiday/actions';
 import { holidayFields } from '@/features/holiday/fields';
 import { Holiday } from '@/features/holiday/types';
 import { Add02Icon } from '@hugeicons/core-free-icons';
@@ -34,7 +34,6 @@ import { DialogClose, DialogFooter } from '../ui/dialog';
 import CalendarEventList from './calendar-event-list';
 
 interface SchoolCalendarProps {
-  holidays: Holiday[];
   onDateSelect?: (date: string) => void;
 }
 
@@ -129,13 +128,20 @@ function HolidayForm() {
   );
 }
 
-export default function SchoolCalendar({
-  holidays,
-  onDateSelect,
-}: SchoolCalendarProps) {
+export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [date, setDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [eventDates, setEventDates] = useState<Set<string>>(new Set());
+
+  // Fetch holidays
+  useEffect(() => {
+    getHolidays().then((result) => {
+      if (result.success) {
+        setHolidays(result.data);
+      }
+    });
+  }, []);
 
   // Fetch dates that have events — cover overflow days from adjacent months
   useEffect(() => {
