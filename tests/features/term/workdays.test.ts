@@ -86,6 +86,21 @@ describe('findEarliestTermCoveringDate', () => {
     expect(result?.id).toBe('a');
   });
 
+  it('includes the startDate and endDate (inclusive bounds)', () => {
+    expect(findEarliestTermCoveringDate([termA, termB], '2026-07-01')?.id).toBe(
+      'a'
+    );
+    expect(findEarliestTermCoveringDate([termA, termB], '2026-07-31')?.id).toBe(
+      'a'
+    );
+  });
+
+  it('includes 2026-08-01 which starts termB', () => {
+    expect(findEarliestTermCoveringDate([termA, termB], '2026-08-01')?.id).toBe(
+      'b'
+    );
+  });
+
   it('returns null for a date between two terms', () => {
     const gap = {
       id: 'g',
