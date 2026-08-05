@@ -1,14 +1,18 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { type ComponentProps, useEffect, useMemo, useState } from 'react';
 
 import Link from 'next/link';
 
 import { getCalendarEventDates } from '@/features/calendar/actions';
-import { createHoliday } from '@/features/holiday/actions';
+import { createHoliday, getHolidays } from '@/features/holiday/actions';
 import { holidayFields } from '@/features/holiday/fields';
 import { Holiday } from '@/features/holiday/types';
-import { Add02Icon } from '@hugeicons/core-free-icons';
+import {
+  Add02Icon,
+  ViewIcon,
+  ViewOffSlashIcon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { addDays, endOfMonth, format, startOfMonth, subDays } from 'date-fns';
 import { id } from 'date-fns/locale/id';
@@ -28,13 +32,13 @@ import { Modal } from '../shared/modal';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { ButtonGroup } from '../ui/button-group';
-import { Calendar } from '../ui/calendar';
+import { Calendar, CalendarDayButton } from '../ui/calendar';
 import { Card, CardContent, CardFooter } from '../ui/card';
 import { DialogClose, DialogFooter } from '../ui/dialog';
+import { Toggle } from '../ui/toggle';
 import CalendarEventList from './calendar-event-list';
 
 interface SchoolCalendarProps {
-  holidays: Holiday[];
   onDateSelect?: (date: string) => void;
 }
 
@@ -56,6 +60,39 @@ function isHoliday(date: Date, holidays: Holiday[]): boolean {
     const end = new Date(h.endDate + 'T00:00:00');
     return d >= start && d <= end;
   });
+}
+
+function CalendarHolidayDayButton({
+  day,
+  holidays,
+  showCurriculums,
+  children,
+  ...props
+}: ComponentProps<typeof CalendarDayButton> & {
+  holidays: Holiday[];
+  showCurriculums: boolean;
+}) {
+  const pills = showCurriculums ? getMatchingHolidays(day.date, holidays) : [];
+  return (
+    <CalendarDayButton day={day} {...props}>
+      {showCurriculums && pills.length > 0 ? (
+        <div className="pointer-events-none absolute inset-0 hidden flex-col items-start gap-0.5 p-1.5 text-left md:flex">
+          <span className="text-xs opacity-70">{children}</span>
+          {pills.slice(0, 1).map((h) => (
+            <span
+              key={h.id}
+              title={h.reason}
+              className="w-full truncate rounded bg-red-100/80 px-0.5 text-[0.6rem] leading-4 text-red-500"
+            >
+              {h.reason}
+            </span>
+          ))}
+        </div>
+      ) : (
+        children
+      )}
+    </CalendarDayButton>
+  );
 }
 
 function AddCustomHoliday({ hasExisting }: { hasExisting: boolean }) {
@@ -129,13 +166,21 @@ function HolidayForm() {
   );
 }
 
-export default function SchoolCalendar({
-  holidays,
-  onDateSelect,
-}: SchoolCalendarProps) {
+export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
+  const [holidays, setHolidays] = useState<Holiday[]>([]);
   const [date, setDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [eventDates, setEventDates] = useState<Set<string>>(new Set());
+  const [showCurriculums, setShowCurriculums] = useState(false);
+
+  // Fetch holidays
+  useEffect(() => {
+    getHolidays().then((result) => {
+      if (result.success) {
+        setHolidays(result.data);
+      }
+    });
+  }, []);
 
   // Fetch dates that have events — cover overflow days from adjacent months
   useEffect(() => {
@@ -151,21 +196,39 @@ export default function SchoolCalendar({
     });
   }, [currentMonth]);
 
-  const modifiers = useMemo(
-    () => ({
+  const modifiers = useMemo(() => {
+    const inCurrentMonth = (day: Date) =>
+      day.getMonth() === currentMonth.getMonth() &&
+      day.getFullYear() === currentMonth.getFullYear();
+    const isWorkday = (day: Date) => {
+      const dow = day.getDay();
+      return dow >= 1 && dow <= 5 && !isHoliday(day, holidays);
+    };
+
+    return {
       weekend: { dayOfWeek: [0, 6] },
       holiday: (day: Date) => isHoliday(day, holidays),
       hasEvent: (day: Date) => eventDates.has(format(day, 'yyyy-MM-dd')),
-    }),
-    [holidays, eventDates]
-  );
+      showCurriculums: showCurriculums,
+      showCurriculumWorkday:
+        showCurriculums &&
+        ((day: Date) => isWorkday(day) && inCurrentMonth(day)),
+      showCurriculumOverflow:
+        showCurriculums &&
+        ((day: Date) => isWorkday(day) && !inCurrentMonth(day)),
+    };
+  }, [holidays, eventDates, showCurriculums, currentMonth]);
 
   const modifiersClassNames = useMemo(
     () => ({
       weekend: 'text-red-500!',
-      holiday: 'text-red-500!',
+      holiday: 'bg-red-100 text-red-500!',
       hasEvent:
         '[&_button]:after:absolute [&_button]:after:bottom-0.75 [&_button]:md:after:bottom-3.5 [&_button]:after:left-1/2 [&_button]:after:-translate-x-1/2 [&_button]:md:after:h-2 [&_button]:after:h-1.5 [&_button]:after:w-[90%] [&_button]:after:rounded-full [&_button]:after:bg-muted-foreground/80 [&_button]:after:content-[""]',
+      showCurriculums:
+        '[&_button]:md:justify-start [&_button]:md:items-start [&_button]:md:text-left [&_button]:md:pl-1.5 [&_button]:md:pt-1.5',
+      showCurriculumWorkday: 'bg-warning/40',
+      showCurriculumOverflow: 'bg-warning/15',
     }),
     []
   );
@@ -186,16 +249,25 @@ export default function SchoolCalendar({
   };
 
   return (
-    <div className="w-full my-2 flex items-center justify-center">
-      <Card className="md:flex md:flex-row w-full md:p-0 mx-auto">
-        <CardContent className="md:pb-4 md:pt-4 md:pr-0 flex items-center justify-center">
+    <div className="w-full my-2 md:px-6 md:h-[calc(100%-1rem)]">
+      <Card className="md:flex md:flex-row w-full md:h-full md:p-0 mx-auto">
+        <CardContent className="md:pb-4 md:pt-4 md:pr-0 md:basis-[65%] md:w-[65%] md:self-stretch flex items-center justify-center">
           <Calendar
             key={`calendar-${holidays.length}`}
             mode="single"
             selected={date}
             onSelect={handleDaySelect}
             onMonthChange={handleMonthChange}
-            className="rounded-lg border-2 w-full! [--cell-size:min(2.5rem, 100%)] md:[--cell-size:5rem] [&_td]:border [&_th]:border"
+            components={{
+              DayButton: (props) => (
+                <CalendarHolidayDayButton
+                  {...props}
+                  holidays={holidays}
+                  showCurriculums={showCurriculums}
+                />
+              ),
+            }}
+            className="rounded-lg border-2 w-full! [--cell-size:min(2.5rem,100%)] [&_td]:border [&_th]:border [&_.rdp-day]:min-w-0 md:h-full! md:[&_.rdp-months]:h-full! md:[&_.rdp-month]:h-full! md:[&_.rdp-month\_grid]:flex! md:[&_.rdp-month\_grid]:flex-1! md:[&_.rdp-month\_grid]:flex-col! md:[&_.rdp-weeks]:flex! md:[&_.rdp-weeks]:flex-1! md:[&_.rdp-weeks]:flex-col! md:[&_.rdp-week]:grow! md:[&_.rdp-week]:min-h-12! md:[&_.rdp-day]:aspect-auto! md:[&_.rdp-day\_button]:aspect-auto! md:[&_.rdp-day\_button]:h-full!"
             required
             fixedWeeks
             locale={id}
@@ -203,7 +275,7 @@ export default function SchoolCalendar({
             modifiersClassNames={modifiersClassNames}
           />
         </CardContent>
-        <CardFooter className="rounded-bl-none md:items-start flex flex-col">
+        <CardFooter className="rounded-bl-none md:items-start flex flex-col md:basis-[35%] md:w-[35%]">
           <span className="text-lg font-semibold my-2 w-full text-center">
             {date.toLocaleDateString('id-ID', {
               weekday: 'long',
@@ -224,8 +296,27 @@ export default function SchoolCalendar({
               }
             ></Button>
             <AddCustomHoliday hasExisting={matchingHolidays.length > 0} />
-            <Button variant="default">+ Kurikulum</Button>
+            <Button
+              render={
+                <Toggle
+                  pressed={showCurriculums}
+                  onPressedChange={setShowCurriculums}
+                  className="aria-pressed:bg-[color-mix(in_oklch,var(--primary),#000_15%)] aria-pressed:text-primary-foreground data-[state=on]:bg-[color-mix(in_oklch,var(--primary),#000_15%)] data-[state=on]:text-primary-foreground"
+                >
+                  <HugeiconsIcon
+                    icon={ViewOffSlashIcon}
+                    className="group-aria-pressed/toggle:hidden"
+                  />
+                  <HugeiconsIcon
+                    icon={ViewIcon}
+                    className="group-aria-pressed/toggle:block hidden"
+                  />
+                  Kurikulum
+                </Toggle>
+              }
+            />
           </ButtonGroup>
+          {showCurriculums && <div>Curriculum Edit?</div>}
           {matchingHolidays.length > 0 && (
             <ItemGroup className="w-full gap-1!">
               <ItemSeparator></ItemSeparator>

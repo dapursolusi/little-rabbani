@@ -97,7 +97,7 @@ export default async function DcrCapturePage({ params }: IDcrCapturePageProps) {
       <PageBreadcrumbs
         segments={[
           { label: 'Dashboard', href: '/dashboard/owner' },
-          { label: 'DCR / Observasi Kelas', href: '/dashboard/owner/dcr' },
+          { label: 'Aktivitas Kelas', href: '/dashboard/owner/daily' },
           { label: displayDate },
         ]}
       />

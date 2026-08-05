@@ -44,6 +44,9 @@ _Avoid_: Task, exercise, lesson.
 The predefined list of activities the owner maintains. The source of consistent vocabulary that enables monthly/quarterly aggregation by activity.
 _Avoid_: Activity list, library.
 
+**Curriculum**: A shared, undated, ordered sequence of planned learning items scoped to one term — authored in a batch (week → semester) as the day-to-day pedagogy backbone. Not pinned to a date and not session-scoped: every session consumes the same sequence, each at its own pace (Session A may reach "day 21" two weeks earlier than Session C). Each session's position is derived from its capture history, not stored. The Daily Class Report locks one curriculum item per session-per-day via `curriculumId` — "the day this session is on." Distinct from a Calendar Event (the rare ad-hoc one-off: an outing, a permission slip). See ADR 0008.
+_Avoid_: Syllabus, lesson plan, schedule (overloaded — use Calendar Event for ad-hoc, Curriculum for the planned sequence).
+
 **Session**: A scheduled class period on a given date — one Session Type running on one school date (e.g., the 9–10:30am morning block on Tue 12 Feb). Observations belong to one kid in one session. A preschool day may run more than one session; a kid attends exactly one session per day. Not persisted as its own row — derived from date + active Session Type + whether that date is a Holiday. See ADR 0007.
 _Avoid_: Class (overloaded), period, slot, occurrence.
 

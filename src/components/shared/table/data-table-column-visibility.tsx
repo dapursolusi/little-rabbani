@@ -26,7 +26,7 @@ export default function DataTableColumnVisibility<TData>({
     <DropdownMenu>
       <DropdownMenuTrigger
         render={
-          <Button variant="default" className="ml-auto">
+          <Button variant="default" className="ml-auto hidden md:flex">
             <HugeiconsIcon icon={Layout03FreeIcons} strokeWidth={2} />
             Kolom Aktif
             <HugeiconsIcon icon={ArrowDown01Icon} />

@@ -23,6 +23,7 @@ field.tsx
 input.tsx
 item.tsx
 label.tsx
+popover.tsx
 progress.tsx
 radio-group.tsx
 scroll-area.tsx

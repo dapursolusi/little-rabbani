@@ -49,10 +49,11 @@ dashboard/
       page.tsx
     curriculum/
       page.tsx
-    dcr/
-      [sessionId]/
-        dcr-form.tsx
-        page.tsx
+    daily/
+      capture/
+        [sessionId]/
+          dcr-form.tsx
+          page.tsx
       loading.tsx
       page.tsx
     guardian/
@@ -133,16 +134,6 @@ dashboard/
       create/
         page.tsx
       page.tsx
-  teacher/
-    capture/
-      [sessionId]/
-        capture-roster.tsx
-        page.tsx
-      _client.tsx
-      actions.ts
-      page.tsx
-    layout.tsx
-    page.tsx
 favicon.ico
 globals.css
 layout.tsx
