@@ -1,5 +1,6 @@
-import { countEmptyWorkdays, listTermWorkdays } from '@/features/term/workdays';
 import { describe, expect, it } from 'vitest';
+
+import { countEmptyWorkdays, listTermWorkdays } from '@/features/term/workdays';
 
 describe('listTermWorkdays', () => {
   it('returns every weekday in a clean week', () => {
