@@ -1,4 +1,8 @@
-import { countEmptyWorkdays, listTermWorkdays } from '@/features/term/workdays';
+import {
+  countEmptyWorkdays,
+  findEarliestTermCoveringDate,
+  listTermWorkdays,
+} from '@/features/term/workdays';
 import { describe, expect, it } from 'vitest';
 
 describe('listTermWorkdays', () => {
@@ -60,5 +64,50 @@ describe('countEmptyWorkdays', () => {
   it('clamps to zero when filled items exceed workdays', () => {
     expect(countEmptyWorkdays(term, [], true, 5)).toBe(0);
     expect(countEmptyWorkdays(term, [], true, 99)).toBe(0);
+  });
+});
+
+describe('findEarliestTermCoveringDate', () => {
+  const termA = {
+    id: 'a',
+    startDate: '2026-07-01',
+    endDate: '2026-07-31',
+    deletedAt: null,
+  };
+  const termB = {
+    id: 'b',
+    startDate: '2026-08-01',
+    endDate: '2026-08-31',
+    deletedAt: null,
+  };
+
+  it('returns the term covering the date', () => {
+    const result = findEarliestTermCoveringDate([termA, termB], '2026-07-15');
+    expect(result?.id).toBe('a');
+  });
+
+  it('returns null for a date between two terms', () => {
+    expect(
+      findEarliestTermCoveringDate([termA, termB], '2026-09-01')
+    ).toBeNull();
+  });
+
+  it('returns the earliest startDate when terms overlap', () => {
+    const later = {
+      id: 'c',
+      startDate: '2026-08-15',
+      endDate: '2026-09-30',
+      deletedAt: null,
+    };
+    // Both later and termB cover 2026-08-20; termB starts earlier.
+    const result = findEarliestTermCoveringDate([later, termB], '2026-08-20');
+    expect(result?.id).toBe('b');
+  });
+
+  it('skips deleted terms', () => {
+    const deleted = { ...termA, deletedAt: new Date() };
+    expect(
+      findEarliestTermCoveringDate([deleted, termB], '2026-07-15')
+    ).toBeNull(); // termB starts 08-01, doesn't cover 07-15
   });
 });

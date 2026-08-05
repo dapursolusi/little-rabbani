@@ -34,3 +34,19 @@ export function countEmptyWorkdays(
   ).length;
   return Math.max(0, workdayCount - filledCount);
 }
+
+export interface TermCoverage {
+  startDate: string;
+  endDate: string;
+  deletedAt: Date | null;
+}
+
+export function findEarliestTermCoveringDate<T extends TermCoverage>(
+  terms: T[],
+  date: string
+): T | null {
+  const covering = terms
+    .filter((t) => !t.deletedAt && t.startDate <= date && date <= t.endDate)
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
+  return covering[0] ?? null;
+}
