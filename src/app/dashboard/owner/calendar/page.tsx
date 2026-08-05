@@ -1,5 +1,3 @@
-import { getHolidays } from '@/features/holiday/actions';
-
 import SchoolCalendar from '@/components/sections/school-calendar';
 
 import { baseMetadata } from '@/lib/metadata';
