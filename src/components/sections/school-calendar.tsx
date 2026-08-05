@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { type ComponentProps, useEffect, useMemo, useState } from 'react';
 
 import Link from 'next/link';
 
@@ -32,7 +32,7 @@ import { Modal } from '../shared/modal';
 import { Badge } from '../ui/badge';
 import { Button } from '../ui/button';
 import { ButtonGroup } from '../ui/button-group';
-import { Calendar } from '../ui/calendar';
+import { Calendar, CalendarDayButton } from '../ui/calendar';
 import { Card, CardContent, CardFooter } from '../ui/card';
 import { DialogClose, DialogFooter } from '../ui/dialog';
 import { Toggle } from '../ui/toggle';
@@ -60,6 +60,39 @@ function isHoliday(date: Date, holidays: Holiday[]): boolean {
     const end = new Date(h.endDate + 'T00:00:00');
     return d >= start && d <= end;
   });
+}
+
+function CalendarHolidayDayButton({
+  day,
+  holidays,
+  showCurriculums,
+  children,
+  ...props
+}: ComponentProps<typeof CalendarDayButton> & {
+  holidays: Holiday[];
+  showCurriculums: boolean;
+}) {
+  const pills = showCurriculums ? getMatchingHolidays(day.date, holidays) : [];
+  return (
+    <CalendarDayButton day={day} {...props}>
+      {showCurriculums && pills.length > 0 ? (
+        <div className="pointer-events-none absolute inset-0 hidden flex-col items-start gap-0.5 p-1.5 text-left md:flex">
+          <span className="text-xs opacity-70">{children}</span>
+          {pills.slice(0, 1).map((h) => (
+            <span
+              key={h.id}
+              title={h.reason}
+              className="w-full truncate rounded bg-red-100/80 px-0.5 text-[0.6rem] leading-4 text-red-500"
+            >
+              {h.reason}
+            </span>
+          ))}
+        </div>
+      ) : (
+        children
+      )}
+    </CalendarDayButton>
+  );
 }
 
 function AddCustomHoliday({ hasExisting }: { hasExisting: boolean }) {
@@ -225,7 +258,16 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
             selected={date}
             onSelect={handleDaySelect}
             onMonthChange={handleMonthChange}
-            className="rounded-lg border-2 w-full! [--cell-size:min(2.5rem,100%)] [&_td]:border [&_th]:border md:h-full! md:[&_.rdp-months]:h-full! md:[&_.rdp-month]:h-full! md:[&_.rdp-month\_grid]:flex! md:[&_.rdp-month\_grid]:flex-1! md:[&_.rdp-month\_grid]:flex-col! md:[&_.rdp-weeks]:flex! md:[&_.rdp-weeks]:flex-1! md:[&_.rdp-weeks]:flex-col! md:[&_.rdp-week]:grow! md:[&_.rdp-week]:min-h-12! md:[&_.rdp-day]:aspect-auto! md:[&_.rdp-day\_button]:aspect-auto! md:[&_.rdp-day\_button]:h-full!"
+            components={{
+              DayButton: (props) => (
+                <CalendarHolidayDayButton
+                  {...props}
+                  holidays={holidays}
+                  showCurriculums={showCurriculums}
+                />
+              ),
+            }}
+            className="rounded-lg border-2 w-full! [--cell-size:min(2.5rem,100%)] [&_td]:border [&_th]:border [&_.rdp-day]:min-w-0 md:h-full! md:[&_.rdp-months]:h-full! md:[&_.rdp-month]:h-full! md:[&_.rdp-month\_grid]:flex! md:[&_.rdp-month\_grid]:flex-1! md:[&_.rdp-month\_grid]:flex-col! md:[&_.rdp-weeks]:flex! md:[&_.rdp-weeks]:flex-1! md:[&_.rdp-weeks]:flex-col! md:[&_.rdp-week]:grow! md:[&_.rdp-week]:min-h-12! md:[&_.rdp-day]:aspect-auto! md:[&_.rdp-day\_button]:aspect-auto! md:[&_.rdp-day\_button]:h-full!"
             required
             fixedWeeks
             locale={id}
