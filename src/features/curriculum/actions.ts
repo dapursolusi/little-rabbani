@@ -1,7 +1,14 @@
 'use server';
 
 import { db } from '@/db';
-import { curriculum, dailyClassReport } from '@/db/schema';
+import { curriculum, dailyClassReport, term } from '@/db/schema';
+import {
+  type CurriculumPlanView,
+  buildPlanView,
+} from '@/features/curriculum/plan-view';
+import type { Curriculum } from '@/features/curriculum/types';
+import { getHolidays } from '@/features/holiday/actions';
+import { getSessionTypes } from '@/features/sessionType/actions';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -52,6 +59,63 @@ export async function getCurriculumItem(id: string) {
     return { success: true as const, data: item };
   } catch {
     return { success: false as const, error: 'Gagal mengambil item kurikulum' };
+  }
+}
+
+// ──────── Plan View (calendar display) ────────
+
+export async function getCurriculumPlanView(): Promise<
+  | { success: true; data: CurriculumPlanView }
+  | { success: false; error: string }
+> {
+  const auth = await requireOwner();
+  if (!auth.authorized) {
+    return { success: false as const, error: auth.error };
+  }
+
+  try {
+    const [termsResult, holidaysResult, sessionTypesResult] = await Promise.all(
+      [
+        db.query.term.findMany({
+          where: isNull(term.deletedAt),
+          orderBy: (t, { asc }) => [asc(t.startDate)],
+        }),
+        getHolidays(),
+        getSessionTypes(),
+      ]
+    );
+
+    const terms = termsResult;
+    const holidays = holidaysResult.success ? holidaysResult.data : [];
+    const hasActiveSessionType = sessionTypesResult.success
+      ? sessionTypesResult.data.length > 0
+      : false;
+
+    const curriculumByTerm: Record<string, Curriculum[]> = {};
+    for (const t of terms) {
+      const result = await getCurriculum(t.id);
+      if (result.success) curriculumByTerm[t.id] = result.data;
+    }
+
+    const data = buildPlanView({
+      terms: terms.map((t) => ({
+        id: t.id,
+        name: t.name,
+        startDate: t.startDate,
+        endDate: t.endDate,
+        isActive: t.isActive,
+      })),
+      holidays,
+      hasActiveSessionType,
+      curriculumByTerm,
+    });
+
+    return { success: true as const, data };
+  } catch {
+    return {
+      success: false as const,
+      error: 'Gagal memuat tampilan kurikulum',
+    };
   }
 }
 
