@@ -5,7 +5,10 @@ import {
 import { BatchModal } from '@/features/curriculum/components/batch-modal';
 import { curriculumColumns } from '@/features/curriculum/components/columns';
 import { curriculumFields } from '@/features/curriculum/fields';
+import { getHolidays } from '@/features/holiday/actions';
 import { getActiveTerm } from '@/features/kid/actions';
+import { getSessionTypes } from '@/features/sessionType/actions';
+import { listTermWorkdays } from '@/features/term/workdays';
 import { getActiveSubThemes } from '@/features/theme/actions';
 
 import { EmptyState } from '@/components/shared/empty-state';
@@ -48,8 +51,25 @@ export default async function CurriculumPage() {
   const items = curriculumResult.success ? curriculumResult.data : [];
   const subThemes = subThemesResult.success ? subThemesResult.data : [];
 
-  const nextSortOrder =
-    items.length > 0 ? Math.max(...items.map((i) => i.sortOrder)) + 1 : 0;
+  // Next empty workdays of the active term, in order. New items land on the
+  // first free workday(s); the server derives sortOrder from the date, so the
+  // calendar shows the item on the intended day instead of term-start (Jul 1/2).
+  const [holidaysResult, sessionTypesResult] = await Promise.all([
+    getHolidays(),
+    getSessionTypes(),
+  ]);
+  const holidays = holidaysResult.success ? holidaysResult.data : [];
+  const hasActiveSessionType = sessionTypesResult.success
+    ? sessionTypesResult.data.length > 0
+    : false;
+  const workdays = listTermWorkdays(
+    { startDate: activeTerm.startDate, endDate: activeTerm.endDate },
+    holidays.map((h) => ({ startDate: h.startDate, endDate: h.endDate })),
+    hasActiveSessionType
+  );
+  const filled = new Set(items.map((i) => i.sortOrder));
+  const nextEmptyDates = workdays.filter((_, idx) => !filled.has(idx));
+  const nextEmptyDate = nextEmptyDates[0] ?? null;
 
   return (
     <div className="p-4 sm:p-6">
@@ -65,7 +85,7 @@ export default async function CurriculumPage() {
           <BatchModal
             termId={activeTerm.id}
             subThemes={subThemes}
-            nextSortOrder={nextSortOrder}
+            nextEmptyDates={nextEmptyDates}
           />
         )}
       </div>
@@ -95,7 +115,7 @@ export default async function CurriculumPage() {
                 return createCurriculumItems([
                   {
                     termId: activeTerm.id,
-                    sortOrder: nextSortOrder,
+                    date: nextEmptyDate,
                     subThemeId: data.subThemeId as string,
                     name: data.name as string,
                     objective: (data.objective as string) || null,

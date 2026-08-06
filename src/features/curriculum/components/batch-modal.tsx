@@ -37,7 +37,8 @@ interface BatchRow {
 interface BatchModalProps {
   termId: string;
   subThemes: SubTheme[];
-  nextSortOrder: number;
+  /** Next empty workdays of the term, in order; row i lands on nextEmptyDates[i]. */
+  nextEmptyDates: string[];
 }
 
 function generateKey() {
@@ -47,7 +48,7 @@ function generateKey() {
 export function BatchModal({
   termId,
   subThemes,
-  nextSortOrder,
+  nextEmptyDates,
 }: BatchModalProps) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
@@ -94,7 +95,7 @@ export function BatchModal({
 
       const inputs = valid.map((r, i) => ({
         termId,
-        sortOrder: nextSortOrder + i,
+        date: nextEmptyDates[i] ?? null,
         subThemeId: r.subThemeId,
         name: r.name.trim(),
         objective: r.objective.trim() || null,

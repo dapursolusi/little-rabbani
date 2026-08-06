@@ -9,6 +9,7 @@ import {
 import type { Curriculum } from '@/features/curriculum/types';
 import { getHolidays } from '@/features/holiday/actions';
 import { getSessionTypes } from '@/features/sessionType/actions';
+import { listTermWorkdays } from '@/features/term/workdays';
 import { and, eq, isNull, sql } from 'drizzle-orm';
 
 import { requireOwner } from '@/lib/actions/utils';
@@ -121,7 +122,13 @@ export async function getCurriculumPlanView(): Promise<
 
 export type CreateCurriculumInput = {
   termId: string;
-  sortOrder: number;
+  /** 0-based workday position. Optional when `date` is provided — the server
+   *  derives it from the term's workday list. */
+  sortOrder?: number;
+  /** ISO date the item should land on. When present, the server resolves
+   *  sortOrder = index of this date in the term's workday list, so the
+   *  calendar date derives from the sequence (no date stored). */
+  date?: string | null;
   subThemeId: string;
   name: string;
   objective?: string | null;
@@ -143,27 +150,83 @@ export async function createCurriculumItems(inputs: CreateCurriculumInput[]) {
   }
 
   try {
-    // Compute starting sort_order server-side to avoid client-racing on concurrent creates.
-    const [maxRow] = await db
-      .select({
-        maxSort: sql<number>`COALESCE(MAX(${curriculum.sortOrder}), -1)`,
-      })
-      .from(curriculum)
-      .where(
-        and(
-          eq(curriculum.termId, inputs[0].termId),
-          isNull(curriculum.deletedAt)
-        )
-      );
+    // Items must all target the same term (a batch write is per-term).
+    const termId = inputs[0].termId;
+    const targetTerm = await db.query.term.findFirst({
+      where: eq(term.id, termId),
+    });
+    if (!targetTerm) {
+      return { success: false as const, error: 'Term tidak ditemukan' };
+    }
 
-    const startSort = (maxRow?.maxSort ?? -1) + 1;
+    const [holidaysResult, sessionTypesResult] = await Promise.all([
+      getHolidays(),
+      getSessionTypes(),
+    ]);
+    const holidays = holidaysResult.success ? holidaysResult.data : [];
+    const hasActiveSessionType = sessionTypesResult.success
+      ? sessionTypesResult.data.length > 0
+      : false;
+    const workdays = listTermWorkdays(
+      {
+        startDate: targetTerm.startDate,
+        endDate: targetTerm.endDate,
+      },
+      holidays.map((h) => ({ startDate: h.startDate, endDate: h.endDate })),
+      hasActiveSessionType
+    );
+
+    // Resolve each input's sortOrder. A `date` places the item on that
+    // workday (one item per workday); without one, fall back to appending
+    // after the current max.
+    const resolved = new Map<string, number>();
+    const startSort = await (async () => {
+      if (inputs.some((i) => !i.date)) {
+        const [maxRow] = await db
+          .select({
+            maxSort: sql<number>`COALESCE(MAX(${curriculum.sortOrder}), -1)`,
+          })
+          .from(curriculum)
+          .where(
+            and(eq(curriculum.termId, termId), isNull(curriculum.deletedAt))
+          );
+        return (maxRow?.maxSort ?? -1) + 1;
+      }
+      return 0;
+    })();
+
+    let appended = 0;
+    const sortOrders: number[] = [];
+    for (const i of inputs) {
+      if (i.date) {
+        const idx = workdays.indexOf(i.date);
+        if (idx === -1) {
+          return {
+            success: false as const,
+            error:
+              'Tanggal tidak termasuk hari aktif term — item tidak dapat ditempatkan',
+          };
+        }
+        if (resolved.has(String(idx))) {
+          return {
+            success: false as const,
+            error: 'Hanya satu aktivitas yang dapat dijadwalkan per hari',
+          };
+        }
+        resolved.set(String(idx), idx);
+        sortOrders.push(idx);
+      } else {
+        sortOrders.push(startSort + appended);
+        appended += 1;
+      }
+    }
 
     const created = await db
       .insert(curriculum)
       .values(
         inputs.map((i, idx) => ({
-          termId: i.termId,
-          sortOrder: startSort + idx,
+          termId,
+          sortOrder: sortOrders[idx],
           subThemeId: i.subThemeId,
           name: i.name,
           objective: i.objective ?? null,
