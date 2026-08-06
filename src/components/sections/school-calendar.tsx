@@ -22,10 +22,12 @@ import {
   Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemFooter,
   ItemGroup,
   ItemHeader,
   ItemSeparator,
+  ItemTitle,
 } from '@/components/ui/item';
 
 import DefaultFormFields from '../shared/form/default-form-field';
@@ -257,6 +259,11 @@ export default function SchoolCalendar({
     [date, holidays]
   );
 
+  const selectedIso = format(date, 'yyyy-MM-dd');
+  const selectedPosition = planView?.positions[selectedIso];
+  const selectedItem = planView?.items[selectedIso];
+  const isSelectedWorkday = selectedPosition != null;
+
   const handleDaySelect = (day: Date | undefined) => {
     if (!day) return;
     setDate(day);
@@ -336,7 +343,61 @@ export default function SchoolCalendar({
               }
             />
           </ButtonGroup>
-          {showCurriculums && <div>Curriculum Edit?</div>}
+          {showCurriculums && isSelectedWorkday && (
+            <ItemGroup className="w-full gap-1!">
+              <ItemSeparator />
+              {selectedItem ? (
+                <Item variant="outline">
+                  <ItemHeader>
+                    <Badge className="font-medium">
+                      {selectedItem.subTheme?.theme?.name ?? '—'}:{' '}
+                      {selectedItem.subTheme?.name ?? '—'}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      Hari {selectedPosition}
+                    </span>
+                  </ItemHeader>
+                  <ItemContent>
+                    <ItemTitle>{selectedItem.name}</ItemTitle>
+                    <ItemDescription className="flex flex-col gap-1">
+                      {selectedItem.objective && (
+                        <span className="text-xs text-muted-foreground">
+                          {selectedItem.objective}
+                        </span>
+                      )}
+                      {selectedItem.itemsToBring && (
+                        <span className="text-xs text-muted-foreground">
+                          Bawaan: {selectedItem.itemsToBring}
+                        </span>
+                      )}
+                    </ItemDescription>
+                  </ItemContent>
+                </Item>
+              ) : (
+                <Item variant="outline">
+                  <ItemHeader>
+                    <span className="font-semibold text-sm text-warning">
+                      Kurikulum belum diisi
+                    </span>
+                  </ItemHeader>
+                  <ItemContent>
+                    <ItemDescription>
+                      Hari ini belum memiliki item kurikulum.
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <Button
+                      size="sm"
+                      disabled
+                      title="Mode massal hadir di fitur berikutnya"
+                    >
+                      Isi Kurikulum
+                    </Button>
+                  </ItemActions>
+                </Item>
+              )}
+            </ItemGroup>
+          )}
           {matchingHolidays.length > 0 && (
             <ItemGroup className="w-full gap-1!">
               <ItemSeparator></ItemSeparator>
