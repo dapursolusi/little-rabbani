@@ -85,7 +85,7 @@ function CalendarHolidayDayButton({
 
   return (
     <CalendarDayButton day={day} {...props}>
-      {showCurriculums && hasCurriculum ? (
+      {showCurriculums && (hasCurriculum || pills.length > 0) ? (
         <div className="pointer-events-none absolute inset-0 flex flex-col items-start gap-0.5 p-1.5 text-left">
           <span className="text-xs opacity-70">{children}</span>
           {pills.length > 0 && (
