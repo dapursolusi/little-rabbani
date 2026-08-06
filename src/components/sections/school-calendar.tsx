@@ -529,6 +529,7 @@ export default function SchoolCalendar({
           open={upsertOpen}
           onOpenChange={setUpsertOpen}
           defaultDate={upsertDate}
+          onSaved={() => setShowCurriculums(true)}
         />
       )}
     </div>

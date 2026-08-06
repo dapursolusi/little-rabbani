@@ -61,6 +61,7 @@ interface BatchUpsertModalProps {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   defaultDate: string;
+  onSaved?: () => void;
 }
 
 function toIso(date: Date): string {
@@ -143,6 +144,7 @@ export function BatchUpsertModal({
   open,
   onOpenChange,
   defaultDate,
+  onSaved,
 }: BatchUpsertModalProps) {
   const router = useRouter();
   const [preset, setPreset] = React.useState<Preset>('1w');
@@ -249,6 +251,9 @@ export function BatchUpsertModal({
         );
         setShowDiff(false);
         onOpenChange(false);
+        // Reveal what was just saved: the calendar overlay is opt-in
+        // (Kurikulum toggle) — flip it on so filled days are visible.
+        onSaved?.();
         router.refresh();
       } else {
         toast.error(result.error);
