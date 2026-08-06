@@ -6,6 +6,7 @@ import { and, eq, inArray, isNull } from 'drizzle-orm';
 
 import { requireOwner } from '../../lib/actions/utils';
 import { TermFormSchema } from './schema';
+import { findEarliestTermCoveringDate } from './workdays';
 
 // ─────────────── Term CRUD ───────────────
 
@@ -166,6 +167,29 @@ export async function deleteTerm(id: string) {
     return { success: true as const, data: undefined };
   } catch {
     return { success: false as const, error: 'Gagal menghapus term' };
+  }
+}
+
+/**
+ * Resolve which term covers a date (earliest non-deleted), or null.
+ * VAL-schedule: date-driven term binding (ADR-0008 addendum §3).
+ */
+export async function getTermForDate(date: string) {
+  const authCheck = await requireOwner();
+  if (!authCheck.authorized) {
+    return { success: false as const, error: authCheck.error };
+  }
+
+  try {
+    const terms = await db.query.term.findMany({
+      where: isNull(term.deletedAt),
+      orderBy: (t, { asc }) => [asc(t.startDate)],
+    });
+
+    const resolved = findEarliestTermCoveringDate(terms, date);
+    return { success: true as const, data: resolved };
+  } catch {
+    return { success: false as const, error: 'Gagal menentukan term' };
   }
 }
 
