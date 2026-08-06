@@ -29,10 +29,15 @@ export function buildPlanView(input: {
       input.hasActiveSessionType
     );
     const termItems = input.curriculumByTerm[term.id] ?? [];
+    const bySortOrder = new Map(
+      [...termItems]
+        .sort((a, b) => a.sortOrder - b.sortOrder)
+        .map((item) => [item.sortOrder, item])
+    );
 
     workdays.forEach((date, idx) => {
       positions[date] = idx + 1;
-      const item = termItems[idx];
+      const item = bySortOrder.get(idx);
       if (item) items[date] = item;
     });
   }

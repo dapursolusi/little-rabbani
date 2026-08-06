@@ -258,6 +258,113 @@ export async function deleteCurriculumItem(id: string) {
   }
 }
 
+// ──────── Batch Upsert ────────
+
+export type BatchUpsertRow = {
+  id?: string;
+  sortOrder: number;
+  subThemeId: string;
+  name: string;
+  objective?: string;
+  indoor?: 'true' | 'false';
+  itemsToBring?: string;
+};
+
+export async function batchUpsert(
+  termId: string,
+  rows: BatchUpsertRow[]
+): Promise<
+  | { success: true; data: { inserted: number; updated: number } }
+  | { success: false; error: string }
+> {
+  const auth = await requireOwner();
+  if (!auth.authorized) return { success: false as const, error: auth.error };
+
+  if (rows.length === 0) {
+    return { success: false as const, error: 'Tidak ada baris yang disimpan' };
+  }
+
+  // Validate each row once; keep parsed values so insert/update share them.
+  const parsedRows: Array<{
+    id?: string;
+    sortOrder: number;
+    data: {
+      subThemeId: string;
+      name: string;
+      objective: string | null;
+      indoor: boolean;
+      itemsToBring: string | null;
+    };
+  }> = [];
+  for (const r of rows) {
+    const parsed = CurriculumItemSchema.safeParse(r);
+    if (!parsed.success) {
+      const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
+      return { success: false as const, error: firstError };
+    }
+    parsedRows.push({
+      id: r.id,
+      sortOrder: r.sortOrder,
+      data: {
+        subThemeId: parsed.data.subThemeId,
+        name: parsed.data.name,
+        objective: parsed.data.objective ?? null,
+        indoor: parsed.data.indoor === 'true',
+        itemsToBring: parsed.data.itemsToBring ?? null,
+      },
+    });
+  }
+
+  try {
+    const existing = await db.query.curriculum.findMany({
+      where: and(eq(curriculum.termId, termId), isNull(curriculum.deletedAt)),
+      columns: { id: true, sortOrder: true },
+    });
+    const existingBySort: Record<number, string> = {};
+    for (const e of existing) existingBySort[e.sortOrder] = e.id;
+
+    const toInsert = parsedRows.filter(
+      (r) => !(r.id ?? existingBySort[r.sortOrder])
+    );
+    const toUpdate = parsedRows.filter(
+      (r) => r.id ?? existingBySort[r.sortOrder]
+    );
+
+    let inserted = 0;
+    if (toInsert.length > 0) {
+      await db.insert(curriculum).values(
+        toInsert.map((r) => ({
+          termId,
+          sortOrder: r.sortOrder,
+          ...r.data,
+        }))
+      );
+      inserted = toInsert.length;
+    }
+
+    for (const u of toUpdate) {
+      const id = u.id ?? existingBySort[u.sortOrder];
+      await db
+        .update(curriculum)
+        .set({ ...u.data, updatedAt: new Date() })
+        .where(
+          and(
+            eq(curriculum.id, id),
+            eq(curriculum.termId, termId),
+            isNull(curriculum.deletedAt)
+          )
+        );
+    }
+
+    return {
+      success: true as const,
+      data: { inserted, updated: toUpdate.length },
+    };
+  } catch {
+    return { success: false as const, error: 'Gagal menyimpan kurikulum' };
+  }
+}
+
 // ──────── Reorder (swap sort order with adjacent item) ────────
 
 export async function reorderCurriculumItem(id: string, newSortOrder: number) {

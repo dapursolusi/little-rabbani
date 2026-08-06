@@ -80,4 +80,21 @@ describe('buildPlanView', () => {
     expect(view.positions['2026-08-11']).toBeUndefined();
     expect(view.positions['2026-08-12']).toBe(6); // 3rd workday was 05
   });
+
+  it('projects by sortOrder value, not array position, when sortOrders have gaps', () => {
+    // Only sortOrders 2 and 3 exist (0 and 1 missing) — the front of the term
+    // must stay empty, not be claimed by array slot 0.
+    const view = buildPlanView({
+      terms: [TERM],
+      holidays: [],
+      hasActiveSessionType: true,
+      curriculumByTerm: { t1: [ITEM(3), ITEM(2)] }, // deliberately unsorted input too
+    });
+
+    expect(view.items['2026-08-03']).toBeUndefined(); // workday 1, no sortOrder 0
+    expect(view.items['2026-08-04']).toBeUndefined(); // workday 2, no sortOrder 1
+    expect(view.items['2026-08-05']?.name).toBe('Aktivitas 2'); // workday 3 → sortOrder 2
+    expect(view.items['2026-08-06']?.name).toBe('Aktivitas 3'); // workday 4 → sortOrder 3
+    expect(view.positions['2026-08-05']).toBe(3);
+  });
 });
