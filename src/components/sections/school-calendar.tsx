@@ -297,16 +297,7 @@ export default function SchoolCalendar({
       const term = findCoveringTerm(planView.terms, iso);
       const blocked = term && gate.statusByTerm[term.id] === 'blocked';
       if (!blocked) {
-        // Anchor the batch window at the term's next-empty workday, not the
-        // clicked date. Curriculum is an ordered sequence (ADR-0008): workday
-        // #N shows the Nth item, so filling out of order silently puts the new
-        // items at the front of the term. Seeding from the first empty keeps
-        // sortOrders contiguous with what's already filled.
-        const anchor =
-          gate.blockingFirstEmptyDate && term && term.id === gate.blockingTermId
-            ? gate.blockingFirstEmptyDate
-            : iso;
-        setUpsertDate(anchor);
+        setUpsertDate(iso);
         setUpsertOpen(true);
       }
     }
@@ -460,12 +451,7 @@ export default function SchoolCalendar({
                       <Button
                         size="sm"
                         onClick={() => {
-                          // Anchor at the term's next empty workday — see
-                          // handleDaySelect. Filling out of order would put
-                          // new items at the sequence front.
-                          setUpsertDate(
-                            gate.blockingFirstEmptyDate ?? selectedIso
-                          );
+                          setUpsertDate(selectedIso);
                           setUpsertOpen(true);
                         }}
                       >
