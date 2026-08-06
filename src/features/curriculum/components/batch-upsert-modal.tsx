@@ -152,18 +152,26 @@ export function BatchUpsertModal({
   const [showDiff, setShowDiff] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
 
+  // base-ui controlled Dialog fires onOpenChange only for user-initiated
+  // close or imperative setOpen — never for a programmatic change to the
+  // `open` prop. So reseed via effect keyed on [open, defaultDate]: fires on
+  // first open and on reopen with a new defaultDate whether the caller
+  // remounts or keeps the modal mounted. Resets to fresh state each open.
+  React.useEffect(() => {
+    if (!open) return;
+    // Reseed on open is the only way to catch programmatic controlled opens
+    // (base-ui bypasses onOpenChange for prop-driven opens). The cascading
+    // render risk is nil: state only changes when open flips, never per-render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPreset('1w');
+    setRows(seedRows(planView, defaultDate, '1w'));
+    setShowDiff(false);
+    setSubmitting(false);
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- deliberate: reseed on open, planView/preset intentionally excluded
+  }, [open, defaultDate]);
+
   function handleOpenChange(v: boolean | ((prev: boolean) => boolean)) {
-    if (typeof v === 'boolean') {
-      // Reseed fresh on each open so a new defaultDate never shows stale rows
-      // or a stale preset, whether the modal stays mounted or remounts.
-      if (v) {
-        setPreset('1w');
-        setRows(seedRows(planView, defaultDate, '1w'));
-        setShowDiff(false);
-        setSubmitting(false);
-      }
-      onOpenChange(v);
-    }
+    if (typeof v === 'boolean') onOpenChange(v);
   }
 
   // Stable under React Compiler: derived from defaultDate, not a mutable handle.
