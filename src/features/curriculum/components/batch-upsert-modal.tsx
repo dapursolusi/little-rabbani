@@ -80,16 +80,25 @@ function presetEndDate(
   preset: Preset
 ): Date | null {
   const anchor = new Date(defaultDate + 'T00:00:00');
+  const coveringId = findCoveringTerm(planView.terms, defaultDate)?.id;
+  const coveringTerm = coveringId
+    ? planView.terms.find((t) => t.id === coveringId)
+    : undefined;
+  const termEnd = coveringTerm
+    ? new Date(coveringTerm.endDate + 'T00:00:00')
+    : null;
+
   if (preset === 'term') {
-    const coveringId = findCoveringTerm(planView.terms, defaultDate)?.id;
-    const coveringTerm = coveringId
-      ? planView.terms.find((t) => t.id === coveringId)
-      : undefined;
-    return coveringTerm ? new Date(coveringTerm.endDate + 'T00:00:00') : null;
+    return termEnd;
   }
-  const end = new Date(anchor);
-  end.setDate(anchor.getDate() + PRESET_DAYS[preset]);
-  return end;
+
+  // Clamp window to covering term end so candidate dates never leak into the
+  // next term. Next-term dates would reuse sortOrder numbers and batchUpsert
+  // would misclassify blanks as updates of current-term items.
+  const presetEnd = new Date(anchor);
+  presetEnd.setDate(anchor.getDate() + PRESET_DAYS[preset]);
+  if (termEnd && presetEnd > termEnd) return termEnd;
+  return presetEnd;
 }
 
 function rowFromDay(planView: CurriculumPlanView, iso: string): BatchRow {
@@ -142,6 +151,20 @@ export function BatchUpsertModal({
   );
   const [showDiff, setShowDiff] = React.useState(false);
   const [submitting, setSubmitting] = React.useState(false);
+
+  function handleOpenChange(v: boolean | ((prev: boolean) => boolean)) {
+    if (typeof v === 'boolean') {
+      // Reseed fresh on each open so a new defaultDate never shows stale rows
+      // or a stale preset, whether the modal stays mounted or remounts.
+      if (v) {
+        setPreset('1w');
+        setRows(seedRows(planView, defaultDate, '1w'));
+        setShowDiff(false);
+        setSubmitting(false);
+      }
+      onOpenChange(v);
+    }
+  }
 
   // Stable under React Compiler: derived from defaultDate, not a mutable handle.
   const termId = React.useMemo(
@@ -234,9 +257,7 @@ export function BatchUpsertModal({
       <Modal
         title="Isi Massal Kurikulum"
         open={open}
-        onOpenChange={(v) => {
-          if (typeof v === 'boolean') onOpenChange(v);
-        }}
+        onOpenChange={handleOpenChange}
         content={
           <div className="space-y-4">
             <div className="flex gap-1 rounded-lg bg-muted p-1">
@@ -262,7 +283,7 @@ export function BatchUpsertModal({
                 <div key={row.key} className="space-y-2 rounded-lg border p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">
-                      {formatDateShort(row.date)}
+                      Hari {row.sortOrder} · {formatDateShort(row.date)}
                       {row.id ? ' (ada)' : ' (baru)'}
                     </span>
                   </div>
