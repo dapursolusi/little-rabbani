@@ -5,6 +5,7 @@ import { type ComponentProps, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { getCalendarEventDates } from '@/features/calendar/actions';
+import { buildGateState, findCoveringTerm } from '@/features/curriculum/gate';
 import type { CurriculumPlanView } from '@/features/curriculum/plan-view';
 import { createHoliday } from '@/features/holiday/actions';
 import { holidayFields } from '@/features/holiday/fields';
@@ -198,6 +199,12 @@ export default function SchoolCalendar({
   const [eventDates, setEventDates] = useState<Set<string>>(new Set());
   const [showCurriculums, setShowCurriculums] = useState(false);
 
+  const todayIso = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
+  const gate = useMemo(
+    () => buildGateState(planView ?? null, todayIso),
+    [planView, todayIso]
+  );
+
   // Fetch dates that have events — cover overflow days from adjacent months
   useEffect(() => {
     // Widen by ~6 days to catch the week overflow into prev/next month
@@ -263,6 +270,9 @@ export default function SchoolCalendar({
   const selectedPosition = planView?.positions[selectedIso];
   const selectedItem = planView?.items[selectedIso];
   const isSelectedWorkday = selectedPosition != null;
+  const selectedTerm = findCoveringTerm(planView?.terms ?? [], selectedIso);
+  const selectedBlocked =
+    !!selectedTerm && gate.statusByTerm[selectedTerm.id] === 'blocked';
 
   const handleDaySelect = (day: Date | undefined) => {
     if (!day) return;
@@ -274,12 +284,20 @@ export default function SchoolCalendar({
     setCurrentMonth(startOfMonth(month));
   };
 
+  const jumpToFirstEmpty = () => {
+    if (!gate.blockingFirstEmptyDate) return;
+    const target = new Date(gate.blockingFirstEmptyDate + 'T00:00:00');
+    setDate(target);
+    setCurrentMonth(startOfMonth(target));
+  };
+
   return (
     <div className="w-full my-2 md:px-6 md:h-[calc(100%-1rem)]">
       <Card className="md:flex md:flex-row w-full md:h-full md:p-0 mx-auto">
         <CardContent className="md:pb-4 md:pt-4 md:pr-0 md:basis-[65%] md:w-[65%] md:self-stretch flex items-center justify-center">
           <Calendar
             key={`calendar-${holidays.length}`}
+            month={currentMonth}
             mode="single"
             selected={date}
             onSelect={handleDaySelect}
@@ -373,6 +391,26 @@ export default function SchoolCalendar({
                     </ItemDescription>
                   </ItemContent>
                 </Item>
+              ) : selectedBlocked ? (
+                <Item variant="outline">
+                  <ItemHeader>
+                    <span className="font-semibold text-sm text-muted-foreground">
+                      Belum bisa diisi — selesaikan dulu term aktif (
+                      {gate.blockingEmptyCount} hari kurikulum belum terisi)
+                    </span>
+                  </ItemHeader>
+                  <ItemContent>
+                    <ItemDescription>
+                      Term berikutnya baru bisa diisi setelah term aktif terisi
+                      penuh.
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <Button size="sm" onClick={jumpToFirstEmpty}>
+                      Lompat ke hari kosong pertama
+                    </Button>
+                  </ItemActions>
+                </Item>
               ) : (
                 <Item variant="outline">
                   <ItemHeader>
@@ -396,6 +434,30 @@ export default function SchoolCalendar({
                   </ItemActions>
                 </Item>
               )}
+            </ItemGroup>
+          )}
+          {showCurriculums && gate.createNextTermNeeded && (
+            <ItemGroup className="w-full gap-1!">
+              <ItemSeparator />
+              <Item variant="outline">
+                <ItemContent>
+                  <ItemDescription>
+                    Kurikulum term ini sudah lengkap — buat term baru untuk
+                    melanjutkan.
+                  </ItemDescription>
+                </ItemContent>
+                <ItemActions>
+                  <Button
+                    size="sm"
+                    nativeButton={false}
+                    render={
+                      <Link href="/dashboard/owner/term/create">
+                        Buat Term Baru
+                      </Link>
+                    }
+                  />
+                </ItemActions>
+              </Item>
             </ItemGroup>
           )}
           {matchingHolidays.length > 0 && (
