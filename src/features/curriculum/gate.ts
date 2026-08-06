@@ -4,16 +4,23 @@ export type TermStatus = 'editable' | 'blocked';
 
 export type GateState = {
   currentTermId: string | null;
-  currentEmptyCount: number;
-  currentFirstEmptyDate: string | null;
+  /** Earliest term from the current term onward with unfilled workdays — the
+   *  term the owner must complete before later terms unlock. Null when the
+   *  current term and everything after it are full. */
+  blockingTermId: string | null;
+  /** Empty workday count of the blocking term (the X in the gate message). */
+  blockingEmptyCount: number;
+  /** First unfilled workday in the blocking term (the jump-back target). */
+  blockingFirstEmptyDate: string | null;
   statusByTerm: Record<string, TermStatus>;
   createNextTermNeeded: boolean;
 };
 
 export const EMPTY_GATE: GateState = {
   currentTermId: null,
-  currentEmptyCount: 0,
-  currentFirstEmptyDate: null,
+  blockingTermId: null,
+  blockingEmptyCount: 0,
+  blockingFirstEmptyDate: null,
   statusByTerm: {},
   createNextTermNeeded: false,
 };
@@ -95,18 +102,36 @@ export function buildGateState(
   }
 
   const currentEmpty = emptyByTerm[currentTermId] ?? 0;
-  const currentFirstEmptyDate =
-    (workdaysByTerm[currentTermId] ?? [])
-      .sort((a, b) => a.localeCompare(b))
-      .find((iso) => !planView.items[iso]) ?? null;
+
+  // Blocking term = first term at/after the current term with empty workdays.
+  // In the normal flow this is the current term; when the current term is
+  // full, it's the next term that still gates the terms after it.
+  const blockingIndex = terms.findIndex(
+    (t, i) => i >= currentIndex && emptyByTerm[t.id] > 0
+  );
+  const blockingTermId = blockingIndex === -1 ? null : terms[blockingIndex].id;
+  const blockingEmptyCount = blockingTermId
+    ? (emptyByTerm[blockingTermId] ?? 0)
+    : 0;
+  const blockingFirstEmptyDate = blockingTermId
+    ? ((workdaysByTerm[blockingTermId] ?? [])
+        .sort((a, b) => a.localeCompare(b))
+        .find((iso) => !planView.items[iso]) ?? null)
+    : null;
 
   const isLastTerm = currentIndex === terms.length - 1;
-  const createNextTermNeeded = currentEmpty === 0 && isLastTerm;
+  // Only when a term covers today or an active term exists — the
+  // earliest-term fallback (no covering, no active: school year ended) must
+  // not surface a "create next term" nudge against a term that ended months
+  // ago.
+  const createNextTermNeeded =
+    Boolean(covering ?? active) && currentEmpty === 0 && isLastTerm;
 
   return {
     currentTermId,
-    currentEmptyCount: currentEmpty,
-    currentFirstEmptyDate,
+    blockingTermId,
+    blockingEmptyCount,
+    blockingFirstEmptyDate,
     statusByTerm,
     createNextTermNeeded,
   };

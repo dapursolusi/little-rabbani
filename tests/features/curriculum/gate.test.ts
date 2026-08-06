@@ -60,8 +60,8 @@ describe('buildGateState', () => {
     const gate = buildGateState(view, '2026-08-04'); // today inside t1
 
     expect(gate.currentTermId).toBe('t1');
-    expect(gate.currentEmptyCount).toBe(3);
-    expect(gate.currentFirstEmptyDate).toBe('2026-08-05'); // 3rd workday
+    expect(gate.blockingEmptyCount).toBe(3);
+    expect(gate.blockingFirstEmptyDate).toBe('2026-08-05'); // 3rd workday
     expect(gate.statusByTerm).toEqual({
       t1: 'editable',
       t2: 'blocked',
@@ -74,7 +74,9 @@ describe('buildGateState', () => {
     const full = [0, 1, 2, 3, 4].map(ITEM); // t1 full
     const gate = buildGateState(VIEW({ t1: full }), '2026-08-04');
 
-    expect(gate.currentEmptyCount).toBe(0);
+    // Blocking term is now t2 (t1 full) — t2's 5 workdays all empty.
+    expect(gate.blockingTermId).toBe('t2');
+    expect(gate.blockingEmptyCount).toBe(5);
     // t2 unlocked (t1 full); t3 still blocked because t2 is empty.
     expect(gate.statusByTerm).toEqual({
       t1: 'editable',
@@ -99,8 +101,8 @@ describe('buildGateState', () => {
     });
     const gate = buildGateState(view, '2026-08-04');
 
-    expect(gate.currentEmptyCount).toBe(0);
-    expect(gate.currentFirstEmptyDate).toBeNull();
+    expect(gate.blockingEmptyCount).toBe(0);
+    expect(gate.blockingFirstEmptyDate).toBeNull();
     expect(gate.createNextTermNeeded).toBe(true);
     expect(gate.statusByTerm).toEqual({ t1: 'editable' });
   });
@@ -159,6 +161,57 @@ describe('buildGateState', () => {
       curriculumByTerm: {},
     });
     expect(buildGateState(emptyView, '2026-08-04')).toBe(EMPTY_GATE);
+  });
+
+  it('reports the blocking term when the current term is full and a later term is empty', () => {
+    // t1 full → t2 is the blocking term; t3 blocked behind t2.
+    const view = VIEW({
+      t1: [0, 1, 2, 3, 4].map(ITEM),
+      t2: [0, 1, 2].map(ITEM), // 3 of 5 t2 workdays filled → 2 empty
+    });
+    const gate = buildGateState(view, '2026-08-04'); // today inside t1
+
+    expect(gate.statusByTerm).toEqual({
+      t1: 'editable',
+      t2: 'editable',
+      t3: 'blocked',
+    });
+    expect(gate.blockingTermId).toBe('t2');
+    expect(gate.blockingEmptyCount).toBe(2);
+    expect(gate.blockingFirstEmptyDate).toBe('2026-08-13'); // 4th t2 workday
+    expect(gate.createNextTermNeeded).toBe(false);
+  });
+
+  it('does not set createNextTermNeeded after the school year ends (earliest-term fallback)', () => {
+    // All terms full, none active, today after every term → earliest-term
+    // fallback. Pre-fix this surfaced a create-next-term nudge against a term
+    // that ended months ago.
+    const view = buildPlanView({
+      terms: [T1, T2, T3].map((t) => ({ ...t, isActive: false })),
+      holidays: [],
+      hasActiveSessionType: true,
+      curriculumByTerm: {
+        t1: [0, 1, 2, 3, 4].map(ITEM),
+        t2: [0, 1, 2, 3, 4].map(ITEM),
+        t3: [0, 1, 2, 3, 4].map(ITEM),
+      },
+    });
+    const gate = buildGateState(view, '2026-08-30'); // after all terms
+
+    expect(gate.createNextTermNeeded).toBe(false);
+  });
+
+  it('clears blocking fields when everything is full', () => {
+    const view = VIEW({
+      t1: [0, 1, 2, 3, 4].map(ITEM),
+      t2: [0, 1, 2, 3, 4].map(ITEM),
+      t3: [0, 1, 2, 3, 4].map(ITEM),
+    });
+    const gate = buildGateState(view, '2026-08-04');
+
+    expect(gate.blockingTermId).toBeNull();
+    expect(gate.blockingEmptyCount).toBe(0);
+    expect(gate.blockingFirstEmptyDate).toBeNull();
   });
 });
 

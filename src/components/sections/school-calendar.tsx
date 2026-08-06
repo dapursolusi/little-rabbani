@@ -285,8 +285,8 @@ export default function SchoolCalendar({
   };
 
   const jumpToFirstEmpty = () => {
-    if (!gate.currentFirstEmptyDate) return;
-    const target = new Date(gate.currentFirstEmptyDate + 'T00:00:00');
+    if (!gate.blockingFirstEmptyDate) return;
+    const target = new Date(gate.blockingFirstEmptyDate + 'T00:00:00');
     setDate(target);
     setCurrentMonth(startOfMonth(target));
   };
@@ -396,7 +396,7 @@ export default function SchoolCalendar({
                   <ItemHeader>
                     <span className="font-semibold text-sm text-muted-foreground">
                       Belum bisa diisi — selesaikan dulu term aktif (
-                      {gate.currentEmptyCount} hari kurikulum belum terisi)
+                      {gate.blockingEmptyCount} hari kurikulum belum terisi)
                     </span>
                   </ItemHeader>
                   <ItemContent>
