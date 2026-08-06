@@ -102,12 +102,23 @@ function presetEndDate(
   return presetEnd;
 }
 
+/**
+ * 1-based workday position → 0-based sortOrder. planView.positions is the
+ * workday number (1, 2, 3…); curriculum sortOrder is 0-based everywhere else
+ * (create starts at 0, reorder treats 0 as first). A 1-based sortOrder would
+ * make batchUpsert's existingBySort matching silently overwrite the *next*
+ * workday's item. Exported for test.
+ */
+export function positionToSortOrder(position: number): number {
+  return position - 1;
+}
+
 function rowFromDay(planView: CurriculumPlanView, iso: string): BatchRow {
   const seed = planView.items[iso];
   return {
     key: generateKey(),
     id: seed?.id,
-    sortOrder: planView.positions[iso],
+    sortOrder: positionToSortOrder(planView.positions[iso]),
     date: iso,
     subThemeId: seed?.subThemeId ?? '',
     name: seed?.name ?? '',
@@ -234,7 +245,9 @@ export function BatchUpsertModal({
     }
     setSubmitting(true);
     try {
-      const payload: BatchUpsertRow[] = validRows.map((r) => ({
+      // Save only what the diff lists — inserts + touched updates — so
+      // untouched filled rows don't churn updatedAt or inflate the count.
+      const payload: BatchUpsertRow[] = [...inserts, ...updates].map((r) => ({
         id: r.id,
         sortOrder: r.sortOrder,
         subThemeId: r.subThemeId,
@@ -296,7 +309,7 @@ export function BatchUpsertModal({
                 <div key={row.key} className="space-y-2 rounded-lg border p-3">
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">
-                      Hari {row.sortOrder} · {formatDateShort(row.date)}
+                      Hari {row.sortOrder + 1} · {formatDateShort(row.date)}
                       {row.id ? ' (ada)' : ' (baru)'}
                     </span>
                   </div>
