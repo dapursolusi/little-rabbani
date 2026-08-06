@@ -347,7 +347,13 @@ export async function batchUpsert(
       await db
         .update(curriculum)
         .set({ ...u.data, updatedAt: new Date() })
-        .where(and(eq(curriculum.id, id), isNull(curriculum.deletedAt)));
+        .where(
+          and(
+            eq(curriculum.id, id),
+            eq(curriculum.termId, termId),
+            isNull(curriculum.deletedAt)
+          )
+        );
     }
 
     return {
