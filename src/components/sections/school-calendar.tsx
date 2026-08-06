@@ -5,9 +5,10 @@ import { type ComponentProps, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { getCalendarEventDates } from '@/features/calendar/actions';
-import { createHoliday, getHolidays } from '@/features/holiday/actions';
+import type { CurriculumPlanView } from '@/features/curriculum/plan-view';
+import { createHoliday } from '@/features/holiday/actions';
 import { holidayFields } from '@/features/holiday/fields';
-import { Holiday } from '@/features/holiday/types';
+import type { Holiday } from '@/features/holiday/types';
 import {
   Add02Icon,
   ViewIcon,
@@ -21,10 +22,12 @@ import {
   Item,
   ItemActions,
   ItemContent,
+  ItemDescription,
   ItemFooter,
   ItemGroup,
   ItemHeader,
   ItemSeparator,
+  ItemTitle,
 } from '@/components/ui/item';
 
 import DefaultFormFields from '../shared/form/default-form-field';
@@ -40,6 +43,8 @@ import CalendarEventList from './calendar-event-list';
 
 interface SchoolCalendarProps {
   onDateSelect?: (date: string) => void;
+  planView?: CurriculumPlanView | null;
+  holidays?: Holiday[];
 }
 
 function getMatchingHolidays(date: Date, holidays: Holiday[]): Holiday[] {
@@ -66,27 +71,44 @@ function CalendarHolidayDayButton({
   day,
   holidays,
   showCurriculums,
+  planView,
   children,
   ...props
 }: ComponentProps<typeof CalendarDayButton> & {
   holidays: Holiday[];
   showCurriculums: boolean;
+  planView?: CurriculumPlanView | null;
 }) {
   const pills = showCurriculums ? getMatchingHolidays(day.date, holidays) : [];
+  const iso = format(day.date, 'yyyy-MM-dd');
+  const position = planView?.positions[iso];
+  const item = planView?.items[iso];
+  const hasCurriculum = position != null;
+
   return (
     <CalendarDayButton day={day} {...props}>
-      {showCurriculums && pills.length > 0 ? (
-        <div className="pointer-events-none absolute inset-0 hidden flex-col items-start gap-0.5 p-1.5 text-left md:flex">
+      {showCurriculums && (hasCurriculum || pills.length > 0) ? (
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-start gap-0.5 p-1.5 text-left">
           <span className="text-xs opacity-70">{children}</span>
-          {pills.slice(0, 1).map((h) => (
-            <span
-              key={h.id}
-              title={h.reason}
-              className="w-full truncate rounded bg-red-100/80 px-0.5 text-[0.6rem] leading-4 text-red-500"
-            >
-              {h.reason}
+          {pills.length > 0 && (
+            <span className="w-full truncate rounded bg-red-100/80 px-0.5 text-[0.6rem] leading-4 text-red-500">
+              {pills[0].reason}
             </span>
-          ))}
+          )}
+          {item && (
+            <span
+              title={item.name}
+              className="w-full truncate rounded bg-primary/10 px-0.5 text-[0.6rem] leading-4 text-primary md:inline"
+            >
+              <span className="hidden md:inline">
+                Hari {position} · {item.subTheme?.theme?.name}:{' '}
+                {item.subTheme?.name}
+              </span>
+              <span className="md:hidden">
+                {item.subTheme?.theme?.name}: {item.subTheme?.name}
+              </span>
+            </span>
+          )}
         </div>
       ) : (
         children
@@ -166,21 +188,15 @@ function HolidayForm() {
   );
 }
 
-export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
+export default function SchoolCalendar({
+  onDateSelect,
+  planView,
+  holidays = [],
+}: SchoolCalendarProps) {
   const [date, setDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [eventDates, setEventDates] = useState<Set<string>>(new Set());
   const [showCurriculums, setShowCurriculums] = useState(false);
-
-  // Fetch holidays
-  useEffect(() => {
-    getHolidays().then((result) => {
-      if (result.success) {
-        setHolidays(result.data);
-      }
-    });
-  }, []);
 
   // Fetch dates that have events — cover overflow days from adjacent months
   useEffect(() => {
@@ -204,6 +220,10 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
       const dow = day.getDay();
       return dow >= 1 && dow <= 5 && !isHoliday(day, holidays);
     };
+    const isUnfilledWorkday = (day: Date) => {
+      const iso = format(day, 'yyyy-MM-dd');
+      return planView?.positions[iso] != null && planView.items[iso] == null;
+    };
 
     return {
       weekend: { dayOfWeek: [0, 6] },
@@ -212,12 +232,13 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
       showCurriculums: showCurriculums,
       showCurriculumWorkday:
         showCurriculums &&
-        ((day: Date) => isWorkday(day) && inCurrentMonth(day)),
+        ((day: Date) =>
+          isWorkday(day) && inCurrentMonth(day) && isUnfilledWorkday(day)),
       showCurriculumOverflow:
         showCurriculums &&
         ((day: Date) => isWorkday(day) && !inCurrentMonth(day)),
     };
-  }, [holidays, eventDates, showCurriculums, currentMonth]);
+  }, [holidays, eventDates, showCurriculums, currentMonth, planView]);
 
   const modifiersClassNames = useMemo(
     () => ({
@@ -237,6 +258,11 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
     () => getMatchingHolidays(date, holidays),
     [date, holidays]
   );
+
+  const selectedIso = format(date, 'yyyy-MM-dd');
+  const selectedPosition = planView?.positions[selectedIso];
+  const selectedItem = planView?.items[selectedIso];
+  const isSelectedWorkday = selectedPosition != null;
 
   const handleDaySelect = (day: Date | undefined) => {
     if (!day) return;
@@ -264,6 +290,7 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
                   {...props}
                   holidays={holidays}
                   showCurriculums={showCurriculums}
+                  planView={planView}
                 />
               ),
             }}
@@ -316,7 +343,61 @@ export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
               }
             />
           </ButtonGroup>
-          {showCurriculums && <div>Curriculum Edit?</div>}
+          {showCurriculums && isSelectedWorkday && (
+            <ItemGroup className="w-full gap-1!">
+              <ItemSeparator />
+              {selectedItem ? (
+                <Item variant="outline">
+                  <ItemHeader>
+                    <Badge className="font-medium">
+                      {selectedItem.subTheme?.theme?.name ?? '—'}:{' '}
+                      {selectedItem.subTheme?.name ?? '—'}
+                    </Badge>
+                    <span className="text-xs text-muted-foreground">
+                      Hari {selectedPosition}
+                    </span>
+                  </ItemHeader>
+                  <ItemContent>
+                    <ItemTitle>{selectedItem.name}</ItemTitle>
+                    <ItemDescription className="flex flex-col gap-1">
+                      {selectedItem.objective && (
+                        <span className="text-xs text-muted-foreground">
+                          {selectedItem.objective}
+                        </span>
+                      )}
+                      {selectedItem.itemsToBring && (
+                        <span className="text-xs text-muted-foreground">
+                          Bawaan: {selectedItem.itemsToBring}
+                        </span>
+                      )}
+                    </ItemDescription>
+                  </ItemContent>
+                </Item>
+              ) : (
+                <Item variant="outline">
+                  <ItemHeader>
+                    <span className="font-semibold text-sm text-warning">
+                      Kurikulum belum diisi
+                    </span>
+                  </ItemHeader>
+                  <ItemContent>
+                    <ItemDescription>
+                      Hari ini belum memiliki item kurikulum.
+                    </ItemDescription>
+                  </ItemContent>
+                  <ItemActions>
+                    <Button
+                      size="sm"
+                      disabled
+                      title="Mode massal hadir di fitur berikutnya"
+                    >
+                      Isi Kurikulum
+                    </Button>
+                  </ItemActions>
+                </Item>
+              )}
+            </ItemGroup>
+          )}
           {matchingHolidays.length > 0 && (
             <ItemGroup className="w-full gap-1!">
               <ItemSeparator></ItemSeparator>
