@@ -5,11 +5,13 @@ import { type ComponentProps, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { getCalendarEventDates } from '@/features/calendar/actions';
+import { BatchUpsertModal } from '@/features/curriculum/components/batch-upsert-modal';
 import { buildGateState, findCoveringTerm } from '@/features/curriculum/gate';
 import type { CurriculumPlanView } from '@/features/curriculum/plan-view';
 import { createHoliday } from '@/features/holiday/actions';
 import { holidayFields } from '@/features/holiday/fields';
 import type { Holiday } from '@/features/holiday/types';
+import type { SubTheme } from '@/features/theme/types';
 import {
   Add02Icon,
   ViewIcon,
@@ -46,6 +48,7 @@ interface SchoolCalendarProps {
   onDateSelect?: (date: string) => void;
   planView?: CurriculumPlanView | null;
   holidays?: Holiday[];
+  subThemes?: SubTheme[];
 }
 
 function getMatchingHolidays(date: Date, holidays: Holiday[]): Holiday[] {
@@ -193,11 +196,14 @@ export default function SchoolCalendar({
   onDateSelect,
   planView,
   holidays = [],
+  subThemes,
 }: SchoolCalendarProps) {
   const [date, setDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [eventDates, setEventDates] = useState<Set<string>>(new Set());
   const [showCurriculums, setShowCurriculums] = useState(false);
+  const [upsertOpen, setUpsertOpen] = useState(false);
+  const [upsertDate, setUpsertDate] = useState<string | null>(null);
 
   const todayIso = useMemo(() => format(new Date(), 'yyyy-MM-dd'), []);
   const gate = useMemo(
@@ -276,8 +282,18 @@ export default function SchoolCalendar({
 
   const handleDaySelect = (day: Date | undefined) => {
     if (!day) return;
+    const iso = format(day, 'yyyy-MM-dd');
     setDate(day);
-    onDateSelect?.(format(day, 'yyyy-MM-dd'));
+    onDateSelect?.(iso);
+    // Open batch upsert for an unfilled workday in an editable term
+    if (planView?.positions[iso] != null && planView.items[iso] == null) {
+      const term = findCoveringTerm(planView.terms, iso);
+      const blocked = term && gate.statusByTerm[term.id] === 'blocked';
+      if (!blocked) {
+        setUpsertDate(iso);
+        setUpsertOpen(true);
+      }
+    }
   };
 
   const handleMonthChange = (month: Date) => {
@@ -426,8 +442,10 @@ export default function SchoolCalendar({
                   <ItemActions>
                     <Button
                       size="sm"
-                      disabled
-                      title="Mode massal hadir di fitur berikutnya"
+                      onClick={() => {
+                        setUpsertDate(selectedIso);
+                        setUpsertOpen(true);
+                      }}
                     >
                       Isi Kurikulum
                     </Button>
@@ -504,6 +522,15 @@ export default function SchoolCalendar({
           <CalendarEventList date={format(date, 'yyyy-MM-dd')} />
         </CardFooter>
       </Card>
+      {planView && subThemes && subThemes.length > 0 && upsertDate && (
+        <BatchUpsertModal
+          planView={planView}
+          subThemes={subThemes}
+          open={upsertOpen}
+          onOpenChange={setUpsertOpen}
+          defaultDate={upsertDate}
+        />
+      )}
     </div>
   );
 }
