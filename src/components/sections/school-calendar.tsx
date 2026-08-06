@@ -69,27 +69,44 @@ function CalendarHolidayDayButton({
   day,
   holidays,
   showCurriculums,
+  planView,
   children,
   ...props
 }: ComponentProps<typeof CalendarDayButton> & {
   holidays: Holiday[];
   showCurriculums: boolean;
+  planView?: CurriculumPlanView | null;
 }) {
   const pills = showCurriculums ? getMatchingHolidays(day.date, holidays) : [];
+  const iso = format(day.date, 'yyyy-MM-dd');
+  const position = planView?.positions[iso];
+  const item = planView?.items[iso];
+  const hasCurriculum = position != null;
+
   return (
     <CalendarDayButton day={day} {...props}>
-      {showCurriculums && pills.length > 0 ? (
-        <div className="pointer-events-none absolute inset-0 hidden flex-col items-start gap-0.5 p-1.5 text-left md:flex">
+      {showCurriculums && hasCurriculum ? (
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-start gap-0.5 p-1.5 text-left">
           <span className="text-xs opacity-70">{children}</span>
-          {pills.slice(0, 1).map((h) => (
-            <span
-              key={h.id}
-              title={h.reason}
-              className="w-full truncate rounded bg-red-100/80 px-0.5 text-[0.6rem] leading-4 text-red-500"
-            >
-              {h.reason}
+          {pills.length > 0 && (
+            <span className="w-full truncate rounded bg-red-100/80 px-0.5 text-[0.6rem] leading-4 text-red-500">
+              {pills[0].reason}
             </span>
-          ))}
+          )}
+          {item && (
+            <span
+              title={item.name}
+              className="w-full truncate rounded bg-primary/10 px-0.5 text-[0.6rem] leading-4 text-primary md:inline"
+            >
+              <span className="hidden md:inline">
+                Hari {position} · {item.subTheme?.theme?.name}:{' '}
+                {item.subTheme?.name}
+              </span>
+              <span className="md:hidden">
+                {item.subTheme?.theme?.name}: {item.subTheme?.name}
+              </span>
+            </span>
+          )}
         </div>
       ) : (
         children
@@ -171,7 +188,7 @@ function HolidayForm() {
 
 export default function SchoolCalendar({
   onDateSelect,
-  planView: _planView,
+  planView,
   holidays = [],
 }: SchoolCalendarProps) {
   const [date, setDate] = useState(new Date());
@@ -201,6 +218,10 @@ export default function SchoolCalendar({
       const dow = day.getDay();
       return dow >= 1 && dow <= 5 && !isHoliday(day, holidays);
     };
+    const isUnfilledWorkday = (day: Date) => {
+      const iso = format(day, 'yyyy-MM-dd');
+      return planView?.positions[iso] != null && planView.items[iso] == null;
+    };
 
     return {
       weekend: { dayOfWeek: [0, 6] },
@@ -209,12 +230,13 @@ export default function SchoolCalendar({
       showCurriculums: showCurriculums,
       showCurriculumWorkday:
         showCurriculums &&
-        ((day: Date) => isWorkday(day) && inCurrentMonth(day)),
+        ((day: Date) =>
+          isWorkday(day) && inCurrentMonth(day) && isUnfilledWorkday(day)),
       showCurriculumOverflow:
         showCurriculums &&
         ((day: Date) => isWorkday(day) && !inCurrentMonth(day)),
     };
-  }, [holidays, eventDates, showCurriculums, currentMonth]);
+  }, [holidays, eventDates, showCurriculums, currentMonth, planView]);
 
   const modifiersClassNames = useMemo(
     () => ({
@@ -261,6 +283,7 @@ export default function SchoolCalendar({
                   {...props}
                   holidays={holidays}
                   showCurriculums={showCurriculums}
+                  planView={planView}
                 />
               ),
             }}
