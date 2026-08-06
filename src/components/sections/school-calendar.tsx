@@ -5,9 +5,10 @@ import { type ComponentProps, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { getCalendarEventDates } from '@/features/calendar/actions';
-import { createHoliday, getHolidays } from '@/features/holiday/actions';
+import type { CurriculumPlanView } from '@/features/curriculum/plan-view';
+import { createHoliday } from '@/features/holiday/actions';
 import { holidayFields } from '@/features/holiday/fields';
-import { Holiday } from '@/features/holiday/types';
+import type { Holiday } from '@/features/holiday/types';
 import {
   Add02Icon,
   ViewIcon,
@@ -40,6 +41,8 @@ import CalendarEventList from './calendar-event-list';
 
 interface SchoolCalendarProps {
   onDateSelect?: (date: string) => void;
+  planView?: CurriculumPlanView | null;
+  holidays?: Holiday[];
 }
 
 function getMatchingHolidays(date: Date, holidays: Holiday[]): Holiday[] {
@@ -166,21 +169,15 @@ function HolidayForm() {
   );
 }
 
-export default function SchoolCalendar({ onDateSelect }: SchoolCalendarProps) {
-  const [holidays, setHolidays] = useState<Holiday[]>([]);
+export default function SchoolCalendar({
+  onDateSelect,
+  planView: _planView,
+  holidays = [],
+}: SchoolCalendarProps) {
   const [date, setDate] = useState(new Date());
   const [currentMonth, setCurrentMonth] = useState(startOfMonth(new Date()));
   const [eventDates, setEventDates] = useState<Set<string>>(new Set());
   const [showCurriculums, setShowCurriculums] = useState(false);
-
-  // Fetch holidays
-  useEffect(() => {
-    getHolidays().then((result) => {
-      if (result.success) {
-        setHolidays(result.data);
-      }
-    });
-  }, []);
 
   // Fetch dates that have events — cover overflow days from adjacent months
   useEffect(() => {
