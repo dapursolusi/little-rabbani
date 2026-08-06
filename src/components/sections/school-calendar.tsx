@@ -285,8 +285,15 @@ export default function SchoolCalendar({
     const iso = format(day, 'yyyy-MM-dd');
     setDate(day);
     onDateSelect?.(iso);
-    // Open batch upsert for an unfilled workday in an editable term
-    if (planView?.positions[iso] != null && planView.items[iso] == null) {
+    // Open batch upsert for an unfilled workday in an editable term. Only when
+    // the Kurikulum overlay is on — the yellow "needs filling" highlight that
+    // signals a clickable day is itself gated on showCurriculums, so opening
+    // with the overlay off feels unprovoked.
+    if (
+      showCurriculums &&
+      planView?.positions[iso] != null &&
+      planView.items[iso] == null
+    ) {
       const term = findCoveringTerm(planView.terms, iso);
       const blocked = term && gate.statusByTerm[term.id] === 'blocked';
       if (!blocked) {
@@ -440,15 +447,17 @@ export default function SchoolCalendar({
                     </ItemDescription>
                   </ItemContent>
                   <ItemActions>
-                    <Button
-                      size="sm"
-                      onClick={() => {
-                        setUpsertDate(selectedIso);
-                        setUpsertOpen(true);
-                      }}
-                    >
-                      Isi Kurikulum
-                    </Button>
+                    {subThemes && subThemes.length > 0 && (
+                      <Button
+                        size="sm"
+                        onClick={() => {
+                          setUpsertDate(selectedIso);
+                          setUpsertOpen(true);
+                        }}
+                      >
+                        Isi Kurikulum
+                      </Button>
+                    )}
                   </ItemActions>
                 </Item>
               )}
