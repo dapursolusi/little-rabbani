@@ -8,9 +8,23 @@ import { auth } from '@/lib/auth';
  * 1. Distributed tracing headers (X-Request-Id, X-Trace-Id)
  * 2. Auth session checking and role-based route protection
  * 3. Redirect unauthenticated /dashboard/* requests to /login
- * 4. Role-based access: Teacher cannot access /dashboard/owner/*
+ * 4. Role-based access via ROLE_ROUTES capability map
  * 5. Root path redirection based on role (authenticated only)
  */
+
+// Read-path authorization: role → route prefixes each role may access.
+// Mirrors `roles` in app-sidebar nav config — keep the two in sync.
+const ROLE_ROUTES: Record<string, string[]> = {
+  owner: ['/dashboard'],
+  teacher: ['/dashboard', '/dashboard/daily', '/dashboard/calendar'],
+};
+
+// ponytail: teacher-preview is a dev/testing aid to exercise the teacher
+// read-path without a seeded teacher user. Not a shipped feature.
+function effectiveRole(role: string, searchParams: URLSearchParams): string {
+  return searchParams.get('teacher-preview') === 'true' ? 'teacher' : role;
+}
+
 export async function proxy(request: NextRequest) {
   const requestId = request.headers.get('X-Request-Id') ?? crypto.randomUUID();
 
@@ -41,10 +55,12 @@ export async function proxy(request: NextRequest) {
       });
 
       if (session) {
-        const role = session.user.role as string;
-        const dashboardUrl =
-          role === 'owner' ? '/dashboard/owner' : '/dashboard/teacher';
-        return NextResponse.redirect(new URL(dashboardUrl, request.url));
+        const role = effectiveRole(
+          session.user.role as string,
+          request.nextUrl.searchParams
+        );
+        const home = role === 'owner' ? '/dashboard' : '/dashboard/daily';
+        return NextResponse.redirect(new URL(home, request.url));
       }
     } catch {
       // Session check failed — fall through to pass-through below
@@ -68,17 +84,21 @@ export async function proxy(request: NextRequest) {
         return NextResponse.redirect(loginUrl);
       }
 
-      const role = session.user.role as string;
+      const role = effectiveRole(
+        session.user.role as string,
+        request.nextUrl.searchParams
+      );
+      const allowed =
+        ROLE_ROUTES[role]?.some(
+          (p) => pathname === p || pathname.startsWith(p + '/')
+        ) ?? false;
 
-      // Teacher trying to access owner-only routes → 403
-      if (role === 'teacher' && pathname.startsWith('/dashboard/owner')) {
+      if (!allowed) {
         const response = new NextResponse('Akses Diblokir', { status: 403 });
         response.headers.set('X-Request-Id', requestId);
         response.headers.set('X-Trace-Id', requestId);
         return response;
       }
-
-      // Owner accessing /dashboard/teacher — allowed, falls through
     } catch {
       // Session check failed — redirect to login for safety
       const loginUrl = new URL('/login', request.url);
