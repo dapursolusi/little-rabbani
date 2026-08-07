@@ -31,7 +31,7 @@ function buildSegments(pathname: string) {
   const parts = pathname.split('/').filter(Boolean);
 
   // Always start with Home
-  // segments.push({ label: 'Home', href: '/dashboard/Owner' });
+  // segments.push({ label: 'Home', href: '/dashboard' });
 
   let accumulated = '';
   for (const part of parts) {

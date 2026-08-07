@@ -57,6 +57,7 @@ type BaseNavItem = {
   title: string;
   label?: string;
   icon?: React.ReactNode | IconSvgElement;
+  roles?: string[];
 };
 
 type LeafNavItem = BaseNavItem & {
@@ -72,6 +73,7 @@ type ParentNavItem = BaseNavItem & {
     title: string;
     href: string;
     icon?: React.ReactNode | IconSvgElement;
+    roles?: string[];
   }[];
 };
 
@@ -89,7 +91,7 @@ const navGroups: SidebarNavItem[] = [
     slug: 'dashboard',
     label: '',
     title: 'Dashboard',
-    href: '/dashboard/owner',
+    href: '/dashboard',
     icon: DashboardSquare01Icon,
   },
   {
@@ -97,28 +99,43 @@ const navGroups: SidebarNavItem[] = [
     title: 'Master Data',
     isActive: true,
     icon: DatabaseSettingIcon,
+    roles: ['owner'],
     subItems: [
       {
         title: 'Wali Murid',
-        href: '/dashboard/owner/guardian',
+        href: '/dashboard/guardian',
         icon: UserGroup02Icon,
+        roles: ['owner'],
       },
-      { title: 'Murid', href: '/dashboard/owner/kid', icon: UserMultipleIcon },
-      { title: 'Term', href: '/dashboard/owner/term', icon: Calendar01Icon },
+      {
+        title: 'Murid',
+        href: '/dashboard/kid',
+        icon: UserMultipleIcon,
+        roles: ['owner'],
+      },
+      {
+        title: 'Term',
+        href: '/dashboard/term',
+        icon: Calendar01Icon,
+        roles: ['owner'],
+      },
       {
         title: 'Tipe Sesi',
-        href: '/dashboard/owner/session-type',
+        href: '/dashboard/session-type',
         icon: Calendar01Icon,
+        roles: ['owner'],
       },
       {
         title: 'Aktivitas',
-        href: '/dashboard/owner/activity',
+        href: '/dashboard/activity',
         icon: Folder01Icon,
+        roles: ['owner'],
       },
       {
         title: 'Kurikulum',
-        href: '/dashboard/owner/curriculum',
+        href: '/dashboard/curriculum',
         icon: BookOpen01Icon,
+        roles: ['owner'],
       },
     ],
   },
@@ -127,11 +144,17 @@ const navGroups: SidebarNavItem[] = [
     title: 'Operasional',
     icon: WorkIcon,
     subItems: [
-      { title: 'Jadwal', href: '/dashboard/owner/calendar', icon: Clock01Icon },
+      {
+        title: 'Jadwal',
+        href: '/dashboard/calendar',
+        icon: Clock01Icon,
+        roles: ['owner', 'teacher'],
+      },
       {
         title: 'DCR / Observasi Kelas',
-        href: '/dashboard/owner/dcr',
+        href: '/dashboard/dcr',
         icon: ClipboardIcon,
+        roles: ['owner', 'teacher'],
       },
     ],
   },
@@ -139,21 +162,25 @@ const navGroups: SidebarNavItem[] = [
     slug: 'reports',
     title: 'Laporan',
     icon: NoteIcon,
+    roles: ['owner'],
     subItems: [
       {
         title: 'Laporan Wali Murid',
-        href: '/dashboard/owner/reports/daily',
+        href: '/dashboard/reports/daily',
         icon: File02Icon,
+        roles: ['owner'],
       },
       {
         title: 'Laporan Bulanan',
-        href: '/dashboard/owner/reports/monthly',
+        href: '/dashboard/reports/monthly',
         icon: File01Icon,
+        roles: ['owner'],
       },
       {
         title: 'Laporan Triwulanan',
-        href: '/dashboard/owner/reports/quarterly',
+        href: '/dashboard/reports/quarterly',
         icon: File01Icon,
+        roles: ['owner'],
       },
     ],
   },
@@ -161,11 +188,13 @@ const navGroups: SidebarNavItem[] = [
     slug: 'configuration',
     title: 'Konfigurasi',
     icon: Settings04Icon,
+    roles: ['owner'],
     subItems: [
       {
         title: 'Tema & Subtema',
-        href: '/dashboard/owner/theme',
+        href: '/dashboard/theme',
         icon: HierarchyCircle03Icon,
+        roles: ['owner'],
       },
     ],
   },
@@ -173,19 +202,45 @@ const navGroups: SidebarNavItem[] = [
     slug: 'system',
     label: 'Sistem',
     title: 'Pengaturan',
-    href: '/dashboard/owner/settings',
+    href: '/dashboard/settings',
     icon: Settings01Icon,
+    roles: ['owner'],
   },
 ];
 
 export function AppSidebar({
   user,
 }: {
-  user: Pick<User, 'name' | 'email' | 'image'> | undefined;
+  user: Pick<User, 'name' | 'email' | 'image' | 'role'> | undefined;
 }) {
   const pathname = usePathname();
 
   if (!user) return null;
+
+  const userRole = user.role;
+  const isVisible = (roles?: string[]) =>
+    !roles || (userRole !== undefined && roles.includes(userRole));
+
+  const visibleGroups: SidebarNavItem[] = navGroups
+    .filter((group) => {
+      if (group.subItems) {
+        return (
+          group.roles === undefined ||
+          (userRole !== undefined && group.roles.includes(userRole))
+        );
+      }
+      return isVisible(group.roles);
+    })
+    .map((group) => {
+      if (group.subItems) {
+        return {
+          ...group,
+          subItems: group.subItems.filter((item) => isVisible(item.roles)),
+        };
+      }
+      return group;
+    })
+    .filter((group) => !group.subItems || group.subItems.length > 0);
 
   return (
     <Sidebar variant="sidebar" collapsible="icon" side="left">
@@ -193,7 +248,7 @@ export function AppSidebar({
         <TeamSwitcher teams={teams} />
       </SidebarHeader>
       <SidebarContent className="space-y-1 px-2">
-        {navGroups.map((group) => (
+        {visibleGroups.map((group) => (
           <SidebarGroup key={group.slug} className="md:p-0">
             {group.label && (
               <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
