@@ -27,8 +27,8 @@ export default async function EditSessionTypePage({
     <div className="p-4 sm:p-6">
       <PageBreadcrumbs
         segments={[
-          { label: 'Dashboard', href: '/dashboard/owner' },
-          { label: 'Tipe Sesi', href: '/dashboard/owner/session-type' },
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Tipe Sesi', href: '/dashboard/session-type' },
           { label: item.name },
         ]}
       />

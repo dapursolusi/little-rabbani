@@ -28,8 +28,8 @@ export default async function EditTermPage({ params }: IEditTermPageProps) {
     <div className="p-4 sm:p-6">
       <PageBreadcrumbs
         segments={[
-          { label: 'Dashboard', href: '/dashboard/owner' },
-          { label: 'Term', href: '/dashboard/owner/term' },
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Term', href: '/dashboard/term' },
           { label: termData.name },
         ]}
       />

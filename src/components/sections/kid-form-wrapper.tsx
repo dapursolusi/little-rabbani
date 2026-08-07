@@ -45,7 +45,7 @@ export function KidFormWrapper({
           toast.success(
             isEdit ? 'Murid berhasil diperbarui' : 'Murid berhasil dibuat'
           );
-          router.push('/dashboard/owner/kid');
+          router.push('/dashboard/kid');
           router.refresh();
         } else {
           toast.error(result.error);

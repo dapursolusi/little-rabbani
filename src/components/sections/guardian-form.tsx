@@ -42,7 +42,7 @@ export function GuardianForm({ mode, initialData }: IGuardianFormProps) {
             ? 'Wali murid berhasil diperbarui'
             : 'Wali murid berhasil dibuat'
         );
-        router.push('/dashboard/owner/guardian');
+        router.push('/dashboard/guardian');
         router.refresh();
       } else {
         toast.error(result.error);

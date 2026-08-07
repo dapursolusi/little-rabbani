@@ -71,7 +71,7 @@ export default async function DcrPickerPage() {
                 <DropdownMenuItem
                   key={session.id}
                   render={
-                    <Link href={`/dashboard/owner/daily/capture/${session.id}`}>
+                    <Link href={`/dashboard/daily/capture/${session.id}`}>
                       {session.name} &#40;{session.start} - {session.end}&#41;
                     </Link>
                   }

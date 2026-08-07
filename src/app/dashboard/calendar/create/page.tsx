@@ -38,7 +38,7 @@ export default function CreateCalendarEventPage() {
           return createCalendarEvent(data);
         }}
         onSuccess={() => {
-          window.location.href = '/dashboard/owner/calendar';
+          window.location.href = '/dashboard/calendar';
         }}
       >
         <Button type="submit" className="w-full">

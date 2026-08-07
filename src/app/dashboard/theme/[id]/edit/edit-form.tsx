@@ -28,7 +28,7 @@ export default function EditThemeForm({
       onSubmit={async (data) => {
         const result = await updateTheme(id, data);
         if (result.success) {
-          router.push('/dashboard/owner/theme');
+          router.push('/dashboard/theme');
           router.refresh();
         }
         return result;

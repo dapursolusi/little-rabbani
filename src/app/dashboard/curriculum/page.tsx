@@ -35,7 +35,7 @@ export default async function CurriculumPage() {
               title="Belum ada term aktif"
               description="Aktifkan term terlebih dahulu untuk mulai menyusun kurikulum"
               actionLabel="Kelola Term"
-              actionHref="/dashboard/owner/term"
+              actionHref="/dashboard/term"
             />
           </CardContent>
         </Card>

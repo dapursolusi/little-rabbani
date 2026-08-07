@@ -13,25 +13,25 @@ import { Button } from '@/components/ui/button';
 const actions = [
   {
     label: 'Buat DCR',
-    href: '/dashboard/owner/dcr',
+    href: '/dashboard/dcr',
     icon: ClipboardIcon,
     variant: 'default' as const,
   },
   {
     label: 'Tambah Murid',
-    href: '/dashboard/owner/kid/create',
+    href: '/dashboard/kid/create',
     icon: UserAdd01Icon,
     variant: 'outline' as const,
   },
   {
     label: 'Buat Sesi',
-    href: '/dashboard/owner/session',
+    href: '/dashboard/session',
     icon: CalendarAdd01Icon,
     variant: 'outline' as const,
   },
   {
     label: 'Laporan Wali Murid',
-    href: '/dashboard/owner/reports/daily',
+    href: '/dashboard/reports/daily',
     icon: File02Icon,
     variant: 'outline' as const,
   },

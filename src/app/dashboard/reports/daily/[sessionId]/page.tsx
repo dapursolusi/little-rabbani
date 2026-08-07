@@ -35,10 +35,10 @@ export default async function DailyReportSessionPage({
     <div className="p-4 sm:p-6">
       <PageBreadcrumbs
         segments={[
-          { label: 'Dashboard', href: '/dashboard/owner' },
+          { label: 'Dashboard', href: '/dashboard' },
           {
             label: 'Laporan Wali Murid',
-            href: '/dashboard/owner/reports/daily',
+            href: '/dashboard/reports/daily',
           },
           { label: date },
         ]}

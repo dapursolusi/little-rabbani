@@ -36,7 +36,7 @@ export default async function DailyReportPickerPage() {
           {sessions.map((st) => (
             <Link
               key={st.id}
-              href={`/dashboard/owner/reports/daily/${st.id}`}
+              href={`/dashboard/reports/daily/${st.id}`}
               className="rounded-lg border bg-background p-4 transition-colors hover:shadow-sm"
             >
               <p className="font-medium text-foreground">{st.name}</p>

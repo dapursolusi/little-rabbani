@@ -37,7 +37,7 @@ export default async function TermListPage() {
             <EmptyState
               title="Belum ada data term"
               actionLabel="Tambah Term"
-              actionHref="/dashboard/owner/term/create"
+              actionHref="/dashboard/term/create"
             />
           </CardContent>
         </Card>

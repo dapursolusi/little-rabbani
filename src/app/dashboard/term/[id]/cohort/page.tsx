@@ -52,7 +52,7 @@ export default async function CohortPage({ params }: ICohortPageProps) {
       <div className="mb-6">
         <div className="flex items-center gap-2">
           <Link
-            href="/dashboard/owner/term"
+            href="/dashboard/term"
             className="text-sm text-primary hover:underline"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} />

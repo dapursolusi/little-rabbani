@@ -357,7 +357,7 @@ export default function SchoolCalendar({
               variant="default"
               nativeButton={false}
               render={
-                <Link href="/dashboard/owner/calendar/create">
+                <Link href="/dashboard/calendar/create">
                   <HugeiconsIcon icon={Add02Icon} />
                   Kegiatan
                 </Link>
@@ -478,9 +478,7 @@ export default function SchoolCalendar({
                     size="sm"
                     nativeButton={false}
                     render={
-                      <Link href="/dashboard/owner/term/create">
-                        Buat Term Baru
-                      </Link>
+                      <Link href="/dashboard/term/create">Buat Term Baru</Link>
                     }
                   />
                 </ItemActions>

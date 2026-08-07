@@ -56,7 +56,7 @@ export default async function CalendarTermPage({
         <div className="mb-6">
           <div className="flex items-center gap-2">
             <Link
-              href="/dashboard/owner/calendar"
+              href="/dashboard/calendar"
               className="flex items-center gap-1 text-sm text-primary hover:underline"
             >
               <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />
@@ -83,7 +83,7 @@ export default async function CalendarTermPage({
               Belum ada tipe sesi. Buat tipe sesi terlebih dahulu.
             </p>
             <Link
-              href={`/dashboard/owner/session-type`}
+              href={`/dashboard/session-type`}
               className={cn(buttonVariants({ variant: 'outline' }), 'mt-4')}
             >
               Kelola Tipe Sesi

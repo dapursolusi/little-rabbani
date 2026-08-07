@@ -49,7 +49,7 @@ export function SessionTypeFormWrapper({
               ? 'Tipe sesi berhasil diperbarui. Versi baru telah dibuat.'
               : 'Tipe sesi berhasil dibuat'
           );
-          router.push('/dashboard/owner/session-type');
+          router.push('/dashboard/session-type');
           router.refresh();
         } else {
           toast.error(result.error);

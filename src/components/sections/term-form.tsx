@@ -40,7 +40,7 @@ export function TermForm({ mode, initialData }: ITermFormProps) {
         toast.success(
           isEdit ? 'Term berhasil diperbarui' : 'Term berhasil dibuat'
         );
-        router.push('/dashboard/owner/term');
+        router.push('/dashboard/term');
         router.refresh();
       } else {
         toast.error(result.error);

@@ -47,7 +47,7 @@ export default function EditCalendarEventPage() {
           updateCalendarEvent(eventId, data as CalendarEventFormData)
         }
         onSuccess={() => {
-          window.location.href = '/dashboard/owner/calendar';
+          window.location.href = '/dashboard/calendar';
         }}
       >
         <Button type="submit" className="w-full">

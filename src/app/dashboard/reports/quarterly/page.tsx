@@ -269,7 +269,7 @@ export default function QuarterlyReportPickerPage() {
               return (
                 <Link
                   key={kidData.id}
-                  href={`/dashboard/owner/reports/quarterly/${kidData.id}?termId=${selectedTermId}`}
+                  href={`/dashboard/reports/quarterly/${kidData.id}?termId=${selectedTermId}`}
                   className={`rounded-lg border p-3 text-left transition-colors hover:shadow-sm ${
                     report
                       ? report.status === 'final'

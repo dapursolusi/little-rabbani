@@ -264,7 +264,7 @@ export default function MonthlyReportPickerPage() {
                   return hasReport ? (
                     <Link
                       key={monthData.value}
-                      href={`/dashboard/owner/reports/monthly/${kidData.id}/${monthData.value}`}
+                      href={`/dashboard/reports/monthly/${kidData.id}/${monthData.value}`}
                       className={`rounded-lg border p-3 text-left transition-colors hover:shadow-sm ${
                         status === 'final'
                           ? 'border-success/30 bg-success/5'
@@ -281,7 +281,7 @@ export default function MonthlyReportPickerPage() {
                   ) : (
                     <Link
                       key={monthData.value}
-                      href={`/dashboard/owner/reports/monthly/${kidData.id}/${monthData.value}`}
+                      href={`/dashboard/reports/monthly/${kidData.id}/${monthData.value}`}
                       className="rounded-lg border border-dashed p-3 text-left transition-colors hover:border-primary hover:shadow-sm"
                     >
                       <p className="text-sm font-medium text-muted-foreground">

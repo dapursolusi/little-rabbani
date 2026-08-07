@@ -267,7 +267,7 @@ async function processCapturePendingReminders(): Promise<number> {
       const result = await sendPushNotification(sub, {
         title: 'Capture Tertunda',
         body,
-        url: '/dashboard/owner',
+        url: '/dashboard',
       });
 
       if (result.success) totalFired++;
@@ -307,7 +307,7 @@ async function processScheduleEntryReminders(): Promise<number> {
     const result = await sendPushNotification(sub, {
       title: 'Jadwal Minggu Depan Kosong',
       body: 'Jadwal minggu depan belum diisi. Masukkan sekarang.',
-      url: '/dashboard/owner/calendar',
+      url: '/dashboard/calendar',
     });
 
     if (result.success) fired++;

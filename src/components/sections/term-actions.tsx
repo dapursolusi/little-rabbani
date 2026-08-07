@@ -80,7 +80,7 @@ export function TermActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
           <DropdownMenuItem
-            onClick={() => router.push(`/dashboard/owner/term/${termId}/edit`)}
+            onClick={() => router.push(`/dashboard/term/${termId}/edit`)}
           >
             Edit
           </DropdownMenuItem>
@@ -90,16 +90,12 @@ export function TermActions({
             </DropdownMenuItem>
           )}
           <DropdownMenuItem
-            onClick={() =>
-              router.push(`/dashboard/owner/term/${termId}/cohort`)
-            }
+            onClick={() => router.push(`/dashboard/term/${termId}/cohort`)}
           >
             Kelola Murid
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() =>
-              router.push(`/dashboard/owner/session?termId=${termId}`)
-            }
+            onClick={() => router.push(`/dashboard/session?termId=${termId}`)}
           >
             Lihat Sesi
           </DropdownMenuItem>

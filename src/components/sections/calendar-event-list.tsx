@@ -111,7 +111,7 @@ export default function CalendarEventList({ date }: CalendarEventListProps) {
             <DataTableRowActions
               id={e.id}
               actions={{
-                editHref: `/dashboard/owner/calendar/edit/${e.id}`,
+                editHref: `/dashboard/calendar/edit/${e.id}`,
                 delete: deleteCalendarEvent,
               }}
               dataName={e.name}

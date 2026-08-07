@@ -65,25 +65,25 @@ export function DashboardStatCards({
         }
         value={enrolledKidsCount}
         icon={<HugeiconsIcon icon={UserMultipleIcon} strokeWidth={2} />}
-        href="/dashboard/owner/kid"
+        href="/dashboard/kid"
       />
       <StatCard
         title="Sesi Hari Ini"
         value={todaySessionsCount}
         icon={<HugeiconsIcon icon={CalendarCheckIcon} strokeWidth={2} />}
-        href="/dashboard/owner/calendar"
+        href="/dashboard/calendar"
       />
       <StatCard
         title="DCR Tertunda"
         value={pendingDcrsCount}
         icon={<HugeiconsIcon icon={ClipboardIcon} strokeWidth={2} />}
-        href="/dashboard/owner/dcr"
+        href="/dashboard/dcr"
       />
       <StatCard
         title="Laporan Tertunda"
         value={pendingReportsCount}
         icon={<HugeiconsIcon icon={File02Icon} strokeWidth={2} />}
-        href="/dashboard/owner/reports/daily"
+        href="/dashboard/reports/daily"
       />
     </div>
   );

@@ -106,17 +106,13 @@ function TermRowActions({ term }: { term: Term }) {
             </DropdownMenuItem>
           )}
           <DropdownMenuItem
-            onClick={() =>
-              router.push(`/dashboard/owner/term/${term.id}/cohort`)
-            }
+            onClick={() => router.push(`/dashboard/term/${term.id}/cohort`)}
           >
             <HugeiconsIcon icon={GroupIcon} />
             Kelola Murid
           </DropdownMenuItem>
           <DropdownMenuItem
-            onClick={() =>
-              router.push(`/dashboard/owner/session?termId=${term.id}`)
-            }
+            onClick={() => router.push(`/dashboard/session?termId=${term.id}`)}
           >
             <HugeiconsIcon icon={Settings01Icon} />
             Lihat Sesi

@@ -5,5 +5,5 @@ import { baseMetadata } from '@/lib/metadata';
 export const metadata = { ...baseMetadata, title: 'Buat Tipe Sesi' };
 
 export default function CreateSessionRedirect() {
-  redirect('/dashboard/owner/session-type/create');
+  redirect('/dashboard/session-type/create');
 }

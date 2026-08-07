@@ -28,7 +28,7 @@ export default function CreateThemePage() {
           onSubmit={async (data) => {
             const result = await createTheme(data);
             if (result.success) {
-              router.push('/dashboard/owner/theme');
+              router.push('/dashboard/theme');
               router.refresh();
             }
             return result;

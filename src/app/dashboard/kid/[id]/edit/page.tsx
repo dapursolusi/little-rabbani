@@ -37,8 +37,8 @@ export default async function EditKidPage({ params }: IEditKidPageProps) {
     <div className="p-4 sm:p-6">
       <PageBreadcrumbs
         segments={[
-          { label: 'Dashboard', href: '/dashboard/owner' },
-          { label: 'Murid', href: '/dashboard/owner/kid' },
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Murid', href: '/dashboard/kid' },
           { label: kidData.name },
         ]}
       />

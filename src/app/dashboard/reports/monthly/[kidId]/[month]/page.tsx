@@ -75,7 +75,7 @@ export default async function MonthlyReportDetailPage({
       <div className="mb-6">
         <div className="flex items-center gap-2">
           <Link
-            href="/dashboard/owner/reports/monthly"
+            href="/dashboard/reports/monthly"
             className="flex items-center gap-1 text-sm text-primary hover:underline"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />

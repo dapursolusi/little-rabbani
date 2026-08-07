@@ -53,7 +53,7 @@ export function TeacherPendingCaptureBanner() {
 
   return (
     <Link
-      href="/dashboard/teacher/capture"
+      href="/dashboard/daily"
       className="mx-4 mt-2 block rounded-lg bg-warning/10 border border-warning/20 px-4 py-3 transition-colors hover:bg-warning/20 active:bg-warning/30"
     >
       <div className="flex items-center justify-between">

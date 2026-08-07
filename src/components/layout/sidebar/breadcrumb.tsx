@@ -16,13 +16,13 @@ import {
 
 /** Maps known route paths to human-readable labels. */
 const ROUTE_LABELS: Record<string, string> = {
-  '/dashboard/owner': 'Dashboard',
-  '/dashboard/owner/kid': 'Anak',
-  '/dashboard/owner/guardian': 'Wali',
-  '/dashboard/owner/activity': 'Aktivitas',
-  '/dashboard/owner/dcr': 'DCR',
-  '/dashboard/owner/reports': 'Laporan',
-  '/dashboard/owner/reports/daily': 'Laporan Harian',
+  '/dashboard': 'Dashboard',
+  '/dashboard/kid': 'Anak',
+  '/dashboard/guardian': 'Wali',
+  '/dashboard/activity': 'Aktivitas',
+  '/dashboard/dcr': 'DCR',
+  '/dashboard/reports': 'Laporan',
+  '/dashboard/reports/daily': 'Laporan Harian',
   '/edit': 'Edit',
 };
 

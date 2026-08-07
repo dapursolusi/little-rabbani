@@ -73,7 +73,7 @@ export default async function QuarterlyReportDetailPage({
       <div className="mb-6">
         <div className="flex items-center gap-2">
           <Link
-            href="/dashboard/owner/reports/quarterly"
+            href="/dashboard/reports/quarterly"
             className="flex items-center gap-1 text-sm text-primary hover:underline"
           >
             <HugeiconsIcon icon={ArrowLeft01Icon} className="size-4" />

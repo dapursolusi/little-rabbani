@@ -29,8 +29,8 @@ export default async function EditGuardianPage({
     <div className="p-4 sm:p-6">
       <PageBreadcrumbs
         segments={[
-          { label: 'Dashboard', href: '/dashboard/owner' },
-          { label: 'Wali Murid', href: '/dashboard/owner/guardian' },
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Wali Murid', href: '/dashboard/guardian' },
           { label: guardianData.name },
         ]}
       />
