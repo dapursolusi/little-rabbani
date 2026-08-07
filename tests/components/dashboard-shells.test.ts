@@ -21,31 +21,17 @@ describe('Dashboard metadata', () => {
     process.env.NEXT_PUBLIC_APP_URL = 'http://localhost:3000';
   });
 
-  it('should export metadata for Owner dashboard', async () => {
-    const mod = await import('@/app/dashboard/owner/page');
+  it('should export metadata for the dashboard page', async () => {
+    const mod = await import('@/app/dashboard/page');
     expect(mod.metadata).toBeDefined();
     expect(mod.metadata.title).toBeDefined();
   });
 
-  it('should export metadata for Teacher dashboard', async () => {
-    const mod = await import('../../_archives/src/app/teacher/page');
-    expect(mod.metadata).toBeDefined();
-    expect(mod.metadata.title).toBeDefined();
-  });
-
-  it('should have Owner metadata title containing Dashboard Owner', async () => {
-    const mod = await import('@/app/dashboard/owner/page');
+  it('should have dashboard metadata title containing Dashboard', async () => {
+    const mod = await import('@/app/dashboard/page');
     const title = mod.metadata.title as { default?: string };
     if (typeof title === 'object' && title.default) {
-      expect(title.default).toContain('Owner');
-    }
-  });
-
-  it('should have Teacher metadata title containing Dashboard Guru', async () => {
-    const mod = await import('../../_archives/src/app/teacher/page');
-    const title = mod.metadata.title as { default?: string };
-    if (typeof title === 'object' && title.default) {
-      expect(title.default).toContain('Guru');
+      expect(title.default).toContain('Dashboard');
     }
   });
 });

@@ -4,7 +4,7 @@ import { baseMetadata } from '@/lib/metadata';
 
 export const metadata: Metadata = {
   ...baseMetadata,
-  title: 'Pengaturan - Owner',
+  title: 'Pengaturan',
 };
 
 export default function SettingsLayout({
