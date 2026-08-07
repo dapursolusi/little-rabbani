@@ -3,7 +3,11 @@ import { headers } from 'next/headers';
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { SidebarBreadcrumb } from '@/components/layout/sidebar/breadcrumb';
 import { Separator } from '@/components/ui/separator';
-import { SidebarInset, SidebarTrigger } from '@/components/ui/sidebar';
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from '@/components/ui/sidebar';
 
 import { auth } from '@/lib/auth';
 
@@ -16,7 +20,7 @@ export default async function DashboardLayout({
     headers: await headers(),
   });
   return (
-    <>
+    <SidebarProvider defaultOpen={true}>
       <AppSidebar user={session?.user} />
       <SidebarInset>
         {/* Top bar */}
@@ -30,6 +34,6 @@ export default async function DashboardLayout({
         {/* Page content */}
         <main className="flex-1 bg-brand-canvas">{children}</main>
       </SidebarInset>
-    </>
+    </SidebarProvider>
   );
 }
