@@ -13,15 +13,24 @@ import { auth } from '@/lib/auth';
  */
 
 // Read-path authorization: role → route prefixes each role may access.
+// A prefix matches the path itself AND everything below it (gate uses
+// `startsWith(p + '/')`). Bare `/dashboard` must NOT be a prefix entry for a
+// non-owner role — it would match every `/dashboard/*` route (allow-ALL).
 // Mirrors `roles` in app-sidebar nav config — keep the two in sync.
 const ROLE_ROUTES: Record<string, string[]> = {
   owner: ['/dashboard'],
-  teacher: ['/dashboard', '/dashboard/daily', '/dashboard/calendar'],
+  teacher: ['/dashboard/daily', '/dashboard/calendar'],
 };
 
+function roleHome(role: string): string {
+  return role === 'owner' ? '/dashboard' : '/dashboard/daily';
+}
+
 // ponytail: teacher-preview is a dev/testing aid to exercise the teacher
-// read-path without a seeded teacher user. Not a shipped feature.
+// read-path without a seeded teacher user. Ignored in production so a shared
+// `?teacher-preview` link can never misroute or downgrade a real session.
 function effectiveRole(role: string, searchParams: URLSearchParams): string {
+  if (process.env.NODE_ENV === 'production') return role;
   return searchParams.get('teacher-preview') === 'true' ? 'teacher' : role;
 }
 
@@ -59,8 +68,7 @@ export async function proxy(request: NextRequest) {
           session.user.role as string,
           request.nextUrl.searchParams
         );
-        const home = role === 'owner' ? '/dashboard' : '/dashboard/daily';
-        return NextResponse.redirect(new URL(home, request.url));
+        return NextResponse.redirect(new URL(roleHome(role), request.url));
       }
     } catch {
       // Session check failed — fall through to pass-through below
@@ -88,6 +96,13 @@ export async function proxy(request: NextRequest) {
         session.user.role as string,
         request.nextUrl.searchParams
       );
+
+      // Bare /dashboard: dispatch non-owners to their role home so teacher
+      // (and future roles) never land on the owner dashboard surface.
+      if (pathname === '/dashboard' && role !== 'owner') {
+        return NextResponse.redirect(new URL(roleHome(role), request.url));
+      }
+
       const allowed =
         ROLE_ROUTES[role]?.some(
           (p) => pathname === p || pathname.startsWith(p + '/')
