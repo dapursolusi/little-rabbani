@@ -16,7 +16,7 @@ import {
 
 import { user } from './auth';
 import { dailyClassSchedule } from './calendar';
-import { sessionType, term } from './enrollment';
+import { classSession, term } from './enrollment';
 import { kid } from './kids';
 import { observation, observationActivity } from './observation';
 
@@ -36,9 +36,9 @@ export const dailyClassReport = pgTable(
     termId: uuid('term_id')
       .notNull()
       .references(() => term.id, { onDelete: 'restrict' }),
-    sessionTypeId: uuid('session_type_id')
+    classSessionId: uuid('class_session_id')
       .notNull()
-      .references(() => sessionType.id, { onDelete: 'cascade' }),
+      .references(() => classSession.id, { onDelete: 'cascade' }),
     scheduleId: uuid('schedule_id').references(() => dailyClassSchedule.id, {
       onDelete: 'set null',
     }),
@@ -55,11 +55,13 @@ export const dailyClassReport = pgTable(
   },
   (table) => ({
     termIdIdx: index('dcr_term_idx').on(table.termId),
-    sessionTypeIdIdx: index('dcr_session_type_idx').on(table.sessionTypeId),
+    classSessionIdIdx: index('dcr_class_session_id_idx').on(
+      table.classSessionId
+    ),
     scheduleIdIdx: index('dcr_schedule_idx').on(table.scheduleId),
     capturedByIdx: index('dcr_captured_by_idx').on(table.capturedBy),
-    dcrDateSessionTypeUnique: uniqueIndex('dcr_date_session_type_unique')
-      .on(table.date, table.sessionTypeId)
+    dcrDateClassSessionIdUnique: uniqueIndex('dcr_date_class_session_id_unique')
+      .on(table.date, table.classSessionId)
       .where(sql`${table.deletedAt} IS NULL`),
   })
 );
@@ -71,9 +73,9 @@ export const dailyClassReportRelations = relations(
       fields: [dailyClassReport.termId],
       references: [term.id],
     }),
-    sessionType: one(sessionType, {
-      fields: [dailyClassReport.sessionTypeId],
-      references: [sessionType.id],
+    classSession: one(classSession, {
+      fields: [dailyClassReport.classSessionId],
+      references: [classSession.id],
     }),
     capturedByUser: one(user, {
       fields: [dailyClassReport.capturedBy],

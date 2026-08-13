@@ -13,7 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 
 import { user } from './auth';
-import { sessionType } from './enrollment';
+import { classSession } from './enrollment';
 
 // ─────────────── Reminders Layer (M6) ───────────────
 // Push notifications subscription store.
@@ -105,7 +105,7 @@ export const reminderLog = pgTable(
     }),
     type: reminderTypeEnum('type').notNull(),
     date: date('date'),
-    sessionTypeId: uuid('session_type_id').references(() => sessionType.id, {
+    classSessionId: uuid('class_session_id').references(() => classSession.id, {
       onDelete: 'set null',
     }),
     scheduledAt: timestamp('scheduled_at').notNull(),
@@ -115,8 +115,8 @@ export const reminderLog = pgTable(
   },
   (table) => ({
     userIdIdx: index('reminder_log_user_idx').on(table.userId),
-    sessionTypeIdIdx: index('reminder_log_session_type_idx').on(
-      table.sessionTypeId
+    classSessionIdIdx: index('reminder_log_class_session_id_idx').on(
+      table.classSessionId
     ),
     reminderTypeDateIdx: index('reminder_log_type_date_idx').on(
       table.type,
@@ -127,9 +127,9 @@ export const reminderLog = pgTable(
       table.date
     ),
     reminderSentAtIdx: index('reminder_log_sent_at_idx').on(table.sentAt),
-    sessionTypeCheck: check(
-      'reminder_log_session_type_check',
-      sql`${table.type} != 'schedule_entry' OR ${table.sessionTypeId} IS NOT NULL`
+    classSessionIdCheck: check(
+      'reminder_log_class_session_id_check',
+      sql`${table.type} != 'schedule_entry' OR ${table.classSessionId} IS NOT NULL`
     ),
   })
 );
@@ -139,8 +139,8 @@ export const reminderLogRelations = relations(reminderLog, ({ one }) => ({
     fields: [reminderLog.userId],
     references: [user.id],
   }),
-  sessionType: one(sessionType, {
-    fields: [reminderLog.sessionTypeId],
-    references: [sessionType.id],
+  classSession: one(classSession, {
+    fields: [reminderLog.classSessionId],
+    references: [classSession.id],
   }),
 }));

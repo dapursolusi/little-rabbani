@@ -13,7 +13,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
-import { sessionType, term } from './enrollment';
+import { classSession, term } from './enrollment';
 import { dailyClassReport } from './reports';
 import { subTheme } from './theme';
 
@@ -81,7 +81,7 @@ export const calendarEvent = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     startDate: date('start_date').notNull(),
     endDate: date('end_date').notNull(),
-    sessionTypeId: uuid('session_type_id').references(() => sessionType.id, {
+    classSessionId: uuid('class_session_id').references(() => classSession.id, {
       onDelete: 'cascade',
     }),
     subThemeId: uuid('sub_theme_id').references(() => subTheme.id, {
@@ -101,14 +101,14 @@ export const calendarEvent = pgTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
-    sessionTypeIdIdx: index('calendar_event_session_type_idx').on(
-      table.sessionTypeId
+    classSessionIdIdx: index('calendar_event_class_session_id_idx').on(
+      table.classSessionId
     ),
     subThemeIdIdx: index('calendar_event_sub_theme_idx').on(table.subThemeId),
-    // ponytail: regular index, not unique — multiple items share a (date, sessionTypeId) group
-    calendarEventDateSessionTypeIdx: index(
-      'calendar_event_date_session_type_idx'
-    ).on(table.startDate, table.sessionTypeId),
+    // ponytail: regular index, not unique — multiple items share a (date, classSessionId) group
+    calendarEventDateClassSessionIdIdx: index(
+      'calendar_event_date_class_session_id_idx'
+    ).on(table.startDate, table.classSessionId),
     calendarEventDateCheck: check(
       'calendar_event_date_check',
       sql`start_date <= end_date`
@@ -117,9 +117,9 @@ export const calendarEvent = pgTable(
 );
 
 export const calendarEventRelations = relations(calendarEvent, ({ one }) => ({
-  sessionType: one(sessionType, {
-    fields: [calendarEvent.sessionTypeId],
-    references: [sessionType.id],
+  classSession: one(classSession, {
+    fields: [calendarEvent.classSessionId],
+    references: [classSession.id],
   }),
   subTheme: one(subTheme, {
     fields: [calendarEvent.subThemeId],

@@ -58,10 +58,10 @@ export const termRelations = relations(term, ({ many }) => ({
   quarterlyReportSnapshots: many(quarterlyKidReportSnapshot),
 }));
 
-// ─────────────── Session Type ───────────────
+// ─────────────── Session ───────────────
 
-export const sessionType = pgTable(
-  'session_type',
+export const classSession = pgTable(
+  'class_session',
   {
     id: uuid('id').defaultRandom().primaryKey(),
     name: text('name').notNull(),
@@ -76,18 +76,18 @@ export const sessionType = pgTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
-    sessionTypeNameStartEnd: unique('session_type_name_start_end').on(
+    classSessionNameStartEnd: unique('class_session_name_start_end').on(
       table.name,
       table.start,
       table.end
     ),
-    sessionTypeActiveName: uniqueIndex('session_type_active_name')
+    classSessionActiveName: uniqueIndex('class_session_active_name')
       .on(table.name)
       .where(sql`active = true`),
   })
 );
 
-export const sessionTypeRelations = relations(sessionType, ({ many }) => ({
+export const classSessionRelations = relations(classSession, ({ many }) => ({
   sessionEnrollments: many(kidSessionEnrollment),
   dailyClassReports: many(dailyClassReport),
   reminderLogs: many(reminderLog),
@@ -106,9 +106,9 @@ export const kidSessionEnrollment = pgTable(
     termId: uuid('term_id')
       .notNull()
       .references(() => term.id, { onDelete: 'cascade' }),
-    sessionTypeId: uuid('session_type_id')
+    classSessionId: uuid('class_session_id')
       .notNull()
-      .references(() => sessionType.id, { onDelete: 'cascade' }),
+      .references(() => classSession.id, { onDelete: 'cascade' }),
     isActive: boolean('is_active').notNull().default(true),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
@@ -120,11 +120,13 @@ export const kidSessionEnrollment = pgTable(
   (table) => ({
     kidIdIdx: index('kse_kid_id_idx').on(table.kidId),
     termIdIdx: index('kse_term_id_idx').on(table.termId),
-    sessionTypeIdIdx: index('kse_session_type_id_idx').on(table.sessionTypeId),
-    uniqueKidEnrollment: unique('kid_term_session_type').on(
+    classSessionIdIdx: index('kse_class_session_id_idx').on(
+      table.classSessionId
+    ),
+    uniqueKidEnrollment: unique('kid_term_class_session').on(
       table.kidId,
       table.termId,
-      table.sessionTypeId
+      table.classSessionId
     ),
   })
 );
@@ -140,9 +142,9 @@ export const kidSessionEnrollmentRelations = relations(
       fields: [kidSessionEnrollment.termId],
       references: [term.id],
     }),
-    sessionType: one(sessionType, {
-      fields: [kidSessionEnrollment.sessionTypeId],
-      references: [sessionType.id],
+    classSession: one(classSession, {
+      fields: [kidSessionEnrollment.classSessionId],
+      references: [classSession.id],
     }),
   })
 );
