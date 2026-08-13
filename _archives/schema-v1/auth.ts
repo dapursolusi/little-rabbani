@@ -1,3 +1,4 @@
+import { relations } from 'drizzle-orm';
 import {
   boolean,
   index,
@@ -6,6 +7,15 @@ import {
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
+
+import { observation } from './observation';
+import { pushSubscription, reminderConfig, reminderLog } from './reminder';
+import {
+  dailyClassReport,
+  dailyKidReportSnapshot,
+  monthlyKidReportSnapshot,
+  quarterlyKidReportSnapshot,
+} from './reports';
 
 export const roleEnum = pgEnum('role', ['owner', 'teacher']);
 
@@ -22,6 +32,19 @@ export const user = pgTable('user', {
     .defaultNow()
     .$onUpdateFn(() => new Date()),
 });
+
+export const userRelations = relations(user, ({ many }) => ({
+  accounts: many(account),
+  sessions: many(session),
+  pushSubscriptions: many(pushSubscription),
+  reminderConfigs: many(reminderConfig),
+  reminderLogs: many(reminderLog),
+  observations: many(observation),
+  dailyClassReports: many(dailyClassReport),
+  dailyKidReportSnapshots: many(dailyKidReportSnapshot),
+  monthlyKidReportSnapshots: many(monthlyKidReportSnapshot),
+  quarterlyKidReportSnapshots: many(quarterlyKidReportSnapshot),
+}));
 
 export const session = pgTable(
   'session',
@@ -44,6 +67,13 @@ export const session = pgTable(
     userIdIdx: index('session_user_id_idx').on(table.userId),
   })
 );
+
+export const sessionRelations = relations(session, ({ one }) => ({
+  user: one(user, {
+    fields: [session.userId],
+    references: [user.id],
+  }),
+}));
 
 export const account = pgTable(
   'account',
@@ -71,6 +101,13 @@ export const account = pgTable(
     userIdIdx: index('account_user_id_idx').on(table.userId),
   })
 );
+
+export const accountRelations = relations(account, ({ one }) => ({
+  user: one(user, {
+    fields: [account.userId],
+    references: [user.id],
+  }),
+}));
 
 export const verification = pgTable('verification', {
   id: text('id').primaryKey(),

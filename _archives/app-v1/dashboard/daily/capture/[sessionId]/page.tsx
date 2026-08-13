@@ -1,4 +1,5 @@
 import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
+import { Separator } from '@/components/ui/separator';
 
 import {
   getCalendarEventsForDcr,
@@ -123,7 +124,10 @@ export default async function DcrCapturePage({ params }: IDcrCapturePageProps) {
           </p>
         </div>
       )}
-
+      <h2 className="text-xl font-semibold text-foreground">
+        Laporan Kegiatan Kelas
+      </h2>
+      <Separator className="my-2" />
       <DcrForm
         sessionId={sessionId}
         initialActivities={initialActivities}
@@ -132,6 +136,8 @@ export default async function DcrCapturePage({ params }: IDcrCapturePageProps) {
         learningNotes={existingDcr?.learningNotes ?? ''}
         isEditing={!!existingDcr}
       />
+      <h2 className="text-xl font-semibold text-foreground">Observasi Anak</h2>
+      <Separator className="my-2" />
     </div>
   );
 }

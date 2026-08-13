@@ -53,22 +53,23 @@ UI Component (Server Component) → Server Action → Service → ORM → DB
 
 ## Naming Conventions
 
-| Entity                     | Convention  | Example           |
-| :------------------------- | :---------- | :---------------- |
-| Components                 | PascalCase  | `UserProfile.tsx` |
-| Utilities                  | camelCase   | `formatDate.ts`   |
-| Functions                  | camelCase   | `getUserById()`   |
-| Props interfaces           | PascalCase  | `ButtonProps`     |
-| Types                      | PascalCase  | `ComponentProps`  |
-| Constants                  | UPPER_SNAKE | `MAX_RETRY_COUNT` |
-| File names (non-component) | kebab-case  | `api-endpoint.ts` |
+| Entity           | Convention  | Example           |
+| :--------------- | :---------- | :---------------- |
+| Components       | PascalCase  | `UserProfile.tsx` |
+| Utilities        | camelCase   | `formatDate.ts`   |
+| Functions        | camelCase   | `getUserById()`   |
+| Props interfaces | PascalCase  | `ButtonProps`     |
+| Types            | PascalCase  | `ComponentProps`  |
+| Constants        | UPPER_SNAKE | `MAX_RETRY_COUNT` |
+| File names       | kebab-case  | `api-endpoint.ts` |
+| Folder names     | kebab-case  | `class-session`   |
 
 ## File Placement
 
 | Component Type        | Location                   | Notes                             |
 | :-------------------- | :------------------------- | :-------------------------------- |
 | Page/Layout           | `src/app/`                 | App Router conventions            |
-| Cross-page sections   | `src/components/sections/` | Grouped by page                   |
+| Feature sections      | `src/features/<entity>/components/` | Per-module components        |
 | Layout components     | `src/components/layout/`   | Header, Footer, MobileMenu        |
 | Shared UI primitives  | `src/components/ui/`       | shadcn base-nova (auto-generated) |
 | Utilities & constants | `src/lib/`                 | metadata, security-headers, utils |

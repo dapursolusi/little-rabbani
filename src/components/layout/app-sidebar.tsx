@@ -152,7 +152,7 @@ const navGroups: SidebarNavItem[] = [
       },
       {
         title: 'DCR / Observasi Kelas',
-        href: '/dashboard/dcr',
+        href: '/dashboard/daily',
         icon: ClipboardIcon,
         roles: ['owner', 'teacher'],
       },

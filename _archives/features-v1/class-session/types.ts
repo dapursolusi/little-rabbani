@@ -1,6 +1,6 @@
 import { BaseDataResponse } from '@/types';
 
-export interface SessionType extends BaseDataResponse {
+export interface ClassSession extends BaseDataResponse {
   name: string;
   start: string;
   end: string;

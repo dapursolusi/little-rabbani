@@ -51,19 +51,17 @@ export default async function DcrPickerPage() {
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <Item variant="outline">
+              <Item variant="outline" className='bg-primary text-white'>
                 <ItemHeader>
                   <HugeiconsIcon icon={Monocle01Icon} />
                 </ItemHeader>
                 <ItemContent>
-                  <ItemTitle>Observasi Anak</ItemTitle>
+                  <ItemTitle>Observasi / Catatan Harian Kelas</ItemTitle>
                   <ItemDescription>Description</ItemDescription>
                 </ItemContent>
               </Item>
             }
-          >
-            Open
-          </DropdownMenuTrigger>
+          />
           <DropdownMenuContent>
             <DropdownMenuGroup>
               <DropdownMenuLabel>Sesi</DropdownMenuLabel>

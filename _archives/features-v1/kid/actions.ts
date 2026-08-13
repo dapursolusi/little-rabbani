@@ -118,8 +118,6 @@ async function createKidFromParsed(parsed: z.output<typeof KidFormSchema>) {
       .values({
         ...data,
         status,
-        enrolledTermId:
-          enrolledTermId && status === 'enrolled' ? enrolledTermId : null,
       })
       .returning();
 
@@ -199,8 +197,6 @@ export async function updateKid(
       .set({
         ...data,
         status,
-        enrolledTermId:
-          status === 'enrolled' && enrolledTermId ? enrolledTermId : null,
         updatedAt: new Date(),
       })
       .where(eq(kid.id, id))

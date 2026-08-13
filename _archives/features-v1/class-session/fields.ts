@@ -1,6 +1,6 @@
 import type { FormField } from '@/types/field';
 
-export function sessionTypeFields(): FormField[] {
+export function classSessionFields(): FormField[] {
   return [
     { name: 'name', label: 'Nama Sesi', type: 'text', required: true },
     { name: 'start', label: 'Jam Mulai', type: 'time', required: true },

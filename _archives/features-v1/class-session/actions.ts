@@ -1,13 +1,13 @@
 'use server';
 
 import { db } from '@/db';
-import { sessionType } from '@/db/schema';
-import { SessionTypeFormSchema } from '@/features/sessionType/schema';
+import { classSession } from '@/db/schema';
+import { ClassSessionFormSchema } from '@/features/class-session/schema';
 import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
 
 import { requireOwner } from '../../lib/actions/utils';
 
-export async function getSessionTypes(params?: {
+export async function getClassSessions(params?: {
   search?: string;
   limit?: number;
   offset?: number;
@@ -21,25 +21,25 @@ export async function getSessionTypes(params?: {
     const { search, limit = 50, offset = 0 } = params ?? {};
 
     const conditions = [
-      eq(sessionType.active, true),
-      isNull(sessionType.deletedAt),
+      eq(classSession.active, true),
+      isNull(classSession.deletedAt),
     ];
     if (search) {
-      conditions.push(ilike(sessionType.name, `%${search}%`));
+      conditions.push(ilike(classSession.name, `%${search}%`));
     }
 
     const where = and(...conditions);
 
     const [items, totalResult] = await Promise.all([
-      db.query.sessionType.findMany({
+      db.query.classSession.findMany({
         where,
-        orderBy: (sessionType, { desc }) => [desc(sessionType.createdAt)],
+        orderBy: (classSession, { desc }) => [desc(classSession.createdAt)],
         limit,
         offset,
       }),
       db
         .select({ count: sql<number>`count(*)` })
-        .from(sessionType)
+        .from(classSession)
         .where(where),
     ]);
 
@@ -51,15 +51,15 @@ export async function getSessionTypes(params?: {
   }
 }
 
-export async function getSessionType(id: string) {
+export async function getClassSession(id: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
   try {
-    const result = await db.query.sessionType.findFirst({
-      where: eq(sessionType.id, id),
+    const result = await db.query.classSession.findFirst({
+      where: eq(classSession.id, id),
     });
 
     if (!result) {
@@ -72,13 +72,13 @@ export async function getSessionType(id: string) {
   }
 }
 
-export async function createSessionType(input: Record<string, unknown>) {
+export async function createClassSession(input: Record<string, unknown>) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
   }
 
-  const parsed = SessionTypeFormSchema.safeParse(input);
+  const parsed = ClassSessionFormSchema.safeParse(input);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
@@ -87,7 +87,7 @@ export async function createSessionType(input: Record<string, unknown>) {
 
   try {
     const [newItem] = await db
-      .insert(sessionType)
+      .insert(classSession)
       .values(parsed.data)
       .returning();
 
@@ -97,7 +97,7 @@ export async function createSessionType(input: Record<string, unknown>) {
   }
 }
 
-export async function updateSessionType(
+export async function updateClassSession(
   id: string,
   input: Record<string, unknown>
 ) {
@@ -106,15 +106,15 @@ export async function updateSessionType(
     return { success: false as const, error: auth.error };
   }
 
-  const parsed = SessionTypeFormSchema.safeParse(input);
+  const parsed = ClassSessionFormSchema.safeParse(input);
 
   if (!parsed.success) {
     const firstError = parsed.error.issues[0]?.message ?? 'Data tidak valid';
     return { success: false as const, error: firstError };
   }
 
-  const existing = await db.query.sessionType.findFirst({
-    where: eq(sessionType.id, id),
+  const existing = await db.query.classSession.findFirst({
+    where: eq(classSession.id, id),
   });
 
   if (!existing) {
@@ -132,19 +132,19 @@ export async function updateSessionType(
 
   // Deactivate old, insert new active row
   await db
-    .update(sessionType)
+    .update(classSession)
     .set({ active: false, updatedAt: new Date() })
-    .where(eq(sessionType.id, id));
+    .where(eq(classSession.id, id));
 
   const [fresh] = await db
-    .insert(sessionType)
+    .insert(classSession)
     .values({ ...parsed.data, active: true })
     .returning();
 
   return { success: true as const, data: { old: existing, fresh } };
 }
 
-export async function deleteSessionType(id: string) {
+export async function deleteClassSession(id: string) {
   const auth = await requireOwner();
   if (!auth.authorized) {
     return { success: false as const, error: auth.error };
@@ -152,9 +152,9 @@ export async function deleteSessionType(id: string) {
 
   try {
     await db
-      .update(sessionType)
+      .update(classSession)
       .set({ deletedAt: new Date() })
-      .where(eq(sessionType.id, id));
+      .where(eq(classSession.id, id));
     return { success: true as const, data: undefined };
   } catch {
     return { success: false as const, error: 'Gagal menghapus sesi' };

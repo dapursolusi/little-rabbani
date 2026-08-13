@@ -1,7 +1,7 @@
 'use server';
 
 import { db } from '@/db';
-import { kid, term } from '@/db/schema';
+import { kid, kidSessionEnrollment, term } from '@/db/schema';
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 
 import { requireOwner } from '../../lib/actions/utils';
@@ -201,12 +201,12 @@ export async function getTermCohort(termId: string) {
     return { success: false as const, error: authCheck.error };
   }
 
-  const enrolledKids = await db.query.kid.findMany({
-    where: eq(kid.enrolledTermId, termId),
+  const enrolledKids = await db.query.kidSessionEnrollment.findMany({
+    where: eq(kidSessionEnrollment.termId, termId),
     with: {
-      guardian: true,
+      kid:true
     },
-    orderBy: (k, { asc }) => [asc(k.name)],
+    orderBy: (kse, { asc }) => [asc(kse.kid.name)],
   });
 
   return { success: true as const, data: enrolledKids };
