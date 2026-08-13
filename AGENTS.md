@@ -53,28 +53,29 @@ UI Component (Server Component) → Server Action → Service → ORM → DB
 
 ## Naming Conventions
 
-| Entity                     | Convention  | Example           |
-| :------------------------- | :---------- | :---------------- |
-| Components                 | PascalCase  | `UserProfile.tsx` |
-| Utilities                  | camelCase   | `formatDate.ts`   |
-| Functions                  | camelCase   | `getUserById()`   |
-| Props interfaces           | PascalCase  | `ButtonProps`     |
-| Types                      | PascalCase  | `ComponentProps`  |
-| Constants                  | UPPER_SNAKE | `MAX_RETRY_COUNT` |
-| File names (non-component) | kebab-case  | `api-endpoint.ts` |
+| Entity           | Convention  | Example           |
+| :--------------- | :---------- | :---------------- |
+| Components       | PascalCase  | `UserProfile.tsx` |
+| Utilities        | camelCase   | `formatDate.ts`   |
+| Functions        | camelCase   | `getUserById()`   |
+| Props interfaces | PascalCase  | `ButtonProps`     |
+| Types            | PascalCase  | `ComponentProps`  |
+| Constants        | UPPER_SNAKE | `MAX_RETRY_COUNT` |
+| File names       | kebab-case  | `api-endpoint.ts` |
+| Folder names     | kebab-case  | `class-session`   |
 
 ## File Placement
 
-| Component Type        | Location                   | Notes                             |
-| :-------------------- | :------------------------- | :-------------------------------- |
-| Page/Layout           | `src/app/`                 | App Router conventions            |
-| Cross-page sections   | `src/components/sections/` | Grouped by page                   |
-| Layout components     | `src/components/layout/`   | Header, Footer, MobileMenu        |
-| Shared UI primitives  | `src/components/ui/`       | shadcn base-nova (auto-generated) |
-| Utilities & constants | `src/lib/`                 | metadata, security-headers, utils |
-| Types                 | `src/types/`               | Add per-project as needed         |
-| Tests (unit)          | `tests/`                   | Vitest                            |
-| Tests (E2E)           | `e2e/`                     | Playwright                        |
+| Component Type        | Location                            | Notes                             |
+| :-------------------- | :---------------------------------- | :-------------------------------- |
+| Page/Layout           | `src/app/`                          | App Router conventions            |
+| Feature sections      | `src/features/<entity>/components/` | Per-module components             |
+| Layout components     | `src/components/layout/`            | Header, Footer, MobileMenu        |
+| Shared UI primitives  | `src/components/ui/`                | shadcn base-nova (auto-generated) |
+| Utilities & constants | `src/lib/`                          | metadata, security-headers, utils |
+| Types                 | `src/types/`                        | Add per-project as needed         |
+| Tests (unit)          | `tests/`                            | Vitest                            |
+| Tests (E2E)           | `e2e/`                              | Playwright                        |
 
 ## Commands
 
@@ -189,6 +190,17 @@ These are decisions, not in-flux patterns — they live in AGENTS.md:
   per-call classNames.
 - **Discriminated-union action results** (`{ success: true, data } | { success:
 false, error }` with `as const`) — clients narrow with `if (!result.success)`.
+- **Index every FK column by default** in Drizzle. Postgres does not
+  auto-index FK columns, so any WHERE/JOIN on an unindexed FK is a full
+  `Seq Scan` that grows linearly as append-only history tables (observation,
+  dcr_activity, reminder_log, report snapshots) grow forever. Rule:
+  - Single-column `index()` per FK as the baseline.
+  - Merge into a composite only when columns are _always_ filtered together
+    (e.g. `reminder_log(type, date)` for the 30-day cleanup).
+  - Drop an index only when `EXPLAIN ANALYZE` shows it never used — never
+    pre-optimize; index by default, profile later.
+  - Indexes live in the `pgTable` third-arg config callback, e.g.
+    `(table) => ({ kidIdIdx: index('kse_kid_id_idx').on(table.kidId) })`.
 
 Adding a new form: write `schema.ts`, register in `schema-registry.ts`:
 

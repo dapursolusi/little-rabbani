@@ -24,12 +24,8 @@ export default async function LoginPage(props: {
     if (redirectUrl) {
       redirect(redirectUrl);
     }
-    const role = session.user.role as string;
-    if (role === 'owner') {
-      redirect('/dashboard/owner');
-    } else {
-      redirect('/dashboard/teacher');
-    }
+    // Proxy dispatches to the role's home on bare /dashboard
+    redirect('/dashboard');
   }
 
   return <LoginForm error={error} redirect={redirectUrl} />;

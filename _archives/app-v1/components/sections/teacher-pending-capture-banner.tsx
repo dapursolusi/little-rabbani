@@ -1,0 +1,73 @@
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+
+import Link from 'next/link';
+
+import { ChevronRightIcon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+
+import { getTeacherPendingCaptureCount } from '@/lib/actions/capture';
+
+/**
+ * In-app Teacher dashboard banner showing pending capture count.
+ * Polls every 5 seconds for real-time updates.
+ * Tap banner to navigate to the capture/laporan screen.
+ *
+ * VAL-REMIN-005: Teacher sees pending capture count on dashboard open.
+ * VAL-REMIN-006: Banner tap routes to pending capture screen.
+ * VAL-REMIN-007: Banner disappears when Teacher completes last pending capture.
+ */
+export function TeacherPendingCaptureBanner() {
+  const [pendingCount, setPendingCount] = useState<number | null>(null);
+
+  const refreshCount = useCallback(async () => {
+    try {
+      const result = await getTeacherPendingCaptureCount();
+      if (result.success) {
+        setPendingCount(result.data);
+      }
+    } catch {
+      // Silently fail — banner simply won't appear
+    }
+  }, []);
+
+  useEffect(() => {
+    // Defer initial fetch to avoid synchronous setState in effect body
+    const raf = requestAnimationFrame(() => {
+      void refreshCount();
+    });
+
+    // Poll every 5 seconds
+    const interval = setInterval(refreshCount, 5000);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearInterval(interval);
+    };
+  }, [refreshCount]);
+
+  // Don't render anything while loading or when count is 0
+  if (pendingCount === null || pendingCount === 0) {
+    return null;
+  }
+
+  return (
+    <Link
+      href="/dashboard/daily"
+      className="mx-4 mt-2 block rounded-lg bg-warning/10 border border-warning/20 px-4 py-3 transition-colors hover:bg-warning/20 active:bg-warning/30"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="flex h-2.5 w-2.5 rounded-full bg-warning" />
+          <p className="text-sm font-medium text-warning">
+            {pendingCount} capture tertunda
+          </p>
+        </div>
+        <HugeiconsIcon
+          icon={ChevronRightIcon}
+          className="h-4 w-4 text-warning"
+        />
+      </div>
+    </Link>
+  );
+}

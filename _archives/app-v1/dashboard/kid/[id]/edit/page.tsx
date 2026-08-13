@@ -1,0 +1,68 @@
+import { notFound } from 'next/navigation';
+
+import { getGuardians } from '@/features/guardian/actions';
+import { getKid } from '@/features/kid/actions';
+import { kidFields } from '@/features/kid/fields';
+import { getTerms } from '@/features/term/actions';
+
+import { KidFormWrapper } from '@/components/sections/kid-form-wrapper';
+import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
+
+import { baseMetadata } from '@/lib/metadata';
+
+export const metadata = { ...baseMetadata, title: 'Edit Murid' };
+
+interface IEditKidPageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default async function EditKidPage({ params }: IEditKidPageProps) {
+  const { id } = await params;
+
+  const [kidResult, guardiansResult, termsResult] = await Promise.all([
+    getKid(id),
+    getGuardians(),
+    getTerms(),
+  ]);
+
+  if (!kidResult.success) {
+    notFound();
+  }
+
+  const kidData = kidResult.data;
+  const guardians = guardiansResult.success ? guardiansResult.data : [];
+  const terms = termsResult.success ? termsResult.data : [];
+
+  return (
+    <div className="p-4 sm:p-6">
+      <PageBreadcrumbs
+        segments={[
+          { label: 'Dashboard', href: '/dashboard' },
+          { label: 'Murid', href: '/dashboard/kid' },
+          { label: kidData.name },
+        ]}
+      />
+      <div className="mb-6">
+        <h1 className="text-2xl font-semibold text-foreground">Edit Murid</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Perbarui data murid
+        </p>
+      </div>
+
+      <div className="mx-auto max-w-lg rounded-lg border bg-card p-6">
+        <KidFormWrapper
+          mode="edit"
+          initialData={{
+            id: kidData.id,
+            name: kidData.name,
+            dob: kidData.dob,
+            guardianId: kidData.guardianId,
+            status: kidData.status,
+            enrolledTermId: kidData.enrolledTermId ?? '',
+          }}
+          formFields={kidFields({ guardians, enrolledTerms: terms })}
+        />
+      </div>
+    </div>
+  );
+}

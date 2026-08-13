@@ -132,9 +132,9 @@ const placementEntries: PlacementEntry[] = [
     notes: 'App Router conventions',
   },
   {
-    componentType: 'Cross-page sections',
-    location: 'src/components/sections/',
-    notes: 'Grouped by page',
+    componentType: 'Feature sections',
+    location: 'src/features/',
+    notes: 'Per-module components',
   },
   {
     componentType: 'Layout components',
