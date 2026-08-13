@@ -66,16 +66,16 @@ UI Component (Server Component) → Server Action → Service → ORM → DB
 
 ## File Placement
 
-| Component Type        | Location                   | Notes                             |
-| :-------------------- | :------------------------- | :-------------------------------- |
-| Page/Layout           | `src/app/`                 | App Router conventions            |
-| Feature sections      | `src/features/<entity>/components/` | Per-module components        |
-| Layout components     | `src/components/layout/`   | Header, Footer, MobileMenu        |
-| Shared UI primitives  | `src/components/ui/`       | shadcn base-nova (auto-generated) |
-| Utilities & constants | `src/lib/`                 | metadata, security-headers, utils |
-| Types                 | `src/types/`               | Add per-project as needed         |
-| Tests (unit)          | `tests/`                   | Vitest                            |
-| Tests (E2E)           | `e2e/`                     | Playwright                        |
+| Component Type        | Location                            | Notes                             |
+| :-------------------- | :---------------------------------- | :-------------------------------- |
+| Page/Layout           | `src/app/`                          | App Router conventions            |
+| Feature sections      | `src/features/<entity>/components/` | Per-module components             |
+| Layout components     | `src/components/layout/`            | Header, Footer, MobileMenu        |
+| Shared UI primitives  | `src/components/ui/`                | shadcn base-nova (auto-generated) |
+| Utilities & constants | `src/lib/`                          | metadata, security-headers, utils |
+| Types                 | `src/types/`                        | Add per-project as needed         |
+| Tests (unit)          | `tests/`                            | Vitest                            |
+| Tests (E2E)           | `e2e/`                              | Playwright                        |
 
 ## Commands
 

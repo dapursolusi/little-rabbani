@@ -6,3 +6,4 @@ build/
 public/
 bun.lock
 *.lock
+_archives/
