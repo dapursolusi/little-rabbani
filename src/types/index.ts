@@ -1,5 +1,4 @@
-export interface BaseDataResponse {
-  id: string;
+export interface BaseDTOResponse {
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;

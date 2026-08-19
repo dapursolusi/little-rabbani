@@ -16,7 +16,12 @@ _Avoid_: Active/inactive (too generic — hides the waiting-list and alumni dist
 
 **Guardian**:
 The parent or caretaker who receives a kid's reports. One guardian is registered per kid; a guardian may be linked to multiple kids (siblings). A second guardian (e.g., the other parent) is an optional contact field on the guardian record, not a separate entity — multi-guardian login is deferred to a later phase.
+**Phone is the guardian's identity.** `phone` is unique and its format is enforced (local Indonesian `08...`, no country code) at the input boundary, so the phone alone reliably matches a returning guardian when registering a sibling. A guardian is created and edited *through the kid form* — the record is shared, so editing it on one kid propagates to every kid linked by the same `guardianId`. There is no dedicated guardian module.
 _Avoid_: Parent (overloaded — "parent" of what?), mom/dad.
+
+**Guardian Relationship**:
+The kid's relationship to their guardian — mother, father, brother_sister, grandparent, aunt_uncle, or other. Stored on the kid row (a guardian may be a mother to one kid and an aunt to a sibling), not on the guardian. `brother_sister` is real in this context: in Indonesia an adult sibling sometimes enrolls an orphaned younger sibling. `other` (the generic "wali") is the catch-all.
+_Avoid_: A second fallback enum value — `other` alone covers it.
 
 **Teacher**:
 A staff member who leads a class session and captures observations during it.

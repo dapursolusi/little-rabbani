@@ -21,7 +21,6 @@ import {
   NoteIcon,
   Settings01Icon,
   Settings04Icon,
-  UserGroup02Icon,
   UserMultipleIcon,
   WorkIcon,
 } from '@hugeicons/core-free-icons';
@@ -101,12 +100,6 @@ const navGroups: SidebarNavItem[] = [
     icon: DatabaseSettingIcon,
     roles: ['owner'],
     subItems: [
-      {
-        title: 'Wali Murid',
-        href: '/dashboard/guardian',
-        icon: UserGroup02Icon,
-        roles: ['owner'],
-      },
       {
         title: 'Murid',
         href: '/dashboard/kid',
