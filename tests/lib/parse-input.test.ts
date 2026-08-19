@@ -32,5 +32,4 @@ describe('parseInput', () => {
       error: 'name: Invalid input: expected string, received undefined',
     });
   });
-
 });

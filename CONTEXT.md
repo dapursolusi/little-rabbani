@@ -13,7 +13,7 @@ target glossary for the planned rebuild, not live vocabulary.
 
 **Kid**:
 A child at the preschool. In V2 the kid row is **identity-only** (name,
-nickname, gender, dob, guardian, relationship) — enrollment status is *not* on
+nickname, gender, dob, guardian, relationship) — enrollment status is _not_ on
 the kid (ADR-0002). `_Avoid_`: Student, student (use "Kid" everywhere —
 matches the preschool's own vocabulary).
 
@@ -21,8 +21,8 @@ matches the preschool's own vocabulary).
 The parent or caretaker of a kid. **Phone is the guardian's identity.** `phone`
 is unique and its format is enforced (local Indonesian `08...`, no country
 code) at the input boundary, so the phone alone reliably matches a returning
-guardian when registering a sibling. A guardian is created and edited *through
-the kid form* — the record is shared, so editing it on one kid propagates to
+guardian when registering a sibling. A guardian is created and edited _through
+the kid form_ — the record is shared, so editing it on one kid propagates to
 every kid linked by the same `guardianId`. There is no dedicated guardian
 module. A second contact (e.g. the other parent) is an optional
 `secondContactName`/`secondContactPhone` field on the guardian record, not a

@@ -10,7 +10,7 @@ Only the **kid** vertical is implemented; these patterns come from it.
 ## Server Actions
 
 - **Discriminated-union result** — every action returns `{ success: true,
-  data } | { success: false, error }` (`as const`). Clients narrow with
+data } | { success: false, error }` (`as const`). Clients narrow with
   `if (!result.success)`. Type alias `ActionResult<T>` lives in
   `src/lib/actions/require-owner.ts`.
 - **`requireOwner()`** — the single auth gate. Wrap the action body:
