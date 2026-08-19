@@ -32,7 +32,7 @@ export default async function DashboardLayout({
           </div>
         </header>
         {/* Page content */}
-        <main className="flex-1 bg-brand-canvas">{children}</main>
+        <main className="flex-1 bg-brand-canvas sm:p-6 p-2">{children}</main>
       </SidebarInset>
     </SidebarProvider>
   );

@@ -8,14 +8,16 @@ import FormFieldGenerator from '@/components/shared/form/form-field-generator';
 
 type KidFormFieldsProps = {
   mode: 'create' | 'edit';
-  initialData: { id?: string; kid?: object; guardian?: object };
+  initialData?: { id?: string; kid?: object; guardian?: object };
   formFields?: FormField[];
+  onSuccess?: () => void;
 };
 
 export default function KidForm({
   mode,
-  initialData,
+  initialData = {},
   formFields,
+  onSuccess,
 }: KidFormFieldsProps) {
   const isEdit = mode === 'edit';
 
@@ -26,6 +28,7 @@ export default function KidForm({
       formFields={formFields ?? []}
       meta={{ label: 'Data murid' }}
       isEditing={isEdit}
+      onSuccess={onSuccess}
       onSubmit={async (data) => {
         const result = isEdit
           ? await updateKid(initialData.id!, {
