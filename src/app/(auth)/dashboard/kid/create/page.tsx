@@ -1,5 +1,4 @@
 import KidForm from '@/features/kids/components/kid-form';
-import { kidFormFields } from '@/features/kids/form-fields';
 
 import { baseMetadata } from '@/lib/metadata';
 
@@ -34,7 +33,6 @@ export default function CreateKidPage() {
               secondContactPhone: '',
             },
           }}
-          formFields={kidFormFields()}
         />
       </div>
     </div>

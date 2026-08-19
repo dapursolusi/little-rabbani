@@ -15,7 +15,7 @@ export const kidFormFields = (): FormField[] => {
     },
     {
       name: 'guardian.phone',
-      label: 'Nomor Telepon Wali/Orang Tua',
+      label: 'No. Telepon Wali/Orang Tua',
       type: 'text',
       required: true,
     },
@@ -33,7 +33,7 @@ export const kidFormFields = (): FormField[] => {
     },
     {
       name: 'guardian.secondContactPhone',
-      label: 'Nomor Telepon Kontak Kedua Wali/Orang Tua',
+      label: 'No. Telepon Kontak Kedua Wali/Orang Tua',
       type: 'text',
       required: false,
     },

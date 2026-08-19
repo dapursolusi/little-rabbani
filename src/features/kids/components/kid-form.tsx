@@ -1,34 +1,35 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 import { createKid, updateKid } from '@/features/kids/actions';
+import { kidFormFields } from '@/features/kids/form-fields';
 import { KidGuardianFormSchema } from '@/features/kids/schemas';
-import type { FormField } from '@/types/field';
 
 import FormFieldGenerator from '@/components/shared/form/form-field-generator';
 
 type KidFormFieldsProps = {
   mode: 'create' | 'edit';
   initialData?: { id?: string; kid?: object; guardian?: object };
-  formFields?: FormField[];
   onSuccess?: () => void;
 };
 
 export default function KidForm({
   mode,
   initialData = {},
-  formFields,
   onSuccess,
 }: KidFormFieldsProps) {
   const isEdit = mode === 'edit';
+  const route = useRouter();
 
   return (
     <FormFieldGenerator
       schema={KidGuardianFormSchema}
       initialData={initialData}
-      formFields={formFields ?? []}
+      formFields={kidFormFields()}
       meta={{ label: 'Data murid' }}
       isEditing={isEdit}
-      onSuccess={onSuccess}
+      onSuccess={() => route.push('/dashboard/kid')}
       onSubmit={async (data) => {
         const result = isEdit
           ? await updateKid(initialData.id!, {

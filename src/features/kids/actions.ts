@@ -10,8 +10,7 @@ import { requireOwner } from '@/lib/actions/require-owner';
 import {
   CreateGuardianSchema,
   CreateKidSchema,
-  UpdateGuardianSchema,
-  UpdateKidSchema,
+  KidGuardianFormSchema,
 } from './schemas';
 import { LeanKid } from './types';
 
@@ -162,15 +161,15 @@ export async function updateKid(
 ) {
   return requireOwner(async () => {
     const parsedKid = parseInput(
-      UpdateKidSchema,
-      input,
+      KidGuardianFormSchema.shape.kid,
+      input.kid,
       'Data anak tidak valid'
     );
     if (!parsedKid.success) return parsedKid;
     const kidData = parsedKid.data;
 
     const parsedGuardian = parseInput(
-      UpdateGuardianSchema,
+      KidGuardianFormSchema.shape.guardian,
       input.guardian,
       'Data wali tidak valid'
     );
