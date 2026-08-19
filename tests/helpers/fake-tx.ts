@@ -1,12 +1,12 @@
+import { guardian } from '@/db/schema';
+import type { GuardianTx } from '@/features/kids/guardian';
 import {
   Column,
   Param,
   SQL,
-  StringChunk,
   type SQL as SQLType,
+  StringChunk,
 } from 'drizzle-orm';
-import { guardian } from '@/db/schema';
-import type { GuardianTx } from '@/features/kids/guardian';
 
 export type GuardianRow = {
   id: string;

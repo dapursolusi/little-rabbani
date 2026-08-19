@@ -1,8 +1,6 @@
+import { type GuardianTx, upsertGuardianTx } from '@/features/kids/guardian';
 import { describe, expect, it } from 'vitest';
-import {
-  upsertGuardianTx,
-  type GuardianTx,
-} from '@/features/kids/guardian';
+
 import { createFakeTx } from '../../helpers/fake-tx';
 
 // Compile-time guard: if `createFakeTx().tx` fails the GuardianTx interface
@@ -126,7 +124,9 @@ describe('upsertGuardianTx — update', () => {
 
   it('update id tidak ada → not-found', async () => {
     const { tx } = createFakeTx();
-    const r = await upsertGuardianTx(tx, base, { existingGuardianId: 'HILANG' });
+    const r = await upsertGuardianTx(tx, base, {
+      existingGuardianId: 'HILANG',
+    });
     expect(r).toEqual({ ok: false, reason: 'not-found' });
   });
 
