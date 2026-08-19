@@ -2,11 +2,12 @@
 
 import { db } from '@/db';
 import { guardian, kid } from '@/db/schema';
-import { and, eq, ilike, isNotNull, isNull, or, sql } from 'drizzle-orm';
+import { and, eq, ilike, isNull, or, sql } from 'drizzle-orm';
 
 import { parseInput } from '@/lib/actions/parse-input';
 import { requireOwner } from '@/lib/actions/require-owner';
 
+import { type GuardianTx, upsertGuardianTx } from './guardian';
 import { CreateGuardianSchema, CreateKidSchema } from './schemas';
 import { LeanKid } from './types';
 
@@ -122,43 +123,14 @@ export async function createKid(input: {
     const guardianData = parsedGuardian.data;
 
     try {
-      const existingGuardian = await db.query.guardian.findFirst({
-        where: eq(guardian.phone, guardianData.phone),
-      });
-      if (existingGuardian) {
-        return {
-          success: false as const,
-          error:
-            'Nomor telepon wali sudah pernah terdaftar, gunakan data wali sebelumnya atau daftar wali yang baru',
-        };
-      }
-
-      const existingGuardianByEmail = await db.query.guardian.findFirst({
-        where: and(
-          isNotNull(guardian.email),
-          eq(guardian?.email, guardianData?.email || '')
-        ),
-      });
-
-      if (existingGuardianByEmail) {
-        return {
-          success: false as const,
-          error:
-            'Email wali sudah pernah terdaftar, gunakan data wali sebelumnya atau daftar wali yang baru',
-        };
-      }
-
       const transactionResult = await db.transaction(async (tx) => {
-        const [insertedGuardian] = await tx
-          .insert(guardian)
-          .values({
-            name: guardianData.name,
-            phone: guardianData.phone,
-            email: guardianData.email || null,
-            secondContactName: guardianData.secondContactName || null,
-            secondContactPhone: guardianData.secondContactPhone || null,
-          })
-          .returning();
+        // cast: NeonTransaction is structurally huge; the seam takes a narrow
+        // GuardianTx (the test surface). Matches the zodResolver-as-never idiom.
+        const guardianResult = await upsertGuardianTx(
+          tx as unknown as GuardianTx,
+          guardianData
+        );
+        if (!guardianResult.ok) return guardianResult;
 
         const [insertedKid] = await tx
           .insert(kid)
@@ -168,16 +140,24 @@ export async function createKid(input: {
             gender: kidData.gender,
             dob: kidData.dob,
             relationship: kidData.relationship,
-            guardianId: insertedGuardian.id,
+            guardianId: guardianResult.id,
           })
           .returning();
 
-        return { insertedKid };
+        return { ok: true as const, insertedKid };
       });
+
+      if (!transactionResult.ok) {
+        const error =
+          transactionResult.reason === 'email-conflict'
+            ? 'Email wali sudah pernah terdaftar, gunakan data wali sebelumnya atau daftar wali yang baru'
+            : 'Nomor telepon wali sudah pernah terdaftar, gunakan data wali sebelumnya atau daftar wali yang baru';
+        return { success: false as const, error };
+      }
 
       return {
         success: true as const,
-        data: { name: transactionResult?.insertedKid.name },
+        data: { name: transactionResult.insertedKid.name },
       };
     } catch (error) {
       console.error('createKid', error);
@@ -252,8 +232,6 @@ export async function updateKid(
     const guardianData = parsedGuardian.data;
 
     try {
-      // update the guardian record (shared — propagates to siblings, ADR-0001)
-
       const existingKid = await db.query.kid.findFirst({
         where: eq(kid.id, kidId),
         with: { guardian: true },
@@ -266,17 +244,14 @@ export async function updateKid(
       }
 
       const transactionResult = await db.transaction(async (tx) => {
-        const [updatedGuardian] = await tx
-          .update(guardian)
-          .set({
-            name: guardianData.name,
-            phone: guardianData.phone,
-            email: guardianData.email || null,
-            secondContactName: guardianData.secondContactName || null,
-            secondContactPhone: guardianData.secondContactPhone || null,
-          })
-          .where(eq(guardian.id, existingKid.guardianId))
-          .returning();
+        // cast: NeonTransaction is structurally huge; the seam takes a narrow
+        // GuardianTx (the test surface). Matches the zodResolver-as-never idiom.
+        const guardianResult = await upsertGuardianTx(
+          tx as unknown as GuardianTx,
+          guardianData,
+          { existingGuardianId: existingKid.guardianId }
+        );
+        if (!guardianResult.ok) return guardianResult;
 
         const [updatedKid] = await tx
           .update(kid)
@@ -286,17 +261,25 @@ export async function updateKid(
             gender: kidData.gender,
             dob: kidData.dob,
             relationship: kidData.relationship,
+            guardianId: guardianResult.id,
           })
           .where(eq(kid.id, kidId))
           .returning();
 
-        return { updatedKid, updatedGuardian };
+        return { ok: true as const, updatedKid };
       });
 
-      if (
-        !transactionResult?.updatedKid ||
-        !transactionResult?.updatedGuardian
-      ) {
+      if (!transactionResult.ok) {
+        const error =
+          transactionResult.reason === 'email-conflict'
+            ? 'Email wali sudah pernah terdaftar, gunakan data wali sebelumnya atau daftar wali yang baru'
+            : transactionResult.reason === 'not-found'
+              ? 'Wali yang dipilih tidak ditemukan'
+              : 'Nomor telepon wali sudah pernah terdaftar, gunakan data wali sebelumnya atau daftar wali yang baru';
+        return { success: false as const, error };
+      }
+
+      if (!transactionResult.updatedKid) {
         return { success: false as const, error: 'Murid tidak ditemukan' };
       }
 
