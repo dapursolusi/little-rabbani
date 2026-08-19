@@ -18,6 +18,7 @@ export default function CreateKidPage() {
         <KidForm
           mode="create"
           initialData={{
+            guardianMode: 'new',
             kid: {
               name: '',
               nickName: '',

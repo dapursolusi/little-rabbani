@@ -132,7 +132,7 @@ export default function FormFieldGenerator<
             data-invalid={fieldState.invalid}
             className={formField.fullWidth ? 'col-span-2' : ''}
           >
-            {formField.type !== 'switch' && (
+            {formField.type !== 'switch' && formField.label && (
               <FieldLabel htmlFor={formField.name}>
                 {formField.label ?? 'Default Label'}
               </FieldLabel>
@@ -175,7 +175,7 @@ export default function FormFieldGenerator<
             className={`sm:grid sm:grid-cols-2 ${groupSpacing}`}
           >
             <div className="sm:col-span-2! ">
-              <FieldLegend className="text-xs! font-light text-foreground/70">
+              <FieldLegend className="text-xs! font-medium text-primary/80">
                 {groupLabel}
               </FieldLegend>
               <FieldSeparator />

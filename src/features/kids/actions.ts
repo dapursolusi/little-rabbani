@@ -7,11 +7,7 @@ import { and, eq, ilike, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import { parseInput } from '@/lib/actions/parse-input';
 import { requireOwner } from '@/lib/actions/require-owner';
 
-import {
-  CreateGuardianSchema,
-  CreateKidSchema,
-  KidGuardianFormSchema,
-} from './schemas';
+import { CreateGuardianSchema, CreateKidSchema } from './schemas';
 import { LeanKid } from './types';
 
 // ── Reads ─────────────────────────────────────────────
@@ -68,7 +64,8 @@ export async function getKid(id: string) {
 
 export async function createKid(input: {
   kid: Record<string, unknown>;
-  guardian: Record<string, unknown>;
+  guardian?: Record<string, unknown>;
+  guardianId?: string;
 }) {
   return requireOwner(async () => {
     const parsedKid = parseInput(
@@ -78,6 +75,43 @@ export async function createKid(input: {
     );
     if (!parsedKid.success) return parsedKid;
     const kidData = parsedKid.data;
+
+    // Pick-existing path: skip guardian parse + collision checks + insert.
+    if (input.guardianId) {
+      try {
+        const target = await db.query.guardian.findFirst({
+          where: and(
+            eq(guardian.id, input.guardianId),
+            isNull(guardian.deletedAt)
+          ),
+        });
+        if (!target) {
+          return {
+            success: false as const,
+            error: 'Wali yang dipilih tidak ditemukan',
+          };
+        }
+        const [insertedKid] = await db
+          .insert(kid)
+          .values({
+            name: kidData.name,
+            nickName: kidData.nickName || null,
+            gender: kidData.gender,
+            dob: kidData.dob,
+            relationship: kidData.relationship,
+            guardianId: input.guardianId,
+          })
+          .returning();
+
+        return {
+          success: true as const,
+          data: { name: insertedKid?.name },
+        };
+      } catch (error) {
+        console.error('createKid', error);
+        return { success: false as const, error: 'Gagal menambah murid baru' };
+      }
+    }
 
     const parsedGuardian = parseInput(
       CreateGuardianSchema,
@@ -156,20 +190,61 @@ export async function updateKid(
   kidId: string,
   input: {
     kid: Record<string, unknown>;
-    guardian: Record<string, unknown>;
+    guardian?: Record<string, unknown>;
+    guardianId?: string;
   }
 ) {
   return requireOwner(async () => {
     const parsedKid = parseInput(
-      KidGuardianFormSchema.shape.kid,
+      CreateKidSchema,
       input.kid,
       'Data anak tidak valid'
     );
     if (!parsedKid.success) return parsedKid;
     const kidData = parsedKid.data;
 
+    // Pick-existing path: re-point the kid's guardian only, don't touch the
+    // guardian row.
+    if (input.guardianId) {
+      try {
+        const target = await db.query.guardian.findFirst({
+          where: and(
+            eq(guardian.id, input.guardianId),
+            isNull(guardian.deletedAt)
+          ),
+        });
+        if (!target) {
+          return {
+            success: false as const,
+            error: 'Wali yang dipilih tidak ditemukan',
+          };
+        }
+        const [updatedKid] = await db
+          .update(kid)
+          .set({
+            name: kidData.name,
+            nickName: kidData.nickName || null,
+            gender: kidData.gender,
+            dob: kidData.dob,
+            relationship: kidData.relationship,
+            guardianId: input.guardianId,
+          })
+          .where(eq(kid.id, kidId))
+          .returning();
+
+        if (!updatedKid) {
+          return { success: false as const, error: 'Murid tidak ditemukan' };
+        }
+
+        return { success: true as const, data: updatedKid.name };
+      } catch (error) {
+        console.error('updateKid', error);
+        return { success: false as const, error: 'Gagal memperbarui murid' };
+      }
+    }
+
     const parsedGuardian = parseInput(
-      KidGuardianFormSchema.shape.guardian,
+      CreateGuardianSchema,
       input.guardian,
       'Data wali tidak valid'
     );
@@ -277,7 +352,7 @@ export async function searchGuardians(
         secondContactPhone: guardian.secondContactPhone,
         kidNames: sql<
           string[]
-        >`coalesce(array_agg(k.name) filter (where k.deleted_at is null), '{}')`,
+        >`coalesce(array_agg(kid.name) filter (where kid.deleted_at is null), '{}')`,
       })
       .from(guardian)
       .leftJoin(kid, eq(kid.guardianId, guardian.id))

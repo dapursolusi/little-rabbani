@@ -35,6 +35,8 @@ export default async function EditKidPage({ params }: EditKidPageProps) {
           mode="edit"
           initialData={{
             id,
+            guardianMode: 'existing',
+            guardianId: kid.guardianId,
             kid: {
               name: kid.name,
               nickName: kid.nickName || '',

@@ -55,10 +55,18 @@ const UpdateKidSchema = BaseKidSchema.extend({
 });
 
 /** Combined kid + guardian form (ADR-0001: phone = guardian identity). */
-const KidGuardianFormSchema = z.object({
-  kid: BaseKidSchema,
-  guardian: GuardianBaseSchema,
-});
+const KidGuardianFormSchema = z.discriminatedUnion('guardianMode', [
+  z.object({
+    guardianMode: z.literal('new'),
+    kid: BaseKidSchema,
+    guardian: GuardianBaseSchema,
+  }),
+  z.object({
+    guardianMode: z.literal('existing'),
+    kid: BaseKidSchema,
+    guardianId: z.string().min(1, 'Pilih wali yang sudah ada'),
+  }),
+]);
 
 export {
   CreateGuardianSchema,

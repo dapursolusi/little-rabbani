@@ -1,8 +1,11 @@
+import type * as React from 'react';
+import type { ReactNode } from 'react';
+
 // import { HTMLInputTypeAttribute } from 'react'; -- kept for reference: if React adds new input types, mirror them here
 
 type FormFieldBase = {
   name: string;
-  label: string;
+  label?: string;
   className?: string;
   fullWidth?: boolean;
   placeholder?: string;
@@ -32,7 +35,23 @@ export type FormField = FormFieldInput | FormFieldGroupHeader;
 export type CustomHTMLInputType =
   | CustomHTMLInputTypeBasic
   | CustomHTMLInputTypeSelect
-  | CustomHTMLInputTypeSwitch;
+  | CustomHTMLInputTypeSwitch
+  | CustomHTMLInputTypeCustom;
+
+export type CustomHTMLInputTypeCustom = {
+  type: 'custom';
+  selectOptions?: never;
+  render: (ctx: {
+    field: {
+      value: unknown;
+      onChange: (value: unknown) => void;
+      onBlur: () => void;
+      name: string;
+      ref: React.Ref<unknown>;
+    };
+    fieldState: { invalid: boolean };
+  }) => ReactNode;
+};
 
 export type CustomHTMLInputTypeSelect = {
   type: 'select';

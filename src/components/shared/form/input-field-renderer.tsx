@@ -83,6 +83,19 @@ export default function InputFieldRenderer<
       );
     }
 
+    case 'custom': {
+      return fieldConfig.render({
+        field: {
+          value: field.value,
+          onChange: field.onChange,
+          onBlur: field.onBlur,
+          name: field.name,
+          ref: field.ref,
+        },
+        fieldState: { invalid: fieldState.invalid },
+      });
+    }
+
     case 'switch':
       return (
         <div className="flex gap-2 items-center">

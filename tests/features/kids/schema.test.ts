@@ -73,20 +73,40 @@ describe('kid form', () => {
 });
 
 describe('combined kid + guardian form', () => {
-  it('validates nested kid and guardian', () => {
+  const validKid = {
+    name: 'Budi',
+    nickName: 'Budi',
+    gender: 'male',
+    dob: '2021-05-10',
+    relationship: 'mother',
+  };
+
+  it('validates nested kid and guardian (new mode)', () => {
     const r = KidGuardianFormSchema.safeParse({
-      kid: {
-        name: 'Budi',
-        nickName: 'Budi',
-        gender: 'male',
-        dob: '2021-05-10',
-        relationship: 'mother',
-      },
+      guardianMode: 'new',
+      kid: validKid,
       guardian: {
         name: 'Ibu Rina',
         phone: '081234567890',
       },
     });
     expect(r.success).toBe(true);
+  });
+
+  it('validates kid + guardianId (existing mode)', () => {
+    const r = KidGuardianFormSchema.safeParse({
+      guardianMode: 'existing',
+      kid: validKid,
+      guardianId: 'some-guardian-id',
+    });
+    expect(r.success).toBe(true);
+  });
+
+  it('rejects missing guardianId in existing mode', () => {
+    const r = KidGuardianFormSchema.safeParse({
+      guardianMode: 'existing',
+      kid: validKid,
+    });
+    expect(r.success).toBe(false);
   });
 });
