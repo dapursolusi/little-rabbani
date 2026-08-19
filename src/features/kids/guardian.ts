@@ -8,9 +8,7 @@ import type { CreateGuardianInput } from './schemas';
 export interface GuardianTx {
   query: {
     guardian: {
-      findFirst: (opts: {
-        where?: SQL<unknown>;
-      }) => Promise<
+      findFirst: (opts: { where?: SQL<unknown> }) => Promise<
         | {
             id: string;
             phone: string;
