@@ -2,16 +2,24 @@
 
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
 <!-- END:nextjs-agent-rules -->
 
 ## Project Context
 
-> **Phase:** Template / Starter
+> **Phase:** Active dev — V2 rebuild (kid module shipped)
 > **Team size:** Solo
-> **Primary users:** Developers bootstrapping new Next.js projects
+> **Primary users:** Preschool owner-operator (Hanifah)
 
-This is a full-stack Next.js template with opinionated tooling baked in. Use it as a starting point for new projects — clone, rename, build.
+Little Rabbani Preschool LMS — a back-office tool for a small Indonesian
+preschool. The v1 app (observation/report domain) was archived to `_archives/`
+and the app rebuilt from the auth shell; only the kid/guardian module is
+implemented so far. Domain vocabulary lives in `CONTEXT.md`, the V2 plan in
+`docs/superpowers/plans/kid-module-v2.md`. Treat `_archives/` as read-only
+reference — it is the old v1, not live code.
 
 ## Stack
 
@@ -19,20 +27,27 @@ This is a full-stack Next.js template with opinionated tooling baked in. Use it 
 - **Package manager:** bun (never npm/pnpm/yarn — `bun run`, `bunx`, `bun add`)
 - **Styling:** Tailwind CSS 4 (CSS-first — no `tailwind.config.ts`) + shadcn/ui (style: base-nova, primitives: `@base-ui/react`, icons: `hugeicons`)
 - **Architecture:** Next.js App Router. Server Components by default. `"use client"` only when hooks/event handlers are needed.
-- **Key libs:** zod for all I/O boundaries (`env.mjs`). sonner for toasts. CVA + clsx for component variants.
+- **Key libs:** zod for all I/O boundaries (`env.mjs`). sonner for toasts. CVA + clsx for component variants. `@tanstack/react-table` v9 for DataTable.
 - **Testing:** Vitest (unit, native `tsconfigPaths` resolution). Playwright for E2E.
-- **Data layer:** Not baked in — add Drizzle + Postgres per-project when needed. `env.mjs` ships a `DATABASE_URL` placeholder.
-- **Auth:** Not baked in — add Auth.js per-project when needed.
+- **Data layer:** Drizzle ORM + Neon Postgres (`@neondatabase/serverless`, WS `Pool` driver — required for transactions). Schema in `src/db/schema/`, one file per entity, exported from `src/db/schema/index.ts`. `db` singleton at `src/db/index.ts`. DB scripts (`db:generate`/`db:push`/`db:migrate`) use `--env-file=.env.local`.
+- **Auth:** Better Auth (better-auth + `@better-auth/drizzle-adapter`), Google OAuth + dev-session bypass. Session gate via `requireOwner()` in `src/lib/actions/require-owner.ts`. Roles: `owner` | `teacher`.
 
 ## Architecture
 
 ```
-UI Component (Server Component) → Server Action → Service → ORM → DB
+UI Component (Server Component / Client form) → Server Action → Drizzle → Neon
 ```
 
-- **API:** Server Actions only. No `api/` routes (except Stripe/cron/webhooks per-project — not in template).
-- **Data flow:** Server Components fetch data directly. Server Actions for mutations. React Query only if per-project needs client-side caching.
+- **API:** Server Actions only. No `api/` routes except Better Auth's `api/auth/[...all]` and the dev-session helper. Auth traffic routes via `src/proxy.ts` (session + role-based route guard).
+- **Data flow:** Server Components fetch directly via `db.query.*`. Mutations are Server Actions returning a **discriminated-union result** (`{ success: true, data } | { success: false, error }`, `as const`) so client forms narrow with `if (!result.success)`.
+- **Action I/O:** every Server Action parses `unknown` input with `parseInput()` (zod) and wraps itself in `requireOwner()` (the single auth gate). Both live in `src/lib/actions/`.
+- **Feature verticals:** entity code under `src/features/<entity>/` (`actions.ts`, `schemas.ts`, `form-fields.ts`, `components/`, `types.ts`). Shared UI under `src/components/shared/`.
 - **File placement:** All source code under `src/`. `@/*` maps to `./src/*`.
+
+## Modules
+
+- **kid** (`src/features/kids/`) — the only implemented domain vertical. Combined kid+guardian form (ADR-0001), identity-only kid (ADR-0002), real Drizzle CRUD with transactional inserts in `createKid`/`updateKid` (see ADR-0003). Routes: `/dashboard/kid`, `/dashboard/kid/create`, `/dashboard/kid/[id]/edit`.
+- **auth** (`src/db/schema/auth.ts`, `src/lib/auth.ts`) — Better Auth tables (user, session, account, verification). `role` on user: `owner` gates all mutations via `requireOwner`.
 
 ## Rules
 
@@ -142,30 +157,33 @@ This is a one-time setup per clone. Skip if already indexed.
   2. `bun run db:migrate` — applies it to the DB
   3. Verify with `drizzle-kit push --force` (non-interactive) or run the schema audit script
   4. A 500 error on a relation query (`with: { ... }`) often means a column referenced in the schema doesn't exist in the DB
+- ⚠️ **CodeGraph / graphify indexes go stale after refactors** — both are snapshot indexes. After a big restructure (like the v1→V2 teardown) they can answer with paths that no longer exist (e.g. `_archives/...`). Reindex explicitly:
+  - `codegraph index` (full rebuild) or `codegraph sync` (incremental)
+  - `graphify update . --force` (the `--force` is required when a refactor deleted code — the graph has fewer nodes and refuses to overwrite otherwise)
+  - When an answer cites a path that doesn't exist, treat the index as stale before trusting the answer.
 
 ## When to Ask
 
 - If stuck after **2 attempts** → log blockers and ask.
 - Any decision that adds a new npm package or changes the data layer.
 - Any decision that changes how env vars are managed or validated.
-- When choosing deployment hosting — not pre-decided in this template.
+- Anything irreversible against the live Neon DB (migrations, drops) or a production deploy.
 
 ## References
 
-- Backlog: GitHub Issues per-project
-- Agent protocols: `CLAUDE.md`, UI: `DESIGN.md`, Preflight: `/webapp-preflight`, Known issues: `docs/known-issues.md`
+- Backlog: GitHub Issues in `narasena/little-rabbani`
+- Agent protocols: `CLAUDE.md`, UI: `DESIGN.md`, Domain vocab: `CONTEXT.md`, Patterns: `docs/patterns.md`, Known issues: `docs/known-issues.md`
 - Runbooks: `docs/runbooks/incident-response.md`, Deploy: [Vercel dashboard](https://vercel.com/narasena/little-rabbani)
-- Feature flags: `src/lib/feature-flags.ts` (toggleable via `FF_*` env vars)
+- ADRs: `docs/adr/` (0001 kid+guardian form, 0002 identity-only kid, 0003 form engine)
 - PII handling: `src/lib/pii.ts` (`detectPiiField`/`maskPiiFields`/`maskPiiValue`)
-- PR review: `.factory/review.yml`
+- Env: `env.mjs` (all vars registered here)
 
 ## Code Patterns
 
-The codebase is mid-refactor (`src/lib/actions/` → `src/features/<entity>/`).
 `docs/patterns.md` is the **living extraction** of the patterns actually
 implemented so far — follow it for new and refactored code.
 
-**Why living doc, not locked rules:** form engine covers 2/~8 entities, backend vertical not refactored — locking freezes half-built shape. Premature hardening is the failure mode.
+**Why living doc, not locked rules:** only the kid vertical is implemented — locking freezes half-built shape. Premature hardening is the failure mode.
 
 **Follow:** `docs/patterns.md`. Code wins if doc disagrees — update doc in same change.
 
@@ -177,39 +195,37 @@ implemented so far — follow it for new and refactored code.
 
 These are decisions, not in-flux patterns — they live in AGENTS.md:
 
-- **Schema-registry form engine:** each entity's Zod schema is registered
-  in `src/components/shared/form/schema-registry.ts` keyed by name;
-  `DefaultFormFields` looks it up via the `schemaKey` prop. One `as never` cast
-  at the `zodResolver` ↔ `react-hook-form` seam is accepted — zod v4's `$ZodType`
-  variance makes generic passthrough unworkable across 3 library seams. Tradeoff:
-  ~1 cast in a shared component vs. per-entity form components. Upgrade to
-  per-entity components when `onSubmit` needs compile-time verification against
-  a server-action param schema.
+- **Generic form engine:** the shared renderer is `FormFieldGenerator`
+  (`src/components/shared/form/form-field-generator.tsx`) + `InputFieldRenderer`.
+  It takes a Zod schema, `initialData`, and a `FormField[]` from the entity's
+  `form-fields.ts` (`src/types/field.ts`). Grouping is done by `{ groupLabel }`
+  headers in the field list → `<FieldSet>` sections. Zod resolver is
+  `zodResolver(schema) as never` — one cast at the `zodResolver` ↔
+  react-hook-form seam, accepted because zod v4's `$ZodType` variance makes
+  generic passthrough unworkable across 3 library seams. Tradeoff: ~1 cast in a
+  shared component vs. per-entity form components. Upgrade to per-entity
+  components when `onSubmit` needs compile-time verification against a
+  server-action param schema. See ADR-0003.
 - **`src/components/ui/` is auto-generated** (shadcn base-nova) — never edited
   by hand. Brand customization happens via tokens in `globals.css` or
   per-call classNames.
 - **Discriminated-union action results** (`{ success: true, data } | { success:
 false, error }` with `as const`) — clients narrow with `if (!result.success)`.
+  `parseInput()` produces one directly from a failed zod parse.
 - **Index every FK column by default** in Drizzle. Postgres does not
   auto-index FK columns, so any WHERE/JOIN on an unindexed FK is a full
-  `Seq Scan` that grows linearly as append-only history tables (observation,
-  dcr_activity, reminder_log, report snapshots) grow forever. Rule:
+  `Seq Scan`. Current example: `kid.guardianId` → `kid_guardian_idx`. Rule:
   - Single-column `index()` per FK as the baseline.
-  - Merge into a composite only when columns are _always_ filtered together
-    (e.g. `reminder_log(type, date)` for the 30-day cleanup).
+  - Merge into a composite only when columns are _always_ filtered together.
   - Drop an index only when `EXPLAIN ANALYZE` shows it never used — never
     pre-optimize; index by default, profile later.
   - Indexes live in the `pgTable` third-arg config callback, e.g.
-    `(table) => ({ kidIdIdx: index('kse_kid_id_idx').on(table.kidId) })`.
+    `(table) => ({ guardianIdx: index('kid_guardian_idx').on(table.guardianId) })`.
 
-Adding a new form: write `schema.ts`, register in `schema-registry.ts`:
-
-```ts
-const schemas = {
-  kid: KidFormSchema,
-  guardian: GuardianFormSchema,
-} as const satisfies Record<string, z.ZodObject<z.ZodRawShape>>;
-```
+Adding a new form: write `schemas.ts` (+ `form-fields.ts` + `types.ts`) under
+`src/features/<entity>/`, then pass `schema`, `initialData`, `formFields` to
+`FormFieldGenerator` in the entity's `*-form.tsx` (see
+`src/features/kids/components/kid-form.tsx`).
 
 Upgrade to per-entity components when `onSubmit` needs compile-time verification against a server-action param schema.
 

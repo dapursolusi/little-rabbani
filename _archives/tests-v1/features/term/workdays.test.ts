@@ -3,6 +3,7 @@ import {
   findEarliestTermCoveringDate,
   listTermWorkdays,
 } from '@/features/term/workdays';
+
 import { describe, expect, it } from 'vitest';
 
 describe('listTermWorkdays', () => {
