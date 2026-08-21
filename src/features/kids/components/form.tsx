@@ -3,7 +3,7 @@
 import { useRouter } from 'next/navigation';
 
 import { createKid, updateKid } from '@/features/kids/actions';
-import { kidFormFields } from '@/features/kids/form-fields';
+import { kidFormFields } from '@/features/kids/components/fields';
 import {
   type KidGuardianFormInput,
   KidGuardianFormSchema,

@@ -1,7 +1,10 @@
 import { headers } from 'next/headers';
 
+import { checkCurrentTerm, checkNextTerm } from '@/features/term/actions';
+
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { SidebarBreadcrumb } from '@/components/layout/sidebar/breadcrumb';
+import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   SidebarInset,
@@ -19,6 +22,10 @@ export default async function DashboardLayout({
   const session = await auth.api.getSession({
     headers: await headers(),
   });
+
+  const currentTerm = await checkCurrentTerm();
+  await checkNextTerm();
+  const termLabel = currentTerm.success ? currentTerm.data.name : null;
   return (
     <SidebarProvider defaultOpen={true}>
       <AppSidebar user={session?.user} />
@@ -30,6 +37,11 @@ export default async function DashboardLayout({
             <Separator orientation="vertical" />
             <SidebarBreadcrumb />
           </div>
+          {termLabel && (
+            <Badge variant="default" className="ml-auto bg-primary font-light">
+              {termLabel}
+            </Badge>
+          )}
         </header>
         {/* Page content */}
         <main className="flex-1 bg-brand-canvas sm:p-6 p-2">{children}</main>

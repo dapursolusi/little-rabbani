@@ -15,6 +15,13 @@
       "when": 1787209407487,
       "tag": "0001_daffy_la_nuit",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1787300054822,
+      "tag": "0002_gorgeous_toxin",
+      "breakpoints": true
     }
   ]
 }

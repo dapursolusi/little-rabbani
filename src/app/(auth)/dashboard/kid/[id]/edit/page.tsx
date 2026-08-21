@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 
 import { getKid } from '@/features/kids/actions';
-import KidForm from '@/features/kids/components/kid-form';
+import KidForm from '@/features/kids/components/form';
 
 import { baseMetadata } from '@/lib/metadata';
 

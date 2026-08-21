@@ -30,10 +30,6 @@ const GuardianBaseSchema = z.object({
 
 const CreateGuardianSchema = GuardianBaseSchema;
 
-const UpdateGuardianSchema = GuardianBaseSchema.extend({
-  id: z.string().min(1, 'ID wali wajib diisi'),
-});
-
 const BaseKidSchema = z.object({
   name: z.string().min(2, 'Nama lengkap murid wajib diisi'),
   nickName: z.string().nullable().optional(),
@@ -49,8 +45,9 @@ const BaseKidSchema = z.object({
 
 const CreateKidSchema = BaseKidSchema;
 
+// Only split because update re-points guardianId — id is a BaseDTOResponse
+// field passed via the route param (updateKid's kidId), not form data.
 const UpdateKidSchema = BaseKidSchema.extend({
-  id: z.string().min(1, 'ID murid wajib diisi'),
   guardianId: z.string().min(1, 'ID Wali murid wajib diisi'),
 });
 
@@ -72,12 +69,10 @@ export {
   CreateGuardianSchema,
   CreateKidSchema,
   KidGuardianFormSchema,
-  UpdateGuardianSchema,
   UpdateKidSchema,
 };
 
 export type CreateGuardianInput = z.infer<typeof CreateGuardianSchema>;
-export type UpdateGuardianInput = z.infer<typeof UpdateGuardianSchema>;
 
 export type CreateKidInput = z.infer<typeof CreateKidSchema>;
 export type UpdateKidInput = z.infer<typeof UpdateKidSchema>;
