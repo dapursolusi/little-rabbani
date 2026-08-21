@@ -183,7 +183,7 @@ export default function FormFieldGenerator<
             {groupFields.map(renderField)}
           </FieldSet>
         ) : (
-          <div key="root" className={groupSpacing}>
+          <div key="root" className={`${groupSpacing} flex flex-col gap-3`}>
             {groupFields.map(renderField)}
           </div>
         );
