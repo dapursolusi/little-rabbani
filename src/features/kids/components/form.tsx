@@ -7,7 +7,7 @@ import { kidFormFields } from '@/features/kids/components/fields';
 import {
   type KidGuardianFormInput,
   KidGuardianFormSchema,
-} from '@/features/kids/schemas';
+} from '@/features/kids/schema';
 import { z } from 'zod';
 
 import FormFieldGenerator from '@/components/shared/form/form-field-generator';
