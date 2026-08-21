@@ -89,7 +89,7 @@ export const kidColumns: ColumnDef<AppTableFeatures, Kid>[] = [
           rowName={kid.name}
           title="Edit Murid"
           description="Perbarui data murid"
-          editHref={`/dashboard/kid/${kid.id}/edit`}
+          edit={{ href: `/dashboard/kid/${kid.id}/edit` }}
           deleteAction={() => deleteKid(kid.id)}
         />
       );

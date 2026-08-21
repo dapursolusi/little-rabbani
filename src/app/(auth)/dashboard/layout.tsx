@@ -1,6 +1,6 @@
 import { headers } from 'next/headers';
 
-import { checkCurrentTerm } from '@/features/term/actions';
+import { checkCurrentTerm, checkNextTerm } from '@/features/term/actions';
 
 import { AppSidebar } from '@/components/layout/app-sidebar';
 import { SidebarBreadcrumb } from '@/components/layout/sidebar/breadcrumb';
@@ -24,6 +24,7 @@ export default async function DashboardLayout({
   });
 
   const currentTerm = await checkCurrentTerm();
+  await checkNextTerm();
   const termLabel = currentTerm.success ? currentTerm.data.name : null;
   return (
     <SidebarProvider defaultOpen={true}>

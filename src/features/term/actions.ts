@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { term } from '@/db/schema';
-import { and, eq, gt, gte, isNull, lt, lte } from 'drizzle-orm';
+import { and, eq, gt, gte, isNull, lt, lte, ne } from 'drizzle-orm';
 
 import { parseInput } from '@/lib/actions/parse-input';
 import { requireOwner } from '@/lib/actions/require-owner';
@@ -97,6 +97,7 @@ export async function checkCurrentTerm() {
         name: formatTermName(startDate, endDate, terms.length + 1),
         startDate,
         endDate,
+        isAutoCreated: true,
       })
       .returning();
 
@@ -104,6 +105,66 @@ export async function checkCurrentTerm() {
   } catch (error) {
     console.error('checkCurrentTerm', error);
     return { success: false as const, error: 'Gagal membuat batch baru' };
+  }
+}
+
+export async function checkNextTerm() {
+  const today = new Date().toISOString().split('T')[0];
+
+  const [currentTerm, nextTerm] = await Promise.all([
+    db.query.term.findFirst({
+      where: and(
+        isNull(term.deletedAt),
+        lte(term.startDate, today),
+        gte(term.endDate, today)
+      ),
+    }),
+    db.query.term.findFirst({
+      where: and(isNull(term.deletedAt), gt(term.startDate, today)),
+    }),
+  ]);
+
+  // Next term already ready — nothing to do.
+  if (nextTerm) return { success: true as const, data: nextTerm };
+  // No active term to base the next one on — checkCurrentTerm owns the
+  // "app untouched for months" edge case (creates a fresh current term).
+  if (!currentTerm) return { success: true as const, data: undefined };
+
+  try {
+    const terms = await db.query.term.findMany({
+      where: isNull(term.deletedAt),
+    });
+
+    // Term N+1 starts the day after term N ends — no overlap, no gap.
+    const duration =
+      new Date(currentTerm.endDate).getTime() -
+      new Date(currentTerm.startDate).getTime();
+    const startDate = new Date(
+      new Date(currentTerm.endDate).getTime() + 24 * 60 * 60 * 1000
+    )
+      .toISOString()
+      .split('T')[0];
+    const endDate = new Date(new Date(startDate).getTime() + duration)
+      .toISOString()
+      .split('T')[0];
+
+    const [insertedTerm] = await db
+      .insert(term)
+      .values({
+        name: formatTermName(startDate, endDate, terms.length + 1),
+        startDate,
+        endDate,
+        isAutoCreated: true,
+      })
+      .returning();
+
+    return { success: true as const, data: insertedTerm };
+  } catch (error) {
+    console.error('checkNextTerm', error);
+    return {
+      success: false as const,
+      error: 'Gagal menyiapkan batch berikutnya',
+    };
   }
 }
 
@@ -157,6 +218,57 @@ export async function createTerm(input: Record<string, unknown>) {
     } catch (error) {
       console.error('createTerm', error);
       return { success: false as const, error: 'Gagal menambahkan batch baru' };
+    }
+  });
+}
+
+export async function updateTerm(id: string, input: Record<string, unknown>) {
+  return requireOwner(async () => {
+    const parsed = parseInput(TermSchema, input, 'Data batch tidak valid');
+    if (!parsed.success) return parsed;
+    const data = parsed.data;
+
+    try {
+      const existing = await db.query.term.findFirst({
+        where: eq(term.id, id),
+      });
+      if (!existing) {
+        return { success: false as const, error: 'Batch tidak ditemukan' };
+      }
+      const oldEndDate = new Date(existing.endDate).toISOString().split('T')[0];
+
+      await db
+        .update(term)
+        .set({
+          name: data.name,
+          startDate: data.startDate,
+          endDate: data.endDate,
+          isAutoCreated: false,
+        })
+        .where(eq(term.id, id));
+
+      // A date edit invalidates the auto-created successor that was chained
+      // to this term's old end date — retire it so checkNextTerm regenerates
+      // it from the corrected dates.
+      const successor = await db.query.term.findFirst({
+        where: and(
+          isNull(term.deletedAt),
+          ne(term.id, id),
+          eq(term.isAutoCreated, true),
+          eq(term.startDate, oldEndDate)
+        ),
+      });
+      if (successor) {
+        await db
+          .update(term)
+          .set({ deletedAt: new Date() })
+          .where(eq(term.id, successor.id));
+      }
+
+      return { success: true as const, data: undefined };
+    } catch (error) {
+      console.error('updateTerm', error);
+      return { success: false as const, error: 'Gagal memperbarui batch' };
     }
   });
 }

@@ -7,7 +7,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default async function TermListPage() {
   const result = await getTerms();
-  console.log('result', result);
   if (!result.success) {
     return (
       <Alert>

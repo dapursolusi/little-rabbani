@@ -1,5 +1,12 @@
 import { sql } from 'drizzle-orm';
-import { check, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  boolean,
+  check,
+  pgTable,
+  text,
+  timestamp,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 export const term = pgTable(
   'term',
@@ -8,6 +15,7 @@ export const term = pgTable(
     name: text('name').notNull().unique(),
     startDate: text('start_date').notNull(),
     endDate: text('end_date').notNull(),
+    isAutoCreated: boolean('is_auto_created').notNull().default(false),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .notNull()

@@ -22,17 +22,28 @@ interface RowActionsDialogProps {
   description: string;
   deleteAction: (id: string) => void;
   /** Link the row's Edit action to a dedicated edit page. */
-  editHref?: string;
-  /** Inline-edit dialog props (mutually exclusive with editHref). */
-  initialData?: Record<string, unknown>;
-  schema?: ZodObject<ZodRawShape>;
-  formFields?: FormField[];
-  updateAction?: (
+  edit: RowActionsEdit;
+  extendedActions?: ReactNode;
+}
+
+export type RowActionsEdit = RowActionsEditHref | RowActionsEditForm;
+export interface RowActionsEditHref {
+  href: string;
+  action?: never;
+  formFields?: never;
+  initialData?: never;
+  schema?: never;
+}
+
+export interface RowActionsEditForm {
+  href?: never;
+  action: (
     id: string,
     data: Record<string, unknown>
-  ) => Promise<{ success: boolean; error?: string }>;
-  /** Extra dropdown menu items rendered between Edit and Hapus. */
-  extendedActions?: ReactNode;
+  ) => Promise<{ success: boolean; error?: string }> | void;
+  formFields: FormField[];
+  initialData: Record<string, unknown>;
+  schema: ZodObject<ZodRawShape>;
 }
 
 export function RowActionsDialog({
@@ -41,30 +52,26 @@ export function RowActionsDialog({
   title,
   description,
   deleteAction,
-  editHref,
-  initialData,
-  schema,
-  formFields,
-  updateAction,
+  edit,
   extendedActions,
 }: RowActionsDialogProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
-  const inlineEdit = Boolean(editHref) === false;
+  const inlineEdit = Boolean(edit.href as string) === false;
 
   return (
     <>
       <DataTableRowActions
         id={id}
         actions={{
-          editHref,
+          editHref: edit.href,
           ...(inlineEdit ? { edit: () => setOpen(true) } : {}),
           delete: deleteAction,
         }}
         dataName={rowName}
         extendedActions={extendedActions}
       />
-      {inlineEdit && schema && formFields && updateAction && (
+      {inlineEdit && edit.schema && edit.formFields && edit.action && (
         <Modal
           title={title}
           description={description}
@@ -72,22 +79,22 @@ export function RowActionsDialog({
           onOpenChange={setOpen}
           content={
             <FormFieldGenerator
-              schema={schema}
-              formFields={formFields}
-              initialData={initialData ?? {}}
+              schema={edit.schema}
+              formFields={edit.formFields}
+              initialData={edit.initialData ?? {}}
               isEditing
               meta={{ label: title }}
               onSubmit={async (data) => {
-                const result = await updateAction(
+                const result = await edit.action(
                   id,
                   data as Record<string, unknown>
                 );
-                if (result.success) {
+                if (result && (result.success as boolean)) {
                   toast.success(`${title} berhasil diperbarui`);
                   setOpen(false);
                   router.refresh();
                 } else {
-                  toast.error(result.error);
+                  toast.error(result?.error);
                 }
               }}
               submitChildren={
