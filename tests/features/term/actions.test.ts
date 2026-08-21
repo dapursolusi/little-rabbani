@@ -1,5 +1,3 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 import {
   checkCurrentTerm,
   checkNextTerm,
@@ -7,6 +5,7 @@ import {
   deleteTerm,
   updateTerm,
 } from '@/features/term/actions';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
@@ -64,7 +63,9 @@ function mockUpdateRejects() {
 }
 
 beforeEach(() => {
-  mocks.getSession.mockResolvedValue({ user: { id: 'owner-1', role: 'owner' } });
+  mocks.getSession.mockResolvedValue({
+    user: { id: 'owner-1', role: 'owner' },
+  });
   mocks.findFirst.mockResolvedValue(undefined);
   mocks.findMany.mockResolvedValue([]);
   mockInsertResolves(NEW_TERM);
@@ -78,14 +79,19 @@ beforeEach(() => {
 afterEach(() => vi.clearAllMocks());
 
 describe('createTerm', () => {
-  const valid = { name: 'Batch A', startDate: '2026-08-01', endDate: '2026-08-15' };
+  const valid = {
+    name: 'Batch A',
+    startDate: '2026-08-01',
+    endDate: '2026-08-15',
+  };
 
   it('inserts a term with normalized dates when no conflict', async () => {
     const result = await createTerm(valid);
 
     expect(result).toEqual({ success: true, data: NEW_TERM });
-    const valuesMock = mocks.insert.mock.results[0]!.value
-      .values as ReturnType<typeof vi.fn>;
+    const valuesMock = mocks.insert.mock.results[0]!.value.values as ReturnType<
+      typeof vi.fn
+    >;
     expect(valuesMock).toHaveBeenCalledWith(valid);
   });
 
@@ -101,7 +107,11 @@ describe('createTerm', () => {
   });
 
   it('returns a parse error for invalid input without touching the db', async () => {
-    const result = await createTerm({ name: '', startDate: 'nope', endDate: '' });
+    const result = await createTerm({
+      name: '',
+      startDate: 'nope',
+      endDate: '',
+    });
 
     expect(result.success).toBe(false);
     expect(mocks.findFirst).not.toHaveBeenCalled();
@@ -134,7 +144,11 @@ describe('createTerm', () => {
 
 describe('checkCurrentTerm', () => {
   it('returns the active term when one exists', async () => {
-    const active = { ...NEW_TERM, startDate: '2026-08-01', endDate: '2026-08-31' };
+    const active = {
+      ...NEW_TERM,
+      startDate: '2026-08-01',
+      endDate: '2026-08-31',
+    };
     mocks.findFirst.mockResolvedValue(active);
 
     const result = await checkCurrentTerm();
@@ -144,7 +158,11 @@ describe('checkCurrentTerm', () => {
   });
 
   it('returns the latest term when it has not ended (lenient — no auto-create on top of a queued next term)', async () => {
-    const latest = { ...NEW_TERM, startDate: '2026-08-01', endDate: '2026-12-31' };
+    const latest = {
+      ...NEW_TERM,
+      startDate: '2026-08-01',
+      endDate: '2026-12-31',
+    };
     mocks.findFirst
       .mockResolvedValueOnce(undefined) // no active term
       .mockResolvedValueOnce(latest); // latest fallback
@@ -173,8 +191,9 @@ describe('checkCurrentTerm', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(mocks.insert).toHaveBeenCalled();
-    const values = mocks.insert.mock.results[0]!.value
-      .values as ReturnType<typeof vi.fn>;
+    const values = mocks.insert.mock.results[0]!.value.values as ReturnType<
+      typeof vi.fn
+    >;
     const { startDate, endDate, isAutoCreated } = values.mock.calls[0][0];
     expect(startDate).toBe('2026-08-21'); // today (real clock)
     expect(new Date(endDate) > new Date(startDate)).toBe(true);
@@ -195,7 +214,12 @@ describe('checkNextTerm', () => {
         if (x && typeof x === 'object' && 'queryChunks' in x) {
           return (x as { queryChunks: unknown[] }).queryChunks.forEach(walk);
         }
-        if (x && (x as { constructor?: { name?: string } }).constructor?.name === 'Param') params++;
+        if (
+          x &&
+          (x as { constructor?: { name?: string } }).constructor?.name ===
+            'Param'
+        )
+          params++;
       };
       where?.queryChunks?.forEach(walk);
       return Promise.resolve(params === 1 ? next : undefined);
@@ -232,8 +256,9 @@ describe('checkNextTerm', () => {
     expect(result.success).toBe(true);
     if (!result.success) return;
     expect(mocks.insert).toHaveBeenCalled();
-    const values = mocks.insert.mock.results[0]!.value
-      .values as ReturnType<typeof vi.fn>;
+    const values = mocks.insert.mock.results[0]!.value.values as ReturnType<
+      typeof vi.fn
+    >;
     const inserted = values.mock.calls[0][0];
     expect(inserted.startDate).toBe('2026-09-01'); // day after current term's end
     expect(inserted.endDate).toBe('2026-10-01'); // same 30-day duration
@@ -289,8 +314,9 @@ describe('updateTerm', () => {
     });
 
     expect(result.success).toBe(true);
-    const setMock = mocks.update.mock.results[0]!.value
-      .set as ReturnType<typeof vi.fn>;
+    const setMock = mocks.update.mock.results[0]!.value.set as ReturnType<
+      typeof vi.fn
+    >;
     expect(setMock).toHaveBeenCalledWith(
       expect.objectContaining({ isAutoCreated: false })
     );
@@ -323,8 +349,9 @@ describe('updateTerm', () => {
 
     expect(result.success).toBe(true);
     expect(mocks.update).toHaveBeenCalledTimes(2);
-    const setMock = mocks.update.mock.results[0]!.value
-      .set as ReturnType<typeof vi.fn>;
+    const setMock = mocks.update.mock.results[0]!.value.set as ReturnType<
+      typeof vi.fn
+    >;
     expect(setMock).toHaveBeenCalledWith(
       expect.objectContaining({
         startDate: '2026-07-01',
@@ -361,11 +388,13 @@ describe('deleteTerm', () => {
     const result = await deleteTerm('T1');
 
     expect(result).toEqual({ success: true, data: undefined });
-    const setMock = mocks.update.mock.results[0]!.value
-      .set as ReturnType<typeof vi.fn>;
+    const setMock = mocks.update.mock.results[0]!.value.set as ReturnType<
+      typeof vi.fn
+    >;
     expect(setMock).toHaveBeenCalledWith({ deletedAt: expect.any(Date) });
-    expect(mocks.update.mock.results[0]!.value.set.mock.results[0]!.value
-      .where).toHaveBeenCalledTimes(1);
+    expect(
+      mocks.update.mock.results[0]!.value.set.mock.results[0]!.value.where
+    ).toHaveBeenCalledTimes(1);
   });
 
   it('returns a generic error when the update throws', async () => {
