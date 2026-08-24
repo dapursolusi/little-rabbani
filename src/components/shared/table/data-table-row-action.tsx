@@ -73,8 +73,11 @@ export function DataTableRowActions({
         ? (actions.delete(id) as Promise<unknown>)
         : Promise.resolve(undefined);
       const resolvedResult = await result;
-      if (resolvedResult) {
-        toast.success(toastMessage?.success?.delete || 'Data berhasil dihapus');
+      if (
+        resolvedResult &&
+        (resolvedResult as { success?: boolean }).success !== false
+      ) {
+        toast.warning(toastMessage?.success?.delete || 'Data berhasil dihapus');
         router.refresh();
       } else {
         toast.error(toastMessage?.failed?.delete || 'Gagal menghapus data');

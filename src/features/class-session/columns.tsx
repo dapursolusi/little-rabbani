@@ -5,6 +5,7 @@ import { ColumnDef } from '@tanstack/react-table';
 import { AppTableFeatures } from '@/components/shared/table/features';
 import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
 
+import { deleteClassSession, updateClassSession } from './actions';
 import { classSessionFormFields } from './fields';
 import { ClassSessionSchema } from './schema';
 import { ClassSession } from './types';
@@ -41,7 +42,7 @@ export const classSessionColumns: ColumnDef<AppTableFeatures, ClassSession>[] =
             edit={{
               schema: ClassSessionSchema,
               formFields: classSessionFormFields,
-              action: () => {},
+              action: updateClassSession,
               initialData: {
                 name: classSession.name,
                 startTime: classSession.startTime,
@@ -49,7 +50,7 @@ export const classSessionColumns: ColumnDef<AppTableFeatures, ClassSession>[] =
               },
             }}
 
-            deleteAction={() => {}}
+            deleteAction={() => deleteClassSession(classSession.id)}
           />
         );
       },
