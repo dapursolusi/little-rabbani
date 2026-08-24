@@ -17,8 +17,8 @@ export default function ClassSessionForm({
       formFields={classSessionFormFields}
       initialData={{
         name: '',
-        startDate: new Date().getTime(),
-        endDate: new Date().getTime(),
+        startTime: '',
+        endTime: '',
       }}
       onSuccess={onSuccess}
       onSubmit={async (data) => {

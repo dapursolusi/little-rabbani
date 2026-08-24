@@ -44,8 +44,8 @@ export const classSessionColumns: ColumnDef<AppTableFeatures, ClassSession>[] =
               action: () => {},
               initialData: {
                 name: classSession.name,
-                startDate: classSession.startTime,
-                endDate: classSession.endTime,
+                startTime: classSession.startTime,
+                endTime: classSession.endTime,
               },
             }}
 
