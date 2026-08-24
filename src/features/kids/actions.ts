@@ -8,7 +8,7 @@ import { parseInput } from '@/lib/actions/parse-input';
 import { requireOwner } from '@/lib/actions/require-owner';
 
 import { type GuardianTx, upsertGuardianTx } from './guardian';
-import { CreateGuardianSchema, CreateKidSchema } from './schemas';
+import { CreateGuardianSchema, CreateKidSchema } from './schema';
 import { LeanKid } from './types';
 
 // ── Reads ─────────────────────────────────────────────

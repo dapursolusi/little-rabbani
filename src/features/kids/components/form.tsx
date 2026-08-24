@@ -3,11 +3,11 @@
 import { useRouter } from 'next/navigation';
 
 import { createKid, updateKid } from '@/features/kids/actions';
-import { kidFormFields } from '@/features/kids/components/fields';
+import { kidFormFields } from '@/features/kids/fields';
 import {
   type KidGuardianFormInput,
   KidGuardianFormSchema,
-} from '@/features/kids/schemas';
+} from '@/features/kids/schema';
 import { z } from 'zod';
 
 import FormFieldGenerator from '@/components/shared/form/form-field-generator';

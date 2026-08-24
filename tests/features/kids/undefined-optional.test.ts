@@ -1,4 +1,4 @@
-import { CreateGuardianSchema, CreateKidSchema } from '@/features/kids/schemas';
+import { CreateGuardianSchema, CreateKidSchema } from '@/features/kids/schema';
 import { describe, expect, it } from 'vitest';
 
 // Regression: untouched optional fields submit as `undefined` (RHF), and the

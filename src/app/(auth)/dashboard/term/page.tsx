@@ -1,5 +1,5 @@
 import { getTerms } from '@/features/term/actions';
-import { termColumns } from '@/features/term/components/columns';
+import { termColumns } from '@/features/term/columns';
 import TermForm from '@/features/term/components/form';
 
 import { DataTable } from '@/components/shared/table/data-table';

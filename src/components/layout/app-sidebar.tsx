@@ -113,8 +113,8 @@ const navGroups: SidebarNavItem[] = [
         roles: ['owner'],
       },
       {
-        title: 'Tipe Sesi',
-        href: '/dashboard/session-type',
+        title: 'Sesi Kelas',
+        href: '/dashboard/class-session',
         icon: Calendar01Icon,
         roles: ['owner'],
       },

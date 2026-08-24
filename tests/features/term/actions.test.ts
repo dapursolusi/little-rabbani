@@ -195,7 +195,7 @@ describe('checkCurrentTerm', () => {
       typeof vi.fn
     >;
     const { startDate, endDate, isAutoCreated } = values.mock.calls[0][0];
-    expect(startDate).toBe('2026-08-21'); // today (real clock)
+    expect(startDate).toBe(new Date().toISOString().split('T')[0]); // today (real clock)
     expect(new Date(endDate) > new Date(startDate)).toBe(true);
     expect(isAutoCreated).toBe(true);
   });

@@ -1,8 +1,8 @@
 import { guardian } from '@/db/schema';
-import { and, eq, isNotNull, isNull, ne } from 'drizzle-orm';
 import type { SQL } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull, ne } from 'drizzle-orm';
 
-import type { CreateGuardianInput } from './schemas';
+import type { CreateGuardianInput } from './schema';
 
 /** Narrow interface — the test surface; a fake tx only needs these shapes. */
 export interface GuardianTx {

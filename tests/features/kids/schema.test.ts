@@ -2,7 +2,7 @@ import {
   CreateGuardianSchema,
   CreateKidSchema,
   KidGuardianFormSchema,
-} from '@/features/kids/schemas';
+} from '@/features/kids/schema';
 import { describe, expect, it } from 'vitest';
 
 describe('guardian phone identity (ADR-0001)', () => {
