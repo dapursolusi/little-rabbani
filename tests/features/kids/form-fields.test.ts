@@ -1,4 +1,4 @@
-import { kidFormFields } from '@/features/kids/components/fields';
+import { kidFormFields } from '@/features/kids/fields';
 import { KidGuardianFormSchema } from '@/features/kids/schema';
 import type { FormFieldInput } from '@/types/field';
 import { describe, expect, it } from 'vitest';

@@ -23,7 +23,22 @@ export const term = pgTable(
       .$onUpdateFn(() => new Date()),
     deletedAt: timestamp('deleted_at'),
   },
-  (table) => ({
-    checkDate: check('check_date', sql`${table.startDate} < ${table.endDate}`),
-  })
+  (table) => [check('check_date', sql`${table.startDate} < ${table.endDate}`)]
+);
+
+export const classSession = pgTable(
+  'class_session',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    name: text('name').notNull().unique(),
+    startTime: text('start_time').notNull(),
+    endTime: text('end_time').notNull(),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => [check('check_time', sql`${table.startTime} < ${table.endTime}`)]
 );

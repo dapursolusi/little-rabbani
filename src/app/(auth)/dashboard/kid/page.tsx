@@ -1,5 +1,5 @@
 import { getKids } from '@/features/kids/actions';
-import { kidColumns } from '@/features/kids/components/columns';
+import { kidColumns } from '@/features/kids/columns';
 import { Kid } from '@/features/kids/types';
 
 import { DataTable } from '@/components/shared/table/data-table';

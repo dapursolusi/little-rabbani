@@ -6,7 +6,7 @@ import { createTerm } from '../actions';
 import { termFormFields } from '../fields';
 import { TermSchema } from '../schema';
 
-export default function TermForm() {
+export default function TermForm({ onSuccess }: { onSuccess?: () => void }) {
   return (
     <FormFieldGenerator
       schema={TermSchema}
@@ -16,8 +16,9 @@ export default function TermForm() {
         startDate: new Date(),
         endDate: new Date(),
       }}
+      onSuccess={onSuccess}
       onSubmit={async (data) => {
-        createTerm(data);
+        return createTerm(data);
       }}
     />
   );
