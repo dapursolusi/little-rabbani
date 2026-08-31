@@ -14,7 +14,7 @@ const emailOptional = z
     message: 'Format email tidak valid',
   });
 
-const GuardianBaseSchema = z.object({
+const GuardianSchema = z.object({
   name: z.string().min(1, 'Nama lengkap wali wajib diisi'),
   phone: z
     .string()
@@ -27,8 +27,6 @@ const GuardianBaseSchema = z.object({
 // ponytail: DB columns for secondContact* are nullable; form fields marked
 // required:false; RHF leaves them undefined when untouched → schema must allow
 // undefined/null. `min(1)` inside the optional chain rejects '' for the user.
-
-const CreateGuardianSchema = GuardianBaseSchema;
 
 const BaseKidSchema = z.object({
   name: z.string().min(2, 'Nama lengkap murid wajib diisi'),
@@ -56,7 +54,7 @@ const KidGuardianFormSchema = z.discriminatedUnion('guardianMode', [
   z.object({
     guardianMode: z.literal('new'),
     kid: BaseKidSchema,
-    guardian: GuardianBaseSchema,
+    guardian: GuardianSchema,
   }),
   z.object({
     guardianMode: z.literal('existing'),
@@ -66,13 +64,15 @@ const KidGuardianFormSchema = z.discriminatedUnion('guardianMode', [
 ]);
 
 export {
-  CreateGuardianSchema,
+  GuardianSchema,
+  GuardianSchema as CreateGuardianSchema,
   CreateKidSchema,
   KidGuardianFormSchema,
   UpdateKidSchema,
 };
 
-export type CreateGuardianInput = z.infer<typeof CreateGuardianSchema>;
+export type CreateGuardianInput = GuardianInput;
+export type GuardianInput = z.infer<typeof GuardianSchema>;
 
 export type CreateKidInput = z.infer<typeof CreateKidSchema>;
 export type UpdateKidInput = z.infer<typeof UpdateKidSchema>;

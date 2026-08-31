@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 
-import { getKid } from '@/features/kids/actions';
-import KidForm from '@/features/kids/components/form';
+import * as kidAction from '@/features/kid/actions';
+import KidForm from '@/features/kid/components/form';
 
 import { baseMetadata } from '@/lib/metadata';
 
@@ -14,7 +14,7 @@ interface EditKidPageProps {
 export default async function EditKidPage({ params }: EditKidPageProps) {
   const { id } = await params;
 
-  const result = await getKid(id);
+  const result = await kidAction.getKid(id);
   if (!result.success) {
     notFound();
   }

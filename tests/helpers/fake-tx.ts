@@ -1,5 +1,5 @@
 import { guardian } from '@/db/schema';
-import type { GuardianTx } from '@/features/kids/guardian';
+import type { GuardianTx } from '@/features/kid/services';
 import {
   Column,
   Param,

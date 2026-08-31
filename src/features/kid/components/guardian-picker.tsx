@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react';
 import {
   type GuardianSearchResult,
   searchGuardians,
-} from '@/features/kids/actions';
+} from '@/features/kid/actions';
 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';

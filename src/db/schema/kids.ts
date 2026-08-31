@@ -18,7 +18,7 @@ export const guardian = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey(),
     name: text('name').notNull(),
-    phone: text('phone').notNull(),
+    phone: text('phone').notNull().unique(),
     email: text('email'),
     secondContactName: text('second_contact_name'),
     secondContactPhone: text('second_contact_phone'),
