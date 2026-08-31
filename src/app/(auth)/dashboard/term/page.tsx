@@ -1,4 +1,4 @@
-import { getTerms } from '@/features/term/actions';
+import * as termAction from '@/features/term/actions';
 import { termColumns } from '@/features/term/columns';
 import TermForm from '@/features/term/components/form';
 
@@ -6,7 +6,7 @@ import { DataTable } from '@/components/shared/table/data-table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default async function TermListPage() {
-  const result = await getTerms();
+  const result = await termAction.getTerms();
   if (!result.success) {
     return (
       <Alert>

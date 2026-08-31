@@ -1,4 +1,7 @@
+import { requireOwner } from '@/lib/actions/require-owner';
+
 import * as termRepo from './repositories';
+import { TermInput } from './schema';
 
 const INDONESIAN_MONTHS = [
   'Jan',
@@ -46,11 +49,11 @@ function formatTermName(
 export async function checkCurrentTerm() {
   const today = new Date().toISOString().split('T')[0];
   try {
-    const currentTerm = await termRepo.findCurrentTerm(today);
+    const currentTerm = await termRepo.findCurrent(today);
 
     if (currentTerm) return { success: true as const, data: currentTerm };
 
-    const terms = await termRepo.findAllTerms();
+    const terms = await termRepo.findAll();
     const latestTerm = terms[0];
 
     // Only auto-create when the latest batch has actually ended — never on top
@@ -71,7 +74,7 @@ export async function checkCurrentTerm() {
           .split('T')[0]
       : new Date(base + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
 
-    const insertedTerm = await termRepo.insertTerm({
+    const insertedTerm = await termRepo.insert({
       name: formatTermName(startDate, endDate, terms.length + 1),
       startDate,
       endDate,
@@ -81,7 +84,7 @@ export async function checkCurrentTerm() {
     return { success: true as const, data: insertedTerm };
   } catch (error) {
     console.error('checkCurrentTerm', error);
-    return { success: false as const, error: 'Gagal membuat batch baru' };
+    return { success: false as const, error: 'Gagal memeriksa batch saat ini' };
   }
 }
 
@@ -89,8 +92,8 @@ export async function checkNextTerm() {
   const today = new Date().toISOString().split('T')[0];
   try {
     const [currentTerm, nextTerm] = await Promise.all([
-      termRepo.findCurrentTerm(today),
-      termRepo.findNextTerm(today),
+      termRepo.findCurrent(today),
+      termRepo.findNext(today),
     ]);
 
     // Next term already ready — nothing to do.
@@ -99,7 +102,7 @@ export async function checkNextTerm() {
     // "app untouched for months" edge case (creates a fresh current term).
     if (!currentTerm) return { success: true as const, data: undefined };
 
-    const terms = await termRepo.findAllTerms();
+    const terms = await termRepo.findAll();
 
     // Term N+1 starts the day after term N ends — no overlap, no gap.
     const duration =
@@ -114,7 +117,7 @@ export async function checkNextTerm() {
       .toISOString()
       .split('T')[0];
 
-    const insertedTerm = await termRepo.insertTerm({
+    const insertedTerm = await termRepo.insert({
       name: formatTermName(startDate, endDate, terms.length + 1),
       startDate,
       endDate,
@@ -129,4 +132,101 @@ export async function checkNextTerm() {
       error: 'Gagal menyiapkan batch berikutnya',
     };
   }
+}
+
+export async function createTerm(input: TermInput) {
+  return requireOwner(async () => {
+    try {
+      const inputStartDate = new Date(input.startDate)
+        .toISOString()
+        .split('T')[0];
+      const inputEndDate = new Date(input.endDate).toISOString().split('T')[0];
+      const conflictingTerm = await termRepo.findOverlapping(
+        inputStartDate,
+        inputEndDate
+      );
+
+      if (conflictingTerm) {
+        return {
+          success: false as const,
+          error:
+            'Batch untuk tanggal tersebut bertabrakan dengan batch yang sudah ada. Silahkan pilih tanggal yang lain atau periksa lagi.',
+        };
+      }
+
+      const newTerm = await termRepo.insert({
+        name: input.name,
+        startDate: inputStartDate,
+        endDate: inputEndDate,
+      });
+
+      return { success: true as const, data: newTerm.name };
+    } catch (error) {
+      console.error('createTerm', error);
+      return { success: false as const, error: 'Gagal menambahkan batch baru' };
+    }
+  });
+}
+
+export async function updateTerm(id: string, input: TermInput) {
+  return requireOwner(async () => {
+    try {
+      const existing = await termRepo.findById(id);
+      if (!existing) {
+        return { success: false as const, error: 'Batch tidak ditemukan' };
+      }
+
+      const inputStartDate = new Date(input.startDate)
+        .toISOString()
+        .split('T')[0];
+      const inputEndDate = new Date(input.endDate).toISOString().split('T')[0];
+      const conflictingTerm = await termRepo.findOverlapping(
+        inputStartDate,
+        inputEndDate
+      );
+      if (conflictingTerm) {
+        return {
+          success: false as const,
+          error:
+            'Batch untuk tanggal tersebut bertabrakan dengan batch yang sudah ada. Silahkan pilih tanggal yang lain atau periksa lagi.',
+        };
+      }
+
+      await termRepo.update(id, {
+        name: input.name,
+        startDate: input.startDate,
+        endDate: input.endDate,
+      });
+
+      const datesChanged =
+        existing.startDate !== inputStartDate ||
+        existing.endDate !== inputEndDate;
+
+      if (datesChanged) {
+        const successorStartDate = new Date(
+          new Date(existing.endDate).getTime() + 24 * 60 * 60 * 1000
+        )
+          .toISOString()
+          .split('T')[0];
+
+        await termRepo.deleteAutoCreatedSuccessor(successorStartDate);
+      }
+      return { success: true as const, data: undefined };
+    } catch (error) {
+      console.error('updateTerm', error);
+      return { success: false as const, error: 'Gagal memperbarui batch' };
+    }
+  });
+}
+
+export async function deleteTerm(id: string) {
+  return requireOwner(async () => {
+    try {
+      await termRepo.remove(id);
+      return { success: true as const, data: undefined };
+    } catch (error) {
+      console.error('deleteTerm', error);
+      return { success: false as const, error: 'Gagal menghapus batch' };
+    }
+  });
 }
