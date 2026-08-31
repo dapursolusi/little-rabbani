@@ -1,4 +1,4 @@
-import { getClassSessions } from '@/features/class-session/actions';
+import * as classSessionAction from '@/features/class-session/actions';
 import { classSessionColumns } from '@/features/class-session/columns';
 import ClassSessionForm from '@/features/class-session/components/form';
 
@@ -6,7 +6,7 @@ import { DataTable } from '@/components/shared/table/data-table';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default async function ClassSessionListPage() {
-  const result = await getClassSessions();
+  const result = await classSessionAction.getClassSessions();
 
   if (!result.success) {
     return (
