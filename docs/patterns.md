@@ -1,68 +1,46 @@
 # Patterns — living extraction of the implemented code
 
-Follow these for new and refactored code. **Code wins if this doc disagrees —
-update this doc in the same change.** Extract a new pattern only after a
-repeatable shape lands; promote to AGENTS.md only after 3+ entities use it
-unchanged. Split into per-stack files when it grows too large.
+Split into per-stack files. Code wins if doc disagrees — update doc in same change.
 
-Only the **kid** vertical is implemented; these patterns come from it.
+| Stack | File |
+|-------|------|
+| Next.js / App Router | [nextjs.md](patterns/nextjs.md) |
+| TypeScript | [typescript.md](patterns/typescript.md) |
+| Database (Drizzle + Neon) | [database.md](patterns/database.md) |
+| Forms (FormFieldGenerator) | [forms.md](patterns/forms.md) |
+| DataTable (TanStack v9) | [tables.md](patterns/tables.md) |
+| Auth (Better Auth) | [auth.md](patterns/auth.md) |
+| Shared UI | [shared-ui.md](patterns/shared-ui.md) |
 
-## Server Actions
+Extract a new pattern only after a repeatable shape lands. Promote to AGENTS.md only after 3+ entities use it unchanged. Add a new stack file when patterns grow too large.
 
-- **Discriminated-union result** — every action returns `{ success: true,
-data } | { success: false, error }` (`as const`). Clients narrow with
-  `if (!result.success)`. Type alias `ActionResult<T>` lives in
-  `src/lib/actions/require-owner.ts`.
-- **`requireOwner()`** — the single auth gate. Wrap the action body:
-  `return requireOwner(async () => { ... })`. Redirects to `/login` when
-  unauthenticated; returns `{ success: false, error }` when the session role
-  isn't `owner`.
-- **`parseInput(schema, unknown, fallback)`** — parse at every I/O boundary.
-  Returns an ActionResult directly from a failed zod parse, so a failed parse
-  is returned from the action with no branching.
-- **`db.transaction`** — cross-table writes are atomic. `createKid`/`updateKid`
-  insert/update guardian + kid in one transaction. Requires the WS `Pool`
-  driver (`src/db/index.ts`), not the http driver.
+## Settled hard rules (locked here, not in stack files)
 
-## Data / schema
+These are decisions, not in-flux patterns — they live in AGENTS.md:
 
-- **`src/db/schema/`** — one file per entity (`kids.ts`, `auth.ts`), exported
-  from `src/db/schema/index.ts`. Relations (`relations(...)`) declared beside
-  the tables.
-- **Soft delete** — destructive actions set `deletedAt` (`timestamp`) instead
-  of deleting rows; reads filter `isNull(deletedAt)`.
-- **Index every FK** — see AGENTS.md "Settled hard rules". Example:
-  `kid_guardian_idx` on `kid.guardianId`.
-- **Enum + label consts** — a `pgEnum` (or `as const` array) plus a parallel
-  `*_LABELS` record mapping value → Indonesian display label, exported from
-  the schema file and reused by both the form (select options) and the table
-  (cell renderers). Example: `GENDER_LABELS`, `GUARDIAN_RELATIONSHIP_LABELS`.
-
-## Forms
-
-- **Entity schema → `FormField[]` → shared renderer.** `schemas.ts` holds zod
-  schemas (create/update/base split, `KidGuardianFormSchema` for the combined
-  form). `form-fields.ts` returns the field list (with `groupLabel` headers).
-  `*-form.tsx` is a thin `use client` wrapper passing `schema`, `initialData`,
-  `formFields` to `FormFieldGenerator`, mapping `onSubmit` to the actions and
-  `onSuccess` to a route push.
-- **Optional fields + nullable columns** — untouched RHF fields arrive as
-  `undefined`; zod `min(1)` rejects them. Allow nullable+optional and coerce
-  `''` → `null` on write (`nickName`, `secondContact*`).
-
-## Tables
-
-- **`DataTable`** (v9, `src/components/shared/table/`) — shared table with
-  search, filters, pagination, column visibility, mobile view. Column defs are
-  `ColumnDef<AppTableFeatures, T>`; per-column search/filter config lives in
-  `meta` (`{ title, enableSearch, filter }`). Row actions via
-  `RowActionsDialog` (edit link + delete action).
-- **React Compiler gotcha** — do not read live values off the stable `table`
-  instance in render; mirror pagination state into `useState` and derive UI
-  from that (AGENTS.md gotcha).
-
-## Shared UI
-
-- `src/components/shared/` for cross-feature components (`EmptyState`,
-  `Pagination`, `SearchInput`, `getStatusBadge`, `DataTable`, form engine).
-- Never edit `src/components/ui/` (shadcn base-nova, auto-generated).
+- **Generic form engine:** the shared renderer is `FormFieldGenerator`
+  (`src/components/shared/form/form-field-generator.tsx`) + `InputFieldRenderer`.
+  It takes a Zod schema, `initialData`, and a `FormField[]` from the entity's
+  `form-fields.ts` (`src/types/field.ts`). Grouping is done by `{ groupLabel }`
+  headers in the field list → `<FieldSet>` sections. Zod resolver is
+  `zodResolver(schema) as never` — one cast at the `zodResolver` ↔
+  react-hook-form seam, accepted because zod v4's `$ZodType` variance makes
+  generic passthrough unworkable across 3 library seams. Tradeoff: ~1 cast in a
+  shared component vs. per-entity form components. Upgrade to per-entity
+  components when `onSubmit` needs compile-time verification against a
+  server-action param schema. See ADR-0003.
+- **`src/components/ui/` is auto-generated** (shadcn base-nova) — never edited
+  by hand. Brand customization happens via tokens in `globals.css` or
+  per-call classNames.
+- **Discriminated-union action results** (`{ success: true, data } | { success:
+false, error }` with `as const`) — clients narrow with `if (!result.success)`.
+  `parseInput()` produces one directly from a failed zod parse.
+- **Index every FK column by default** in Drizzle. Postgres does not
+  auto-index FK columns, so any WHERE/JOIN on an unindexed FK is a full
+  `Seq Scan`. Current example: `kid.guardianId` → `kid_guardian_idx`. Rule:
+  - Single-column `index()` per FK as the baseline.
+  - Merge into a composite only when columns are _always_ filtered together.
+  - Drop an index only when `EXPLAIN ANALYZE` shows it never used — never
+    pre-optimize; index by default, profile later.
+  - Indexes live in the `pgTable` third-arg config callback, e.g.
+    `(table) => ({ guardianIdx: index('kid_guardian_idx').on(table.guardianId) })`.
