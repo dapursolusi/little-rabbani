@@ -8,7 +8,8 @@ import { usePathname } from 'next/navigation';
 import { User } from '@/features/auth/types';
 import {
   BookOpen01Icon,
-  Calendar01Icon,
+  Calendar02Icon,
+  CalendarUserIcon,
   ChevronRightIcon,
   ClipboardIcon,
   Clock01Icon,
@@ -21,6 +22,7 @@ import {
   NoteIcon,
   Settings01Icon,
   Settings04Icon,
+  TimeQuarterPassIcon,
   UserMultipleIcon,
   WorkIcon,
 } from '@hugeicons/core-free-icons';
@@ -106,16 +108,11 @@ const navGroups: SidebarNavItem[] = [
         icon: UserMultipleIcon,
         roles: ['owner'],
       },
+
       {
-        title: 'Term',
-        href: '/dashboard/term',
-        icon: Calendar01Icon,
-        roles: ['owner'],
-      },
-      {
-        title: 'Sesi Kelas',
-        href: '/dashboard/class-session',
-        icon: Calendar01Icon,
+        title: 'Registrasi Batch',
+        href: '/dashboard/registration',
+        icon: CalendarUserIcon,
         roles: ['owner'],
       },
       {
@@ -183,6 +180,18 @@ const navGroups: SidebarNavItem[] = [
     icon: Settings04Icon,
     roles: ['owner'],
     subItems: [
+      {
+        title: 'Batch',
+        href: '/dashboard/term',
+        icon: Calendar02Icon,
+        roles: ['owner'],
+      },
+      {
+        title: 'Sesi Kelas',
+        href: '/dashboard/class-session',
+        icon: TimeQuarterPassIcon,
+        roles: ['owner'],
+      },
       {
         title: 'Tema & Subtema',
         href: '/dashboard/theme',

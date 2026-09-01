@@ -1,5 +1,5 @@
-import { ArrowUpRight01Icon, DatabaseIcon } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { ArrowUpRight01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -13,11 +13,25 @@ import {
 
 interface EmptyDataProps {
   title: string;
-  icon?: React.ReactNode;
+  icon?: IconSvgElement | React.ReactNode;
   description?: string;
   actionLabel?: string;
   actionHref?: string;
   action?: React.ReactNode;
+}
+
+function isIconSvgElement(
+  icon: IconSvgElement | React.ReactNode
+): icon is IconSvgElement {
+  if (!Array.isArray(icon)) return false;
+
+  const firstItem = icon[0];
+  return (
+    Array.isArray(firstItem) &&
+    typeof firstItem[0] === 'string' &&
+    typeof firstItem[1] === 'object' &&
+    firstItem[1] !== null
+  );
 }
 
 export function EmptyState({
@@ -32,7 +46,13 @@ export function EmptyState({
     <Empty>
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          {icon ? icon : <HugeiconsIcon icon={DatabaseIcon} size={60} />}
+          {icon ? (
+            isIconSvgElement(icon) ? (
+              <HugeiconsIcon icon={icon} size={60} />
+            ) : (
+              icon
+            )
+          ) : null}
         </EmptyMedia>
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>

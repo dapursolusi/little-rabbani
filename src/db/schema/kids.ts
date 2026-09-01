@@ -11,6 +11,8 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
+import { kidEnrollment } from './enrollment';
+
 // ─────────────── Guardian / Parent ───────────────
 
 export const guardian = pgTable(
@@ -81,6 +83,15 @@ export const GUARDIAN_RELATIONSHIP_LABELS: Record<
   other: 'Wali',
 };
 
+export const ACTIVE_STATUS = ['active', 'inactive', 'alumni'] as const;
+export type ActiveStatus = (typeof ACTIVE_STATUS)[number];
+export const activeStatusEnum = pgEnum('active_status', ACTIVE_STATUS);
+export const ACTIVE_STATUS_LABELS: Record<ActiveStatus, string> = {
+  active: 'Aktif',
+  inactive: 'Tidak Aktif',
+  alumni: 'Alumni',
+};
+
 export const kid = pgTable(
   'kid',
   {
@@ -93,6 +104,7 @@ export const kid = pgTable(
       .notNull()
       .references(() => guardian.id, { onDelete: 'restrict' }),
     relationship: guardianRelationshipEnum('relationship').notNull(),
+    activeStatus: activeStatusEnum('active_status').notNull().default('active'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .notNull()
@@ -106,9 +118,10 @@ export const kid = pgTable(
   })
 );
 
-export const kidRelations = relations(kid, ({ one }) => ({
+export const kidRelations = relations(kid, ({ one, many }) => ({
   guardian: one(guardian, {
     fields: [kid.guardianId],
     references: [guardian.id],
   }),
+  enrollments: many(kidEnrollment),
 }));

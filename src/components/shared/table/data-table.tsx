@@ -5,7 +5,7 @@ import * as React from 'react';
 import Link from 'next/link';
 
 import { Add02Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import {
   type CellData,
   type ColumnDef,
@@ -84,10 +84,7 @@ interface DataTableProps<TData extends RowData, TValue extends CellData> {
   };
   createForm?: TableFormProps;
   createHref?: string;
-  emptyAction?: {
-    actionHref?: string;
-    action?: React.ReactNode;
-  };
+  emptyStateIcon?: IconSvgElement | React.ReactNode;
 }
 
 export function DataTable<TData extends RowData, TValue extends CellData>({
@@ -96,7 +93,7 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
   meta,
   createForm,
   createHref,
-  emptyAction,
+  emptyStateIcon,
 }: DataTableProps<TData, TValue>) {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [pagination, setPagination] = React.useState({
@@ -229,11 +226,9 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
         title={`Belum ada ${meta.label.toLowerCase()}`}
         description={`Mulai dengan menambahkan ${meta.label.toLowerCase()} baru.`}
         actionLabel={`Tambah ${meta.label}`}
-        actionHref={emptyAction?.actionHref}
+        actionHref={createHref}
         action={
-          emptyAction?.action ? (
-            emptyAction.action
-          ) : (
+          createForm && (
             <SaveModal
               metaLabel={meta.label}
               form={createForm as TableFormProps}
@@ -242,6 +237,7 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
             />
           )
         }
+        icon={emptyStateIcon}
       />
     );
   }
