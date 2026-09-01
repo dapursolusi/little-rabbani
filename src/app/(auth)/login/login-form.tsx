@@ -9,12 +9,19 @@ import { Button } from '@/components/ui/button';
 
 import { authClient } from '@/lib/auth-client';
 
+import { DemoLoginCard } from './demo-login-card';
+
 interface ILoginFormProps {
   error?: string;
   redirect?: string;
+  showDemo?: boolean;
 }
 
-export function LoginForm({ error, redirect: redirectUrl }: ILoginFormProps) {
+export function LoginForm({
+  error,
+  redirect: redirectUrl,
+  showDemo,
+}: ILoginFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [oauthError, setOauthError] = useState<string | null>(null);
 
@@ -122,6 +129,8 @@ export function LoginForm({ error, redirect: redirectUrl }: ILoginFormProps) {
           )}
           {isLoading ? 'Memproses...' : 'Masuk dengan Google'}
         </Button>
+
+        {showDemo && <DemoLoginCard />}
       </div>
     </div>
   );
