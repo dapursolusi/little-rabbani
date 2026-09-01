@@ -1,20 +1,15 @@
-import { EnrollmentStatus } from '@/db/schema';
 import { BaseDTOResponse } from '@/types';
 
 import { ClassSession } from '../class-session/types';
 import { Kid } from '../kid/types';
-import { KidEnrollmentInput } from './schema';
+import { Term } from '../term/types';
+import { UpdateKidEnrollmentInput } from './schema';
 
 export interface KidEnrollment
-  extends BaseDTOResponse, InsertKidEnrollmentInput {
-  kid: Kid;
-  classSession: ClassSession;
+  extends BaseDTOResponse, InsertDbKidEnrollmentInput {
+  kid: Pick<Kid, 'name'>;
+  classSession: Pick<ClassSession, 'name'>;
+  term: Pick<Term, 'name'>;
 }
 
-export interface InsertKidEnrollmentInput extends Omit<
-  KidEnrollmentInput,
-  'kids'
-> {
-  kidId: string;
-  status: EnrollmentStatus;
-}
+export type InsertDbKidEnrollmentInput = UpdateKidEnrollmentInput;

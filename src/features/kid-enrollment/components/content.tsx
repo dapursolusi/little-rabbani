@@ -4,7 +4,7 @@ import { useRouter } from 'next/navigation';
 
 import { ClassSession } from '@/features/class-session/types';
 import { Term } from '@/features/term/types';
-import { ContractsIcon } from '@hugeicons/core-free-icons';
+import { ContractsIcon, DatabaseSyncIcon } from '@hugeicons/core-free-icons';
 
 import { DataTable } from '@/components/shared/table/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -118,8 +118,13 @@ export default function KidEnrollmentContent({
       <DataTable
         columns={columns}
         data={data}
-        meta={{ label: 'Pendaftaran Murid', domain: 'registration' }}
-        createHref="/dashboard/registration/create"
+        meta={{
+          label: 'Pendaftaran Murid',
+          customActionLabel: 'Update',
+          customActionIcon: DatabaseSyncIcon,
+          domain: 'registration',
+        }}
+        createHref="/dashboard/registration/update"
         emptyStateIcon={ContractsIcon}
       />
     </div>

@@ -1,3 +1,4 @@
+import { isIconSvgElement } from '@/utils/icon-checker';
 import { ArrowUpRight01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 
@@ -18,20 +19,6 @@ interface EmptyDataProps {
   actionLabel?: string;
   actionHref?: string;
   action?: React.ReactNode;
-}
-
-function isIconSvgElement(
-  icon: IconSvgElement | React.ReactNode
-): icon is IconSvgElement {
-  if (!Array.isArray(icon)) return false;
-
-  const firstItem = icon[0];
-  return (
-    Array.isArray(firstItem) &&
-    typeof firstItem[0] === 'string' &&
-    typeof firstItem[1] === 'object' &&
-    firstItem[1] !== null
-  );
 }
 
 export function EmptyState({

@@ -4,6 +4,7 @@ import * as React from 'react';
 
 import Link from 'next/link';
 
+import { isIconSvgElement } from '@/utils/icon-checker';
 import { Add02Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import {
@@ -81,6 +82,8 @@ interface DataTableProps<TData extends RowData, TValue extends CellData> {
   meta: {
     domain?: string;
     label: string;
+    customActionLabel?: string;
+    customActionIcon?: IconSvgElement | React.ReactNode;
   };
   createForm?: TableFormProps;
   createHref?: string;
@@ -225,7 +228,7 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
       <EmptyState
         title={`Belum ada ${meta.label.toLowerCase()}`}
         description={`Mulai dengan menambahkan ${meta.label.toLowerCase()} baru.`}
-        actionLabel={`Tambah ${meta.label}`}
+        actionLabel={`${meta.customActionLabel ?? 'Tambah'} ${meta.label}`}
         actionHref={createHref}
         action={
           createForm && (
@@ -267,8 +270,19 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
                 href={createHref}
                 className={cn(buttonVariants({ variant: 'default' }))}
               >
-                <HugeiconsIcon icon={PlusSignIcon} className="h-4 w-4 mr-2" />
-                {`Tambah ${meta.label}`}
+                {meta.customActionIcon ? (
+                  isIconSvgElement(meta.customActionIcon) ? (
+                    <HugeiconsIcon
+                      icon={meta.customActionIcon}
+                      className="h-4 w-4 mr-2"
+                    />
+                  ) : (
+                    meta.customActionIcon
+                  )
+                ) : (
+                  <HugeiconsIcon icon={PlusSignIcon} className="h-4 w-4 mr-2" />
+                )}
+                {`${meta.customActionLabel ?? 'Tambah'} ${meta.label}`}
               </Link>
             ) : createForm ? (
               <SaveModal

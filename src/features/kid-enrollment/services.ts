@@ -1,7 +1,7 @@
 import { requireOwner } from '@/lib/actions/require-owner';
 
 import * as kidEnrollmentRepo from './repositories';
-import { KidEnrollmentInput } from './schema';
+import { CreateKidEnrollmentInput } from './schema';
 
 export async function getKidsEnrollments({
   termId,
@@ -33,7 +33,7 @@ export async function getKidsEnrollments({
   }
 }
 
-export async function createKidsEnrollments(input: KidEnrollmentInput) {
+export async function createKidsEnrollments(input: CreateKidEnrollmentInput) {
   return requireOwner(async () => {
     try {
       const enrolledKids = input.kids.map((kid) => {
