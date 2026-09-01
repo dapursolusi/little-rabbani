@@ -28,5 +28,9 @@ export default async function LoginPage(props: {
     redirect('/dashboard');
   }
 
-  return <LoginForm error={error} redirect={redirectUrl} />;
+  const isDemoMode = process.env.NEXT_PUBLIC_DEMO_MODE === '1';
+
+  return (
+    <LoginForm error={error} redirect={redirectUrl} showDemo={isDemoMode} />
+  );
 }
