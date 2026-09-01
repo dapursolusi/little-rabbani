@@ -6,11 +6,11 @@ import { ClassSessionSchema, OverlappingClassSessionSchema } from './schema';
 import * as classSessionService from './services';
 
 export async function checkOverlappingClassSession(input: unknown) {
-  const parsed = parseInput(
-    OverlappingClassSessionSchema,
+  const parsed = parseInput({
+    schema: OverlappingClassSessionSchema,
     input,
-    'Data batch tidak valid'
-  );
+    fallbackError: 'Data batch tidak valid',
+  });
   if (!parsed.success) return parsed;
   const { startTime, endTime } = parsed.data;
   return await classSessionService.checkOverlappingClassSession({
@@ -20,11 +20,11 @@ export async function checkOverlappingClassSession(input: unknown) {
 }
 
 export async function createClassSession(input: unknown) {
-  const parsed = parseInput(
-    ClassSessionSchema,
+  const parsed = parseInput({
+    schema: ClassSessionSchema,
     input,
-    'Data batch tidak valid'
-  );
+    fallbackError: 'Data batch tidak valid',
+  });
   if (!parsed.success) return parsed;
   const data = parsed.data;
   return await classSessionService.createClassSession(data);
@@ -34,11 +34,11 @@ export async function updateClassSession(
   id: string,
   input: Record<string, unknown>
 ) {
-  const parsed = parseInput(
-    ClassSessionSchema,
+  const parsed = parseInput({
+    schema: ClassSessionSchema,
     input,
-    'Data batch tidak valid'
-  );
+    fallbackError: 'Data batch tidak valid',
+  });
   if (!parsed.success) return parsed;
   const data = parsed.data;
   return await classSessionService.updateClassSession(id, data);

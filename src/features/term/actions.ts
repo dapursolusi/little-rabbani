@@ -29,7 +29,11 @@ export async function getTerms() {
 }
 
 export async function createTerm(input: unknown) {
-  const parsed = parseInput(TermSchema, input, 'Data batch tidak valid');
+  const parsed = parseInput({
+    schema: TermSchema,
+    input,
+    fallbackError: 'Data batch tidak valid',
+  });
   if (!parsed.success) return parsed;
   const data = parsed.data;
 
@@ -37,7 +41,11 @@ export async function createTerm(input: unknown) {
 }
 
 export async function updateTerm(id: string, input: Record<string, unknown>) {
-  const parsed = parseInput(TermSchema, input, 'Data batch tidak valid');
+  const parsed = parseInput({
+    schema: TermSchema,
+    input,
+    fallbackError: 'Data batch tidak valid',
+  });
   if (!parsed.success) return parsed;
   const data = parsed.data;
   return await termService.updateTerm(id, data);

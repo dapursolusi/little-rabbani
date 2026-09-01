@@ -27,19 +27,19 @@ export async function createKid(input: {
   guardian?: unknown;
   guardianId?: string;
 }) {
-  const parsedKid = parseInput(
-    CreateKidSchema,
-    input.kid,
-    'Data anak tidak valid'
-  );
+  const parsedKid = parseInput({
+    input: input.kid,
+    schema: CreateKidSchema,
+    fallbackError: 'Data anak tidak valid',
+  });
   if (!parsedKid.success) return parsedKid;
   const kidData = parsedKid.data;
 
-  const parsedGuardian = parseInput(
-    GuardianSchema,
-    input.guardian,
-    'Data wali tidak valid'
-  );
+  const parsedGuardian = parseInput({
+    input: input.guardian,
+    schema: GuardianSchema,
+    fallbackError: 'Data wali tidak valid',
+  });
   if (!parsedGuardian.success) return parsedGuardian;
   const guardianData = parsedGuardian.data;
 
@@ -58,19 +58,19 @@ export async function updateKid(
     guardianId?: string;
   }
 ) {
-  const parsedKid = parseInput(
-    UpdateKidSchema,
-    input.kid,
-    'Data anak tidak valid'
-  );
+  const parsedKid = parseInput({
+    input: input.kid,
+    schema: UpdateKidSchema,
+    fallbackError: 'Data anak tidak valid',
+  });
   if (!parsedKid.success) return parsedKid;
   const kidData = parsedKid.data;
 
-  const parsedGuardian = parseInput(
-    GuardianSchema,
-    input.guardian,
-    'Data wali tidak valid'
-  );
+  const parsedGuardian = parseInput({
+    input: input.guardian,
+    schema: GuardianSchema,
+    fallbackError: 'Data wali tidak valid',
+  });
   if (!parsedGuardian.success) return parsedGuardian;
   const guardianData = parsedGuardian.data;
 
