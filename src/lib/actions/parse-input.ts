@@ -12,7 +12,7 @@ export function parseInput<S extends z.ZodType>({
 }: {
   schema: S;
   input: unknown;
-  fallbackError: string;
+  fallbackError?: string;
 }): { success: true; data: z.infer<S> } | { success: false; error: string } {
   const parsed = schema.safeParse(input);
   if (!parsed.success) {
@@ -21,7 +21,7 @@ export function parseInput<S extends z.ZodType>({
     const message = path ? `${path}: ${first.message}` : first.message;
     return {
       success: false as const,
-      error: message || fallbackError,
+      error: message || (fallbackError ?? 'Data tidak valid'),
     };
   }
   return { success: true as const, data: parsed.data };

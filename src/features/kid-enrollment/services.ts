@@ -1,4 +1,7 @@
+import { requireOwner } from '@/lib/actions/require-owner';
+
 import * as kidEnrollmentRepo from './repositories';
+import { KidEnrollmentInput } from './schema';
 
 export async function getKidsEnrollments({
   termId,
@@ -28,4 +31,31 @@ export async function getKidsEnrollments({
       error: 'Gagal memuat data. Coba muat ulang halaman.',
     };
   }
+}
+
+export async function createKidsEnrollments(input: KidEnrollmentInput) {
+  return requireOwner(async () => {
+    try {
+      const enrolledKids = input.kids.map((kid) => {
+        return {
+          termId: input.termId,
+          classSessionId: input.classSessionId,
+          kidId: kid.id,
+          status: kid.status,
+        };
+      });
+      const createdEnrollments =
+        await kidEnrollmentRepo.insertMany(enrolledKids);
+      return {
+        success: true as const,
+        data: createdEnrollments,
+      };
+    } catch (error) {
+      console.error('createKidsEnrollments: ', error);
+      return {
+        success: false as const,
+        error: 'Gagal membuat pendaftaran anak. Coba lagi nanti.',
+      };
+    }
+  });
 }

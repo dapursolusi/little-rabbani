@@ -9,7 +9,7 @@ export default async function KidEnrollmentListPage({
 }: {
   searchParams: Promise<{ termId?: string; classSessionId?: string }>;
 }) {
-  const { termId, classSessionId } = await searchParams;
+  const { termId, classSessionId = 'all' } = await searchParams;
 
   const [termResult, classSessionResult, currentTermResult] = await Promise.all(
     [

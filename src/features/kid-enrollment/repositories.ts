@@ -2,6 +2,8 @@ import { db } from '@/db';
 import { kidEnrollment } from '@/db/schema';
 import { and, eq, isNull } from 'drizzle-orm';
 
+import { InsertKidEnrollmentInput } from './types';
+
 export async function findMany({
   termId,
   classSessionId,
@@ -19,4 +21,8 @@ export async function findMany({
     ),
     with: { kid: true, classSession: true },
   });
+}
+
+export async function insertMany(input: InsertKidEnrollmentInput[]) {
+  return await db.insert(kidEnrollment).values(input).returning();
 }

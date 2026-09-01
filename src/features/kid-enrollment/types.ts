@@ -6,9 +6,15 @@ import { Kid } from '../kid/types';
 import { KidEnrollmentInput } from './schema';
 
 export interface KidEnrollment
-  extends BaseDTOResponse, Omit<KidEnrollmentInput, 'kids'> {
-  kidId: string;
-  status: EnrollmentStatus;
+  extends BaseDTOResponse, InsertKidEnrollmentInput {
   kid: Kid;
   classSession: ClassSession;
+}
+
+export interface InsertKidEnrollmentInput extends Omit<
+  KidEnrollmentInput,
+  'kids'
+> {
+  kidId: string;
+  status: EnrollmentStatus;
 }
