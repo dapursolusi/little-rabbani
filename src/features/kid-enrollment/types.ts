@@ -3,13 +3,13 @@ import { BaseDTOResponse } from '@/types';
 import { ClassSession } from '../class-session/types';
 import { Kid } from '../kid/types';
 import { Term } from '../term/types';
-import { UpdateKidEnrollmentInput } from './schema';
+import { KidEnrollmentInput, KidToBeEnrolled } from './schema';
 
-export interface KidEnrollment
-  extends BaseDTOResponse, InsertDbKidEnrollmentInput {
-  kid: Pick<Kid, 'name'>;
+export interface KidEnrollment extends BaseDTOResponse, LeanKidEnrollment {
+  kid: Pick<Kid, 'id' | 'name'>;
   classSession: Pick<ClassSession, 'name'>;
   term: Pick<Term, 'name'>;
 }
 
-export type InsertDbKidEnrollmentInput = UpdateKidEnrollmentInput;
+export interface LeanKidEnrollment
+  extends Omit<KidEnrollmentInput, 'kids'>, KidToBeEnrolled {}

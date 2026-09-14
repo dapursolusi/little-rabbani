@@ -1,18 +1,21 @@
 import { db } from '@/db';
-import { kidEnrollment } from '@/db/schema';
-import { and, eq, isNull } from 'drizzle-orm';
+import { EnrollmentStatus, kid, kidEnrollment } from '@/db/schema';
+import { SQL, and, eq, exists, inArray, isNull, not } from 'drizzle-orm';
 
-import { InsertDbKidEnrollmentInput } from './types';
+import { LeanKidEnrollment } from './types';
 
 export async function findMany({
   termId,
   classSessionId,
+  where,
 }: {
   termId?: string;
   classSessionId?: string;
+  where?: SQL<unknown>;
 }) {
   return await db.query.kidEnrollment.findMany({
     where: and(
+      where,
       isNull(kidEnrollment.deletedAt),
       termId ? eq(kidEnrollment.termId, termId) : undefined,
       classSessionId
@@ -20,13 +23,79 @@ export async function findMany({
         : undefined
     ),
     with: {
-      kid: { columns: { name: true } },
+      kid: { columns: { id: true, name: true } },
       classSession: { columns: { name: true } },
       term: { columns: { name: true } },
     },
   });
 }
 
-export async function insertMany(input: InsertDbKidEnrollmentInput[]) {
+export async function findAvailableKids({
+  termId,
+  classSessionId,
+}: {
+  termId: string;
+  classSessionId: string;
+}) {
+  return await db.query.kid.findMany({
+    where: and(
+      isNull(kid.deletedAt),
+      eq(kid.activeStatus, 'active'),
+      not(
+        exists(
+          db
+            .select()
+            .from(kidEnrollment)
+            .where(
+              and(
+                eq(kidEnrollment.kidId, kid.id),
+                eq(kidEnrollment.termId, termId),
+                classSessionId
+                  ? eq(kidEnrollment.classSessionId, classSessionId)
+                  : undefined,
+                isNull(kidEnrollment.deletedAt)
+              )
+            )
+        )
+      )
+    ),
+  });
+}
+
+export async function insertMany(input: LeanKidEnrollment[]) {
   return await db.insert(kidEnrollment).values(input).returning();
+}
+
+export async function findForBatch({
+  termId,
+  classSessionId,
+}: {
+  termId: string;
+  classSessionId: string;
+}) {
+  return await db.query.kidEnrollment.findMany({
+    where: and(
+      isNull(kidEnrollment.deletedAt),
+      eq(kidEnrollment.termId, termId),
+      eq(kidEnrollment.classSessionId, classSessionId)
+    ),
+    columns: { id: true, kidId: true, status: true },
+  });
+}
+
+export async function softDeleteMany(ids: string[]) {
+  if (ids.length === 0) return;
+  await db
+    .update(kidEnrollment)
+    .set({ deletedAt: new Date() })
+    .where(inArray(kidEnrollment.id, ids));
+}
+
+export async function updateStatus(kidId: string, status: EnrollmentStatus) {
+  await db
+    .update(kidEnrollment)
+    .set({ status })
+    .where(
+      and(isNull(kidEnrollment.deletedAt), eq(kidEnrollment.kidId, kidId))
+    );
 }

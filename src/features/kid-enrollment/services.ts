@@ -1,7 +1,8 @@
 import { requireOwner } from '@/lib/actions/require-owner';
 
+import { LeanKid } from '../kid/types';
 import * as kidEnrollmentRepo from './repositories';
-import { CreateKidEnrollmentInput } from './schema';
+import { KidEnrollmentInput } from './schema';
 
 export async function getKidsEnrollments({
   termId,
@@ -33,15 +34,53 @@ export async function getKidsEnrollments({
   }
 }
 
-export async function createKidsEnrollments(input: CreateKidEnrollmentInput) {
+export async function getAvailableKids({
+  termId,
+  classSessionId,
+}: {
+  termId: string;
+  classSessionId: string;
+}) {
+  try {
+    // 'all' means no session filter — only filter by term
+    const effectiveClassSessionId =
+      classSessionId && classSessionId !== 'all' ? classSessionId : '';
+    const availableKids = await kidEnrollmentRepo.findAvailableKids({
+      termId,
+      classSessionId: effectiveClassSessionId,
+    });
+    if (availableKids.length === 0) {
+      return {
+        success: false as const,
+        error:
+          'Tidak ada data anak yang bisa ditambahkan lagi. Silahkan pilih untuk batch atau sesi lainnya.',
+      };
+    }
+    return {
+      success: true as const,
+      data: availableKids.map((kid) => ({
+        id: kid.id,
+        name: kid.name,
+      })) as LeanKid[],
+    };
+  } catch (error) {
+    console.error('getAvailableKids: ', error);
+    return {
+      success: false as const,
+      error: 'Gagal memuat data. Coba muat ulang halaman.',
+    };
+  }
+}
+
+export async function createKidsEnrollments(input: KidEnrollmentInput) {
   return requireOwner(async () => {
     try {
-      const enrolledKids = input.kids.map((kid) => {
+      const enrolledKids = input.kids.map(({ kidId, status }) => {
         return {
           termId: input.termId,
           classSessionId: input.classSessionId,
-          kidId: kid.id,
-          status: kid.status,
+          kidId,
+          status,
         };
       });
       const createdEnrollments =
