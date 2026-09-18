@@ -1,3 +1,5 @@
+import { createContext, memo, useContext } from 'react';
+
 import { ENROLLMENT_STATUS_LABELS } from '@/db/schema';
 import { ColumnDef } from '@tanstack/react-table';
 
@@ -8,6 +10,32 @@ import { Badge } from '@/components/ui/badge';
 import { getDeterministicClass } from '../../utils/badge-color';
 import { KidEnrollment } from './types';
 
+export const NewKidIdsContext = createContext<Set<string>>(new Set());
+
+const KidNameCell = memo(function KidNameCell({
+  kidId,
+  name,
+}: {
+  kidId: string;
+  name: string;
+}) {
+  const newKidIds = useContext(NewKidIdsContext);
+  const isNew = newKidIds.has(kidId);
+  return (
+    <span className="flex items-center gap-2">
+      {name}
+      {isNew && (
+        <Badge
+          variant="outline"
+          className="text-xs border-amber-300 text-amber-700 bg-amber-50 dark:border-amber-600 dark:text-amber-400 dark:bg-amber-950"
+        >
+          Baru
+        </Badge>
+      )}
+    </span>
+  );
+});
+
 export const kidEnrollmentColumns: ColumnDef<
   AppTableFeatures,
   KidEnrollment
@@ -15,6 +43,9 @@ export const kidEnrollmentColumns: ColumnDef<
   {
     accessorKey: 'kid.name',
     header: 'Nama',
+    cell: ({ row }) => (
+      <KidNameCell kidId={row.original.kidId} name={row.original.kid.name} />
+    ),
   },
   {
     accessorKey: 'status',

@@ -1,6 +1,6 @@
 import * as classSessionAction from '@/features/class-session/actions';
 import * as kidEnrollmentAction from '@/features/kid-enrollment/actions';
-import KidEnrollmentContent from '@/features/kid-enrollment/components/content';
+import KidEnrollmentClient from '@/features/kid-enrollment/components/kid-enrollment-client';
 import { KidEnrollment } from '@/features/kid-enrollment/types';
 import * as termAction from '@/features/term/actions';
 
@@ -54,7 +54,8 @@ export default async function KidEnrollmentListPage({
   }
 
   return (
-    <KidEnrollmentContent
+    <KidEnrollmentClient
+      key={`${effectiveTermId}-${classSessionId}`}
       terms={termResult.data}
       classSessions={classSessionResult.data}
       data={enrollmentsResult.data as unknown as KidEnrollment[]}

@@ -92,58 +92,69 @@ export default function UpdateEnrolledKids({
   onUpdateToggle,
   kids,
   onAdd,
-  onSave,
-  onCancel,
+  selectedClassSessionId,
+  hasChanges,
 }: {
   isUpdateMode: boolean;
   onUpdateToggle: () => void;
   kids: LeanKid[];
   onAdd?: (selectedKids: Set<string>) => void;
-  onSave?: () => void;
-  onCancel?: () => void;
+  selectedClassSessionId: string;
+  hasChanges: boolean;
 }) {
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isAddKidModalOpen, setIsAddKidModalOpen] = useState(false);
+
+  const noSessionSelected = selectedClassSessionId === 'all';
 
   return (
     <div className="flex items-center justify-end gap-2">
       {isUpdateMode && (
         <div className="flex items-center justify-end gap-2">
-          <Modal
-            title="Tambah Murid ke Batch"
-            description=""
-            trigger={{
-              icon: AddTeamIcon,
-              text: 'Tambah Murid ke Batch',
-            }}
-            content={
-              <CheckboxInTable
-                selectedRows={selectedRows}
-                onSelectedRowsChange={setSelectedRows}
-                kids={kids.map((kid) => {
-                  return {
-                    id: kid.id,
-                    name: kid.name,
-                  };
-                })}
-              />
-            }
-            open={isAddKidModalOpen}
-            onOpenChange={setIsAddKidModalOpen}
-            footer={
-              <Button
-                className="flex justify-center items-center gap-3"
-                onClick={() => onAdd?.(selectedRows)}
-              >
-                <HugeiconsIcon icon={Add02Icon} />
-                Tambah ke List
-              </Button>
-            }
-          />
-          <Button>
-            <HugeiconsIcon icon={SaveIcon} className="mr-1" />
-            Simpan Perubahan
-          </Button>
+          {noSessionSelected ? (
+            <Button disabled variant="default">
+              <HugeiconsIcon icon={AddTeamIcon} />
+              Tambah Murid ke Batch
+            </Button>
+          ) : (
+            <Modal
+              title="Tambah Murid ke Batch"
+              description=""
+              trigger={{
+                icon: AddTeamIcon,
+                text: 'Tambah Murid ke Batch',
+              }}
+              content={
+                <CheckboxInTable
+                  selectedRows={selectedRows}
+                  onSelectedRowsChange={setSelectedRows}
+                  kids={kids.map((kid) => {
+                    return {
+                      id: kid.id,
+                      name: kid.name,
+                    };
+                  })}
+                />
+              }
+              open={isAddKidModalOpen}
+              onOpenChange={setIsAddKidModalOpen}
+              footer={
+                <Button
+                  className="flex justify-center items-center gap-3"
+                  onClick={() => onAdd?.(selectedRows)}
+                >
+                  <HugeiconsIcon icon={Add02Icon} />
+                  Tambah ke List
+                </Button>
+              }
+            />
+          )}
+          {hasChanges && (
+            <Button>
+              <HugeiconsIcon icon={SaveIcon} className="mr-1" />
+              Simpan Perubahan
+            </Button>
+          )}
         </div>
       )}
       <Button onClick={onUpdateToggle} hidden={isUpdateMode}>

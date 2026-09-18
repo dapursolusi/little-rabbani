@@ -22,7 +22,11 @@ import {
 import { Separator } from '@/components/ui/separator';
 
 import * as kidEnrollmentAction from '../actions';
-import { kidEnrollmentColumns, kidEnrollmentSessionColumn } from '../columns';
+import {
+  NewKidIdsContext,
+  kidEnrollmentColumns,
+  kidEnrollmentSessionColumn,
+} from '../columns';
 import { KidToBeEnrolled } from '../schema';
 import { KidEnrollment } from '../types';
 import UpdateEnrolledKids from './update-enrolled-kids';
@@ -69,6 +73,9 @@ export default function KidEnrollmentClient({
     ? [...kidEnrollmentColumns, kidEnrollmentSessionColumn]
     : kidEnrollmentColumns;
 
+  const newKidIds = new Set(created.map((k) => k.kidId));
+  const hasChanges = created.length > 0 || updated.size > 0 || deleted.size > 0;
+
   // Fetch available kids when entering update mode
   useEffect(() => {
     if (!isUpdateMode) return;
@@ -106,7 +113,7 @@ export default function KidEnrollmentClient({
           classSession: { name: '' },
           term: { name: '' },
         }));
-        return [...current, ...newKids];
+        return [...newKids, ...current];
       });
 
       setCreated((current) => [...current, ...newEnrollments]);
@@ -189,37 +196,41 @@ export default function KidEnrollmentClient({
         </div>
       </div>
       <Separator />
-      <DataTable
-        columns={columns}
-        data={enrolledKids}
-        meta={{
-          label: 'Pendaftaran Murid',
-          customActionLabel: 'Update',
-          customActionIcon: DatabaseSyncIcon,
-          domain: 'registration',
-        }}
-        createForm={{
-          meta: {
+      <NewKidIdsContext.Provider value={newKidIds}>
+        <DataTable
+          columns={columns}
+          data={enrolledKids}
+          meta={{
             label: 'Pendaftaran Murid',
+            customActionLabel: 'Update',
+            customActionIcon: DatabaseSyncIcon,
             domain: 'registration',
-          },
-          createForm: <div></div>,
-        }}
-        emptyStateIcon={ContractsIcon}
-        toolbar={{
-          showAll: !isUpdateMode,
-        }}
-        customAction={
-          <UpdateEnrolledKids
-            isUpdateMode={isUpdateMode}
-            onUpdateToggle={() => {
-              setIsUpdateMode(!isUpdateMode);
-            }}
-            kids={availableKids}
-            onAdd={handleAdd}
-          />
-        }
-      />
+          }}
+          createForm={{
+            meta: {
+              label: 'Pendaftaran Murid',
+              domain: 'registration',
+            },
+            createForm: <div></div>,
+          }}
+          emptyStateIcon={ContractsIcon}
+          toolbar={{
+            showAll: !isUpdateMode,
+          }}
+          customAction={
+            <UpdateEnrolledKids
+              isUpdateMode={isUpdateMode}
+              onUpdateToggle={() => {
+                setIsUpdateMode(!isUpdateMode);
+              }}
+              kids={availableKids}
+              onAdd={handleAdd}
+              selectedClassSessionId={selectedClassSessionId ?? 'all'}
+              hasChanges={hasChanges}
+            />
+          }
+        />
+      </NewKidIdsContext.Provider>
     </div>
   );
 }

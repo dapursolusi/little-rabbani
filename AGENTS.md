@@ -81,16 +81,23 @@ UI Component (Server Component / Client form) → Server Action → Drizzle → 
 
 ## File Placement
 
-| Component Type        | Location                            | Notes                             |
-| :-------------------- | :---------------------------------- | :-------------------------------- |
-| Page/Layout           | `src/app/`                          | App Router conventions            |
-| Feature sections      | `src/features/<entity>/components/` | Per-module components             |
-| Layout components     | `src/components/layout/`            | Header, Footer, MobileMenu        |
-| Shared UI primitives  | `src/components/ui/`                | shadcn base-nova (auto-generated) |
-| Utilities & constants | `src/lib/`                          | metadata, security-headers, utils |
-| Types                 | `src/types/`                        | Add per-project as needed         |
-| Tests (unit)          | `tests/`                            | Vitest                            |
-| Tests (E2E)           | `e2e/`                              | Playwright                        |
+| Component Type                          | Location                                | Notes                                     |
+| :-------------------------------------- | :-------------------------------------- | :---------------------------------------- |
+| Page/Layout                             | `src/app/`                              | App Router conventions                    |
+| Feature sections                        | `src/features/<module>/components/`     | Per-module components                     |
+| Layout components                       | `src/components/layout/`                | Header, Footer, MobileMenu                |
+| Shared UI primitives                    | `src/components/ui/`                    | shadcn base-nova (auto-generated)         |
+| Utilities & constants                   | `src/lib/`                              | 3rd party, all that affecting domain      |
+| Helpers                                 | `src/utils/`                            | helpers                                   |
+| Types                                   | `src/types/`                            | Add per-project as needed                 |
+| Tests (unit)                            | `src/features/_tests_/`                 | Vitest                                    |
+| Tests (integration, within 1 module)    | `src/features/_tests_/`                 | Vitest                                    |
+| Tests (integration, cross module)       | `tests/`                                | Vitest                                    |
+| Tests (E2E)                             | `e2e/`                                  | Playwright                                |
+| Server Actions                          | `src/features/<module>/actions.ts`      | Controllers/Actions                       |
+| Services                                | `src/features/<module>/services.ts`     | Business Logic                            |
+| Repositories                            | `src/features/<module>/repositories.ts` | Repositories                              |
+| Repositories (Module w/ cross entities) | `src/features/<module>/repositories/`   | Repositories: file barrel`index.ts` and `<table/entity_name>.ts` |
 
 ## Commands
 

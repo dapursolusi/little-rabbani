@@ -88,6 +88,14 @@ interface DataTableProps<TData extends RowData, TValue extends CellData> {
   createForm?: TableFormProps;
   createHref?: string;
   emptyStateIcon?: IconSvgElement | React.ReactNode;
+  toolbar?: {
+    showAll?: boolean;
+    showColumnVisibility?: boolean;
+    showSearchBar?: boolean;
+    showFilter?: boolean;
+    showCreateAction?: boolean;
+  };
+  customAction?: React.ReactNode;
 }
 
 export function DataTable<TData extends RowData, TValue extends CellData>({
@@ -97,6 +105,8 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
   createForm,
   createHref,
   emptyStateIcon,
+  toolbar,
+  customAction,
 }: DataTableProps<TData, TValue>) {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [pagination, setPagination] = React.useState({
@@ -111,6 +121,12 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+  const showAllToolbar = toolbar?.showAll ?? true;
+  const showColumnVisibility = toolbar?.showColumnVisibility ?? false;
+  const showSearchBar = toolbar?.showSearchBar ?? true;
+  const showFilter = toolbar?.showFilter ?? true;
+  const showCreateAction = toolbar?.showCreateAction ?? true;
+
   // Scoping to opt-in columns: a column participates in the global filter
   // only when its `meta.enableSearch` is true. Source of truth lives in each
   // ColumnDef's `meta`, out of the search bar — so the same flag that gates
@@ -247,55 +263,65 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
 
   return (
     <SortingStateContext.Provider value={sorting}>
-      <DataTableFilter
-        table={table}
-        columns={columns}
-        columnFilters={columnFilters}
-        onColumnFiltersChange={setColumnFilters}
-      >
-        <div className="my-2 flex max-md:flex-col items-center gap-2 justify-between">
-          <DataTableSearchBar
-            table={table}
-            globalFilter={globalFilter}
-            placeholder={searchPlaceholder}
-          />
-          <div className="flex items-center gap-2 max-md:w-full max-md:justify-between">
-            <DataTableFilter.Button />
-            <DataTableColumnVisibility
-              table={table}
-              columnVisibility={columnVisibility}
-            />
-            {createHref ? (
-              <Link
-                href={createHref}
-                className={cn(buttonVariants({ variant: 'default' }))}
-              >
-                {meta.customActionIcon ? (
-                  isIconSvgElement(meta.customActionIcon) ? (
+      {customAction}
+      {showAllToolbar && (
+        <DataTableFilter
+          table={table}
+          columns={columns}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={setColumnFilters}
+        >
+          <div className="my-2 flex max-md:flex-col items-center gap-2 justify-between">
+            {showSearchBar && (
+              <DataTableSearchBar
+                table={table}
+                globalFilter={globalFilter}
+                placeholder={searchPlaceholder}
+              />
+            )}
+            <div className="flex items-center gap-2 max-md:w-full max-md:justify-between">
+              <DataTableFilter.Button />
+              {showColumnVisibility && (
+                <DataTableColumnVisibility
+                  table={table}
+                  columnVisibility={columnVisibility}
+                />
+              )}
+              {showCreateAction && createHref ? (
+                <Link
+                  href={createHref}
+                  className={cn(buttonVariants({ variant: 'default' }))}
+                >
+                  {meta.customActionIcon ? (
+                    isIconSvgElement(meta.customActionIcon) ? (
+                      <HugeiconsIcon
+                        icon={meta.customActionIcon}
+                        className="h-4 w-4 mr-2"
+                      />
+                    ) : (
+                      meta.customActionIcon
+                    )
+                  ) : (
                     <HugeiconsIcon
-                      icon={meta.customActionIcon}
+                      icon={PlusSignIcon}
                       className="h-4 w-4 mr-2"
                     />
-                  ) : (
-                    meta.customActionIcon
-                  )
-                ) : (
-                  <HugeiconsIcon icon={PlusSignIcon} className="h-4 w-4 mr-2" />
-                )}
-                {`${meta.customActionLabel ?? 'Tambah'} ${meta.label}`}
-              </Link>
-            ) : createForm ? (
-              <SaveModal
-                metaLabel={meta.label}
-                form={createForm as TableFormProps}
-                open={modalOpen}
-                onOpenChange={setModalOpen}
-              />
-            ) : null}
+                  )}
+                  {`${meta.customActionLabel ?? 'Tambah'} ${meta.label}`}
+                </Link>
+              ) : showCreateAction && createForm ? (
+                <SaveModal
+                  metaLabel={meta.label}
+                  form={createForm as TableFormProps}
+                  open={modalOpen}
+                  onOpenChange={setModalOpen}
+                />
+              ) : null}
+            </div>
           </div>
-        </div>
-        <DataTableFilter.Bar />
-      </DataTableFilter>
+          <DataTableFilter.Bar />
+        </DataTableFilter>
+      )}
       <div className="md:bg-table-body-bg overflow-hidden rounded-lg border-2! border-black/30">
         <div className="hidden overflow-x-auto md:block">
           <Table>
