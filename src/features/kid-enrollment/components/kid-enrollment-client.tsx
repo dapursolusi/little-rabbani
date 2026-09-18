@@ -24,8 +24,10 @@ import { Separator } from '@/components/ui/separator';
 import * as kidEnrollmentAction from '../actions';
 import {
   NewKidIdsContext,
+  UpdateModeContext,
   kidEnrollmentColumns,
   kidEnrollmentSessionColumn,
+  kidEnrollmentUpdateActionColumn,
 } from '../columns';
 import { KidToBeEnrolled } from '../schema';
 import { KidEnrollment } from '../types';
@@ -70,11 +72,48 @@ export default function KidEnrollmentClient({
 
   const showAllSessions = selectedClassSessionId === 'all';
   const columns = showAllSessions
-    ? [...kidEnrollmentColumns, kidEnrollmentSessionColumn]
-    : kidEnrollmentColumns;
+    ? [
+        ...kidEnrollmentColumns,
+        kidEnrollmentSessionColumn,
+        ...(isUpdateMode ? [kidEnrollmentUpdateActionColumn] : []),
+      ]
+    : [
+        ...kidEnrollmentColumns,
+        ...(isUpdateMode ? [kidEnrollmentUpdateActionColumn] : []),
+      ];
 
   const newKidIds = new Set(created.map((k) => k.kidId));
+  const createdIds = new Set(created.map((k) => k.kidId));
+  const deletedIds = deleted;
   const hasChanges = created.length > 0 || updated.size > 0 || deleted.size > 0;
+
+  const handleRemoveNew = useCallback((kidId: string) => {
+    setCreated((prev) => prev.filter((k) => k.kidId !== kidId));
+    setEnrolledKids((prev) => prev.filter((k) => k.kidId !== kidId));
+  }, []);
+
+  const handleToggleDeleted = useCallback((enrollmentId: string) => {
+    setDeleted((prev) => {
+      const next = new Set(prev);
+      if (next.has(enrollmentId)) {
+        next.delete(enrollmentId);
+      } else {
+        next.add(enrollmentId);
+      }
+      return next;
+    });
+  }, []);
+
+  const handleUpdateToggle = useCallback(() => {
+    setIsUpdateMode((prev) => !prev);
+    if (isUpdateMode) {
+      // Exiting update mode — reset all local state
+      setCreated([]);
+      setUpdated(new Map());
+      setDeleted(new Set());
+      setEnrolledKids(data);
+    }
+  }, [isUpdateMode, data]);
 
   // Fetch available kids when entering update mode
   useEffect(() => {
@@ -197,39 +236,52 @@ export default function KidEnrollmentClient({
       </div>
       <Separator />
       <NewKidIdsContext.Provider value={newKidIds}>
-        <DataTable
-          columns={columns}
-          data={enrolledKids}
-          meta={{
-            label: 'Pendaftaran Murid',
-            customActionLabel: 'Update',
-            customActionIcon: DatabaseSyncIcon,
-            domain: 'registration',
+        <UpdateModeContext.Provider
+          value={{
+            isUpdateMode,
+            createdIds,
+            deletedIds,
+            onRemoveNew: handleRemoveNew,
+            onToggleDeleted: handleToggleDeleted,
           }}
-          createForm={{
-            meta: {
+        >
+          <DataTable
+            columns={columns}
+            data={enrolledKids}
+            getRowClassName={(row) =>
+              deletedIds.has((row as KidEnrollment).id)
+                ? 'opacity-50'
+                : undefined
+            }
+            meta={{
               label: 'Pendaftaran Murid',
+              customActionLabel: 'Update',
+              customActionIcon: DatabaseSyncIcon,
               domain: 'registration',
-            },
-            createForm: <div></div>,
-          }}
-          emptyStateIcon={ContractsIcon}
-          toolbar={{
-            showAll: !isUpdateMode,
-          }}
-          customAction={
-            <UpdateEnrolledKids
-              isUpdateMode={isUpdateMode}
-              onUpdateToggle={() => {
-                setIsUpdateMode(!isUpdateMode);
-              }}
-              kids={availableKids}
-              onAdd={handleAdd}
-              selectedClassSessionId={selectedClassSessionId ?? 'all'}
-              hasChanges={hasChanges}
-            />
-          }
-        />
+            }}
+            createForm={{
+              meta: {
+                label: 'Pendaftaran Murid',
+                domain: 'registration',
+              },
+              createForm: <div></div>,
+            }}
+            emptyStateIcon={ContractsIcon}
+            toolbar={{
+              showAll: !isUpdateMode,
+            }}
+            customAction={
+              <UpdateEnrolledKids
+                isUpdateMode={isUpdateMode}
+                onUpdateToggle={handleUpdateToggle}
+                kids={availableKids}
+                onAdd={handleAdd}
+                selectedClassSessionId={selectedClassSessionId ?? 'all'}
+                hasChanges={hasChanges}
+              />
+            }
+          />
+        </UpdateModeContext.Provider>
       </NewKidIdsContext.Provider>
     </div>
   );

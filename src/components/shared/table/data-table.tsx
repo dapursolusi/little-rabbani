@@ -96,6 +96,7 @@ interface DataTableProps<TData extends RowData, TValue extends CellData> {
     showCreateAction?: boolean;
   };
   customAction?: React.ReactNode;
+  getRowClassName?: (row: TData) => string | undefined;
 }
 
 export function DataTable<TData extends RowData, TValue extends CellData>({
@@ -107,6 +108,7 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
   emptyStateIcon,
   toolbar,
   customAction,
+  getRowClassName,
 }: DataTableProps<TData, TValue>) {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [pagination, setPagination] = React.useState({
@@ -349,7 +351,10 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
+                  <TableRow
+                    key={row.id}
+                    className={getRowClassName?.(row.original)}
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(

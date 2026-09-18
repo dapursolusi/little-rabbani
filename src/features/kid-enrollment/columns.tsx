@@ -1,6 +1,8 @@
 import { createContext, memo, useContext } from 'react';
 
 import { ENROLLMENT_STATUS_LABELS } from '@/db/schema';
+import { Cancel02Icon, Undo02Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { ColumnDef } from '@tanstack/react-table';
 
 import { AppTableFeatures } from '@/components/shared/table/features';
@@ -11,6 +13,20 @@ import { getDeterministicClass } from '../../utils/badge-color';
 import { KidEnrollment } from './types';
 
 export const NewKidIdsContext = createContext<Set<string>>(new Set());
+
+export const UpdateModeContext = createContext<{
+  isUpdateMode: boolean;
+  createdIds: Set<string>;
+  deletedIds: Set<string>;
+  onRemoveNew: (kidId: string) => void;
+  onToggleDeleted: (enrollmentId: string) => void;
+}>({
+  isUpdateMode: false,
+  createdIds: new Set(),
+  deletedIds: new Set(),
+  onRemoveNew: () => {},
+  onToggleDeleted: () => {},
+});
 
 const KidNameCell = memo(function KidNameCell({
   kidId,
@@ -116,4 +132,50 @@ export const kidEnrollmentActionColumn: ColumnDef<
       />
     );
   },
+};
+
+function UpdateActionCell({ row }: { row: { original: KidEnrollment } }) {
+  const ctx = useContext(UpdateModeContext);
+  if (!ctx.isUpdateMode) return null;
+
+  const { createdIds, deletedIds, onRemoveNew, onToggleDeleted } = ctx;
+  const kidEnrollment = row.original;
+  const isCreated = createdIds.has(kidEnrollment.kidId);
+  const isDeleted = deletedIds.has(kidEnrollment.id);
+
+  if (isDeleted) {
+    return (
+      <button
+        type="button"
+        onClick={() => onToggleDeleted(kidEnrollment.id)}
+        className="text-green-600 hover:text-green-700"
+      >
+        <HugeiconsIcon icon={Undo02Icon} className="h-4 w-4" strokeWidth={3} />
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={() =>
+        isCreated
+          ? onRemoveNew(kidEnrollment.kidId)
+          : onToggleDeleted(kidEnrollment.id)
+      }
+      className="text-red-500 hover:text-red-700"
+    >
+      <HugeiconsIcon icon={Cancel02Icon} className="h-4 w-4" />
+    </button>
+  );
+}
+
+export const kidEnrollmentUpdateActionColumn: ColumnDef<
+  AppTableFeatures,
+  KidEnrollment
+> = {
+  id: 'update-actions',
+  header: '',
+  enableHiding: false,
+  cell: UpdateActionCell,
 };
