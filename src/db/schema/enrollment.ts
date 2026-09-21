@@ -9,7 +9,6 @@ import {
   timestamp,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { table } from 'node:console';
 
 import { kid } from './kids';
 

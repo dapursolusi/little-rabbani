@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { ClassSession } from '@/features/class-session/types';
 import * as kidEnrollmentActions from '@/features/kid-enrollment/actions';
 import { kidEnrollmentFormFields } from '@/features/kid-enrollment/fields';
-import { CreateKidEnrollmentSchema } from '@/features/kid-enrollment/schema';
+import { BaseKidEnrollmentSchema } from '@/features/kid-enrollment/schema';
 import { Kid } from '@/features/kid/types';
 import type { Term } from '@/features/term/types';
 
