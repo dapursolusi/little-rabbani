@@ -2,15 +2,15 @@
 
 Split into per-stack files. Code wins if doc disagrees — update doc in same change.
 
-| Stack | File |
-|-------|------|
-| Next.js / App Router | [nextjs.md](patterns/nextjs.md) |
-| TypeScript | [typescript.md](patterns/typescript.md) |
-| Database (Drizzle + Neon) | [database.md](patterns/database.md) |
-| Forms (FormFieldGenerator) | [forms.md](patterns/forms.md) |
-| DataTable (TanStack v9) | [tables.md](patterns/tables.md) |
-| Auth (Better Auth) | [auth.md](patterns/auth.md) |
-| Shared UI | [shared-ui.md](patterns/shared-ui.md) |
+| Stack                      | File                                    |
+| -------------------------- | --------------------------------------- |
+| Next.js / App Router       | [nextjs.md](patterns/nextjs.md)         |
+| TypeScript                 | [typescript.md](patterns/typescript.md) |
+| Database (Drizzle + Neon)  | [database.md](patterns/database.md)     |
+| Forms (FormFieldGenerator) | [forms.md](patterns/forms.md)           |
+| DataTable (TanStack v9)    | [tables.md](patterns/tables.md)         |
+| Auth (Better Auth)         | [auth.md](patterns/auth.md)             |
+| Shared UI                  | [shared-ui.md](patterns/shared-ui.md)   |
 
 Extract a new pattern only after a repeatable shape lands. Promote to AGENTS.md only after 3+ entities use it unchanged. Add a new stack file when patterns grow too large.
 

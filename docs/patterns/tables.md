@@ -7,14 +7,22 @@
 ## Feature set
 
 Registered in `src/components/shared/table/features.ts`:
+
 ```ts
 export const tableFeaturesConfig = tableFeatures({
-  columnFilteringFeature, columnVisibilityFeature, globalFilteringFeature,
-  rowPaginationFeature, rowSortingFeature,
+  columnFilteringFeature,
+  columnVisibilityFeature,
+  globalFilteringFeature,
+  rowPaginationFeature,
+  rowSortingFeature,
   filteredRowModel: createFilteredRowModel(),
   paginatedRowModel: createPaginatedRowModel(),
   sortedRowModel: createSortedRowModel(),
-  filterFns: { select: selectFilterFn, text: textFilterFn, range: rangeFilterFn },
+  filterFns: {
+    select: selectFilterFn,
+    text: textFilterFn,
+    range: rangeFilterFn,
+  },
   columnMeta: {} as AppColumnMeta,
 });
 export type AppTableFeatures = typeof tableFeaturesConfig;
@@ -29,8 +37,12 @@ export const entityColumns: ColumnDef<AppTableFeatures, Entity>[] = [
   {
     accessorKey: 'name',
     meta: { title: 'Nama', enableSearch: true },
-    header: ({ column }) => <DataTableColumnHeader column={column} title="Nama" />,
-    cell: ({ row }) => <span className="font-medium">{row.getValue('name') ?? '-'}</span>,
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title="Nama" />
+    ),
+    cell: ({ row }) => (
+      <span className="font-medium">{row.getValue('name') ?? '-'}</span>
+    ),
   },
   // ...
   {
@@ -54,6 +66,7 @@ export const entityColumns: ColumnDef<AppTableFeatures, Entity>[] = [
 ## RowActionsDialog
 
 `src/components/shared/table/row-actions-dialog.tsx` — two modes:
+
 1. **Edit link** (`edit: { href: string }`) — navigates to a dedicated edit page
 2. **Inline edit** (`edit: { schema, formFields, action, initialData }`) — opens a modal with `FormFieldGenerator`
 
@@ -68,7 +81,10 @@ export const entityColumns: ColumnDef<AppTableFeatures, Entity>[] = [
   meta={{ label: 'Entity', domain: 'entity' }}
   createHref="/dashboard/entity/create"
   // or modal form:
-  createForm={{ createForm: <EntityForm />, meta: { label: 'Entity', domain: 'entity' } }}
+  createForm={{
+    createForm: <EntityForm />,
+    meta: { label: 'Entity', domain: 'entity' },
+  }}
 />
 ```
 
@@ -86,6 +102,7 @@ Client-side (all data loaded at once). `DataTablePagination` component. State mi
 ## React Compiler gotcha
 
 Do not read live values off the stable `table` instance in render. Mirror pagination state:
+
 ```tsx
 const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 const pageCount = Math.max(1, Math.ceil(filteredRowCount / pagination.pageSize));
@@ -95,6 +112,7 @@ const paginationInfo = {
   ...
 };
 ```
+
 Pass `paginationInfo` to child components, not `table.getCanNextPage()`.
 
 ## Mobile view

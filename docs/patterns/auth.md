@@ -7,6 +7,7 @@ Better Auth (`better-auth` + `@better-auth/drizzle-adapter`). Google OAuth + dev
 ## Configuration
 
 `src/lib/auth.ts` — `betterAuth()` setup with:
+
 - Drizzle adapter (`provider: 'pg'`)
 - Google social provider
 - Allowed hosts (localhost, lobo, vercel)
@@ -28,6 +29,7 @@ Redirects to `/login` if unauthenticated. Returns `{ success: false, error: 'Aks
 ## Route proxy
 
 `src/proxy.ts` — middleware handling:
+
 1. Distributed tracing headers (`X-Request-Id`, `X-Trace-Id`)
 2. Session checking for `/dashboard/*` routes
 3. Role-based access: `ROLE_ROUTES` map defines which routes each role can access

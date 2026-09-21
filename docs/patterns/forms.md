@@ -17,11 +17,13 @@ Engine handles: form state, validation (zod via `zodResolver`), toast feedback, 
 ## Zod resolver seam
 
 The `zodResolver(schema)` → react-hook-form seam requires one cast:
+
 ```ts
 const form = useForm<TForm>({
   resolver: zodResolver(schema) as never,
 });
 ```
+
 Accepted because variance on optional/nullable mapped types makes TS reject structurally identical types. One cast in shared component vs. per-entity components.
 
 ## Entity form files
@@ -58,6 +60,7 @@ Three files per entity under `features/<entity>/`:
 ## InputFieldRenderer
 
 `src/components/shared/form/input-field-renderer.tsx` — renders the actual input per `type`:
+
 - `'select'` → shadcn Select with grouped/flat options
 - `'custom'` → calls `fieldConfig.render()` with field + fieldState
 - `'switch'` → shadcn Switch
@@ -80,14 +83,24 @@ nickName: z.string().nullable().optional(),
 ## Combined forms
 
 Discriminated union schema for mode-switching forms (e.g. kid+guardian):
+
 ```ts
 const KidGuardianFormSchema = z.discriminatedUnion('guardianMode', [
-  z.object({ guardianMode: z.literal('new'), kid: BaseKidSchema, guardian: GuardianSchema }),
-  z.object({ guardianMode: z.literal('existing'), kid: BaseKidSchema, guardianId: z.string() }),
+  z.object({
+    guardianMode: z.literal('new'),
+    kid: BaseKidSchema,
+    guardian: GuardianSchema,
+  }),
+  z.object({
+    guardianMode: z.literal('existing'),
+    kid: BaseKidSchema,
+    guardianId: z.string(),
+  }),
 ]);
 ```
 
 The schema cast in the form component:
+
 ```ts
 const schema = KidGuardianFormSchema as unknown as z.ZodObject<...> & { _output: ... };
 ```

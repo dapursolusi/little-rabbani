@@ -6,8 +6,7 @@ Every Server Action returns a discriminated union — the single pattern for all
 
 ```ts
 type ActionResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+  { success: true; data: T } | { success: false; error: string };
 ```
 
 Declared in `src/lib/actions/require-owner.ts`. Always `as const` on the literal so TS narrows with `if (!result.success)`.
@@ -15,7 +14,7 @@ Declared in `src/lib/actions/require-owner.ts`. Always `as const` on the literal
 ## `parseInput()` — zod at every trust boundary
 
 ```ts
-parseInput({ schema, input, fallbackError })
+parseInput({ schema, input, fallbackError });
 // → { success: true, data: z.infer<S> } | { success: false, error: string }
 ```
 
@@ -33,6 +32,7 @@ export interface Entity extends BaseDTOResponse, EntityInput {}
 ## Re-export pattern
 
 `schema.ts` exports both the schema and the inferred type:
+
 ```ts
 export { EntitySchema };
 export type EntityInput = z.infer<typeof EntitySchema>;
@@ -45,6 +45,7 @@ export type EntityInput = z.infer<typeof EntitySchema>;
 ## Repository exports
 
 Repositories under `repositories/` dir with `index.ts`:
+
 ```ts
 export * as kidRepo from './kid';
 export * as guardianRepo from './guardian';
@@ -57,7 +58,9 @@ Use `unknown` or proper interfaces. `as never` at the zodResolver ↔ react-hook
 ## `cn()` utility
 
 ```ts
-import { cn } from '@/lib/utils'; // clsx + tailwind-merge
+import { cn } from '@/lib/utils';
+
+// clsx + tailwind-merge
 ```
 
 ## Ponytail comments

@@ -7,7 +7,9 @@ Cross-feature components under `src/components/shared/`. Auto-generated shadcn b
 ## cn() utility
 
 ```ts
-import { cn } from '@/lib/utils'; // clsx + tailwind-merge
+import { cn } from '@/lib/utils';
+
+// clsx + tailwind-merge
 ```
 
 ## EmptyState
@@ -37,6 +39,7 @@ import { cn } from '@/lib/utils'; // clsx + tailwind-merge
 ## Format utilities
 
 `src/lib/format.ts`:
+
 - `formatDate(dateStr)` — "Senin, 1 Januari 2024"
 - `formatDateShort(dateStr)` — "Senin, 11 Agu"
 - `formatAge(dob)` — "3 tahun 5 bulan" from YYYY-MM-DD

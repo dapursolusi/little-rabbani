@@ -15,10 +15,10 @@ features/<entity>/actions.ts  →  features/<entity>/services.ts  →  features/
 **Layered:** actions.ts parses input, services.ts wraps business logic in `requireOwner()`, repositories/ talk to DB. Thin actions layer, fat services layer.
 
 **Action shape:** every action returns `ActionResult<T>`:
+
 ```ts
 type ActionResult<T = void> =
-  | { success: true; data: T }
-  | { success: false; error: string };
+  { success: true; data: T } | { success: false; error: string };
 ```
 
 Narrow client-side with `if (!result.success)`.
@@ -30,15 +30,23 @@ Narrow client-side with `if (!result.success)`.
 ## Page pattern
 
 Every page exports `metadata` using `baseMetadata`:
+
 ```ts
 import { baseMetadata } from '@/lib/metadata';
+
 export const metadata = { ...baseMetadata, title: '...' };
 ```
 
 Page fetches data, passes to DataTable. Error state rendered inline with `<Alert>`:
+
 ```tsx
 if (!result.success) {
-  return <Alert><AlertTitle>Error</AlertTitle><AlertDescription>...</AlertDescription></Alert>;
+  return (
+    <Alert>
+      <AlertTitle>Error</AlertTitle>
+      <AlertDescription>...</AlertDescription>
+    </Alert>
+  );
 }
 ```
 

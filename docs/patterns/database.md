@@ -17,7 +17,10 @@ export const entity = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     // ...columns...
     createdAt: timestamp('created_at').notNull().defaultNow(),
-    updatedAt: timestamp('updated_at').notNull().defaultNow().$onUpdateFn(() => new Date()),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
     deletedAt: timestamp('deleted_at'),
   },
   (table) => ({
@@ -44,7 +47,7 @@ Postgres does not auto-index FK columns. Each FK gets a single-column index:
 (table) => ({
   guardianIdx: index('kid_guardian_idx').on(table.guardianId),
   kidNameDobUnique: unique('kid_name_dob_unique').on(table.name, table.dob),
-})
+});
 ```
 
 ## Enum + label constants
@@ -67,7 +70,10 @@ Declared beside the table, not in a separate file:
 
 ```ts
 export const kidRelations = relations(kid, ({ one, many }) => ({
-  guardian: one(guardian, { fields: [kid.guardianId], references: [guardian.id] }),
+  guardian: one(guardian, {
+    fields: [kid.guardianId],
+    references: [guardian.id],
+  }),
   enrollments: many(kidEnrollment),
 }));
 ```
