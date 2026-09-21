@@ -87,10 +87,20 @@ export default function KidEnrollmentClient({
   const deletedIds = deleted;
   const hasChanges = created.length > 0 || updated.size > 0 || deleted.size > 0;
 
-  const handleRemoveNew = useCallback((kidId: string) => {
-    setCreated((prev) => prev.filter((k) => k.kidId !== kidId));
-    setEnrolledKids((prev) => prev.filter((k) => k.kidId !== kidId));
-  }, []);
+  const handleRemoveNew = useCallback(
+    (kidId: string) => {
+      const kidData = enrolledKids.find((k) => k.kidId === kidId);
+      if (kidData) {
+        setAvailableKids((current) => [
+          ...current,
+          { id: kidData.kidId, name: kidData.kid.name },
+        ]);
+      }
+      setCreated((prev) => prev.filter((k) => k.kidId !== kidId));
+      setEnrolledKids((prev) => prev.filter((k) => k.kidId !== kidId));
+    },
+    [enrolledKids]
+  );
 
   const handleToggleDeleted = useCallback((enrollmentId: string) => {
     setDeleted((prev) => {
