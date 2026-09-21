@@ -71,7 +71,9 @@ beforeEach(() => {
   mockInsertResolves(NEW_TERM);
   mocks.update.mockReturnValue({
     set: vi.fn().mockReturnValue({
-      where: vi.fn().mockResolvedValue(undefined),
+      where: vi.fn().mockReturnValue({
+        returning: vi.fn().mockResolvedValue([undefined]),
+      }),
     }),
   });
 });
@@ -88,11 +90,17 @@ describe('createTerm', () => {
   it('inserts a term with normalized dates when no conflict', async () => {
     const result = await createTerm(valid);
 
-    expect(result).toEqual({ success: true, data: NEW_TERM });
+    expect(result).toEqual({ success: true, data: 'Batch A' });
     const valuesMock = mocks.insert.mock.results[0]!.value.values as ReturnType<
       typeof vi.fn
     >;
-    expect(valuesMock).toHaveBeenCalledWith(valid);
+    expect(valuesMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Batch A',
+        startDate: '2026-08-01',
+        endDate: '2026-08-15',
+      })
+    );
   });
 
   it('rejects when the date range overlaps an existing term', async () => {
@@ -300,10 +308,13 @@ describe('updateTerm', () => {
   it('clears isAutoCreated and does not touch the successor when dates are unchanged', async () => {
     mocks.findFirst
       .mockResolvedValueOnce(existing) // the row being edited
+      .mockResolvedValueOnce(undefined) // findOverlapping — no conflict
       .mockResolvedValueOnce(undefined); // successor lookup (none)
     mocks.update.mockReturnValue({
       set: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue(undefined),
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([undefined]),
+        }),
       }),
     });
 
@@ -318,7 +329,11 @@ describe('updateTerm', () => {
       typeof vi.fn
     >;
     expect(setMock).toHaveBeenCalledWith(
-      expect.objectContaining({ isAutoCreated: false })
+      expect.objectContaining({
+        name: 'Batch A',
+        startDate: '2026-08-01',
+        endDate: '2026-09-30',
+      })
     );
     // successor update (deletedAt) not called
     expect(mocks.update).toHaveBeenCalledTimes(1);
@@ -334,10 +349,13 @@ describe('updateTerm', () => {
     };
     mocks.findFirst
       .mockResolvedValueOnce(existing) // the row being edited
+      .mockResolvedValueOnce(undefined) // findOverlapping — no conflict
       .mockResolvedValueOnce(successor); // successor lookup
     mocks.update.mockReturnValue({
       set: vi.fn().mockReturnValue({
-        where: vi.fn().mockResolvedValue(undefined),
+        where: vi.fn().mockReturnValue({
+          returning: vi.fn().mockResolvedValue([undefined]),
+        }),
       }),
     });
 
@@ -356,7 +374,7 @@ describe('updateTerm', () => {
       expect.objectContaining({
         startDate: '2026-07-01',
         endDate: '2026-09-10',
-        isAutoCreated: false,
+        name: 'Batch A',
       })
     );
     const successorSetMock = mocks.update.mock.results[1]!.value
