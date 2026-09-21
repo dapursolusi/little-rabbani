@@ -1,6 +1,4 @@
 import { db } from '@/db';
-import { kidEnrollment } from '@/db/schema';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
 
 import { requireOwner } from '@/lib/actions/require-owner';
 
