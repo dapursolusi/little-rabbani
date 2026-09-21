@@ -2,12 +2,14 @@
 
 import { useRouter } from 'next/navigation';
 
+import { ClassSession } from '@/features/class-session/types';
 import { createKid, updateKid } from '@/features/kid/actions';
 import { kidFormFields } from '@/features/kid/fields';
 import {
   type KidGuardianFormInput,
   KidGuardianFormSchema,
 } from '@/features/kid/schema';
+import { Term } from '@/features/term/types';
 import { z } from 'zod';
 
 import FormFieldGenerator from '@/components/shared/form/form-field-generator';
@@ -21,6 +23,8 @@ type KidFormFieldsProps = {
     guardianId?: string;
     guardianMode?: 'new' | 'existing';
   };
+  terms: Term[];
+  classSessions: ClassSession[];
 };
 
 // Engine pins `schema` to `z.ZodObject`; a discriminated union isn't one.
@@ -33,6 +37,8 @@ const schema =
 export default function KidForm({
   mode,
   initialData = {},
+  terms,
+  classSessions,
 }: KidFormFieldsProps) {
   const isEdit = mode === 'edit';
   const route = useRouter();
@@ -58,7 +64,9 @@ export default function KidForm({
     <FormFieldGenerator
       schema={schema}
       initialData={initialData}
-      formFields={(watch) => kidFormFields(watch, summary)}
+      formFields={(watch) =>
+        kidFormFields({ watch, summary, terms, classSessions })
+      }
       meta={{ label: 'Data murid' }}
       isEditing={isEdit}
       onSuccess={() => route.push('/dashboard/kid')}
@@ -73,13 +81,20 @@ export default function KidForm({
               : await createKid({
                   kid: data.kid,
                   guardianId: data.guardianId,
+                  termId: data.termId,
+                  classSessionId: data.classSessionId,
                 })
             : isEdit
               ? await updateKid(initialData.id!, {
                   kid: data.kid,
                   guardian: data.guardian,
                 })
-              : await createKid({ kid: data.kid, guardian: data.guardian });
+              : await createKid({
+                  kid: data.kid,
+                  guardian: data.guardian,
+                  termId: data.termId,
+                  classSessionId: data.classSessionId,
+                });
         return result;
       }}
     />

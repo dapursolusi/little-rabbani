@@ -5,6 +5,9 @@ import { FormField } from '@/types/field';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { ClassSession } from '../class-session/types';
+import { Term } from '../term/types';
+
 type GuardianMode = 'new' | 'existing';
 
 const GUARDIAN_MODE_TABS: { value: GuardianMode; label: string }[] = [
@@ -32,10 +35,17 @@ const guardianModeField = (watch: (name: string) => unknown): FormField => {
   };
 };
 
-export const kidFormFields = (
-  watch: (name: string) => unknown,
-  summary?: GuardianSearchResult
-): FormField[] => {
+export const kidFormFields = ({
+  watch,
+  summary,
+  terms,
+  classSessions,
+}: {
+  watch: (name: string) => unknown;
+  summary?: GuardianSearchResult;
+  terms: Term[];
+  classSessions: ClassSession[];
+}): FormField[] => {
   const mode = (watch('guardianMode') ?? 'new') as GuardianMode;
 
   const guardianFields: FormField[] =
@@ -139,6 +149,27 @@ export const kidFormFields = (
         })
       ),
       required: true,
+    },
+    {
+      groupLabel: 'Registrasi Batch (Opsional)',
+    },
+    {
+      name: 'termId',
+      label: 'Batch',
+      type: 'select',
+      selectOptions: terms.map((term) => ({
+        value: term.id,
+        label: term.name,
+      })),
+    },
+    {
+      name: 'classSessionId',
+      label: 'Sesi Kelas',
+      type: 'select',
+      selectOptions: classSessions.map((cs) => ({
+        value: cs.id,
+        label: cs.name,
+      })),
     },
   ];
 };

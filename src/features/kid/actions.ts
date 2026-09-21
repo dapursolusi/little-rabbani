@@ -26,6 +26,8 @@ export async function createKid(input: {
   kid: unknown;
   guardian?: unknown;
   guardianId?: string;
+  termId?: string;
+  classSessionId?: string;
 }) {
   const parsedKid = parseInput({
     input: input.kid,
@@ -47,6 +49,8 @@ export async function createKid(input: {
     kid: kidData,
     guardian: guardianData,
     guardianId: input.guardianId,
+    termId: input.termId,
+    classSessionId: input.classSessionId,
   });
 }
 

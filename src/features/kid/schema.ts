@@ -49,17 +49,26 @@ const UpdateKidSchema = BaseKidSchema.extend({
   guardianId: z.string().min(1, 'ID Wali murid wajib diisi'),
 });
 
+const EnrollmentFields = z.object({
+  termId: z.string().optional(),
+  classSessionId: z.string().optional(),
+});
+
 /** Combined kid + guardian form (ADR-0001: phone = guardian identity). */
 const KidGuardianFormSchema = z.discriminatedUnion('guardianMode', [
   z.object({
     guardianMode: z.literal('new'),
     kid: BaseKidSchema,
     guardian: GuardianSchema,
+    termId: EnrollmentFields.shape.termId,
+    classSessionId: EnrollmentFields.shape.classSessionId,
   }),
   z.object({
     guardianMode: z.literal('existing'),
     kid: BaseKidSchema,
     guardianId: z.string().min(1, 'Pilih wali yang sudah ada'),
+    termId: EnrollmentFields.shape.termId,
+    classSessionId: EnrollmentFields.shape.classSessionId,
   }),
 ]);
 
