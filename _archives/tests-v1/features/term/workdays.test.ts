@@ -1,12 +1,8 @@
-<<<<<<< Updated upstream:_archives/tests-v1/features/term/workdays.test.ts
 import {
   countEmptyWorkdays,
   findEarliestTermCoveringDate,
   listTermWorkdays,
 } from '@/features/term/workdays';
-
-=======
->>>>>>> Stashed changes:tests/features/term/workdays.test.ts
 import { describe, expect, it } from 'vitest';
 
 import { countEmptyWorkdays, listTermWorkdays } from '@/features/term/workdays';
