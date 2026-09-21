@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { EnrollmentStatus, kid, kidEnrollment } from '@/db/schema';
+import { TransactionClient } from '@/types';
 import { SQL, and, eq, exists, inArray, isNull, not } from 'drizzle-orm';
 
 import { LeanKidEnrollment } from './types';
@@ -62,8 +63,12 @@ export async function findAvailableKids({
   });
 }
 
-export async function insertMany(input: LeanKidEnrollment[]) {
-  return await db.insert(kidEnrollment).values(input).returning();
+export async function insertMany(
+  input: LeanKidEnrollment[],
+  tx?: TransactionClient
+) {
+  const session = tx ? tx : db;
+  return await session.insert(kidEnrollment).values(input).returning();
 }
 
 export async function findForBatch({
@@ -83,19 +88,37 @@ export async function findForBatch({
   });
 }
 
-export async function softDeleteMany(ids: string[]) {
+export async function softDeleteMany(ids: string[], tx?: TransactionClient) {
+  const session = tx ? tx : db;
   if (ids.length === 0) return;
-  await db
+  await session
     .update(kidEnrollment)
     .set({ deletedAt: new Date() })
     .where(inArray(kidEnrollment.id, ids));
 }
 
-export async function updateStatus(kidId: string, status: EnrollmentStatus) {
-  await db
+export async function updateStatus(
+  id: string,
+  status: EnrollmentStatus,
+  tx: TransactionClient
+) {
+  const session = tx ? tx : db;
+  await session
     .update(kidEnrollment)
     .set({ status })
-    .where(
-      and(isNull(kidEnrollment.deletedAt), eq(kidEnrollment.kidId, kidId))
-    );
+    .where(and(isNull(kidEnrollment.deletedAt), eq(kidEnrollment.id, id)));
+}
+
+export async function updateManyStatus(
+  updates: { id: string; status: EnrollmentStatus }[]
+) {
+  if (updates.length === 0) return;
+  await Promise.all(
+    updates.map(({ id, status }) =>
+      db
+        .update(kidEnrollment)
+        .set({ status })
+        .where(and(isNull(kidEnrollment.deletedAt), eq(kidEnrollment.id, id)))
+    )
+  );
 }

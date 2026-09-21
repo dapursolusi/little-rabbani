@@ -1,8 +1,12 @@
+import { db } from '@/db';
+import { kidEnrollment } from '@/db/schema';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
+
 import { requireOwner } from '@/lib/actions/require-owner';
 
 import { LeanKid } from '../kid/types';
 import * as kidEnrollmentRepo from './repositories';
-import { KidEnrollmentInput } from './schema';
+import { KidEnrollmentInput, SaveEnrollmentChangesInput } from './schema';
 
 export async function getKidsEnrollments({
   termId,
@@ -94,6 +98,55 @@ export async function createKidsEnrollments(input: KidEnrollmentInput) {
       return {
         success: false as const,
         error: 'Gagal membuat pendaftaran anak. Coba lagi nanti.',
+      };
+    }
+  });
+}
+
+export async function saveEnrollmentChanges(input: SaveEnrollmentChangesInput) {
+  return requireOwner(async () => {
+    try {
+      const result = await db.transaction(async (tx) => {
+        // 1. Insert new enrollments
+        let insertedCount = 0;
+        if (input.created.length > 0) {
+          const newRows = input.created.map(({ kidId, status }) => ({
+            termId: input.termId,
+            classSessionId: input.classSessionId,
+            kidId,
+            status,
+          }));
+          await kidEnrollmentRepo.insertMany(newRows, tx);
+          insertedCount = newRows.length;
+        }
+
+        // 2. Soft-delete removed enrollments
+        let deletedCount = 0;
+        if (input.deleted.length > 0) {
+          await kidEnrollmentRepo.softDeleteMany(input.deleted, tx);
+          deletedCount = input.deleted.length;
+        }
+
+        // 3. Update status changes
+        let updatedCount = 0;
+        if (input.updated.length > 0) {
+          await Promise.all(
+            input.updated.map(({ id, status }) =>
+              kidEnrollmentRepo.updateStatus(id, status, tx)
+            )
+          );
+          updatedCount = input.updated.length;
+        }
+
+        return { insertedCount, deletedCount, updatedCount };
+      });
+
+      return { success: true as const, data: result };
+    } catch (error) {
+      console.error('saveEnrollmentChanges: ', error);
+      return {
+        success: false as const,
+        error: 'Gagal menyimpan perubahan pendaftaran. Coba lagi nanti.',
       };
     }
   });

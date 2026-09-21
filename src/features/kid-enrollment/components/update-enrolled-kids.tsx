@@ -92,6 +92,7 @@ export default function UpdateEnrolledKids({
   onUpdateToggle,
   kids,
   onAdd,
+  onSave,
   selectedClassSessionId,
   hasChanges,
 }: {
@@ -99,6 +100,7 @@ export default function UpdateEnrolledKids({
   onUpdateToggle: () => void;
   kids: LeanKid[];
   onAdd?: (selectedKids: Set<string>) => void;
+  onSave?: () => void;
   selectedClassSessionId: string;
   hasChanges: boolean;
 }) {
@@ -106,6 +108,7 @@ export default function UpdateEnrolledKids({
   const [isAddKidModalOpen, setIsAddKidModalOpen] = useState(false);
 
   const noSessionSelected = selectedClassSessionId === 'all';
+  const noAvailableKids = kids.length === 0;
 
   return (
     <div className="flex items-center justify-end gap-2">
@@ -125,16 +128,22 @@ export default function UpdateEnrolledKids({
                 text: 'Tambah Murid ke Batch',
               }}
               content={
-                <CheckboxInTable
-                  selectedRows={selectedRows}
-                  onSelectedRowsChange={setSelectedRows}
-                  kids={kids.map((kid) => {
-                    return {
-                      id: kid.id,
-                      name: kid.name,
-                    };
-                  })}
-                />
+                noAvailableKids ? (
+                  <p className="py-8 text-center text-muted-foreground">
+                    Tidak ada murid baru untuk ditambahkan
+                  </p>
+                ) : (
+                  <CheckboxInTable
+                    selectedRows={selectedRows}
+                    onSelectedRowsChange={setSelectedRows}
+                    kids={kids.map((kid) => {
+                      return {
+                        id: kid.id,
+                        name: kid.name,
+                      };
+                    })}
+                  />
+                )
               }
               open={isAddKidModalOpen}
               onOpenChange={setIsAddKidModalOpen}
@@ -142,6 +151,7 @@ export default function UpdateEnrolledKids({
                 <Button
                   className="flex justify-center items-center gap-3"
                   onClick={() => onAdd?.(selectedRows)}
+                  disabled={noAvailableKids}
                 >
                   <HugeiconsIcon icon={Add02Icon} />
                   Tambah ke List
@@ -150,7 +160,7 @@ export default function UpdateEnrolledKids({
             />
           )}
           {hasChanges && (
-            <Button>
+            <Button onClick={onSave}>
               <HugeiconsIcon icon={SaveIcon} className="mr-1" />
               Simpan Perubahan
             </Button>

@@ -4,10 +4,12 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { EnrollmentStatus } from '@/db/schema';
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Term } from '@/features/term/types';
 import { ContractsIcon, DatabaseSyncIcon } from '@hugeicons/core-free-icons';
+import { toast } from 'sonner';
 
 import { DataTable } from '@/components/shared/table/data-table';
 import { Badge } from '@/components/ui/badge';
@@ -50,7 +52,6 @@ export default function KidEnrollmentClient({
 }) {
   const router = useRouter();
   const [isUpdateMode, setIsUpdateMode] = useState<boolean>(false);
-  // const [isAddKidModalOpen, setIsAddKidModalOpen] = useState<boolean>(false);
   const [availableKids, setAvailableKids] = useState<LeanKid[]>([]);
   const [enrolledKids, setEnrolledKids] = useState(data);
   const [created, setCreated] = useState<KidToBeEnrolled[]>([]);
@@ -85,6 +86,7 @@ export default function KidEnrollmentClient({
   const newKidIds = new Set(created.map((k) => k.kidId));
   const createdIds = new Set(created.map((k) => k.kidId));
   const deletedIds = deleted;
+  const updatedIds = new Set(updated.keys());
   const hasChanges = created.length > 0 || updated.size > 0 || deleted.size > 0;
 
   const handleRemoveNew = useCallback(
@@ -113,6 +115,30 @@ export default function KidEnrollmentClient({
       return next;
     });
   }, []);
+
+  const handleUpdateStatus = useCallback(
+    (enrollmentId: string, status: EnrollmentStatus) => {
+      const enrollment = enrolledKids.find((k) => k.id === enrollmentId);
+      if (!enrollment) return;
+      // If this is a newly-created row (no DB id yet), update `created` instead
+      if (created.some((c) => c.kidId === enrollment.kidId)) {
+        setCreated((prev) =>
+          prev.map((c) => (c.kidId === enrollment.kidId ? { ...c, status } : c))
+        );
+      } else {
+        setUpdated((prev) => {
+          const next = new Map(prev);
+          next.set(enrollmentId, { ...enrollment, status });
+          return next;
+        });
+      }
+      // Also update enrolledKids so the UI reflects the change immediately
+      setEnrolledKids((prev) =>
+        prev.map((k) => (k.id === enrollmentId ? { ...k, status } : k))
+      );
+    },
+    [enrolledKids, created]
+  );
 
   const handleUpdateToggle = useCallback(() => {
     setIsUpdateMode((prev) => !prev);
@@ -175,6 +201,43 @@ export default function KidEnrollmentClient({
     },
     [selectedTermId, selectedClassSessionId, availableKids]
   );
+
+  const handleSave = useCallback(async () => {
+    const result = await kidEnrollmentAction.saveEnrollmentChanges({
+      termId: selectedTermId ?? '',
+      classSessionId: selectedClassSessionId ?? '',
+      created,
+      updated: Array.from(updated.values()).map(({ id, status }) => ({
+        id,
+        status,
+      })),
+      deleted: Array.from(deleted),
+    });
+    if (result.success) {
+      toast.success('Perubahan pendaftaran berhasil disimpan');
+      setIsUpdateMode(false);
+      setCreated([]);
+      setUpdated(new Map());
+      setDeleted(new Set());
+      // Re-fetch fresh data so local state matches server
+      const fresh = await kidEnrollmentAction.getKidsEnrollments({
+        termId: selectedTermId ?? '',
+        classSessionId: selectedClassSessionId ?? '',
+      });
+      if (fresh.success) {
+        setEnrolledKids(fresh.data as KidEnrollment[]);
+      }
+    } else {
+      toast.error(result.error);
+    }
+  }, [
+    selectedTermId,
+    selectedClassSessionId,
+    created,
+    updated,
+    deleted,
+    router,
+  ]);
 
   return (
     <div className="p-4 sm:p-6 flex flex-col gap-4">
@@ -251,8 +314,10 @@ export default function KidEnrollmentClient({
             isUpdateMode,
             createdIds,
             deletedIds,
+            updatedIds,
             onRemoveNew: handleRemoveNew,
             onToggleDeleted: handleToggleDeleted,
+            onUpdateStatus: handleUpdateStatus,
           }}
         >
           <DataTable
@@ -286,6 +351,7 @@ export default function KidEnrollmentClient({
                 onUpdateToggle={handleUpdateToggle}
                 kids={availableKids}
                 onAdd={handleAdd}
+                onSave={handleSave}
                 selectedClassSessionId={selectedClassSessionId ?? 'all'}
                 hasChanges={hasChanges}
               />
