@@ -7,9 +7,11 @@ import { z } from 'zod';
 const MODES = ['new', 'existing'] as const;
 
 function fieldsFor(mode: (typeof MODES)[number]): FormFieldInput[] {
-  return kidFormFields(() => mode).filter(
-    (f): f is FormFieldInput => 'name' in f
-  );
+  return kidFormFields({
+    watch: () => mode,
+    terms: [],
+    classSessions: [],
+  }).filter((f): f is FormFieldInput => 'name' in f);
 }
 
 describe('kid form fields ↔ schema consistency', () => {

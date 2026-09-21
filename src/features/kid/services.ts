@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { guardian, kid } from '@/db/schema';
+import * as kidEnrollmentRepo from '@/features/kid-enrollment/repositories';
 import { ListParams, TransactionClient } from '@/types';
 import { SQL, and, ilike, isNull } from 'drizzle-orm';
 
@@ -143,6 +144,8 @@ export async function createKid(input: {
   kid: CreateKidInput;
   guardian?: GuardianInput;
   guardianId?: string;
+  termId?: string;
+  classSessionId?: string;
 }) {
   return requireOwner(async () => {
     try {
@@ -155,6 +158,17 @@ export async function createKid(input: {
           ...input.kid,
           guardianId: input.guardianId,
         });
+        // Optional enrollment
+        if (input.termId && input.classSessionId) {
+          await kidEnrollmentRepo.insertMany([
+            {
+              termId: input.termId,
+              classSessionId: input.classSessionId,
+              kidId: newKid.id,
+              status: 'enrolled',
+            },
+          ]);
+        }
         return { success: true as const, data: newKid.name };
       }
 
@@ -173,6 +187,21 @@ export async function createKid(input: {
           },
           tx
         );
+
+        // Optional enrollment (same tx)
+        if (input.termId && input.classSessionId) {
+          await kidEnrollmentRepo.insertMany(
+            [
+              {
+                termId: input.termId,
+                classSessionId: input.classSessionId,
+                kidId: newKid.id,
+                status: 'enrolled',
+              },
+            ],
+            tx
+          );
+        }
 
         return { ok: true as const, data: newKid.name };
       });
