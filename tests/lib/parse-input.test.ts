@@ -9,12 +9,16 @@ const schema = z.object({
 
 describe('parseInput', () => {
   it('returns the parsed data on success', () => {
-    const r = parseInput(schema, { name: 'Budi' }, 'Fallback');
+    const r = parseInput({ schema, input: { name: 'Budi' } });
     expect(r).toEqual({ success: true, data: { name: 'Budi' } });
   });
 
   it('returns the first issue message on failure', () => {
-    const r = parseInput(schema, { name: '' }, 'Fallback');
+    const r = parseInput({
+      schema,
+      input: { name: '' },
+      fallbackError: 'Fallback',
+    });
     expect(r).toEqual({ success: false, error: 'name: Nama wajib diisi' });
   });
 
@@ -26,7 +30,11 @@ describe('parseInput', () => {
       name: z.string().min(2, 'Nama wajib diisi'),
       dob: z.string().min(1, 'Tanggal lahir wajib diisi'),
     });
-    const r = parseInput(flatKid, { kid: { name: 'GT1' } }, 'Fallback');
+    const r = parseInput({
+      schema: flatKid,
+      input: { kid: { name: 'GT1' } },
+      fallbackError: 'Fallback',
+    });
     expect(r).toEqual({
       success: false,
       error: 'name: Invalid input: expected string, received undefined',

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import type { ClassSession } from '@/features/class-session/types';
 import * as kidEnrollmentActions from '@/features/kid-enrollment/actions';
 import { kidEnrollmentFormFields } from '@/features/kid-enrollment/fields';
-import { BaseKidEnrollmentSchema } from '@/features/kid-enrollment/schema';
+import { KidEnrollmentSchema } from '@/features/kid-enrollment/schema';
 import { Kid } from '@/features/kid/types';
 import type { Term } from '@/features/term/types';
 
@@ -26,7 +26,7 @@ export default function KidEnrollmentForm({
   return (
     <FormFieldGenerator
       formFields={kidEnrollmentFormFields({ terms, classSessions, kids })}
-      schema={CreateKidEnrollmentSchema}
+      schema={KidEnrollmentSchema}
       initialData={{
         termId: terms[0]?.id,
         classSessionId: classSessions[0]?.id,

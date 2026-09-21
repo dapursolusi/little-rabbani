@@ -1,4 +1,4 @@
-import * as kidRepo from '@/features/kid/repositories';
+import * as kidRepo from '@/features/kid/repositories/kid';
 import { drizzle } from 'drizzle-orm/node-postgres';
 
 import { kidEnrollment } from '../schema';
@@ -10,7 +10,7 @@ async function main() {
 
   const currentTermId = 'b3048034-ea3b-42a0-a7b5-aa1fb52b4329';
 
-  const kids = await kidRepo.findKids();
+  const kids = await kidRepo.findMany();
   // eslint-disable-next-line no-console
   console.log(`Found ${kids.length} kids`);
 

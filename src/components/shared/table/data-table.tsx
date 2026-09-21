@@ -126,7 +126,6 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
   const showAllToolbar = toolbar?.showAll ?? true;
   const showColumnVisibility = toolbar?.showColumnVisibility ?? false;
   const showSearchBar = toolbar?.showSearchBar ?? true;
-  const showFilter = toolbar?.showFilter ?? true;
   const showCreateAction = toolbar?.showCreateAction ?? true;
 
   // Scoping to opt-in columns: a column participates in the global filter
