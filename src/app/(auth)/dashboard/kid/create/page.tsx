@@ -1,4 +1,4 @@
-import KidForm from '@/features/kids/components/form';
+import KidForm from '@/features/kid/components/form';
 
 import { baseMetadata } from '@/lib/metadata';
 

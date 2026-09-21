@@ -5,11 +5,15 @@ import { z } from 'zod';
  * result — so a failed parse can be returned straight from a Server Action
  * with no branching. Used at every action I/O boundary (see `actions.ts`).
  */
-export function parseInput<S extends z.ZodType>(
-  schema: S,
-  input: unknown,
-  fallbackError: string
-): { success: true; data: z.infer<S> } | { success: false; error: string } {
+export function parseInput<S extends z.ZodType>({
+  schema,
+  input,
+  fallbackError,
+}: {
+  schema: S;
+  input: unknown;
+  fallbackError?: string;
+}): { success: true; data: z.infer<S> } | { success: false; error: string } {
   const parsed = schema.safeParse(input);
   if (!parsed.success) {
     const first = parsed.error.issues[0];
@@ -17,7 +21,7 @@ export function parseInput<S extends z.ZodType>(
     const message = path ? `${path}: ${first.message}` : first.message;
     return {
       success: false as const,
-      error: message || fallbackError,
+      error: message || (fallbackError ?? 'Data tidak valid'),
     };
   }
   return { success: true as const, data: parsed.data };

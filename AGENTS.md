@@ -81,16 +81,23 @@ UI Component (Server Component / Client form) → Server Action → Drizzle → 
 
 ## File Placement
 
-| Component Type        | Location                            | Notes                             |
-| :-------------------- | :---------------------------------- | :-------------------------------- |
-| Page/Layout           | `src/app/`                          | App Router conventions            |
-| Feature sections      | `src/features/<entity>/components/` | Per-module components             |
-| Layout components     | `src/components/layout/`            | Header, Footer, MobileMenu        |
-| Shared UI primitives  | `src/components/ui/`                | shadcn base-nova (auto-generated) |
-| Utilities & constants | `src/lib/`                          | metadata, security-headers, utils |
-| Types                 | `src/types/`                        | Add per-project as needed         |
-| Tests (unit)          | `tests/`                            | Vitest                            |
-| Tests (E2E)           | `e2e/`                              | Playwright                        |
+| Component Type                          | Location                                | Notes                                                            |
+| :-------------------------------------- | :-------------------------------------- | :--------------------------------------------------------------- |
+| Page/Layout                             | `src/app/`                              | App Router conventions                                           |
+| Feature sections                        | `src/features/<module>/components/`     | Per-module components                                            |
+| Layout components                       | `src/components/layout/`                | Header, Footer, MobileMenu                                       |
+| Shared UI primitives                    | `src/components/ui/`                    | shadcn base-nova (auto-generated)                                |
+| Utilities & constants                   | `src/lib/`                              | 3rd party, all that affecting domain                             |
+| Helpers                                 | `src/utils/`                            | helpers                                                          |
+| Types                                   | `src/types/`                            | Add per-project as needed                                        |
+| Tests (unit)                            | `src/features/_tests_/`                 | Vitest                                                           |
+| Tests (integration, within 1 module)    | `src/features/_tests_/`                 | Vitest                                                           |
+| Tests (integration, cross module)       | `tests/`                                | Vitest                                                           |
+| Tests (E2E)                             | `e2e/`                                  | Playwright                                                       |
+| Server Actions                          | `src/features/<module>/actions.ts`      | Controllers/Actions                                              |
+| Services                                | `src/features/<module>/services.ts`     | Business Logic                                                   |
+| Repositories                            | `src/features/<module>/repositories.ts` | Repositories                                                     |
+| Repositories (Module w/ cross entities) | `src/features/<module>/repositories/`   | Repositories: file barrel`index.ts` and `<table/entity_name>.ts` |
 
 ## Commands
 
@@ -101,66 +108,14 @@ bunx shadcn@latest add <component>   # Add base-nova component (NOT in package.j
 bunx playwright install              # First-time browser binary setup
 ```
 
-## Graphify
+## Graphify & CodeGraph
 
-This project has a knowledge graph at `graphify-out/` with god nodes, community structure, and cross-file relationships.
-
-Rules:
-
-- For codebase questions, first run `graphify query "<question>"` when `graphify-out/graph.json` exists. Use `graphify path "<A>" "<B>"` for relationships and `graphify explain "<concept>"` for focused concepts. These return a scoped subgraph, usually much smaller than `GRAPH_REPORT.md` or raw grep output.
-- If `graphify-out/wiki/index.md` exists, use it for broad navigation instead of raw source browsing.
-- Read `graphify-out/GRAPH_REPORT.md` only for broad architecture review or when query/path/explain do not surface enough context.
-- After modifying code, run `graphify update .` to keep the graph current (AST-only, no API cost).
-
-## CodeGraph
-
-This project uses CodeGraph (`.codegraph/`) for code intelligence. Agents must ensure it's available before performing code exploration.
-
-```bash
-# 1. Check installation
-which codegraph || echo "codegraph not installed"
-
-# Install via pip:
-# pip install codegraph
-
-# 2. Check if index exists
-ls .codegraph/codegraph.db 2>/dev/null && echo "indexed" || echo "not indexed"
-
-# 3. Init if missing
-codegraph init
-```
-
-**Agent auto-setup:** Before any code exploration or edit, silently run:
-
-1. `which codegraph` — if missing, suggest install and stop
-2. `ls .codegraph/codegraph.db 2>/dev/null` — if missing, run `codegraph init`
-
-This is a one-time setup per clone. Skip if already indexed.
+This project uses both graphify and CodeGraph for code intelligence. See `docs/patterns/graphify-codegraph.md` for usage and reindexing.
 
 ## Gotchas
 
-- ⚠️ Vitest uses native `resolve.tsconfigPaths` — reads `tsconfig.json` paths automatically, no plugin needed.
-- ⚠️ Tailwind v4 uses CSS-first config (`globals.css`). No `tailwind.config.ts`. Use `@theme inline` for custom values.
-- ⚠️ shadcn preset `bI9A` pins style, base color, icon library, and primitives in one shot — no separate flags needed.
-- ⚠️ `env.mjs` uses `@t3-oss/env-nextjs` — all env vars MUST be registered there, not read directly from `process.env`.
-- ⚠️ Port 3000 must be free. Kill stale Next.js procs first.
-- ⚠️ **React Compiler is ON** (`reactCompiler: true` in `next.config`, React 19). It auto-memoizes every component and sub-expression, treating a referentially-stable value as a **constant**. This breaks any library that keeps live, mutable state behind a stable handle — most importantly **TanStack Table's `table` instance**: `useReactTable` returns the _same object identity_ every render, so the compiler memoizes `table.getState()…` / `table.getCanNextPage()` reads and serves **stale values** even though the underlying state updated.
-  - **Symptom:** UI shows stale value while imperative read in render body shows fresh — React Compiler memoized the getter.
-  - **Fix:** mirror state into React `useState`, derive UI values from that, not from the stable handle. For TanStack Table: `state: { pagination }` + `onPaginationChange: setPagination` → derive `pageCount`/`canPreviousPage`/`canNextPage` from `pagination` state. Mutations still call `table.nextPage()`.
-  - **Escape hatch:** `"use no memo"` directive opts one component out.
-  - **Generalized:** any stale-read bug under `reactCompiler: true` → check if value comes from a stable handle hiding mutable state (zustand stores, TanStack Query refs, singleton services).
-- ⚠️ **TypeScript `^6` resolution in CI** — `^6` in `package.json` can resolve to TypeScript 7.x (e.g. `7.0.2`) in CI, but `@typescript-eslint/typescript-estree@8.x` doesn't support TypeScript 7's new `Extension` enum. Linter crashes with `TypeError: Cannot read properties of undefined (reading 'Cjs')`. **Pin to an exact version** (`"typescript": "6.0.3"`) instead of a range — don't use `^`.
-- ⚠️ **ESLint 10 + eslint-plugin-react 7.x incompatibility** — ESLint 10 removed `context.getFilename()`, but `eslint-plugin-react@7.x` still calls it in `lib/util/version.js`. Linter crashes on `.tsx` files with `TypeError: contextOrFilename.getFilename is not a function`. **Fix:** a postinstall patch (`scripts/patch-eslint-plugin-react.mjs`) replaces `contextOrFilename.getFilename()` → `contextOrFilename.filename`. Remove the patch when eslint-plugin-react ships 8.x.
-- ⚠️ **`env.mjs` env vars required in CI** — `@t3-oss/env-nextjs` validates ALL env vars at import time. Tests importing `@/lib/auth` (which imports `env.mjs`) must set every variable in `beforeEach`, including `OPENROUTER_API_KEY`, `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`. CI workflows running `next dev` (E2E, Preview) need a full `.env` or injected secrets — missing vars crash startup.
-- ⚠️ **DB schema changes require a migration, every time** — the Drizzle schema file and the live DB drift silently if you only edit `.ts`. After ANY schema change:
-  1. `bun run db:generate` — produces migration SQL + snapshot
-  2. `bun run db:migrate` — applies it to the DB
-  3. Verify with `drizzle-kit push --force` (non-interactive) or run the schema audit script
-  4. A 500 error on a relation query (`with: { ... }`) often means a column referenced in the schema doesn't exist in the DB
-- ⚠️ **CodeGraph / graphify indexes go stale after refactors** — both are snapshot indexes. After a big restructure (like the v1→V2 teardown) they can answer with paths that no longer exist (e.g. `_archives/...`). Reindex explicitly:
-  - `codegraph index` (full rebuild) or `codegraph sync` (incremental)
-  - `graphify update . --force` (the `--force` is required when a refactor deleted code — the graph has fewer nodes and refuses to overwrite otherwise)
-  - When an answer cites a path that doesn't exist, treat the index as stale before trusting the answer.
+- ⚠️ **React Compiler is ON** (`reactCompiler: true` in next.config, React 19). Auto-memoizes everything. Stable-identity trap: TanStack Table's `table` instance returns same object identity every render → compiler memoizes getter calls stale. **Fix:** mirror state into `useState`, derive UI values from that. `"use no memo"` escapes one component.
+- ⚠️ See `docs/known-issues.md` for CI/env/ESLint/DB migration gotchas.
 
 ## When to Ask
 
@@ -172,7 +127,7 @@ This is a one-time setup per clone. Skip if already indexed.
 ## References
 
 - Backlog: GitHub Issues in `narasena/little-rabbani`
-- Agent protocols: `CLAUDE.md`, UI: `DESIGN.md`, Domain vocab: `CONTEXT.md`, Patterns: `docs/patterns.md`, Known issues: `docs/known-issues.md`
+- Agent protocols: `CLAUDE.md`, UI: `DESIGN.md`, Domain vocab: `CONTEXT.md`, Patterns: `docs/patterns/`, Known issues: `docs/known-issues.md`
 - Runbooks: `docs/runbooks/incident-response.md`, Deploy: [Vercel dashboard](https://vercel.com/narasena/little-rabbani)
 - ADRs: `docs/adr/` (0001 kid+guardian form, 0002 identity-only kid, 0003 form engine)
 - PII handling: `src/lib/pii.ts` (`detectPiiField`/`maskPiiFields`/`maskPiiValue`)
@@ -180,18 +135,11 @@ This is a one-time setup per clone. Skip if already indexed.
 
 ## Code Patterns
 
-`docs/patterns.md` is the **living extraction** of the patterns actually
-implemented so far — follow it for new and refactored code.
+`docs/patterns.md` is the index. Follow `docs/patterns/` for new code. Code wins if doc disagrees.
 
-**Why living doc, not locked rules:** only the kid vertical is implemented — locking freezes half-built shape. Premature hardening is the failure mode.
+**Extract new pattern** after repeatable shape lands. Promote to AGENTS.md only after 3+ entities use it unchanged.
 
-**Follow:** `docs/patterns.md`. Code wins if doc disagrees — update doc in same change.
-
-**Extract new pattern** after repeatable shape lands. Capture in `patterns.md` first; promote to AGENTS.md only after 3+ entities use it unchanged.
-
-**Split `patterns.md`** into per-stack files when it grows too large or domains feel jarring mixed. Keep one-line index in `patterns.md`.
-
-### Settled hard rules (locked here, not in `patterns.md`)
+### Settled hard rules (locked here)
 
 These are decisions, not in-flux patterns — they live in AGENTS.md:
 
@@ -222,40 +170,9 @@ false, error }` with `as const`) — clients narrow with `if (!result.success)`.
   - Indexes live in the `pgTable` third-arg config callback, e.g.
     `(table) => ({ guardianIdx: index('kid_guardian_idx').on(table.guardianId) })`.
 
-Adding a new form: write `schemas.ts` (+ `form-fields.ts` + `types.ts`) under
-`src/features/<entity>/`, then pass `schema`, `initialData`, `formFields` to
-`FormFieldGenerator` in the entity's `*-form.tsx` (see
-`src/features/kids/components/kid-form.tsx`).
+## Doc Compression
 
-Upgrade to per-entity components when `onSubmit` needs compile-time verification against a server-action param schema.
-
-## Doc Compression Rules
-
-Agent-only docs (.md files consumed only by agents, not humans) are compressed before commit. These rules govern when and how.
-
-1. **`caveman-compress` never used in active sessions** — the skill corrupts files (injects meta-commentary, truncates content, breaks backups). Use only in isolated runs over non-live data. Manual compression always preferred.
-
-2. **Compress agent-only .md before commit** — patterns, ADRs (after review), audit reports, agent-readiness checklists, generated route/component docs. Target 40–60% reduction for heavy files, 20–30% for moderate ones.
-
-3. **Never compress** — behavioral protocol (CLAUDE.md S1–S8 rules), vocabulary glossaries (CONTEXT.md Language section), ADRs (reasoning is load-bearing), public-facing docs (PRD.md, manuals). Also: never when compression removes the "why" behind a rule.
-
-4. **Verify cross-references after compression** — every inline link (`See AGENTS.md`, `docs/...`, `[[memory-link]]`) must still resolve. Run `grep -oP 'docs/[a-z/-]+\.md' <file>` and check each path exists.
-
-5. **Subagents self-compress their output** — any subagent generating specs, plans, or audit reports (`docs/superpowers/specs/`, `docs/superpowers/plans/`) writes compressed from the start. Pass the instruction in the spawn prompt, don't rely on a later pass.
-
-6. **`docs/superpowers/` is ephemeral** — plan docs are session artifacts. Delete after the work ships, or compress and archive. Never accumulate indefinitely.
-
-7. **Backup is git, not `.original.md`** — before compressing, confirm the file is committed (`git status -- <file>`). After compression, `git diff <file>` to verify. Rollback via `git checkout -- <file>`. Never rely on sidecar `.original.md` files — they silently corrupt alongside the source.
-
-8. **Fidelity check after compression** — skim the diff for meaning-shifts, not just link integrity. A compressed sentence that reads opposite to the original (e.g. "do X" → "don't do X") costs more than the saved tokens. For dense sections (React Compiler gotcha, glossary entries), compare the compressed version against the original side-by-side.
-
-9. **Compression targets by density:**
-   - Behavioral rules, vocabulary glossaries: 0–15% (light trim only)
-   - Reference/spec files (DESIGN.md, patterns.md): 40–60%
-   - Audit reports, checklists: 60–80%
-   - ADRs: 0% — reasoning is load-bearing, compress only after the decision settles and you're revisiting for reference
-
-10. **Delete `.original.md` sidecars after verification** — the caveman skill leaves backup files scattered in `.local/share/caveman-compress/backups/`. After confirming the compressed file is correct (rule 7+8), run `rm -rf ~/.local/share/caveman-compress/backups/` to clean up. These files are dead weight — git history is the real backup.
+Agent-only .md files compressed before commit. Rules in `docs/patterns/doc-compression.md`. Manual compression only — `caveman-compress` corrupts files.
 
 ## Agent skills
 

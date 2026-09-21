@@ -4,8 +4,9 @@ import * as React from 'react';
 
 import Link from 'next/link';
 
+import { isIconSvgElement } from '@/utils/icon-checker';
 import { Add02Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
-import { HugeiconsIcon } from '@hugeicons/react';
+import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import {
   type CellData,
   type ColumnDef,
@@ -81,13 +82,21 @@ interface DataTableProps<TData extends RowData, TValue extends CellData> {
   meta: {
     domain?: string;
     label: string;
+    customActionLabel?: string;
+    customActionIcon?: IconSvgElement | React.ReactNode;
   };
   createForm?: TableFormProps;
   createHref?: string;
-  emptyAction?: {
-    actionHref?: string;
-    action?: React.ReactNode;
+  emptyStateIcon?: IconSvgElement | React.ReactNode;
+  toolbar?: {
+    showAll?: boolean;
+    showColumnVisibility?: boolean;
+    showSearchBar?: boolean;
+    showFilter?: boolean;
+    showCreateAction?: boolean;
   };
+  customAction?: React.ReactNode;
+  getRowClassName?: (row: TData) => string | undefined;
 }
 
 export function DataTable<TData extends RowData, TValue extends CellData>({
@@ -96,7 +105,10 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
   meta,
   createForm,
   createHref,
-  emptyAction,
+  emptyStateIcon,
+  toolbar,
+  customAction,
+  getRowClassName,
 }: DataTableProps<TData, TValue>) {
   const [modalOpen, setModalOpen] = React.useState(false);
   const [pagination, setPagination] = React.useState({
@@ -111,6 +123,11 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
   const [columnFilters, setColumnFilters] = React.useState<ColumnFiltersState>(
     []
   );
+  const showAllToolbar = toolbar?.showAll ?? true;
+  const showColumnVisibility = toolbar?.showColumnVisibility ?? false;
+  const showSearchBar = toolbar?.showSearchBar ?? true;
+  const showCreateAction = toolbar?.showCreateAction ?? true;
+
   // Scoping to opt-in columns: a column participates in the global filter
   // only when its `meta.enableSearch` is true. Source of truth lives in each
   // ColumnDef's `meta`, out of the search bar — so the same flag that gates
@@ -228,12 +245,10 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
       <EmptyState
         title={`Belum ada ${meta.label.toLowerCase()}`}
         description={`Mulai dengan menambahkan ${meta.label.toLowerCase()} baru.`}
-        actionLabel={`Tambah ${meta.label}`}
-        actionHref={emptyAction?.actionHref}
+        actionLabel={`${meta.customActionLabel ?? 'Tambah'} ${meta.label}`}
+        actionHref={createHref}
         action={
-          emptyAction?.action ? (
-            emptyAction.action
-          ) : (
+          createForm && (
             <SaveModal
               metaLabel={meta.label}
               form={createForm as TableFormProps}
@@ -242,50 +257,72 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
             />
           )
         }
+        icon={emptyStateIcon}
       />
     );
   }
 
   return (
     <SortingStateContext.Provider value={sorting}>
-      <DataTableFilter
-        table={table}
-        columns={columns}
-        columnFilters={columnFilters}
-        onColumnFiltersChange={setColumnFilters}
-      >
-        <div className="my-2 flex max-md:flex-col items-center gap-2 justify-between">
-          <DataTableSearchBar
-            table={table}
-            globalFilter={globalFilter}
-            placeholder={searchPlaceholder}
-          />
-          <div className="flex items-center gap-2 max-md:w-full max-md:justify-between">
-            <DataTableFilter.Button />
-            <DataTableColumnVisibility
-              table={table}
-              columnVisibility={columnVisibility}
-            />
-            {createHref ? (
-              <Link
-                href={createHref}
-                className={cn(buttonVariants({ variant: 'default' }))}
-              >
-                <HugeiconsIcon icon={PlusSignIcon} className="h-4 w-4 mr-2" />
-                {`Tambah ${meta.label}`}
-              </Link>
-            ) : createForm ? (
-              <SaveModal
-                metaLabel={meta.label}
-                form={createForm as TableFormProps}
-                open={modalOpen}
-                onOpenChange={setModalOpen}
+      {customAction}
+      {showAllToolbar && (
+        <DataTableFilter
+          table={table}
+          columns={columns}
+          columnFilters={columnFilters}
+          onColumnFiltersChange={setColumnFilters}
+        >
+          <div className="my-2 flex max-md:flex-col items-center gap-2 justify-between">
+            {showSearchBar && (
+              <DataTableSearchBar
+                table={table}
+                globalFilter={globalFilter}
+                placeholder={searchPlaceholder}
               />
-            ) : null}
+            )}
+            <div className="flex items-center gap-2 max-md:w-full max-md:justify-between">
+              <DataTableFilter.Button />
+              {showColumnVisibility && (
+                <DataTableColumnVisibility
+                  table={table}
+                  columnVisibility={columnVisibility}
+                />
+              )}
+              {showCreateAction && createHref ? (
+                <Link
+                  href={createHref}
+                  className={cn(buttonVariants({ variant: 'default' }))}
+                >
+                  {meta.customActionIcon ? (
+                    isIconSvgElement(meta.customActionIcon) ? (
+                      <HugeiconsIcon
+                        icon={meta.customActionIcon}
+                        className="h-4 w-4 mr-2"
+                      />
+                    ) : (
+                      meta.customActionIcon
+                    )
+                  ) : (
+                    <HugeiconsIcon
+                      icon={PlusSignIcon}
+                      className="h-4 w-4 mr-2"
+                    />
+                  )}
+                  {`${meta.customActionLabel ?? 'Tambah'} ${meta.label}`}
+                </Link>
+              ) : showCreateAction && createForm ? (
+                <SaveModal
+                  metaLabel={meta.label}
+                  form={createForm as TableFormProps}
+                  open={modalOpen}
+                  onOpenChange={setModalOpen}
+                />
+              ) : null}
+            </div>
           </div>
-        </div>
-        <DataTableFilter.Bar />
-      </DataTableFilter>
+          <DataTableFilter.Bar />
+        </DataTableFilter>
+      )}
       <div className="md:bg-table-body-bg overflow-hidden rounded-lg border-2! border-black/30">
         <div className="hidden overflow-x-auto md:block">
           <Table>
@@ -313,7 +350,10 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
             <TableBody>
               {table.getRowModel().rows?.length ? (
                 table.getRowModel().rows.map((row) => (
-                  <TableRow key={row.id}>
+                  <TableRow
+                    key={row.id}
+                    className={getRowClassName?.(row.original)}
+                  >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id}>
                         {flexRender(

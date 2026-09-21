@@ -59,6 +59,7 @@
     "dexie": "4.4.6",
     "dexie-react-hooks": "4.4.0",
     "drizzle-orm": "0.45.2",
+    "drizzle-seed": "0.3.1",
     "little-date": "1.2.1",
     "next": "16.3.4",
     "next-themes": "0.4.6",

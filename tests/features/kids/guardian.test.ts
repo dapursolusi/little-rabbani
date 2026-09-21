@@ -1,4 +1,4 @@
-import { type GuardianTx, upsertGuardianTx } from '@/features/kids/guardian';
+import { type GuardianTx, resolveGuardian } from '@/features/kid/services';
 import { describe, expect, it } from 'vitest';
 
 import { createFakeTx } from '../../helpers/fake-tx';
@@ -17,10 +17,10 @@ const base = {
   secondContactPhone: '081298765432',
 };
 
-describe('upsertGuardianTx — create', () => {
+describe('resolveGuardian — create', () => {
   it('menyimpan guardian baru dengan semua field, null dinormalisasi', async () => {
     const { tx, guardians } = createFakeTx();
-    const r = await upsertGuardianTx(tx, base);
+    const r = await resolveGuardian(tx, base);
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(r.id).toMatch(/^[0-9a-f-]{36}$/);
@@ -36,7 +36,7 @@ describe('upsertGuardianTx — create', () => {
 
   it('create dengan email kosong → null', async () => {
     const { tx, guardians } = createFakeTx();
-    const r = await upsertGuardianTx(tx, { ...base, email: undefined });
+    const r = await resolveGuardian(tx, { ...base, email: undefined });
     expect(r.ok).toBe(true);
     if (!r.ok) return;
     expect(guardians.get(r.id)?.email).toBeNull();
@@ -52,7 +52,7 @@ describe('upsertGuardianTx — create', () => {
       secondContactName: null,
       secondContactPhone: null,
     });
-    const r = await upsertGuardianTx(tx, base);
+    const r = await resolveGuardian(tx, base);
     expect(r).toEqual({ ok: false, reason: 'phone-conflict' });
     expect(guardians.size).toBe(1);
   });
@@ -67,7 +67,7 @@ describe('upsertGuardianTx — create', () => {
       secondContactName: null,
       secondContactPhone: null,
     });
-    const r = await upsertGuardianTx(tx, base);
+    const r = await resolveGuardian(tx, base);
     expect(r).toEqual({ ok: false, reason: 'email-conflict' });
     expect(guardians.size).toBe(1);
   });
@@ -82,13 +82,13 @@ describe('upsertGuardianTx — create', () => {
       secondContactName: null,
       secondContactPhone: null,
     });
-    const r = await upsertGuardianTx(tx, base);
+    const r = await resolveGuardian(tx, base);
     expect(r.ok).toBe(true);
     expect(guardians.size).toBe(2);
   });
 });
 
-describe('upsertGuardianTx — update', () => {
+describe('resolveGuardian — update', () => {
   it('update sukses: row di-merge, id tetap', async () => {
     const { tx, guardians } = createFakeTx();
     guardians.set('G', {
@@ -99,7 +99,7 @@ describe('upsertGuardianTx — update', () => {
       secondContactName: null,
       secondContactPhone: null,
     });
-    const r = await upsertGuardianTx(tx, base, { existingGuardianId: 'G' });
+    const r = await resolveGuardian(tx, base, 'G');
     expect(r).toEqual({ ok: true, id: 'G' });
     expect(guardians.get('G')).toMatchObject({
       phone: '081234567890',
@@ -118,15 +118,13 @@ describe('upsertGuardianTx — update', () => {
       secondContactName: null,
       secondContactPhone: null,
     });
-    const r = await upsertGuardianTx(tx, base, { existingGuardianId: 'G' });
+    const r = await resolveGuardian(tx, base, 'G');
     expect(r).toEqual({ ok: true, id: 'G' });
   });
 
   it('update id tidak ada → not-found', async () => {
     const { tx } = createFakeTx();
-    const r = await upsertGuardianTx(tx, base, {
-      existingGuardianId: 'HILANG',
-    });
+    const r = await resolveGuardian(tx, base, 'HILANG');
     expect(r).toEqual({ ok: false, reason: 'not-found' });
   });
 
@@ -149,7 +147,7 @@ describe('upsertGuardianTx — update', () => {
       secondContactName: null,
       secondContactPhone: null,
     });
-    const r = await upsertGuardianTx(tx, base, { existingGuardianId: 'G1' });
+    const r = await resolveGuardian(tx, base, 'G1');
     expect(r).toEqual({ ok: false, reason: 'phone-conflict' });
     expect(guardians.get('G1')).toMatchObject({
       phone: '081299999999',
@@ -176,7 +174,7 @@ describe('upsertGuardianTx — update', () => {
       secondContactName: null,
       secondContactPhone: null,
     });
-    const r = await upsertGuardianTx(tx, base, { existingGuardianId: 'G1' });
+    const r = await resolveGuardian(tx, base, 'G1');
     expect(r).toEqual({ ok: false, reason: 'email-conflict' });
     expect(guardians.get('G1')).toMatchObject({
       phone: '081299999999',
@@ -194,7 +192,7 @@ describe('upsertGuardianTx — update', () => {
       secondContactName: null,
       secondContactPhone: null,
     });
-    const r = await upsertGuardianTx(tx, base, { existingGuardianId: 'G' });
+    const r = await resolveGuardian(tx, base, 'G');
     expect(r).toEqual({ ok: true, id: 'G' });
   });
 });
