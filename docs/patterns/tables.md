@@ -144,7 +144,10 @@ const tabs = [
         columns={parentColumns}
         data={parents}
         meta={{ label: 'Parent' }}
-        createForm={{ createForm: <ParentForm />, meta: { label: 'Parent', domain: 'parent' } }}
+        createForm={{
+          createForm: <ParentForm />,
+          meta: { label: 'Parent', domain: 'parent' },
+        }}
       />
     ),
   },
@@ -157,7 +160,10 @@ const tabs = [
         columns={childColumns}
         data={children}
         meta={{ label: 'Child' }}
-        createForm={{ createForm: <ChildForm />, meta: { label: 'Child', domain: 'child' } }}
+        createForm={{
+          createForm: <ChildForm />,
+          meta: { label: 'Child', domain: 'child' },
+        }}
       />
     ),
   },
