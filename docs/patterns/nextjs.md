@@ -12,7 +12,31 @@ Every mutation is a Server Action. Pattern:
 features/<entity>/actions.ts  →  features/<entity>/services.ts  →  features/<entity>/repositories/
 ```
 
-**Layered:** actions.ts parses input, services.ts wraps business logic in `requireOwner()`, repositories/ talk to DB. Thin actions layer, fat services layer.
+**Layered:** actions.ts is the controller — parses input with `parseInput()`, calls service, returns result. services.ts owns all business logic including auth gating via `requireOwner()`. repositories/ talk to DB. Thin actions layer, fat services layer.
+
+```ts
+// actions.ts — controller only
+export async function createXxx(input: Record<string, unknown>) {
+  const parsed = parseInput({ schema, input, fallbackError: '...' });
+  if (!parsed.success) return parsed;
+  return xxxService.createXxx(parsed.data);
+}
+
+// services.ts — business logic + auth gate
+export async function createXxx(input: XxxInput) {
+  return requireOwner(async () => {
+    try {
+      const newItem = await xxxRepo.insert(input);
+      return { success: true as const, data: newItem };
+    } catch (error) {
+      console.error('createXxx', error);
+      return { success: false as const, error: 'Gagal membuat data' };
+    }
+  });
+}
+```
+
+Read-only queries (`getXxx`) follow the same pattern — `requireOwner` in services, not actions.
 
 **Action shape:** every action returns `ActionResult<T>`:
 

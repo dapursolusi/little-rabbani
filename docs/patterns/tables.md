@@ -127,6 +127,53 @@ Optional — pass `showColumnVisibility` to enable.
 
 When `data.length === 0`, renders `EmptyState` component with create button.
 
+## Dual-entity tab page
+
+Two related entities on one page via `ContentTabs` + two `DataTable` instances. Parent tab (e.g. Theme) + child tab (SubTheme). Each tab has its own columns, data, and create form:
+
+```tsx
+import ContentTabs from '@/components/shared/content-tabs';
+
+const tabs = [
+  {
+    triggerValue: 'parent',
+    triggerLabel: 'Parent',
+    icon: ParentIcon,
+    children: (
+      <DataTable
+        columns={parentColumns}
+        data={parents}
+        meta={{ label: 'Parent' }}
+        createForm={{
+          createForm: <ParentForm />,
+          meta: { label: 'Parent', domain: 'parent' },
+        }}
+      />
+    ),
+  },
+  {
+    triggerValue: 'child',
+    triggerLabel: 'Child',
+    icon: ChildIcon,
+    children: (
+      <DataTable
+        columns={childColumns}
+        data={children}
+        meta={{ label: 'Child' }}
+        createForm={{
+          createForm: <ChildForm />,
+          meta: { label: 'Child', domain: 'child' },
+        }}
+      />
+    ),
+  },
+];
+
+return <ContentTabs tabs={tabs} />;
+```
+
+Child columns often need parent data for select options — pass it via a factory function (`createChildColumns(parents)`). Both datasets are fetched in parallel in the Server Component page.
+
 ## Filters
 
 - `src/components/shared/table/filters/builtins.ts` — built-in filter functions (select, text, range)
