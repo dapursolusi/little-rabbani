@@ -22,6 +22,8 @@ Auto-generated from `src/app/` directory structure.
       page.tsx
     term/
       page.tsx
+    theme/
+      page.tsx
   login/
     demo-login-card.tsx
     login-form.tsx

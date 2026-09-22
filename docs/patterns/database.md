@@ -39,6 +39,18 @@ uniqueIndex('guardian_phone_unique_live')
   .where(sql`${table.deletedAt} is null`),
 ```
 
+## FK referential actions
+
+Use `onDelete: 'restrict'` on FKs where deletion should be blocked if child rows exist:
+
+```ts
+themeId: uuid('theme_id')
+  .notNull()
+  .references(() => theme.id, { onDelete: 'restrict' }),
+```
+
+This prevents deleting a parent that still has children. The DB error surfaces as a caught exception in the service layer.
+
 ## Index every FK by default
 
 Postgres does not auto-index FK columns. Each FK gets a single-column index:
@@ -80,7 +92,15 @@ export const kidRelations = relations(kid, ({ one, many }) => ({
 
 ## Repository layer
 
-Under `features/<entity>/repositories/`. Each file exports standalone functions (not class methods). Takes optional `tx?: TransactionClient` for transactional operations:
+Under `features/<entity>/repositories/` as a directory. One file per DB table — a repository is scoped to a single table schema. Barrel `index.ts` re-exports with namespaced aliases:
+
+```ts
+// repositories/index.ts
+export * as themeRepo from './theme';
+export * as subThemeRepo from './sub-theme';
+```
+
+Each file exports standalone functions (not class methods). Takes optional `tx?: TransactionClient` for transactional operations:
 
 ```ts
 export async function insert(data, tx?: TransactionClient) {
