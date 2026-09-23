@@ -1,4 +1,8 @@
-import { type FormFieldInput, type SelectOptionGroup } from '@/types/field';
+import {
+  type CustomHTMLInputTypeSelect,
+  type FormFieldInput,
+  type SelectOptionGroup,
+} from '@/types/field';
 import type {
   ControllerFieldState,
   ControllerRenderProps,
@@ -50,7 +54,10 @@ export default function InputFieldRenderer<
         <Select
           name={field.name}
           value={field.value}
-          onValueChange={field.onChange}
+          onValueChange={(value) => {
+            field.onChange(value);
+            (fieldConfig as CustomHTMLInputTypeSelect).onValueChange?.(value);
+          }}
         >
           <SelectTrigger
             id={field.name}
