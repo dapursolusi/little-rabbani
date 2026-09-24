@@ -5,7 +5,7 @@ import { requireOwner } from '@/lib/actions/require-owner';
 import { LeanKid } from '../kid/types';
 import * as termService from '../term/services';
 import * as kidEnrollmentRepo from './repositories';
-import { KidEnrollmentInput, SaveEnrollmentChangesInput } from './schema';
+import { KidEnrollmentInput, SaveEnrollmentChangesInput } from './validation';
 
 export async function getKidsEnrollments({
   termId,

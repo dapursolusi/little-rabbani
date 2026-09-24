@@ -3,7 +3,7 @@ import { kid } from '@/db/schema';
 import { TransactionClient } from '@/types';
 import { SQL, eq, sql } from 'drizzle-orm';
 
-import { UpdateKidInput } from '../schema';
+import { UpdateKidInput } from '../validation';
 
 export async function findMany(
   limit?: number,

@@ -31,8 +31,8 @@ import {
   kidEnrollmentUpdateActionColumn,
 } from '../columns';
 import { EnrollmentStatus } from '../constants';
-import { KidToBeEnrolled } from '../schema';
 import { KidEnrollment } from '../types';
+import { KidToBeEnrolled } from '../validation';
 import UpdateEnrolledKids from './update-enrolled-kids';
 
 export default function KidEnrollmentClient({

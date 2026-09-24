@@ -1,6 +1,6 @@
 import { BaseDTOResponse } from '@/types';
 
-import { GuardianInput, UpdateKidInput } from './schema';
+import { GuardianInput, UpdateKidInput } from './validation';
 
 // ponytail: lean subset of Kid (id, name) for guardian kids badges — not full Kid objects
 export interface LeanKid {

@@ -4,7 +4,7 @@ import FormFieldGenerator from '@/components/shared/form/form-field-generator';
 
 import { createClassSession } from '../actions';
 import { classSessionFormFields } from '../fields';
-import { ClassSessionSchema } from '../schema';
+import { ClassSessionSchema } from '../validation';
 
 export default function ClassSessionForm({
   onSuccess,

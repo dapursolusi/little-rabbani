@@ -2,8 +2,8 @@
 
 import { parseInput } from '@/lib/actions/parse-input';
 
-import { subThemeFormSchema, themeFormSchema } from './schema';
 import * as themeService from './services';
+import { subThemeFormSchema, themeFormSchema } from './validation';
 
 export async function getThemes(params?: {
   search?: string;

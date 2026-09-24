@@ -2,9 +2,9 @@
 
 import { parseInput } from '@/lib/actions/parse-input';
 
-import { CreateKidSchema, GuardianSchema, UpdateKidSchema } from './schema';
 import * as kidService from './services';
 import { LeanKid } from './types';
+import { CreateKidSchema, GuardianSchema, UpdateKidSchema } from './validation';
 
 // ── Reads ─────────────────────────────────────────────
 

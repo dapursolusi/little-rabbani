@@ -7,8 +7,8 @@ import { eq, isNull } from 'drizzle-orm';
 import { parseInput } from '@/lib/actions/parse-input';
 import { requireOwner } from '@/lib/actions/require-owner';
 
-import { TermSchema } from './schema';
 import * as termService from './services';
+import { TermSchema } from './validation';
 
 export async function checkCurrentTerm() {
   return await termService.checkCurrentTerm();

@@ -8,7 +8,7 @@ import { requireOwner } from '@/lib/actions/require-owner';
 
 import { GuardianSearchResult } from './actions';
 import { guardianRepo, kidRepo } from './repositories';
-import { CreateKidInput, GuardianInput, UpdateKidInput } from './schema';
+import { CreateKidInput, GuardianInput, UpdateKidInput } from './validation';
 
 export async function getKids(params?: ListParams) {
   return requireOwner(async () => {

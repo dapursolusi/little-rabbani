@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { classSession } from '@/db/schema';
 import { and, count as drizzleCount, eq, gt, isNull, lt } from 'drizzle-orm';
 
-import { ClassSessionInput, OverlappingClassSessionInput } from './schema';
+import { ClassSessionInput, OverlappingClassSessionInput } from './validation';
 
 export async function findOverlapping({
   startTime,

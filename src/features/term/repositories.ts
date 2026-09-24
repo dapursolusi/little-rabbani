@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { term } from '@/db/schema';
 import { and, eq, gt, gte, isNull, lt, lte } from 'drizzle-orm';
 
-import { TermInput } from './schema';
+import { TermInput } from './validation';
 
 export async function findCurrent(todayStr: string) {
   return await db.query.term.findFirst({

@@ -13,8 +13,8 @@ import {
   updateTheme,
 } from './actions';
 import { subThemeFields, themeFields } from './fields';
-import { subThemeSchema, themeSchema } from './schema';
 import { SubTheme, Theme } from './types';
+import { subThemeSchema, themeSchema } from './validation';
 
 export const themeColumns: ColumnDef<AppTableFeatures, Theme>[] = [
   {

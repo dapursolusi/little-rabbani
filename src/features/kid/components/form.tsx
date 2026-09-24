@@ -8,7 +8,7 @@ import { kidFormFields } from '@/features/kid/fields';
 import {
   type KidGuardianFormInput,
   KidGuardianFormSchema,
-} from '@/features/kid/schema';
+} from '@/features/kid/validation';
 import { Term } from '@/features/term/types';
 import { z } from 'zod';
 

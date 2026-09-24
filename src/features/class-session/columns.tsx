@@ -7,8 +7,8 @@ import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
 
 import { deleteClassSession, updateClassSession } from './actions';
 import { classSessionFormFields } from './fields';
-import { ClassSessionSchema } from './schema';
 import { ClassSession } from './types';
+import { ClassSessionSchema } from './validation';
 
 export const classSessionColumns: ColumnDef<AppTableFeatures, ClassSession>[] =
   [

@@ -1,7 +1,7 @@
 import { requireOwner } from '@/lib/actions/require-owner';
 
 import * as classSessionRepo from './repositories';
-import { ClassSessionInput, OverlappingClassSessionInput } from './schema';
+import { ClassSessionInput, OverlappingClassSessionInput } from './validation';
 
 export async function checkOverlappingClassSession({
   startTime,

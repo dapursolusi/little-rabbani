@@ -1,8 +1,8 @@
 'use server';
 import { parseInput } from '@/lib/actions/parse-input';
 
-import { KidEnrollmentSchema, SaveEnrollmentChangesSchema } from './schema';
 import * as kidEnrollmentService from './services';
+import { KidEnrollmentSchema, SaveEnrollmentChangesSchema } from './validation';
 
 export async function getKidsEnrollments(input?: unknown) {
   return await kidEnrollmentService.getKidsEnrollments(
