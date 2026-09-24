@@ -3,6 +3,7 @@ import { db } from '@/db';
 import { requireOwner } from '@/lib/actions/require-owner';
 
 import { LeanKid } from '../kid/types';
+import * as termService from '../term/services';
 import * as kidEnrollmentRepo from './repositories';
 import { KidEnrollmentInput, SaveEnrollmentChangesInput } from './schema';
 
@@ -29,6 +30,42 @@ export async function getKidsEnrollments({
     };
   } catch (error) {
     console.error('getKidsEnrollments: ', error);
+    return {
+      success: false as const,
+      error: 'Gagal memuat data. Coba muat ulang halaman.',
+    };
+  }
+}
+
+export async function getCurrentTermKidEnrollmentsByClassSession({
+  classSessionId,
+}: {
+  classSessionId: string;
+}) {
+  try {
+    if (!classSessionId)
+      return {
+        success: false as const,
+        error: 'Wajib memilih sesi kelas terlebih dahulu',
+      };
+
+    const currentTermId = (await termService.checkCurrentTerm())?.data?.id;
+    if (!currentTermId) {
+      return {
+        success: false as const,
+        error: 'Gagal memuat data. Coba muat ulang halaman.',
+      };
+    }
+    const kidsEnrollments = await kidEnrollmentRepo.findMany({
+      termId: currentTermId,
+      classSessionId,
+    });
+    return {
+      success: true as const,
+      data: kidsEnrollments,
+    };
+  } catch (error) {
+    console.error('getCurrentTermKidEnrollments: ', error);
     return {
       success: false as const,
       error: 'Gagal memuat data. Coba muat ulang halaman.',

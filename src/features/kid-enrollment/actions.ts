@@ -10,6 +10,14 @@ export async function getKidsEnrollments(input?: unknown) {
   );
 }
 
+export async function getCurrentTermKidEnrollmentsByClassSession(
+  input?: unknown
+) {
+  return await kidEnrollmentService.getCurrentTermKidEnrollmentsByClassSession(
+    input as { classSessionId: string }
+  );
+}
+
 export async function getAvailableKids(input: unknown) {
   return await kidEnrollmentService.getAvailableKids(
     input as { termId: string; classSessionId: string }

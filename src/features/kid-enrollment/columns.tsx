@@ -4,7 +4,7 @@ import {
   ENROLLMENT_STATUS,
   ENROLLMENT_STATUS_LABELS,
   EnrollmentStatus,
-} from '@/db/schema';
+} from '@/features/kid-enrollment/constants';
 import { Cancel02Icon, Undo02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ColumnDef } from '@tanstack/react-table';
@@ -93,7 +93,8 @@ function StatusCell({ row }: { row: { original: KidEnrollment } }) {
   const { isUpdateMode, onUpdateStatus } = useContext(UpdateModeContext);
   const enrollment = row.original;
   const status = enrollment.status;
-  const label = ENROLLMENT_STATUS_LABELS[status];
+  const label =
+    ENROLLMENT_STATUS_LABELS[status as keyof typeof ENROLLMENT_STATUS_LABELS];
   const statusColor =
     status === 'enrolled'
       ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
@@ -117,7 +118,13 @@ function StatusCell({ row }: { row: { original: KidEnrollment } }) {
       }
     >
       <SelectTrigger className="w-36">
-        <span>{ENROLLMENT_STATUS_LABELS[status]}</span>
+        <span>
+          {
+            ENROLLMENT_STATUS_LABELS[
+              status as keyof typeof ENROLLMENT_STATUS_LABELS
+            ]
+          }
+        </span>
       </SelectTrigger>
       <SelectContent>
         {ENROLLMENT_STATUS.map((s) => (

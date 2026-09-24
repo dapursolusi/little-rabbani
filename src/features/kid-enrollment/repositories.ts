@@ -1,8 +1,9 @@
 import { db } from '@/db';
-import { EnrollmentStatus, kid, kidEnrollment } from '@/db/schema';
+import { kid, kidEnrollment } from '@/db/schema';
 import { TransactionClient } from '@/types';
 import { SQL, and, eq, exists, inArray, isNull, not } from 'drizzle-orm';
 
+import { EnrollmentStatus } from './constants';
 import { LeanKidEnrollment } from './types';
 
 export async function findMany({

@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { EnrollmentStatus } from '@/db/schema';
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Term } from '@/features/term/types';
@@ -31,6 +30,7 @@ import {
   kidEnrollmentSessionColumn,
   kidEnrollmentUpdateActionColumn,
 } from '../columns';
+import { EnrollmentStatus } from '../constants';
 import { KidToBeEnrolled } from '../schema';
 import { KidEnrollment } from '../types';
 import UpdateEnrolledKids from './update-enrolled-kids';
