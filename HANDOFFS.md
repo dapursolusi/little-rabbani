@@ -31,3 +31,14 @@ D-008: Curriculum = undated shared sequence, DCR = dated instance, no projection
 - **Blockers:** None.
 
 D-009: Curriculum stays undated — dates derive from `sortOrder` projected onto the term's active workdays; write paths must resolve sortOrder from a target date (or next empty workday), never MAX+1 append. Root cause of #72.
+
+## [Session — 2026-09-22] — Test strategy review (Uncle Bob gauntlet gap analysis)
+
+- **What changed:** `memory/test-strategy-while-shipping.md` — documented what tests to write now vs defer during active dev.
+- **Gaps vs Uncle Bob's gauntlet:** No mutation testing, no property-based tests, no Gherkin specs, unit tests don't run in CI, coverage thresholds at 10% (meaningless). None blockers for ship mode.
+- **Decision:** During active dev, test only (1) auth gates, (2) Zod schemas, (3) core CRUD data integrity, (4) data migrations. Defer mutation/property/E2E/Coverage gates to post-ship when the module is stable.
+- **When to add a test:** (a) bug caught post-merge, (b) data integrity risk, (c) auth boundary, (d) non-trivial + stable code. Otherwise ship + manual verify.
+- **State:** Documented. No code changes.
+- **Verification:** N/A (docs only).
+- **Next steps:** Press on with feature work.
+- **Blockers:** None.
