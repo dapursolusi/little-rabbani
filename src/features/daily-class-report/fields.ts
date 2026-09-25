@@ -3,15 +3,21 @@ import { FormField, SelectOptionGroup } from '@/types/field';
 
 import { ClassSession } from '../class-session/types';
 import { Theme } from '../theme/types';
+import {
+  KID_APPETITE_LABELS,
+  KID_ATTENDANCE_LABELS,
+  KID_MOOD_LABELS,
+  KidMood,
+} from './constants';
 
 export const dailyClassReportFormFields = ({
   classSessions,
   themes,
-  onValueChange,
+  onValueChangeAction,
 }: {
   classSessions: ClassSession[];
   themes: Theme[];
-  onValueChange: (value: string) => void;
+  onValueChangeAction: (value: string) => void;
 }): FormField[] => [
   {
     name: 'classSessionId',
@@ -22,7 +28,7 @@ export const dailyClassReportFormFields = ({
       value: cs.id,
       label: `${cs.name} (${cs.startTime} - ${cs.endTime})`,
     })),
-    onValueChange,
+    onValueChange: onValueChangeAction,
   },
   {
     name: 'subThemeId',
@@ -41,6 +47,45 @@ export const dailyClassReportFormFields = ({
     name: 'description',
     label: 'Deskripsi',
     type: 'text',
+    fullWidth: true,
+  },
+];
+
+export const dcrObservationFormFields: FormField[] = [
+  {
+    name: 'attendance',
+    label: { text: 'Kehadiran', className: 'text-primary' },
+    type: 'toggle-group',
+    fullWidth: true,
+    items: Object.entries(KID_ATTENDANCE_LABELS).map(([key, value]) => ({
+      value: key,
+      label: value as string,
+    })),
+  },
+  {
+    name: 'mood',
+    label: { text: 'Mood', className: 'text-primary' },
+    type: 'toggle-group',
+    fullWidth: true,
+    items: Object.entries(KID_MOOD_LABELS).map(([key, value]) => ({
+      value: key as KidMood,
+      label: value as string,
+    })),
+  },
+  {
+    name: 'appetite',
+    label: { text: 'Makan', className: 'text-primary' },
+    type: 'toggle-group',
+    fullWidth: true,
+    items: Object.entries(KID_APPETITE_LABELS).map(([key, value]) => ({
+      value: key,
+      label: value as string,
+    })),
+  },
+  {
+    name: 'notes',
+    label: { text: 'Catatan (Opsional)', className: 'text-primary' },
+    type: 'textarea',
     fullWidth: true,
   },
 ];
