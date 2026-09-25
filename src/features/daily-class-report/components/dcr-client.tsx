@@ -7,19 +7,22 @@ import ContentTabs, {
   ContentTabsProps,
 } from '@/components/shared/content-tabs';
 
+import { DCRObservation } from '../types';
 import DailyClassReportForm from './form';
-import DCRObservation from './observation';
+import DCRKidObservation from './observation';
 
 export default function DailyClassReportClient({
   classSessions,
   themes,
   kids,
   defaultClassSessionId,
+  existingObservations,
 }: {
   classSessions: ClassSession[];
   themes: Theme[];
   kids: LeanKid[];
   defaultClassSessionId?: string;
+  existingObservations: DCRObservation[];
 }) {
   const tabs: ContentTabsProps['tabs'] = [
     {
@@ -32,7 +35,10 @@ export default function DailyClassReportClient({
             themes={themes}
             defaultClassSessionId={defaultClassSessionId}
           />
-          <DCRObservation kids={kids} />
+          <DCRKidObservation
+            kids={kids}
+            existingObservations={existingObservations}
+          />
         </div>
       ),
       maxWidthPx: '900px',

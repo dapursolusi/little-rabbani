@@ -44,12 +44,27 @@ export async function createKidObservation({
       ...input,
       dcrId: dcr.data?.id,
     });
-    return { success: true as const, data: kidObservation };
+    return { success: true as const, data: kidObservation as DCRObservation };
   } catch (error) {
     console.error('createKidObservation', error);
     return {
       success: false as const,
       message: 'Gagal membuat observasi anak. Coba lagi nanti.',
+    };
+  }
+}
+
+export async function getDCRObservationsByDcrId(
+  dcrId: string
+): Promise<ActionResult<DCRObservation[]>> {
+  try {
+    const observations = await observationRepo.findMany({ dcrId });
+    return { success: true as const, data: observations };
+  } catch (error) {
+    console.error('getDCRObservationsByDcrId', error);
+    return {
+      success: false as const,
+      message: 'Gagal memuat observasi anak. Coba lagi nanti.',
     };
   }
 }

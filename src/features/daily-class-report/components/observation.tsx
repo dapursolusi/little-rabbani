@@ -8,12 +8,36 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+import {
+  Item,
+  ItemContent,
+  ItemDescription,
+  ItemTitle,
+} from '@/components/ui/item';
+import { Separator } from '@/components/ui/separator';
 
 import { observationAction } from '../actions';
+import {
+  KID_APPETITE_LABELS,
+  KID_ATTENDANCE_LABELS,
+  KID_MOOD_LABELS,
+} from '../constants';
 import { dcrObservationFormFields } from '../fields';
+import { type DCRObservation } from '../types';
 import { dcrObservationSchema } from '../validation';
 
-export default function DCRObservation({ kids }: { kids: LeanKid[] }) {
+export default function DCRKidObservation({
+  kids,
+  existingObservations,
+}: {
+  kids: LeanKid[];
+  existingObservations: DCRObservation[];
+}) {
+  const unfilledKids = kids.filter(
+    (kid) => !existingObservations.some((obs) => obs.kidId === kid.id)
+  );
+
   return (
     <Accordion
       multiple
@@ -23,7 +47,7 @@ export default function DCRObservation({ kids }: { kids: LeanKid[] }) {
       <AccordionItem value="unfilled" className="border-b last:border-0">
         <AccordionTrigger>Belum Diisi</AccordionTrigger>
         <AccordionContent className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 my-2">
-          {kids.map((kid) => (
+          {unfilledKids.map((kid) => (
             <Modal
               key={kid.id}
               title={`Observasi: ${kid.name}`}
@@ -64,6 +88,60 @@ export default function DCRObservation({ kids }: { kids: LeanKid[] }) {
           ))}
         </AccordionContent>
       </AccordionItem>
+      {Object.entries(KID_ATTENDANCE_LABELS).map(([attendance, label]) => (
+        <AccordionItem
+          key={attendance}
+          value={attendance}
+          className="border-b last:border-0"
+        >
+          <AccordionTrigger>
+            {label} (
+            {
+              existingObservations.filter((o) => o.attendance === attendance)
+                .length
+            }
+            )
+          </AccordionTrigger>
+          <AccordionContent className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 my-2">
+            {existingObservations
+              .filter((o) => o.attendance === attendance)
+              .map((o) => (
+                <Item variant="outline" key={o.id}>
+                  <ItemContent>
+                    <ItemTitle>
+                      <div className="flex items-center gap-2">
+                        {o.kid.name}
+                      </div>
+                    </ItemTitle>
+                    <Separator />
+                    <ItemDescription className="flex flex-col gap-2">
+                      <div className="flex items-center justify-evenly gap-2 w-full">
+                        <div className="flex flex-col items-center gap-2">
+                          <Badge className="text-[10px]">Mood:</Badge>{' '}
+                          <span>{o.mood ? KID_MOOD_LABELS[o.mood] : '-'}</span>
+                        </div>
+
+                        <Separator orientation="vertical" />
+                        <div className="flex flex-col items-center gap-2">
+                          <Badge className="text-[10px]">Makan:</Badge>{' '}
+                          <span>
+                            {o.appetite ? KID_APPETITE_LABELS[o.appetite] : '-'}
+                          </span>
+                        </div>
+                      </div>
+                      <Separator />
+                      <div className="flex items-center gap-2">
+                        <Badge>Catatan:</Badge>
+                        <Separator orientation="vertical" />
+                        <span>{o.notes || '-'}</span>
+                      </div>
+                    </ItemDescription>
+                  </ItemContent>
+                </Item>
+              ))}
+          </AccordionContent>
+        </AccordionItem>
+      ))}
     </Accordion>
   );
 }

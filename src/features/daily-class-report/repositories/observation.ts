@@ -23,3 +23,24 @@ export async function findObservation({
     ),
   });
 }
+
+export async function findMany({
+  dcrId,
+  kidId,
+}: {
+  dcrId?: string;
+  kidId?: string;
+}) {
+  const filters = [
+    kidId ? eq(dcrObservation.kidId, kidId) : undefined,
+    dcrId ? eq(dcrObservation.dcrId, dcrId) : undefined,
+  ].filter((f) => f !== undefined);
+  if (filters.length === 0) return [];
+
+  return await db.query.dcrObservation.findMany({
+    where: and(...filters),
+    with: {
+      kid: { columns: { name: true } },
+    },
+  });
+}
