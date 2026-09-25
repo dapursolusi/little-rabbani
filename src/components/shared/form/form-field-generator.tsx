@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { ActionResult } from '@/types';
 import { type FormField, type FormFieldInput } from '@/types/field';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SaveIcon } from '@hugeicons/core-free-icons';
@@ -104,7 +105,7 @@ export default function FormFieldGenerator<
     try {
       const result = await onSubmitProp(data);
       if (!result) return;
-      const r = result as { success: boolean; error?: string };
+      const r = result as ActionResult<TForm>;
       if (r.success) {
         toast.success(
           `${meta?.label ?? 'Data'} berhasil ${isEditing ? 'diperbarui' : 'ditambahkan'}`
@@ -112,7 +113,7 @@ export default function FormFieldGenerator<
         router.refresh();
         onSuccess?.();
       } else {
-        toast.error(r.error ?? 'Gagal menyimpan data');
+        toast.error((!r.success && r.message) ?? 'Gagal menyimpan data');
       }
     } catch {
       toast.error(`${meta?.label ?? 'Data'} gagal disimpan`);
@@ -133,8 +134,17 @@ export default function FormFieldGenerator<
             className={formField.fullWidth ? 'col-span-2' : ''}
           >
             {formField.type !== 'switch' && formField.label && (
-              <FieldLabel htmlFor={formField.name}>
-                {formField.label ?? 'Default Label'}
+              <FieldLabel
+                htmlFor={formField.name}
+                className={
+                  typeof formField.label === 'object'
+                    ? formField.label.className
+                    : ''
+                }
+              >
+                {typeof formField.label === 'string'
+                  ? formField.label
+                  : formField.label.text}
               </FieldLabel>
             )}
             <InputFieldRenderer

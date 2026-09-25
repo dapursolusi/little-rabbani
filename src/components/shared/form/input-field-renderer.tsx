@@ -22,6 +22,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface InputFieldRendererProps<TFormAttributes extends FieldValues> {
   fieldConfig: FormFieldInput;
@@ -56,7 +58,9 @@ export default function InputFieldRenderer<
           value={field.value}
           onValueChange={(value) => {
             field.onChange(value);
-            (fieldConfig as CustomHTMLInputTypeSelect).onValueChange?.(value);
+            (fieldConfig as CustomHTMLInputTypeSelect).onValueChange?.(
+              (value as unknown as string) ?? ''
+            );
           }}
         >
           <SelectTrigger
@@ -112,12 +116,56 @@ export default function InputFieldRenderer<
             checked={field.value}
             onCheckedChange={field.onChange}
           />
-          <FieldLabel htmlFor="switch-options">{fieldConfig.label}</FieldLabel>
+          <FieldLabel
+            htmlFor="switch-options"
+            className={`${typeof fieldConfig.label === 'object' ? fieldConfig.label.className : ''}`}
+          >
+            {typeof fieldConfig.label === 'string'
+              ? fieldConfig.label
+              : fieldConfig.label?.text}
+          </FieldLabel>
         </div>
+      );
+
+    case 'toggle-group':
+      // ponytail: base-ui ToggleGroup is array-based (Value[]) even in
+      // single-select mode, but RHF field.value is a string from zod enum.
+      // Wrap/unwrap the single value at this seam.
+      const items = fieldConfig.items;
+      const toggleValue = field.value ? [field.value] : [];
+      return (
+        <ToggleGroup
+          value={toggleValue}
+          onValueChange={(val) => field.onChange(val.at(0) ?? undefined)}
+          className="w-full grid grid-cols-2 sm:grid-cols-4 items-stretch"
+        >
+          {items.map((item) => (
+            <ToggleGroupItem
+              variant="outline"
+              key={item.value}
+              value={item.value}
+              className="flex justify-center px-1"
+            >
+              {item.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       );
 
     case 'hidden':
       return null;
+
+    case 'textarea':
+      return (
+        <Textarea
+          {...field}
+          id={field.name}
+          aria-invalid={fieldState.invalid}
+          placeholder={fieldConfig.placeholder ?? 'Enter value'}
+          autoComplete="off"
+          value={field.value as string | number | readonly string[] | undefined}
+        />
+      );
 
     default:
       return (

@@ -30,3 +30,17 @@ export type TransactionClient = PgTransaction<
   typeof import('@/db/schema'),
   ExtractTablesWithRelations<typeof import('@/db/schema')>
 >;
+
+export type ActionResult<T> =
+  | {
+      success: true;
+      message?: string;
+      data?: T | null;
+      error?: never;
+    }
+  | {
+      success: false;
+      message: string;
+      data?: never;
+      error?: Record<string, string[]>;
+    };
