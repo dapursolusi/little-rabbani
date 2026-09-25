@@ -12,6 +12,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
+import { dcrObservation } from './daily';
 import { kidEnrollment } from './enrollment';
 
 // ─────────────── Guardian / Parent ───────────────
@@ -99,4 +100,5 @@ export const kidRelations = relations(kid, ({ one, many }) => ({
     references: [guardian.id],
   }),
   enrollments: many(kidEnrollment),
+  dcrObservations: many(dcrObservation),
 }));

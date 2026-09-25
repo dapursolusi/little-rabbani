@@ -11,6 +11,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
+import { dailyClassReport } from './daily';
 import { kid } from './kids';
 
 export const term = pgTable(
@@ -54,6 +55,7 @@ export const classSession = pgTable(
 
 export const classSessionRelations = relations(classSession, ({ many }) => ({
   sessionEnrollments: many(kidEnrollment),
+  dailyClassReports: many(dailyClassReport),
 }));
 
 export const enrollmentStatusEnum = pgEnum(
