@@ -32,18 +32,16 @@ export async function getKids(params?: ListParams) {
 }
 
 export async function getKid(id: string) {
-  return requireOwner(async () => {
-    try {
-      const kid = await kidRepo.findById(id);
-      if (!kid) {
-        return { success: false as const, error: 'Murid tidak ditemukan' };
-      }
-      return { success: true as const, data: kid };
-    } catch (error) {
-      console.error('getKid', error);
-      return { success: false as const, error: 'Gagal mengambil data murid' };
+  try {
+    const kid = await kidRepo.findById(id);
+    if (!kid) {
+      return { success: false as const, error: 'Murid tidak ditemukan' };
     }
-  });
+    return { success: true as const, data: kid };
+  } catch (error) {
+    console.error('getKid', error);
+    return { success: false as const, error: 'Gagal mengambil data murid' };
+  }
 }
 
 /** Narrow interface — the test surface; a fake tx only needs these shapes. */
