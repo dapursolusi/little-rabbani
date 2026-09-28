@@ -67,7 +67,9 @@ export default function DCRKidObservation({
                   <div className="flex flex-col gap-2">
                     <FormFieldGenerator
                       schema={dcrObservationSchema}
-                      formFields={dcrObservationFormFields}
+                      formFields={(watch) =>
+                        dcrObservationFormFields({ watch })
+                      }
                       initialData={{
                         dcrId: crypto.randomUUID(),
                         kidId: kid.id,

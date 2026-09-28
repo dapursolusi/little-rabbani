@@ -7,6 +7,7 @@ import {
   KID_APPETITE_LABELS,
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
+  KidAttendance,
   KidMood,
 } from './constants';
 
@@ -51,7 +52,52 @@ export const dailyClassReportFormFields = ({
   },
 ];
 
-export const dcrObservationFormFields: FormField[] = [
+export const dcrObservationFormFieldsPresentAttendance = ({
+  watch,
+}: {
+  watch: (name: string) => unknown;
+}): FormField[] => {
+  const isPresent =
+    (watch('attendance') as unknown) ===
+    ('present' as unknown as KidAttendance);
+  if (!isPresent) {
+    return [];
+  }
+  return [
+    {
+      name: 'mood',
+      label: { text: 'Mood', className: 'text-primary' },
+      type: 'toggle-group',
+      fullWidth: true,
+      items: Object.entries(KID_MOOD_LABELS).map(([key, value]) => ({
+        value: key as KidMood,
+        label: value as string,
+      })),
+    },
+    {
+      name: 'appetite',
+      label: { text: 'Makan', className: 'text-primary' },
+      type: 'toggle-group',
+      fullWidth: true,
+      items: Object.entries(KID_APPETITE_LABELS).map(([key, value]) => ({
+        value: key,
+        label: value as string,
+      })),
+    },
+    {
+      name: 'notes',
+      label: { text: 'Catatan (Opsional)', className: 'text-primary' },
+      type: 'textarea',
+      fullWidth: true,
+    },
+  ];
+};
+
+export const dcrObservationFormFields = ({
+  watch,
+}: {
+  watch: (name: string) => unknown;
+}): FormField[] => [
   {
     name: 'attendance',
     label: { text: 'Kehadiran', className: 'text-primary' },
@@ -62,30 +108,5 @@ export const dcrObservationFormFields: FormField[] = [
       label: value as string,
     })),
   },
-  {
-    name: 'mood',
-    label: { text: 'Mood', className: 'text-primary' },
-    type: 'toggle-group',
-    fullWidth: true,
-    items: Object.entries(KID_MOOD_LABELS).map(([key, value]) => ({
-      value: key as KidMood,
-      label: value as string,
-    })),
-  },
-  {
-    name: 'appetite',
-    label: { text: 'Makan', className: 'text-primary' },
-    type: 'toggle-group',
-    fullWidth: true,
-    items: Object.entries(KID_APPETITE_LABELS).map(([key, value]) => ({
-      value: key,
-      label: value as string,
-    })),
-  },
-  {
-    name: 'notes',
-    label: { text: 'Catatan (Opsional)', className: 'text-primary' },
-    type: 'textarea',
-    fullWidth: true,
-  },
+  ...dcrObservationFormFieldsPresentAttendance({ watch }),
 ];
