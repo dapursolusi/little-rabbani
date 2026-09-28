@@ -12,11 +12,29 @@ export async function insert(input: DailyClassReportInput) {
   return inserted;
 }
 
-export async function findDCR({ date, classSessionId }: DailyClassReportInput) {
+export async function findDCR({
+  date,
+  classSessionId,
+}: {
+  date?: string;
+  classSessionId?: string;
+}) {
+  const filters = [
+    date ? eq(dailyClassReport.date, date) : undefined,
+    classSessionId
+      ? eq(dailyClassReport.classSessionId, classSessionId)
+      : undefined,
+  ].filter((f) => f !== undefined);
+  if (filters.length === 0) return null;
+
   return await db.query.dailyClassReport.findFirst({
-    where: and(
-      eq(dailyClassReport.date, date),
-      eq(dailyClassReport.classSessionId, classSessionId)
-    ),
+    where: and(...filters),
+    with: {
+      observations: {
+        with: {
+          kid: { columns: { name: true } },
+        },
+      },
+    },
   });
 }

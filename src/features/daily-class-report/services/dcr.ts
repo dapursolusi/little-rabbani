@@ -19,3 +19,27 @@ export async function getOrCreateDCR({
     return { success: false as const, error: 'Gagal memuat laporan harian' };
   }
 }
+
+export async function getDCRByDate(
+  date: string,
+  { classSessionId }: { classSessionId?: string }
+) {
+  try {
+    const dcr = await dcrRepo.findDCR({ date, classSessionId });
+
+    if (!dcr) {
+      return {
+        success: false as const,
+        error: `Laporan harian tanggal ${date} tidak ditemukan / belum dibuat`,
+      };
+    }
+
+    return { success: true as const, data: dcr };
+  } catch (error) {
+    console.error('getDCRByDate', error);
+    return {
+      success: false as const,
+      error: 'Gagal memuat data laporan harian',
+    };
+  }
+}

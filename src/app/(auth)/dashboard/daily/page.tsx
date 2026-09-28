@@ -35,24 +35,23 @@ export default async function DailyClassReportPage({
       </section>
     );
   }
-  const currentKids =
-    await kidEnrollmentAction.getCurrentTermKidEnrollmentsByClassSession({
+
+  const currentTermKidsResults =
+    await kidEnrollmentAction.getCurrentTermKidEnrollmentsByClassSession(
+      classSessionId
+    );
+  const todayDate = new Date().toISOString().split('T')[0];
+  const existingObservationsResults =
+    await observationAction.getDCRObservationsByDate(todayDate, {
       classSessionId,
     });
-  const currentDCR = await dcrAction.getOrCreateDCR({
-    classSessionId: classSessionId as string,
-  });
-  const existingObservations =
-    await observationAction.getDCRObservationsByDcrId(
-      currentDCR.data?.id as string
-    );
   return (
     <DailyClassReportClient
       classSessions={csResults.data}
       themes={themeResults.data}
-      kids={currentKids.data?.map((ck) => ck.kid) ?? []}
+      availableKids={currentTermKidsResults.data?.map((ctk) => ctk.kid) ?? []}
       defaultClassSessionId={classSessionId}
-      existingObservations={existingObservations.data as DCRObservation[]}
+      existingObservationsResults={existingObservationsResults}
     />
   );
 }

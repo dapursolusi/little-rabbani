@@ -2,10 +2,13 @@
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Theme } from '@/features/theme/types';
+import { ActionResult } from '@/types';
+import { DatabaseIcon, Warning } from '@hugeicons/core-free-icons';
 
 import ContentTabs, {
   ContentTabsProps,
 } from '@/components/shared/content-tabs';
+import { EmptyState } from '@/components/shared/empty-state';
 
 import { DCRObservation } from '../types';
 import DailyClassReportForm from './form';
@@ -14,15 +17,15 @@ import DCRKidObservation from './observation';
 export default function DailyClassReportClient({
   classSessions,
   themes,
-  kids,
+  availableKids,
   defaultClassSessionId,
-  existingObservations,
+  existingObservationsResults,
 }: {
   classSessions: ClassSession[];
   themes: Theme[];
-  kids: LeanKid[];
+  availableKids: LeanKid[];
   defaultClassSessionId?: string;
-  existingObservations: DCRObservation[];
+  existingObservationsResults: ActionResult<DCRObservation[]>;
 }) {
   const tabs: ContentTabsProps['tabs'] = [
     {
@@ -35,10 +38,17 @@ export default function DailyClassReportClient({
             themes={themes}
             defaultClassSessionId={defaultClassSessionId}
           />
-          <DCRKidObservation
-            kids={kids}
-            existingObservations={existingObservations}
-          />
+          {defaultClassSessionId ? (
+            <DCRKidObservation
+              availableKids={availableKids}
+              existingObservationsResults={existingObservationsResults}
+            />
+          ) : (
+            <EmptyState
+              title="Pilih sesi kelas terlebih dahulu."
+              icon={Warning}
+            />
+          )}
         </div>
       ),
       maxWidthPx: '900px',

@@ -68,3 +68,27 @@ export async function getDCRObservationsByDcrId(
     };
   }
 }
+
+export async function getDCRObservationsByDate(
+  date: string,
+  { classSessionId }: { classSessionId?: string }
+): Promise<ActionResult<DCRObservation[]>> {
+  try {
+    const dcrResults = await dcrService.getDCRByDate(date, {
+      classSessionId,
+    });
+    const observations = dcrResults.data?.observations;
+    if (!dcrResults.success)
+      return {
+        success: false as const,
+        message: 'Laporan harian tidak ditemukan',
+      };
+    return { success: true as const, data: observations };
+  } catch (error) {
+    console.error('getDCRObservationsByDate', error);
+    return {
+      success: false as const,
+      message: 'Gagal memuat observasi anak. Coba lagi nanti.',
+    };
+  }
+}
