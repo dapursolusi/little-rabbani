@@ -9,6 +9,18 @@ export async function insert(input: DCRObservationInput) {
   return inserted;
 }
 
+export async function update(input: DCRObservationInput) {
+  const { dcrId, kidId, ...mutable } = input;
+  const [updated] = await db
+    .update(dcrObservation)
+    .set(mutable)
+    .where(
+      and(eq(dcrObservation.dcrId, dcrId), eq(dcrObservation.kidId, kidId))
+    )
+    .returning();
+  return updated;
+}
+
 export async function findObservation({
   dcrId,
   kidId,
@@ -40,7 +52,7 @@ export async function findMany({
   return await db.query.dcrObservation.findMany({
     where: and(...filters),
     with: {
-      kid: { columns: { name: true } },
+      kid: { columns: { id: true, name: true } },
     },
   });
 }

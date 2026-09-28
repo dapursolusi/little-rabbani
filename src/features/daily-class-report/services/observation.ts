@@ -54,6 +54,32 @@ export async function createKidObservation({
   }
 }
 
+export async function updateKidObservation(
+  input: DCRObservationInput
+): Promise<ActionResult<DCRObservation>> {
+  try {
+    const existing = await observationRepo.findObservation({
+      dcrId: input.dcrId,
+      kidId: input.kidId,
+    });
+    if (!existing)
+      return { success: false as const, message: 'Observasi tidak ditemukan' };
+
+    const updated = await observationRepo.update(input);
+    return {
+      success: true as const,
+      message: 'Berhasil mengupdate observasi',
+      data: updated as DCRObservation,
+    };
+  } catch (error) {
+    console.error('updateKidObservation: ', error);
+    return {
+      success: false as const,
+      message: 'Gagal mengupdate observasi anak. Coba lagi beberapa saat.',
+    };
+  }
+}
+
 export async function getDCRObservationsByDcrId(
   dcrId: string
 ): Promise<ActionResult<DCRObservation[]>> {

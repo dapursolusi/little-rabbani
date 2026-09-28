@@ -9,7 +9,7 @@
 - `formFields` — `FormField[]` or `(watch) => FormField[]` (dynamic fields)
 - `onSubmit` — handler returning `ActionResult`
 - `onSuccess` — callback after successful submission
-- `isEditing` — toggles toast message ("ditambahkan" / "diperbarui")
+- `isEditMode` — toggles toast message ("ditambahkan" / "diperbarui")
 - `submitChildren` — optional custom submit button / footer
 
 Engine handles: form state, validation (zod via `zodResolver`), toast feedback, grouping, submission.

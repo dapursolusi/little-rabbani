@@ -68,7 +68,7 @@ export default function KidForm({
         kidFormFields({ watch, summary, terms, classSessions })
       }
       meta={{ label: 'Data murid' }}
-      isEditing={isEdit}
+      isEditMode={isEdit}
       onSuccess={() => route.push('/dashboard/kid')}
       onSubmit={async (data) => {
         const result =

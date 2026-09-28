@@ -37,7 +37,7 @@ export type DefaultFormFieldsProps<
   meta?: { label: string };
   onSuccess?: () => void;
   onSubmit: (data: TForm) => unknown | Promise<unknown>;
-  isEditing?: boolean;
+  isEditMode?: boolean;
 };
 
 export default function FormFieldGenerator<
@@ -51,7 +51,7 @@ export default function FormFieldGenerator<
   submitChildren,
   meta,
   onSuccess,
-  isEditing,
+  isEditMode,
 }: DefaultFormFieldsProps<S, TForm>) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -108,7 +108,7 @@ export default function FormFieldGenerator<
       const r = result as ActionResult<TForm>;
       if (r.success) {
         toast.success(
-          `${meta?.label ?? 'Data'} berhasil ${isEditing ? 'diperbarui' : 'ditambahkan'}`
+          `${meta?.label ?? 'Data'} berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}`
         );
         router.refresh();
         onSuccess?.();

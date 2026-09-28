@@ -14,7 +14,6 @@ export async function getKidsEnrollments(input?: unknown) {
 export async function getCurrentTermKidEnrollmentsByClassSession(
   input: unknown
 ) {
-  console.log('input: ', input);
   const parsed = parseInput({
     input,
     schema: uuidSchema,

@@ -7,5 +7,5 @@ export type DailyClassReport = typeof dailyClassReport.$inferSelect & {
 };
 
 export type DCRObservation = typeof dcrObservation.$inferSelect & {
-  kid: Partial<Kid>;
+  kid: Pick<Kid, 'id' | 'name' | 'nickName'>;
 };

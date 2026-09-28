@@ -32,7 +32,7 @@ export async function findDCR({
     with: {
       observations: {
         with: {
-          kid: { columns: { name: true } },
+          kid: { columns: { id: true, name: true, nickName: true } },
         },
       },
     },

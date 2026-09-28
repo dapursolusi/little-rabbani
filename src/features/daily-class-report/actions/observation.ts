@@ -28,6 +28,24 @@ export async function createKidObservation({
   });
 }
 
+export async function updateKidObservation(input: unknown) {
+  const parsed = parseInput({
+    input,
+    schema: dcrObservationSchema,
+    fallbackError: 'Data observasi kelas tidak valid',
+  });
+  if (!parsed.success) {
+    return {
+      success: false as const,
+      error: {
+        type: ['ACTION_VALIDATION'],
+      },
+      message: parsed.error,
+    };
+  }
+  return await observationService.updateKidObservation(parsed.data);
+}
+
 export async function getDCRObservationsByDcrId(input: unknown) {
   const parsed = parseInput({
     schema: uuidSchema,

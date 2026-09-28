@@ -11,7 +11,7 @@ import ContentTabs, {
 import { EmptyState } from '@/components/shared/empty-state';
 
 import { DCRObservation } from '../types';
-import DailyClassReportForm from './form';
+import { DailyClassReportForm } from './form';
 import DCRKidObservation from './observation';
 
 export default function DailyClassReportClient({
@@ -30,7 +30,7 @@ export default function DailyClassReportClient({
   const tabs: ContentTabsProps['tabs'] = [
     {
       triggerValue: 'input',
-      triggerLabel: 'Input Laporan Harian & Observasi',
+      triggerLabel: 'Input',
       children: (
         <div>
           <DailyClassReportForm
@@ -55,7 +55,7 @@ export default function DailyClassReportClient({
     },
     {
       triggerValue: 'history',
-      triggerLabel: 'Riwayat Laporan',
+      triggerLabel: 'Riwayat',
       children: (
         <div>
           <h1>Riwayat Laporan Harian & Observasi</h1>
@@ -64,7 +64,7 @@ export default function DailyClassReportClient({
     },
   ];
   return (
-    <div>
+    <div className="py-2 px-4">
       <ContentTabs tabs={tabs} fullWidth />
     </div>
   );
