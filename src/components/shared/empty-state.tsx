@@ -1,3 +1,5 @@
+import Link from 'next/link';
+
 import { isIconSvgElement } from '@/utils/icon-checker';
 import { ArrowUpRight01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
@@ -19,6 +21,10 @@ interface EmptyDataProps {
   actionLabel?: string;
   actionHref?: string;
   action?: React.ReactNode;
+  learnMore?: {
+    href: string;
+    label: string;
+  };
 }
 
 export function EmptyState({
@@ -28,6 +34,7 @@ export function EmptyState({
   actionLabel,
   actionHref,
   action,
+  learnMore,
 }: EmptyDataProps) {
   return (
     <Empty>
@@ -51,18 +58,20 @@ export function EmptyState({
           action
         ) : null}
       </EmptyContent>
-      <Button
-        variant="link"
-        className="text-muted-foreground"
-        size="sm"
-        nativeButton={false}
-        render={
-          <a href="#">
-            Learn More{' '}
-            <HugeiconsIcon icon={ArrowUpRight01Icon} strokeWidth={2} />
-          </a>
-        }
-      />
+      {learnMore && (
+        <Button
+          variant="link"
+          className="text-muted-foreground"
+          size="sm"
+          nativeButton={false}
+          render={
+            <Link href="learnMore.href">
+              {learnMore?.label}{' '}
+              <HugeiconsIcon icon={ArrowUpRight01Icon} strokeWidth={2} />
+            </Link>
+          }
+        />
+      )}
     </Empty>
   );
 }
