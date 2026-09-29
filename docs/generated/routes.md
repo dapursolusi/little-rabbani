@@ -7,6 +7,8 @@ Auto-generated from `src/app/` directory structure.
   dashboard/
     class-session/
       page.tsx
+    daily/
+      page.tsx
     kid/
       [id]/
         edit/
@@ -17,8 +19,6 @@ Auto-generated from `src/app/` directory structure.
     layout.tsx
     page.tsx
     registration/
-      page.tsx
-    registration-prototype/
       page.tsx
     term/
       page.tsx
