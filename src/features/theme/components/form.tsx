@@ -2,8 +2,8 @@ import FormFieldGenerator from '@/components/shared/form/form-field-generator';
 
 import { createSubTheme, createTheme } from '../actions';
 import { subThemeFields, themeFields } from '../fields';
-import { subThemeSchema, themeSchema } from '../schema';
 import type { Theme } from '../types';
+import { subThemeSchema, themeSchema } from '../validation';
 
 export function ThemeForm({ onSuccess }: { onSuccess?: () => void }) {
   return (

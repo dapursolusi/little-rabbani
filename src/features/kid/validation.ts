@@ -1,4 +1,4 @@
-import { GENDERS, GUARDIAN_RELATIONSHIPS } from '@/db/schema';
+import { GENDERS, GUARDIAN_RELATIONSHIPS } from '@/features/kid/constants';
 import z from 'zod';
 
 // Phone = guardian identity (ADR-0001): local Indonesian, no country code.

@@ -1,5 +1,5 @@
 import { kidFormFields } from '@/features/kid/fields';
-import { KidGuardianFormSchema } from '@/features/kid/schema';
+import { KidGuardianFormSchema } from '@/features/kid/validation';
 import type { FormFieldInput } from '@/types/field';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';

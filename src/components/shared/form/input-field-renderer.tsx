@@ -1,4 +1,8 @@
-import { type FormFieldInput, type SelectOptionGroup } from '@/types/field';
+import {
+  type CustomHTMLInputTypeSelect,
+  type FormFieldInput,
+  type SelectOptionGroup,
+} from '@/types/field';
 import type {
   ControllerFieldState,
   ControllerRenderProps,
@@ -18,11 +22,14 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 interface InputFieldRendererProps<TFormAttributes extends FieldValues> {
   fieldConfig: FormFieldInput;
   field: ControllerRenderProps<TFormAttributes, Path<TFormAttributes>>;
   fieldState: ControllerFieldState;
+  disabled?: boolean;
 }
 
 export default function InputFieldRenderer<
@@ -31,6 +38,7 @@ export default function InputFieldRenderer<
   fieldConfig,
   field,
   fieldState,
+  disabled,
 }: InputFieldRendererProps<TFormAttributes>) {
   switch (fieldConfig.type) {
     case 'select': {
@@ -50,7 +58,13 @@ export default function InputFieldRenderer<
         <Select
           name={field.name}
           value={field.value}
-          onValueChange={field.onChange}
+          disabled={disabled}
+          onValueChange={(value) => {
+            field.onChange(value);
+            (fieldConfig as CustomHTMLInputTypeSelect).onValueChange?.(
+              (value as unknown as string) ?? ''
+            );
+          }}
         >
           <SelectTrigger
             id={field.name}
@@ -66,11 +80,15 @@ export default function InputFieldRenderer<
               ? (options as SelectOptionGroup[]).map((group) => (
                   <SelectGroup key={group.group}>
                     <SelectLabel>{group.group}</SelectLabel>
-                    {group.options.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
+                    {group.options.length > 0 ? (
+                      group.options.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem disabled>—</SelectItem>
+                    )}
                   </SelectGroup>
                 ))
               : flatOpts.map((opt) => (
@@ -103,14 +121,61 @@ export default function InputFieldRenderer<
             id="switch-options"
             size="sm"
             checked={field.value}
+            disabled={disabled}
             onCheckedChange={field.onChange}
           />
-          <FieldLabel htmlFor="switch-options">{fieldConfig.label}</FieldLabel>
+          <FieldLabel
+            htmlFor="switch-options"
+            className={`${typeof fieldConfig.label === 'object' ? fieldConfig.label.className : ''}`}
+          >
+            {typeof fieldConfig.label === 'string'
+              ? fieldConfig.label
+              : fieldConfig.label?.text}
+          </FieldLabel>
         </div>
+      );
+
+    case 'toggle-group':
+      // ponytail: base-ui ToggleGroup is array-based (Value[]) even in
+      // single-select mode, but RHF field.value is a string from zod enum.
+      // Wrap/unwrap the single value at this seam.
+      const items = fieldConfig.items;
+      const toggleValue = field.value ? [field.value] : [];
+      return (
+        <ToggleGroup
+          value={toggleValue}
+          onValueChange={(val) => field.onChange(val.at(0) ?? undefined)}
+          disabled={disabled}
+          className="w-full grid grid-cols-2 sm:grid-cols-4 items-stretch"
+        >
+          {items.map((item) => (
+            <ToggleGroupItem
+              variant="outline"
+              key={item.value}
+              value={item.value}
+              className="flex justify-center px-1"
+            >
+              {item.label}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
       );
 
     case 'hidden':
       return null;
+
+    case 'textarea':
+      return (
+        <Textarea
+          {...field}
+          id={field.name}
+          aria-invalid={fieldState.invalid}
+          placeholder={fieldConfig.placeholder ?? 'Enter value'}
+          autoComplete="off"
+          disabled={disabled}
+          value={field.value as string | number | readonly string[] | undefined}
+        />
+      );
 
     default:
       return (
@@ -121,6 +186,7 @@ export default function InputFieldRenderer<
           aria-invalid={fieldState.invalid}
           placeholder={fieldConfig.placeholder ?? 'Enter value'}
           autoComplete="off"
+          disabled={disabled}
           value={field.value as string | number | readonly string[] | undefined}
         />
       );

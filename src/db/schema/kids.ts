@@ -1,3 +1,4 @@
+import { GENDERS, GUARDIAN_RELATIONSHIPS } from '@/features/kid/constants';
 import { relations, sql } from 'drizzle-orm';
 import {
   date,
@@ -11,6 +12,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
+import { dcrObservation } from './daily';
 import { kidEnrollment } from './enrollment';
 
 // ─────────────── Guardian / Parent ───────────────
@@ -50,38 +52,12 @@ export const guardianRelations = relations(guardian, ({ many }) => ({
 
 // ─────────────── Kids ───────────────
 
-export const GENDERS = ['male', 'female'] as const;
-export type Gender = (typeof GENDERS)[number];
 export const genderEnum = pgEnum('gender', GENDERS);
-export const GENDER_LABELS: Record<Gender, string> = {
-  male: 'Laki-laki',
-  female: 'Perempuan',
-};
 
-export const GUARDIAN_RELATIONSHIPS = [
-  'mother',
-  'father',
-  'older_sibling',
-  'grandparent',
-  'aunt_uncle',
-  'other',
-] as const;
-export type GuardianRelationship = (typeof GUARDIAN_RELATIONSHIPS)[number];
 export const guardianRelationshipEnum = pgEnum(
   'guardian_relationship',
   GUARDIAN_RELATIONSHIPS
 );
-export const GUARDIAN_RELATIONSHIP_LABELS: Record<
-  GuardianRelationship,
-  string
-> = {
-  mother: 'Ibu',
-  father: 'Ayah',
-  older_sibling: 'Kakak',
-  grandparent: 'Kakek / Nenek',
-  aunt_uncle: 'Bibi / Paman',
-  other: 'Wali',
-};
 
 export const ACTIVE_STATUS = ['active', 'inactive', 'alumni'] as const;
 export type ActiveStatus = (typeof ACTIVE_STATUS)[number];
@@ -124,4 +100,5 @@ export const kidRelations = relations(kid, ({ one, many }) => ({
     references: [guardian.id],
   }),
   enrollments: many(kidEnrollment),
+  dcrObservations: many(dcrObservation),
 }));

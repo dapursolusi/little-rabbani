@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { ENROLLMENT_STATUS_LABELS } from '@/db/schema';
+import { ENROLLMENT_STATUS_LABELS } from '@/features/kid-enrollment/constants';
 import { Kid } from '@/features/kid/types';
 import {
   Add02Icon,

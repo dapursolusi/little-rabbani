@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { subTheme } from '@/db/schema';
 import { and, eq, isNull } from 'drizzle-orm';
 
-import type { SubThemeInput } from '../schema';
+import type { SubThemeInput } from '../validation';
 
 export async function findMany(params?: { themeId?: string }) {
   const conditions = [isNull(subTheme.deletedAt)];

@@ -1,4 +1,4 @@
-import { ENROLLMENT_STATUS } from '@/db/schema';
+import { ENROLLMENT_STATUS } from '@/features/kid-enrollment/constants';
 import z from 'zod';
 
 export const BaseKidEnrollmentSchema = z.object({

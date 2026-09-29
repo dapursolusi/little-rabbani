@@ -2,7 +2,7 @@ import { db } from '@/db';
 import { theme } from '@/db/schema';
 import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
 
-import type { ThemeInput } from '../schema';
+import type { ThemeInput } from '../validation';
 
 export async function findMany() {
   return await db.query.theme.findMany({

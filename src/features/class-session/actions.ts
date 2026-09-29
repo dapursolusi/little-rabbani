@@ -2,8 +2,11 @@
 
 import { parseInput } from '@/lib/actions/parse-input';
 
-import { ClassSessionSchema, OverlappingClassSessionSchema } from './schema';
 import * as classSessionService from './services';
+import {
+  ClassSessionSchema,
+  OverlappingClassSessionSchema,
+} from './validation';
 
 export async function checkOverlappingClassSession(input: unknown) {
   const parsed = parseInput({

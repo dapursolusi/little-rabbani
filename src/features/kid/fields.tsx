@@ -1,6 +1,9 @@
-import { GENDER_LABELS, GUARDIAN_RELATIONSHIP_LABELS } from '@/db/schema';
 import { GuardianSearchResult } from '@/features/kid/actions';
 import GuardianPicker from '@/features/kid/components/guardian-picker';
+import {
+  GENDER_LABELS,
+  GUARDIAN_RELATIONSHIP_LABELS,
+} from '@/features/kid/constants';
 import { FormField } from '@/types/field';
 
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';

@@ -5,7 +5,7 @@ import type { ReactNode } from 'react';
 
 type FormFieldBase = {
   name: string;
-  label?: string;
+  label?: string | { text: string; className: string };
   className?: string;
   fullWidth?: boolean;
   placeholder?: string;
@@ -36,6 +36,7 @@ export type CustomHTMLInputType =
   | CustomHTMLInputTypeBasic
   | CustomHTMLInputTypeSelect
   | CustomHTMLInputTypeSwitch
+  | CustomHTMLInputTypeToggleGroup
   | CustomHTMLInputTypeCustom;
 
 export type CustomHTMLInputTypeCustom = {
@@ -55,19 +56,25 @@ export type CustomHTMLInputTypeCustom = {
 
 export type CustomHTMLInputTypeSelect = {
   type: 'select';
-  selectOptions: SelectOption[];
+  selectOptions: SelectOption[] | SelectOptionGroup[];
+  onValueChange?: (value: string) => void;
 };
 
-export type SelectOption = { value: string; label: string } | SelectOptionGroup;
+export type SelectOption = { value: string; label: string };
 
 export interface SelectOptionGroup {
   group: string;
-  options: { value: string; label: string }[];
+  options: SelectOption[];
 }
 
 export type CustomHTMLInputTypeSwitch = {
   type: 'switch';
   selectOptions?: never;
+};
+
+export type CustomHTMLInputTypeToggleGroup = {
+  type: 'toggle-group';
+  items: SelectOption[];
 };
 
 export type CustomHTMLInputTypeBasic = {
@@ -95,6 +102,7 @@ export type StrictHTMLInputType =
   | 'submit'
   | 'tel'
   | 'text'
+  | 'textarea'
   | 'time'
   | 'url'
   | 'week';

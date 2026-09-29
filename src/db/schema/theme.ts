@@ -1,6 +1,8 @@
 import { relations } from 'drizzle-orm';
 import { index, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
+import { dailyClassReport } from './daily';
+
 // ─────────────── Theme/Sub-Theme ───────────────
 
 export const theme = pgTable('theme', {
@@ -38,9 +40,10 @@ export const subTheme = pgTable(
   })
 );
 
-export const subThemeRelations = relations(subTheme, ({ one }) => ({
+export const subThemeRelations = relations(subTheme, ({ one, many }) => ({
   theme: one(theme, {
     fields: [subTheme.themeId],
     references: [theme.id],
   }),
+  dailyClassReports: many(dailyClassReport),
 }));

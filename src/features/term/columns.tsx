@@ -8,8 +8,8 @@ import { Badge } from '@/components/ui/badge';
 
 import { deleteTerm, updateTerm } from './actions';
 import { termFormFields } from './fields';
-import { TermSchema } from './schema';
 import { Term } from './types';
+import { TermSchema } from './validation';
 
 export const termColumns: ColumnDef<AppTableFeatures, Term>[] = [
   {

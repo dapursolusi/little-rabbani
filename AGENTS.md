@@ -115,6 +115,7 @@ This project uses both graphify and CodeGraph for code intelligence. See `docs/p
 ## Gotchas
 
 - ⚠️ **React Compiler is ON** (`reactCompiler: true` in next.config, React 19). Auto-memoizes everything. Stable-identity trap: TanStack Table's `table` instance returns same object identity every render → compiler memoizes getter calls stale. **Fix:** mirror state into `useState`, derive UI values from that. `"use no memo"` escapes one component.
+- ⚠️ **`'use server'` must be line 1 of every `actions.ts` / `actions/<name>.ts`.** Missing it compiles fine — the action silently becomes a plain function, Turbopack bundles the whole server chain (services → repos → `db` → Neon driver) into the client, and it fails at runtime with a misleading DB error (`No database host or connection string was set` wrapped in "Failed query"). Do NOT put it on a barrel `index.ts` that re-exports (`export * as ...`) — only async function exports are allowed there; build error: `Only async functions are allowed to be exported in a "use server" file`.
 - ⚠️ See `docs/known-issues.md` for CI/env/ESLint/DB migration gotchas.
 
 ## When to Ask

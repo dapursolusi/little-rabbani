@@ -1,3 +1,4 @@
+import { ENROLLMENT_STATUS } from '@/features/kid-enrollment/constants';
 import { relations, sql } from 'drizzle-orm';
 import {
   boolean,
@@ -10,6 +11,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
+import { dailyClassReport } from './daily';
 import { kid } from './kids';
 
 export const term = pgTable(
@@ -53,18 +55,13 @@ export const classSession = pgTable(
 
 export const classSessionRelations = relations(classSession, ({ many }) => ({
   sessionEnrollments: many(kidEnrollment),
+  dailyClassReports: many(dailyClassReport),
 }));
 
-export const ENROLLMENT_STATUS = ['waiting', 'enrolled'] as const;
-export type EnrollmentStatus = (typeof ENROLLMENT_STATUS)[number];
 export const enrollmentStatusEnum = pgEnum(
   'enrollment_status',
   ENROLLMENT_STATUS
 );
-export const ENROLLMENT_STATUS_LABELS: Record<EnrollmentStatus, string> = {
-  waiting: 'Dalam Waiting List',
-  enrolled: 'Terdaftar',
-};
 
 export const kidEnrollment = pgTable(
   'kid_enrollment',

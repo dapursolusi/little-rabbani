@@ -82,7 +82,7 @@ export function RowActionsDialog({
               schema={edit.schema}
               formFields={edit.formFields}
               initialData={edit.initialData ?? {}}
-              isEditing
+              isEditMode
               meta={{ label: title }}
               onSubmit={async (data) => {
                 const result = await edit.action(

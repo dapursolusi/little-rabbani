@@ -98,7 +98,6 @@ const navGroups: SidebarNavItem[] = [
   {
     slug: 'master-data',
     title: 'Master Data',
-    isActive: true,
     icon: DatabaseSettingIcon,
     roles: ['owner'],
     subItems: [
@@ -250,78 +249,83 @@ export function AppSidebar({
         <TeamSwitcher teams={teams} />
       </SidebarHeader>
       <SidebarContent className="space-y-1 px-2">
-        {visibleGroups.map((group) => (
-          <SidebarGroup key={group.slug} className="md:p-0">
-            {group.label && (
-              <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
-            )}
-            <SidebarGroupContent>
-              <SidebarMenu>
-                {group.subItems ? (
-                  <Collapsible
-                    defaultOpen={group.isActive}
-                    className="group/collapsible"
-                    render={<SidebarMenuItem />}
-                  >
-                    <CollapsibleTrigger
-                      render={
-                        <SidebarMenuButton
-                          tooltip={group.title}
-                          className="max-md:h-12"
+        {visibleGroups.map((group) => {
+          const isParentActive =
+            group.subItems?.some((item) => pathname === item.href) ?? false;
+          return (
+            <SidebarGroup key={group.slug} className="md:p-0">
+              {group.label && (
+                <SidebarGroupLabel>{group.label}</SidebarGroupLabel>
+              )}
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  {group.subItems ? (
+                    <Collapsible
+                      key={pathname}
+                      defaultOpen={isParentActive || group.isActive}
+                      className="group/collapsible"
+                      render={<SidebarMenuItem />}
+                    >
+                      <CollapsibleTrigger
+                        render={
+                          <SidebarMenuButton
+                            tooltip={group.title}
+                            className="max-md:h-12"
+                          />
+                        }
+                      >
+                        {group.icon && (
+                          <HugeiconsIcon icon={group.icon as IconSvgElement} />
+                        )}
+                        <span>{group.title}</span>
+                        <HugeiconsIcon
+                          icon={ChevronRightIcon}
+                          strokeWidth={2}
+                          className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90"
                         />
-                      }
-                    >
-                      {group.icon && (
-                        <HugeiconsIcon icon={group.icon as IconSvgElement} />
-                      )}
-                      <span>{group.title}</span>
-                      <HugeiconsIcon
-                        icon={ChevronRightIcon}
-                        strokeWidth={2}
-                        className="ml-auto transition-transform duration-200 group-data-open/collapsible:rotate-90"
-                      />
-                    </CollapsibleTrigger>
-                    <CollapsibleContent>
-                      <SidebarMenuSub>
-                        {group.subItems?.map((item) => {
-                          const isActive = pathname === item.href;
-                          return (
-                            <SidebarMenuSubItem key={item.href}>
-                              <SidebarMenuSubButton
-                                render={<Link href={item.href} />}
-                                isActive={isActive}
-                                className="max-md:h-11"
-                              >
-                                <HugeiconsIcon
-                                  icon={item.icon as IconSvgElement}
-                                  strokeWidth={2}
-                                />
-                                <span>{item.title}</span>
-                              </SidebarMenuSubButton>
-                            </SidebarMenuSubItem>
-                          );
-                        })}
-                      </SidebarMenuSub>
-                    </CollapsibleContent>
-                  </Collapsible>
-                ) : (
-                  <SidebarMenuItem>
-                    <SidebarMenuButton
-                      render={<Link href={group.href} />}
-                      tooltip={group.title}
-                      className="max-md:h-11"
-                    >
-                      {group.icon && (
-                        <HugeiconsIcon icon={group.icon as IconSvgElement} />
-                      )}
-                      <span>{group.title}</span>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                )}
-              </SidebarMenu>
-            </SidebarGroupContent>
-          </SidebarGroup>
-        ))}
+                      </CollapsibleTrigger>
+                      <CollapsibleContent>
+                        <SidebarMenuSub>
+                          {group.subItems?.map((item) => {
+                            const isActive = pathname === item.href;
+                            return (
+                              <SidebarMenuSubItem key={item.href}>
+                                <SidebarMenuSubButton
+                                  render={<Link href={item.href} />}
+                                  isActive={isActive}
+                                  className="max-md:h-11"
+                                >
+                                  <HugeiconsIcon
+                                    icon={item.icon as IconSvgElement}
+                                    strokeWidth={2}
+                                  />
+                                  <span>{item.title}</span>
+                                </SidebarMenuSubButton>
+                              </SidebarMenuSubItem>
+                            );
+                          })}
+                        </SidebarMenuSub>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  ) : (
+                    <SidebarMenuItem>
+                      <SidebarMenuButton
+                        render={<Link href={group.href} />}
+                        tooltip={group.title}
+                        className="max-md:h-11"
+                      >
+                        {group.icon && (
+                          <HugeiconsIcon icon={group.icon as IconSvgElement} />
+                        )}
+                        <span>{group.title}</span>
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  )}
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          );
+        })}
       </SidebarContent>
       <SidebarSeparator className="mx-0" />
       <SidebarFooter>

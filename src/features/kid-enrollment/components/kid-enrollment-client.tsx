@@ -4,7 +4,6 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
-import { EnrollmentStatus } from '@/db/schema';
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Term } from '@/features/term/types';
@@ -31,8 +30,9 @@ import {
   kidEnrollmentSessionColumn,
   kidEnrollmentUpdateActionColumn,
 } from '../columns';
-import { KidToBeEnrolled } from '../schema';
+import { EnrollmentStatus } from '../constants';
 import { KidEnrollment } from '../types';
+import { KidToBeEnrolled } from '../validation';
 import UpdateEnrolledKids from './update-enrolled-kids';
 
 export default function KidEnrollmentClient({

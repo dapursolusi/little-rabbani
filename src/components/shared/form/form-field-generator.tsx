@@ -4,6 +4,7 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { ActionResult } from '@/types';
 import { type FormField, type FormFieldInput } from '@/types/field';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { SaveIcon } from '@hugeicons/core-free-icons';
@@ -36,7 +37,8 @@ export type DefaultFormFieldsProps<
   meta?: { label: string };
   onSuccess?: () => void;
   onSubmit: (data: TForm) => unknown | Promise<unknown>;
-  isEditing?: boolean;
+  isEditMode?: boolean;
+  disabled?: boolean;
 };
 
 export default function FormFieldGenerator<
@@ -50,7 +52,8 @@ export default function FormFieldGenerator<
   submitChildren,
   meta,
   onSuccess,
-  isEditing,
+  isEditMode,
+  disabled,
 }: DefaultFormFieldsProps<S, TForm>) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -104,15 +107,15 @@ export default function FormFieldGenerator<
     try {
       const result = await onSubmitProp(data);
       if (!result) return;
-      const r = result as { success: boolean; error?: string };
+      const r = result as ActionResult<TForm>;
       if (r.success) {
         toast.success(
-          `${meta?.label ?? 'Data'} berhasil ${isEditing ? 'diperbarui' : 'ditambahkan'}`
+          `${meta?.label ?? 'Data'} berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}`
         );
         router.refresh();
         onSuccess?.();
       } else {
-        toast.error(r.error ?? 'Gagal menyimpan data');
+        toast.error((!r.success && r.message) ?? 'Gagal menyimpan data');
       }
     } catch {
       toast.error(`${meta?.label ?? 'Data'} gagal disimpan`);
@@ -133,14 +136,24 @@ export default function FormFieldGenerator<
             className={formField.fullWidth ? 'col-span-2' : ''}
           >
             {formField.type !== 'switch' && formField.label && (
-              <FieldLabel htmlFor={formField.name}>
-                {formField.label ?? 'Default Label'}
+              <FieldLabel
+                htmlFor={formField.name}
+                className={
+                  typeof formField.label === 'object'
+                    ? formField.label.className
+                    : ''
+                }
+              >
+                {typeof formField.label === 'string'
+                  ? formField.label
+                  : formField.label.text}
               </FieldLabel>
             )}
             <InputFieldRenderer
               fieldConfig={formField}
               field={field}
               fieldState={fieldState}
+              disabled={disabled}
             />
             {fieldState.error && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -188,17 +201,16 @@ export default function FormFieldGenerator<
           </div>
         );
       })}
-      {typeof submitChildren === 'function' ? (
+      {disabled ? (
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          Data sudah tidak dapat diubah (lewat 7 hari)
+        </div>
+      ) : typeof submitChildren === 'function' ? (
         submitChildren({ isSubmitting })
       ) : submitChildren ? (
         submitChildren
       ) : (
-        <Button
-          disabled={isSubmitting}
-          type="submit"
-          className="w-full mt-8
-          "
-        >
+        <Button disabled={isSubmitting} type="submit" className="w-full mt-8">
           <HugeiconsIcon icon={SaveIcon} />
           Simpan
         </Button>

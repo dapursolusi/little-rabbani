@@ -1,7 +1,7 @@
 import { requireOwner } from '@/lib/actions/require-owner';
 
 import * as termRepo from './repositories';
-import { TermInput } from './schema';
+import { TermInput } from './validation';
 
 const INDONESIAN_MONTHS = [
   'Jan',

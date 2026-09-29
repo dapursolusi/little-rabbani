@@ -8,7 +8,7 @@ import { kidFormFields } from '@/features/kid/fields';
 import {
   type KidGuardianFormInput,
   KidGuardianFormSchema,
-} from '@/features/kid/schema';
+} from '@/features/kid/validation';
 import { Term } from '@/features/term/types';
 import { z } from 'zod';
 
@@ -68,7 +68,7 @@ export default function KidForm({
         kidFormFields({ watch, summary, terms, classSessions })
       }
       meta={{ label: 'Data murid' }}
-      isEditing={isEdit}
+      isEditMode={isEdit}
       onSuccess={() => route.push('/dashboard/kid')}
       onSubmit={async (data) => {
         const result =

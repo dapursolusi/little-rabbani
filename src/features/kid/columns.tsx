@@ -1,6 +1,6 @@
 'use client';
 
-import { GENDER_LABELS } from '@/db/schema';
+import { GENDER_LABELS } from '@/features/kid/constants';
 import type { ColumnDef } from '@tanstack/react-table';
 
 import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';

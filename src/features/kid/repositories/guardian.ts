@@ -3,7 +3,7 @@ import { guardian, kid } from '@/db/schema';
 import { TransactionClient } from '@/types';
 import { and, eq, ilike, isNotNull, isNull, ne, or, sql } from 'drizzle-orm';
 
-import { GuardianInput } from '../schema';
+import { GuardianInput } from '../validation';
 
 export async function findById(id: string, tx?: TransactionClient) {
   const session = tx ? tx : db;

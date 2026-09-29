@@ -1,7 +1,7 @@
 import { requireOwner } from '@/lib/actions/require-owner';
 
 import { subThemeRepo, themeRepo } from './repositories';
-import { SubThemeInput, ThemeInput } from './schema';
+import { SubThemeInput, ThemeInput } from './validation';
 
 export async function getThemes(params?: {
   search?: string;
