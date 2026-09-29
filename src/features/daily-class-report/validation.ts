@@ -2,7 +2,7 @@ import z from 'zod';
 
 import { KID_APPETITE, KID_ATTENDANCE, KID_MOOD } from './constants';
 
-export const dailyReportClassSchema = z.object({
+export const dailyClassReportSchema = z.object({
   classSessionId: z.uuid('Sesi kelas wajib dipilih'),
   subThemeId: z.uuid('Sub tema wajib dipilih').optional(),
   date: z.iso.date(),
@@ -30,6 +30,6 @@ export const dcrObservationSchema = z
     }
   );
 
-export type DailyClassReportInput = z.infer<typeof dailyReportClassSchema>;
+export type DailyClassReportInput = z.infer<typeof dailyClassReportSchema>;
 
 export type DCRObservationInput = z.infer<typeof dcrObservationSchema>;

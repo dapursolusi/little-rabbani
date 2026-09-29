@@ -77,11 +77,15 @@ export default function InputFieldRenderer<
               ? (options as SelectOptionGroup[]).map((group) => (
                   <SelectGroup key={group.group}>
                     <SelectLabel>{group.group}</SelectLabel>
-                    {group.options.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
+                    {group.options.length > 0 ? (
+                      group.options.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))
+                    ) : (
+                      <SelectItem disabled>—</SelectItem>
+                    )}
                   </SelectGroup>
                 ))
               : flatOpts.map((opt) => (

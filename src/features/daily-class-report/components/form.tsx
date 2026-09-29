@@ -6,23 +6,24 @@ import { Theme } from '@/features/theme/types';
 
 import FormFieldGenerator from '@/components/shared/form/form-field-generator';
 
-import { observationAction } from '../actions';
-import { KidAppetite, KidMood } from '../constants';
+import { dcrAction, observationAction } from '../actions';
 import {
   dailyClassReportFormFields,
   dcrObservationFormFields,
 } from '../fields';
-import { DCRObservation } from '../types';
-import { dailyReportClassSchema, dcrObservationSchema } from '../validation';
+import { DCRObservation, DailyClassReport } from '../types';
+import { dailyClassReportSchema, dcrObservationSchema } from '../validation';
 
 export function DailyClassReportForm({
   classSessions,
   themes,
   defaultClassSessionId,
+  existingDCR,
 }: {
   classSessions: ClassSession[];
   themes: Theme[];
   defaultClassSessionId?: string;
+  existingDCR: DailyClassReport;
 }) {
   const router = useRouter();
   const pushParam = (key: 'classSessionId', value: string | null) => {
@@ -32,7 +33,7 @@ export function DailyClassReportForm({
   };
   return (
     <FormFieldGenerator
-      schema={dailyReportClassSchema}
+      schema={dailyClassReportSchema}
       formFields={dailyClassReportFormFields({
         classSessions,
         themes,
@@ -42,11 +43,14 @@ export function DailyClassReportForm({
       })}
       initialData={{
         classSessionId: defaultClassSessionId ?? '',
-        subThemeId: '',
-        description: '',
+        date: new Date().toISOString().split('T')[0],
+        subThemeId: defaultClassSessionId ? existingDCR.subThemeId : '',
+        description: defaultClassSessionId ? existingDCR.description : '',
       }}
-      onSuccess={() => {}}
-      onSubmit={() => {}}
+      onSubmit={async (data) => {
+        return await dcrAction.saveDCR(data);
+      }}
+      isEditMode
     />
   );
 }

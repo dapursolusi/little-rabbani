@@ -4,7 +4,6 @@ import {
   observationAction,
 } from '@/features/daily-class-report/actions';
 import DailyClassReportClient from '@/features/daily-class-report/components/dcr-client';
-import { DCRObservation } from '@/features/daily-class-report/types';
 import * as kidEnrollmentAction from '@/features/kid-enrollment/actions';
 import * as termAction from '@/features/term/actions';
 import * as themeAction from '@/features/theme/actions';
@@ -41,6 +40,10 @@ export default async function DailyClassReportPage({
       classSessionId
     );
   const todayDate = new Date().toISOString().split('T')[0];
+  const existingDCRs = await dcrAction.getDCRs({
+    date: { year: Number(todayDate.slice(0, 4)) },
+    classSessionId,
+  });
   const existingObservationsResults =
     await observationAction.getDCRObservationsByDate(todayDate, {
       classSessionId,
@@ -51,6 +54,7 @@ export default async function DailyClassReportPage({
       themes={themeResults.data}
       availableKids={currentTermKidsResults.data?.map((ctk) => ctk.kid) ?? []}
       defaultClassSessionId={classSessionId}
+      existingDCRs={existingDCRs}
       existingObservationsResults={existingObservationsResults}
     />
   );

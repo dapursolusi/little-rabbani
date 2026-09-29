@@ -1,4 +1,8 @@
+import { ActionResult } from '@/types';
+
 import { dcrRepo } from '../repositories';
+import { DailyClassReport } from '../types';
+import { DailyClassReportInput } from '../validation';
 
 export async function getOrCreateDCR({
   classSessionId,
@@ -17,6 +21,27 @@ export async function getOrCreateDCR({
   } catch (error) {
     console.error('checkExistingDCR', error);
     return { success: false as const, error: 'Gagal memuat laporan harian' };
+  }
+}
+
+export async function saveDCR(input: DailyClassReportInput) {
+  try {
+    const existingDCRResults = await getOrCreateDCR({
+      classSessionId: input.classSessionId,
+    });
+
+    const updated = await dcrRepo.update({
+      input,
+      dcrId: existingDCRResults.data?.id as string,
+    });
+    return {
+      success: true as const,
+      message: 'Berhasil menyimpan laporan harian',
+      data: updated,
+    };
+  } catch (error) {
+    console.error('saveDCR: ', error);
+    return { success: false as const, error: 'Gagal menyimpan laporan harian' };
   }
 }
 
@@ -40,6 +65,31 @@ export async function getDCRByDate(
     return {
       success: false as const,
       error: 'Gagal memuat data laporan harian',
+    };
+  }
+}
+
+export async function getDCRs(input: {
+  classSessionId?: string;
+  date?: { year?: number; month?: number };
+}): Promise<ActionResult<DailyClassReport[]>> {
+  try {
+    const defaultYear = new Date().getFullYear();
+    const dcrs = await dcrRepo.findMany({
+      date: {
+        year: input.date?.year ?? defaultYear,
+        month: input.date?.month,
+      },
+    });
+    return {
+      success: true as const,
+      data: dcrs as DailyClassReport[],
+    };
+  } catch (error) {
+    console.error('getDCRs :', error);
+    return {
+      success: false as const,
+      message: 'Gagal memuat data kegiatan harian',
     };
   }
 }

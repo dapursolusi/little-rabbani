@@ -47,7 +47,7 @@ export const dailyClassReportFormFields = ({
   {
     name: 'description',
     label: 'Deskripsi',
-    type: 'text',
+    type: 'textarea',
     fullWidth: true,
   },
 ];
