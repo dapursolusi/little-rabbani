@@ -1,8 +1,9 @@
 import { ActionResult } from '@/types';
+import { isWithinEditWindow } from '@/utils/date';
 
 import { dcrService } from '.';
 import * as kidService from '../../kid/services';
-import { observationRepo } from '../repositories';
+import { dcrRepo, observationRepo } from '../repositories';
 import { DCRObservation } from '../types';
 import { DCRObservationInput } from '../validation';
 
@@ -64,6 +65,19 @@ export async function updateKidObservation(
     });
     if (!existing)
       return { success: false as const, message: 'Observasi tidak ditemukan' };
+
+    const dcr = await dcrRepo.findById(input.dcrId);
+    if (!dcr)
+      return {
+        success: false as const,
+        message: 'Laporan harian tidak ditemukan',
+      };
+    if (!isWithinEditWindow(dcr.date)) {
+      return {
+        success: false as const,
+        message: 'Periode edit observasi sudah lewat (maksimal 7 hari)',
+      };
+    }
 
     const updated = await observationRepo.update(input);
     return {

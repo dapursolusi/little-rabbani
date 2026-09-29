@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/shared/empty-state';
 
 import { DCRObservation, DailyClassReport } from '../types';
 import { DailyClassReportForm } from './form';
+import DCRHistory from './history';
 import DCRKidObservation from './observation';
 
 export default function DailyClassReportClient({
@@ -19,18 +20,20 @@ export default function DailyClassReportClient({
   themes,
   availableKids,
   defaultClassSessionId,
-  existingDCRs,
+  existingDCRsResults,
   existingObservationsResults,
 }: {
   classSessions: ClassSession[];
   themes: Theme[];
   availableKids: LeanKid[];
   defaultClassSessionId?: string;
-  existingDCRs: ActionResult<DailyClassReport[]>;
+  existingDCRsResults: ActionResult<DailyClassReport[]>;
   existingObservationsResults: ActionResult<DCRObservation[]>;
 }) {
   const currentDate = new Date().toISOString().split('T')[0];
-  const currentDCR = existingDCRs.data?.find((dcr) => dcr.date === currentDate);
+  const currentDCR = existingDCRsResults.data?.find(
+    (dcr) => dcr.date === currentDate
+  );
   const tabs: ContentTabsProps['tabs'] = [
     {
       triggerValue: 'input',
@@ -61,11 +64,7 @@ export default function DailyClassReportClient({
     {
       triggerValue: 'history',
       triggerLabel: 'Riwayat',
-      children: (
-        <div>
-          <h1>Riwayat Laporan Harian & Observasi</h1>
-        </div>
-      ),
+      children: <DCRHistory defaultDcrs={existingDCRsResults.data ?? []} />,
     },
   ];
   const formattedTodayDate = new Intl.DateTimeFormat('id-ID', {
@@ -75,7 +74,7 @@ export default function DailyClassReportClient({
     year: 'numeric',
   }).format(new Date());
   return (
-    <div className="py-2 px-4">
+    <div className="py-2 px-2">
       <h2 className="w-full text-center font-semibold my-2 text-primary">
         {formattedTodayDate}
       </h2>

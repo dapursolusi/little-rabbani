@@ -29,6 +29,7 @@ interface InputFieldRendererProps<TFormAttributes extends FieldValues> {
   fieldConfig: FormFieldInput;
   field: ControllerRenderProps<TFormAttributes, Path<TFormAttributes>>;
   fieldState: ControllerFieldState;
+  disabled?: boolean;
 }
 
 export default function InputFieldRenderer<
@@ -37,6 +38,7 @@ export default function InputFieldRenderer<
   fieldConfig,
   field,
   fieldState,
+  disabled,
 }: InputFieldRendererProps<TFormAttributes>) {
   switch (fieldConfig.type) {
     case 'select': {
@@ -56,6 +58,7 @@ export default function InputFieldRenderer<
         <Select
           name={field.name}
           value={field.value}
+          disabled={disabled}
           onValueChange={(value) => {
             field.onChange(value);
             (fieldConfig as CustomHTMLInputTypeSelect).onValueChange?.(
@@ -118,6 +121,7 @@ export default function InputFieldRenderer<
             id="switch-options"
             size="sm"
             checked={field.value}
+            disabled={disabled}
             onCheckedChange={field.onChange}
           />
           <FieldLabel
@@ -141,6 +145,7 @@ export default function InputFieldRenderer<
         <ToggleGroup
           value={toggleValue}
           onValueChange={(val) => field.onChange(val.at(0) ?? undefined)}
+          disabled={disabled}
           className="w-full grid grid-cols-2 sm:grid-cols-4 items-stretch"
         >
           {items.map((item) => (
@@ -167,6 +172,7 @@ export default function InputFieldRenderer<
           aria-invalid={fieldState.invalid}
           placeholder={fieldConfig.placeholder ?? 'Enter value'}
           autoComplete="off"
+          disabled={disabled}
           value={field.value as string | number | readonly string[] | undefined}
         />
       );
@@ -180,6 +186,7 @@ export default function InputFieldRenderer<
           aria-invalid={fieldState.invalid}
           placeholder={fieldConfig.placeholder ?? 'Enter value'}
           autoComplete="off"
+          disabled={disabled}
           value={field.value as string | number | readonly string[] | undefined}
         />
       );

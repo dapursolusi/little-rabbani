@@ -38,6 +38,7 @@ export type DefaultFormFieldsProps<
   onSuccess?: () => void;
   onSubmit: (data: TForm) => unknown | Promise<unknown>;
   isEditMode?: boolean;
+  disabled?: boolean;
 };
 
 export default function FormFieldGenerator<
@@ -52,6 +53,7 @@ export default function FormFieldGenerator<
   meta,
   onSuccess,
   isEditMode,
+  disabled,
 }: DefaultFormFieldsProps<S, TForm>) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -151,6 +153,7 @@ export default function FormFieldGenerator<
               fieldConfig={formField}
               field={field}
               fieldState={fieldState}
+              disabled={disabled}
             />
             {fieldState.error && <FieldError errors={[fieldState.error]} />}
           </Field>
@@ -198,17 +201,16 @@ export default function FormFieldGenerator<
           </div>
         );
       })}
-      {typeof submitChildren === 'function' ? (
+      {disabled ? (
+        <div className="mt-8 text-center text-sm text-muted-foreground">
+          Data sudah tidak dapat diubah (lewat 7 hari)
+        </div>
+      ) : typeof submitChildren === 'function' ? (
         submitChildren({ isSubmitting })
       ) : submitChildren ? (
         submitChildren
       ) : (
-        <Button
-          disabled={isSubmitting}
-          type="submit"
-          className="w-full mt-8
-          "
-        >
+        <Button disabled={isSubmitting} type="submit" className="w-full mt-8">
           <HugeiconsIcon icon={SaveIcon} />
           Simpan
         </Button>

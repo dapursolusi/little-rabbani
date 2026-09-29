@@ -54,7 +54,7 @@ export default async function DailyClassReportPage({
       themes={themeResults.data}
       availableKids={currentTermKidsResults.data?.map((ctk) => ctk.kid) ?? []}
       defaultClassSessionId={classSessionId}
-      existingDCRs={existingDCRs}
+      existingDCRsResults={existingDCRs}
       existingObservationsResults={existingObservationsResults}
     />
   );

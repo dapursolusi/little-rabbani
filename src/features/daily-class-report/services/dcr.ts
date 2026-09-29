@@ -1,4 +1,5 @@
 import { ActionResult } from '@/types';
+import { isWithinEditWindow } from '@/utils/date';
 
 import { dcrRepo } from '../repositories';
 import { DailyClassReport } from '../types';
@@ -26,6 +27,13 @@ export async function getOrCreateDCR({
 
 export async function saveDCR(input: DailyClassReportInput) {
   try {
+    if (input.date && !isWithinEditWindow(input.date)) {
+      return {
+        success: false as const,
+        message: 'Periode edit laporan harian sudah lewat (maksimal 7 hari)',
+      };
+    }
+
     const existingDCRResults = await getOrCreateDCR({
       classSessionId: input.classSessionId,
     });

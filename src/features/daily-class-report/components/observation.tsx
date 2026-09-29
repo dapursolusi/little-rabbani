@@ -1,4 +1,4 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode } from 'react';
 
 import { LeanKid } from '@/features/kid/types';
 import { ActionResult } from '@/types';
@@ -33,18 +33,24 @@ export function KidObservationModal({
   kid,
   observation,
   isEditMode,
+  disabled,
   triggerRender,
 }: {
   kid: LeanKid;
   observation?: DCRObservation;
   isEditMode?: boolean;
+  disabled?: boolean;
   triggerRender?: ReactNode;
 }) {
   return (
     <Modal
       key={kid.id}
       title={`Observasi: ${kid.name}`}
-      description="Berikan observasi untuk hari ini terhadap anak lalu klik simpan."
+      description={
+        disabled
+          ? 'Data sudah tidak dapat diubah (lewat 7 hari).'
+          : 'Berikan observasi untuk hari ini terhadap anak lalu klik simpan.'
+      }
       trigger={{
         text: kid.name,
         render: triggerRender,
@@ -55,6 +61,7 @@ export function KidObservationModal({
             kid={kid}
             observation={observation}
             isEditMode={isEditMode}
+            disabled={disabled}
           />
         </div>
       }
@@ -65,23 +72,20 @@ export function KidObservationModal({
 export default function DCRKidObservation({
   availableKids,
   existingObservationsResults,
+  disabled,
 }: {
   availableKids: LeanKid[];
   existingObservationsResults: ActionResult<DCRObservation[]>;
+  disabled?: boolean;
 }) {
   const existingObservations = existingObservationsResults.data ?? [];
 
   const unfilledKids = availableKids.filter(
     (kid) => !existingObservations.some((obs) => obs.kidId === kid.id)
   );
-  const [observation, setObservation] = useState<DCRObservation | null>(null);
 
   return (
-    <Accordion
-      multiple
-      defaultValue={['unfilled']}
-      className="border rounded-md py-1 px-2"
-    >
+    <Accordion multiple className="border rounded-md py-1 px-2">
       {unfilledKids.length > 0 && (
         <AccordionItem value="unfilled" className="border-b last:border-0">
           <AccordionTrigger>
@@ -90,7 +94,7 @@ export default function DCRKidObservation({
 
           <AccordionContent className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 my-2">
             {unfilledKids.map((kid) => (
-              <KidObservationModal key={kid.id} kid={kid} />
+              <KidObservationModal key={kid.id} kid={kid} disabled={disabled} />
             ))}
           </AccordionContent>
         </AccordionItem>
@@ -122,6 +126,7 @@ export default function DCRKidObservation({
                       kid={observation.kid}
                       observation={observation}
                       isEditMode
+                      disabled={disabled}
                       triggerRender={
                         <Item
                           variant="outline"
@@ -176,6 +181,7 @@ export default function DCRKidObservation({
                       kid={observation.kid}
                       observation={observation as DCRObservation}
                       isEditMode
+                      disabled={disabled}
                     />
                   )
                 )}

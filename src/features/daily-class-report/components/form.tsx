@@ -59,10 +59,12 @@ export function DCRObservationForm({
   kid,
   observation,
   isEditMode,
+  disabled,
 }: {
   kid: LeanKid;
   observation?: DCRObservation;
   isEditMode?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <FormFieldGenerator
@@ -78,6 +80,8 @@ export function DCRObservationForm({
         notes: isEditMode ? (observation?.notes ?? undefined) : undefined,
       }}
       onSubmit={async (data) => {
+        if (disabled) return;
+
         if (isEditMode) {
           return await observationAction.updateKidObservation(data);
         }
@@ -95,6 +99,7 @@ export function DCRObservationForm({
       }}
       meta={{ label: 'Observasi Anak' }}
       isEditMode={isEditMode}
+      disabled={disabled}
     />
   );
 }

@@ -54,6 +54,12 @@ export async function findDCR({
   });
 }
 
+export async function findById(id: string) {
+  return await db.query.dailyClassReport.findFirst({
+    where: eq(dailyClassReport.id, id),
+  });
+}
+
 export async function findMany({
   classSessionId,
   date,
