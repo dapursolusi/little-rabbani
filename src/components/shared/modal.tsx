@@ -53,15 +53,14 @@ export function Modal({
                 {trigger.icon && <HugeiconsIcon icon={trigger.icon} />}
                 {trigger.text ?? 'Open Dialog'}
               </Link>
+            ) : trigger.render ? (
+              typeof trigger.render === 'function' ? (
+                <Button variant="default" render={trigger.render} />
+              ) : (
+                <span className="contents">{trigger.render}</span>
+              )
             ) : (
-              <Button
-                variant="default"
-                render={
-                  typeof trigger.render === 'function'
-                    ? trigger.render
-                    : undefined
-                }
-              >
+              <Button variant="default">
                 {' '}
                 {trigger.icon && <HugeiconsIcon icon={trigger.icon} />}
                 {trigger.text ?? 'Open Dialog'}

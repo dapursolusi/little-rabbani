@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 
 import { LeanKid } from '@/features/kid/types';
 import { ActionResult } from '@/types';
@@ -33,10 +33,12 @@ export function KidObservationModal({
   kid,
   observation,
   isEditMode,
+  triggerRender,
 }: {
   kid: LeanKid;
   observation?: DCRObservation;
   isEditMode?: boolean;
+  triggerRender?: ReactNode;
 }) {
   return (
     <Modal
@@ -45,6 +47,7 @@ export function KidObservationModal({
       description="Berikan observasi untuk hari ini terhadap anak lalu klik simpan."
       trigger={{
         text: kid.name,
+        render: triggerRender,
       }}
       content={
         <div className="flex flex-col gap-2">
@@ -114,49 +117,59 @@ export default function DCRKidObservation({
               <AccordionContent className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 my-2">
                 {observations.map((observation) =>
                   observation.attendance === 'present' ? (
-                    <Item
-                      variant="outline"
-                      className="bg-primary/30"
+                    <KidObservationModal
                       key={observation.id}
-                    >
-                      <ItemContent>
-                        <ItemTitle>{observation.kid.nickName}</ItemTitle>
+                      kid={observation.kid}
+                      observation={observation}
+                      isEditMode
+                      triggerRender={
+                        <Item
+                          variant="outline"
+                          className="bg-primary/30"
+                          key={observation.id}
+                        >
+                          <ItemContent>
+                            <ItemTitle>{observation.kid.nickName}</ItemTitle>
 
-                        <Separator />
+                            <Separator />
 
-                        <ItemDescription className="flex flex-col gap-2">
-                          <div className="flex items-center justify-evenly gap-2 w-full">
-                            <div className="flex flex-col items-center gap-2">
-                              <Badge className="text-[10px]">Mood:</Badge>
-                              <span>
-                                {observation.mood
-                                  ? KID_MOOD_LABELS[observation.mood]
-                                  : '-'}
-                              </span>
-                            </div>
+                            <ItemDescription className="flex flex-col gap-2">
+                              <div className="flex items-center justify-evenly gap-2 w-full">
+                                <div className="flex flex-col items-center gap-2">
+                                  <Badge className="text-[10px]">Mood:</Badge>
+                                  <span>
+                                    {observation.mood
+                                      ? KID_MOOD_LABELS[observation.mood]
+                                      : '-'}
+                                  </span>
+                                </div>
 
-                            <Separator orientation="vertical" />
+                                <Separator orientation="vertical" />
 
-                            <div className="flex flex-col items-center gap-2">
-                              <Badge className="text-[10px]">Makan:</Badge>
-                              <span>
-                                {observation.appetite
-                                  ? KID_APPETITE_LABELS[observation.appetite]
-                                  : '-'}
-                              </span>
-                            </div>
-                          </div>
+                                <div className="flex flex-col items-center gap-2">
+                                  <Badge className="text-[10px]">Makan:</Badge>
+                                  <span>
+                                    {observation.appetite
+                                      ? KID_APPETITE_LABELS[
+                                          observation.appetite
+                                        ]
+                                      : '-'}
+                                  </span>
+                                </div>
+                              </div>
 
-                          <Separator />
+                              <Separator />
 
-                          <div className="flex items-center gap-2">
-                            <Badge>Catatan:</Badge>
-                            <Separator orientation="vertical" />
-                            <span>{observation.notes || '-'}</span>
-                          </div>
-                        </ItemDescription>
-                      </ItemContent>
-                    </Item>
+                              <div className="flex items-center gap-2">
+                                <Badge>Catatan:</Badge>
+                                <Separator orientation="vertical" />
+                                <span>{observation.notes || '-'}</span>
+                              </div>
+                            </ItemDescription>
+                          </ItemContent>
+                        </Item>
+                      }
+                    />
                   ) : (
                     <KidObservationModal
                       key={observation.id}

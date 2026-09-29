@@ -65,7 +65,7 @@ export function DCRObservationForm({
       schema={dcrObservationSchema}
       formFields={(watch) => dcrObservationFormFields({ watch })}
       initialData={{
-        dcrId: isEditMode ? observation?.dcrId : undefined,
+        dcrId: isEditMode ? observation?.dcrId : crypto.randomUUID(),
         kidId: kid.id,
         attendance: isEditMode ? observation?.attendance : undefined,
         // DB nullable → undefined (zod .optional() rejects null)
