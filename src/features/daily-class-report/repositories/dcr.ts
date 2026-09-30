@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { dailyClassReport, dcrObservation } from '@/db/schema/daily';
+import { subTheme } from '@/db/schema/theme';
 import { and, eq, gte, lt } from 'drizzle-orm';
 
 import { DailyClassReportInput } from '../validation';
@@ -73,18 +74,31 @@ export async function findByIdWithObservations(id: string) {
   });
 }
 
+export async function findSubThemeNameById(id: string): Promise<string | null> {
+  const st = await db.query.subTheme.findFirst({
+    where: eq(subTheme.id, id),
+    columns: { name: true },
+  });
+  return st?.name ?? null;
+}
+
 export async function updateNarratives(
   dcrId: string,
   updates: Array<{ kidId: string; narrativeGenerated: string }>
 ) {
-  for (const u of updates) {
-    await db
-      .update(dcrObservation)
-      .set({ narrativeGenerated: u.narrativeGenerated })
-      .where(
-        and(eq(dcrObservation.dcrId, dcrId), eq(dcrObservation.kidId, u.kidId))
-      );
-  }
+  await db.transaction(async (tx) => {
+    for (const u of updates) {
+      await tx
+        .update(dcrObservation)
+        .set({ narrativeGenerated: u.narrativeGenerated })
+        .where(
+          and(
+            eq(dcrObservation.dcrId, dcrId),
+            eq(dcrObservation.kidId, u.kidId)
+          )
+        );
+    }
+  });
 }
 
 export async function saveNarrativeEdited(

@@ -1,13 +1,11 @@
-import { db } from '@/db';
-import { subTheme } from '@/db/schema';
 import { TemplateData, expandTemplate } from '@/utils/template';
-import { eq } from 'drizzle-orm';
 
 import {
   KID_APPETITE_LABELS,
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
 } from '../constants';
+import { dcrRepo } from '../repositories';
 import * as templateRepo from '../repositories/report-template';
 import { DailyClassReport } from '../types';
 
@@ -25,14 +23,10 @@ export async function generateReportsForDCR(
     throw new Error('Template laporan belum diatur.');
   }
 
-  // Resolve sub-theme name
+  // Resolve sub-theme name via repository
   let subThemeName = '';
   if (dcr.subThemeId) {
-    const st = await db.query.subTheme.findFirst({
-      where: eq(subTheme.id, dcr.subThemeId),
-      columns: { name: true },
-    });
-    subThemeName = st?.name ?? '';
+    subThemeName = (await dcrRepo.findSubThemeNameById(dcr.subThemeId)) ?? '';
   }
 
   const template = tmpl.content;

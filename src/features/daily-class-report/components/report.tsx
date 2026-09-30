@@ -55,9 +55,28 @@ export default function DailyReport({
         saved: boolean;
       }
     >
-  >({});
+  >(() => {
+    // Pre-populate from existing observations (narrative_edited ?? narrative_generated)
+    const initial: Record<
+      string,
+      { narrative: string; editedNarrative: string; saved: boolean }
+    > = {};
+    for (const obs of existingObservations) {
+      const narrative = obs.narrativeEdited ?? obs.narrativeGenerated ?? '';
+      if (narrative) {
+        initial[obs.kidId] = {
+          narrative,
+          editedNarrative: narrative,
+          saved: true,
+        };
+      }
+    }
+    return initial;
+  });
   const [expandedKid, setExpandedKid] = useState<string | null>(null);
-  const [dcrId, setDcrId] = useState<string | null>(null);
+  const [dcrId, setDcrId] = useState<string | null>(() => {
+    return existingObservations[0]?.dcrId ?? null;
+  });
 
   const handleGenerate = useCallback(async () => {
     // Find the DCR ID from the first observation

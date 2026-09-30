@@ -1,7 +1,11 @@
 import * as repo from '../repositories/report-template';
+import { seedDefaultTemplate } from './seed-template';
 
 export async function getDefaultTemplate() {
   try {
+    // Seed default on first read if not exists
+    await seedDefaultTemplate();
+
     const tmpl = await repo.findDefault();
     if (!tmpl) {
       return {
