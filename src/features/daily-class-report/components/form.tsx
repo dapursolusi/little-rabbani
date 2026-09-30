@@ -3,6 +3,7 @@ import { useRouter } from 'next/navigation';
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Theme } from '@/features/theme/types';
+import { getLocalDateString } from '@/utils/date-local';
 
 import FormFieldGenerator from '@/components/shared/form/form-field-generator';
 
@@ -23,7 +24,7 @@ export function DailyClassReportForm({
   classSessions: ClassSession[];
   themes: Theme[];
   defaultClassSessionId?: string;
-  existingDCR: DailyClassReport;
+  existingDCR?: DailyClassReport;
 }) {
   const router = useRouter();
   const pushParam = (key: 'classSessionId', value: string | null) => {
@@ -43,9 +44,13 @@ export function DailyClassReportForm({
       })}
       initialData={{
         classSessionId: defaultClassSessionId ?? '',
-        date: new Date().toISOString().split('T')[0],
-        subThemeId: defaultClassSessionId ? existingDCR.subThemeId : '',
-        description: defaultClassSessionId ? existingDCR.description : '',
+        date: getLocalDateString(),
+        subThemeId: defaultClassSessionId
+          ? (existingDCR?.subThemeId ?? '')
+          : '',
+        description: defaultClassSessionId
+          ? (existingDCR?.description ?? '')
+          : '',
       }}
       onSubmit={async (data) => {
         return await dcrAction.saveDCR(data);

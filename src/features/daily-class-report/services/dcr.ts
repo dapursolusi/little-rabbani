@@ -1,5 +1,6 @@
 import { ActionResult } from '@/types';
 import { isWithinEditWindow } from '@/utils/date';
+import { getLocalDateString } from '@/utils/date-local';
 
 import { dcrRepo } from '../repositories';
 import { DailyClassReport } from '../types';
@@ -11,8 +12,7 @@ export async function getOrCreateDCR({
   classSessionId: string;
 }) {
   try {
-    const today = new Date();
-    const iso = today.toISOString().split('T')[0];
+    const iso = getLocalDateString();
 
     const existing = await dcrRepo.findDCR({ date: iso, classSessionId });
     if (existing) return { success: true as const, data: existing };
@@ -82,7 +82,7 @@ export async function getDCRs(input: {
   date?: { year?: number; month?: number };
 }): Promise<ActionResult<DailyClassReport[]>> {
   try {
-    const defaultYear = new Date().getFullYear();
+    const defaultYear = Number(getLocalDateString().slice(0, 4));
     const dcrs = await dcrRepo.findMany({
       date: {
         year: input.date?.year ?? defaultYear,

@@ -38,7 +38,14 @@ export default function DCRHistory({
         fixedWeeks
         modifiers={{
           haveDCR: (date: Date) =>
-            dcrDates.has(date.toISOString().split('T')[0]),
+            dcrDates.has(
+              new Intl.DateTimeFormat('fr-CA', {
+                timeZone: 'Asia/Jakarta',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              }).format(date)
+            ),
           today: (date: Date) => date.getTime() === today.getTime(),
           weekend: (date) => [0, 6].includes(date.getDay()),
           greyedPast: (date: Date) => date < today,

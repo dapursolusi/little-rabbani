@@ -3,7 +3,13 @@ import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Theme } from '@/features/theme/types';
 import { ActionResult } from '@/types';
-import { Warning } from '@hugeicons/core-free-icons';
+import { getLocalDateString } from '@/utils/date-local';
+import {
+  Audit01Icon,
+  FilePenIcon,
+  HistoryIcon,
+  Warning,
+} from '@hugeicons/core-free-icons';
 
 import ContentTabs, {
   ContentTabsProps,
@@ -30,7 +36,7 @@ export default function DailyClassReportClient({
   existingDCRsResults: ActionResult<DailyClassReport[]>;
   existingObservationsResults: ActionResult<DCRObservation[]>;
 }) {
-  const currentDate = new Date().toISOString().split('T')[0];
+  const currentDate = getLocalDateString();
   const currentDCR = existingDCRsResults.data?.find(
     (dcr) => dcr.date === currentDate
   );
@@ -38,13 +44,14 @@ export default function DailyClassReportClient({
     {
       triggerValue: 'input',
       triggerLabel: 'Input',
+      icon: FilePenIcon,
       children: (
         <div>
           <DailyClassReportForm
             classSessions={classSessions}
             themes={themes}
             defaultClassSessionId={defaultClassSessionId}
-            existingDCR={currentDCR as DailyClassReport}
+            existingDCR={currentDCR}
           />
           {defaultClassSessionId ? (
             <DCRKidObservation
@@ -62,12 +69,20 @@ export default function DailyClassReportClient({
       maxWidthPx: '900px',
     },
     {
+      triggerValue: 'report',
+      triggerLabel: 'Laporan',
+      icon: Audit01Icon,
+      children: <div>Laporan</div>,
+    },
+    {
       triggerValue: 'history',
       triggerLabel: 'Riwayat',
+      icon: HistoryIcon,
       children: <DCRHistory defaultDcrs={existingDCRsResults.data ?? []} />,
     },
   ];
   const formattedTodayDate = new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'Asia/Jakarta',
     weekday: 'long',
     day: '2-digit',
     month: 'long',
