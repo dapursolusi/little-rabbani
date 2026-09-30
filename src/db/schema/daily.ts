@@ -78,6 +78,8 @@ export const dcrObservation = pgTable(
     mood: kidMoodEnum('mood'),
     appetite: kidAppetiteEnum('appetite'),
     notes: text('notes'),
+    narrativeGenerated: text('narrative_generated'),
+    narrativeEdited: text('narrative_edited'),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .notNull()
