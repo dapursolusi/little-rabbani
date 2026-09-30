@@ -100,6 +100,38 @@ export const dcrObservation = pgTable(
   })
 );
 
+// export const reportStatusEnum = pgEnum('report_status', ['draft', 'sent']);
+
+// export const dailyReport = pgTable(
+//   'daily_report',
+//   {
+//     id: uuid('id').defaultRandom().primaryKey(),
+//     dcrObservationId: uuid('dcr_observation_id')
+//       .notNull()
+//       .references(() => dcrObservation.id, { onDelete: 'restrict' }),
+//     narrativeDraft: text('narrative_draft'),
+//     narrativeFinal: text('narrative_final'),
+//     reportStatus: reportStatusEnum('report_status'),
+//     createdAt: timestamp('created_at').notNull().defaultNow(),
+//     updatedAt: timestamp('updated_at')
+//       .notNull()
+//       .defaultNow()
+//       .$onUpdateFn(() => new Date()),
+//     deletedAt: timestamp('deleted_at'),
+//   },
+//   (table) => ({
+//     dcrObservationIdx: index('daily_report_dcr_observation_idx').on(table.dcrObservationId),
+//     dcrObservationUniq: unique('daily_report_dcr_observation_uniq').on(table.dcrObservationId),
+//   })
+// );
+
+// export const dailyReportRelationship = relations(dailyReport, ({ one }) => ({
+//   observation: one(dcrObservation, {
+//     fields: [dailyReport.dcrObservationId],
+//     references: [dcrObservation.id],
+//   }),
+// }));
+
 export const dcrObservationRelationship = relations(
   dcrObservation,
   ({ one }) => ({

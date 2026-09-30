@@ -1,7 +1,6 @@
 import { ReactNode } from 'react';
 
 import { LeanKid } from '@/features/kid/types';
-import { ActionResult } from '@/types';
 import { DatabaseIcon } from '@hugeicons/core-free-icons';
 
 import { EmptyState } from '@/components/shared/empty-state';
@@ -70,26 +69,21 @@ export function KidObservationModal({
 }
 
 export default function DCRKidObservation({
-  availableKids,
-  existingObservationsResults,
+  unfilledKids,
+  existingObservations,
   disabled,
 }: {
-  availableKids: LeanKid[];
-  existingObservationsResults: ActionResult<DCRObservation[]>;
+  unfilledKids: LeanKid[];
+  existingObservations: DCRObservation[];
   disabled?: boolean;
 }) {
-  const existingObservations = existingObservationsResults.data ?? [];
-
-  const unfilledKids = availableKids.filter(
-    (kid) => !existingObservations.some((obs) => obs.kidId === kid.id)
-  );
-
   return (
     <Accordion multiple className="border rounded-md py-1 px-2">
       {unfilledKids.length > 0 && (
         <AccordionItem value="unfilled" className="border-b last:border-0">
           <AccordionTrigger>
-            Belum Diisi ({unfilledKids.length})
+            <span className="text-orange-400 mr-1">⚠ </span> Belum Diisi (
+            {unfilledKids.length})
           </AccordionTrigger>
 
           <AccordionContent className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 my-2">
@@ -100,7 +94,7 @@ export default function DCRKidObservation({
         </AccordionItem>
       )}
 
-      {existingObservationsResults.success ? (
+      {existingObservations.length > 0 ? (
         Object.entries(KID_ATTENDANCE_LABELS).map(([attendance, label]) => {
           const observations = existingObservations.filter(
             (observation) => observation.attendance === attendance

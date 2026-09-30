@@ -20,6 +20,22 @@ import { DCRObservation, DailyClassReport } from '../types';
 import { DailyClassReportForm } from './form';
 import DCRHistory from './history';
 import DCRKidObservation from './observation';
+import DailyReport from './report';
+
+function DateInformation() {
+  const formattedTodayDate = new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'Asia/Jakarta',
+    weekday: 'long',
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  }).format(new Date());
+  return (
+    <h2 className="w-full text-center font-semibold my-2 text-primary">
+      {formattedTodayDate}
+    </h2>
+  );
+}
 
 export default function DailyClassReportClient({
   classSessions,
@@ -40,6 +56,11 @@ export default function DailyClassReportClient({
   const currentDCR = existingDCRsResults.data?.find(
     (dcr) => dcr.date === currentDate
   );
+  const existingObservations = existingObservationsResults.data;
+  const unfilledKids = availableKids.filter(
+    (kid) => !existingObservations?.some((obs) => obs.kidId === kid.id)
+  );
+
   const tabs: ContentTabsProps['tabs'] = [
     {
       triggerValue: 'input',
@@ -47,6 +68,7 @@ export default function DailyClassReportClient({
       icon: FilePenIcon,
       children: (
         <div>
+          <DateInformation />
           <DailyClassReportForm
             classSessions={classSessions}
             themes={themes}
@@ -55,8 +77,8 @@ export default function DailyClassReportClient({
           />
           {defaultClassSessionId ? (
             <DCRKidObservation
-              availableKids={availableKids}
-              existingObservationsResults={existingObservationsResults}
+              unfilledKids={unfilledKids}
+              existingObservations={existingObservations as DCRObservation[]}
             />
           ) : (
             <EmptyState
@@ -72,27 +94,29 @@ export default function DailyClassReportClient({
       triggerValue: 'report',
       triggerLabel: 'Laporan',
       icon: Audit01Icon,
-      children: <div>Laporan</div>,
+      children: (
+        <div>
+          <DateInformation />
+          <DailyReport
+            existingObservations={existingObservations as DCRObservation[]}
+            unfilledKids={unfilledKids}
+            availableKids={availableKids}
+          />
+        </div>
+      ),
+      maxWidthPx: '900px',
     },
     {
       triggerValue: 'history',
       triggerLabel: 'Riwayat',
       icon: HistoryIcon,
       children: <DCRHistory defaultDcrs={existingDCRsResults.data ?? []} />,
+      maxWidthPx: '900px',
     },
   ];
-  const formattedTodayDate = new Intl.DateTimeFormat('id-ID', {
-    timeZone: 'Asia/Jakarta',
-    weekday: 'long',
-    day: '2-digit',
-    month: 'long',
-    year: 'numeric',
-  }).format(new Date());
+
   return (
     <div className="py-2 px-2">
-      <h2 className="w-full text-center font-semibold my-2 text-primary">
-        {formattedTodayDate}
-      </h2>
       <ContentTabs tabs={tabs} fullWidth />
     </div>
   );
