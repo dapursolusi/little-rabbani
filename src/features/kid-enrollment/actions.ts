@@ -6,6 +6,7 @@ import * as kidEnrollmentService from './services';
 import { KidEnrollmentSchema, SaveEnrollmentChangesSchema } from './validation';
 
 export async function getKidsEnrollments(input?: unknown) {
+  console.log('getKidsEnrollments input: ', input);
   return await kidEnrollmentService.getKidsEnrollments(
     input as { termId?: string; classSessionId?: string }
   );

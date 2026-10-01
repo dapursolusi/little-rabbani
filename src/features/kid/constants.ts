@@ -26,3 +26,11 @@ export const GUARDIAN_RELATIONSHIP_LABELS: Record<
   aunt_uncle: 'Bibi / Paman',
   other: 'Wali',
 };
+
+export const ACTIVE_STATUS = ['registered', 'active', 'inactive'] as const;
+export type ActiveStatus = (typeof ACTIVE_STATUS)[number];
+export const ACTIVE_STATUS_LABELS: Record<ActiveStatus, string> = {
+  registered: 'Terdaftar',
+  active: 'Aktif',
+  inactive: 'Tidak Aktif',
+};

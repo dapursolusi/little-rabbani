@@ -1,4 +1,8 @@
-import { GENDERS, GUARDIAN_RELATIONSHIPS } from '@/features/kid/constants';
+import {
+  ACTIVE_STATUS,
+  GENDERS,
+  GUARDIAN_RELATIONSHIPS,
+} from '@/features/kid/constants';
 import { relations, sql } from 'drizzle-orm';
 import {
   date,
@@ -59,14 +63,7 @@ export const guardianRelationshipEnum = pgEnum(
   GUARDIAN_RELATIONSHIPS
 );
 
-export const ACTIVE_STATUS = ['active', 'inactive', 'alumni'] as const;
-export type ActiveStatus = (typeof ACTIVE_STATUS)[number];
 export const activeStatusEnum = pgEnum('active_status', ACTIVE_STATUS);
-export const ACTIVE_STATUS_LABELS: Record<ActiveStatus, string> = {
-  active: 'Aktif',
-  inactive: 'Tidak Aktif',
-  alumni: 'Alumni',
-};
 
 export const kid = pgTable(
   'kid',

@@ -27,7 +27,7 @@ export default async function KidEnrollmentListPage({
     (currentTermResult.success ? currentTermResult.data.id : undefined);
 
   const enrollmentsResult = await kidEnrollmentAction.getKidsEnrollments({
-    termId: classSessionId ? undefined : effectiveTermId,
+    termId: effectiveTermId,
     classSessionId: classSessionId ?? undefined,
   });
 

@@ -2,9 +2,11 @@ import Link from 'next/link';
 
 import { isIconSvgElement } from '@/utils/icon-checker';
 import {
+  Add02Icon,
   Alert01Icon,
   ArrowUpRight01Icon,
   Database01Icon,
+  LinkSquare02Icon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 
@@ -22,21 +24,30 @@ interface EmptyDataProps {
   title: string;
   icon?: IconSvgElement | React.ReactNode;
   description?: string;
-  actionLabel?: string;
-  actionHref?: string;
-  action?: React.ReactNode;
+  action?: EmptyDataAction;
   learnMore?: {
     href: string;
     label: string;
   };
 }
 
+type EmptyDataAction = EmptyDataHrefAction | EmptyDataCustomAction;
+
+interface EmptyDataHrefAction {
+  type: 'href';
+  label: string;
+  href: string;
+}
+
+interface EmptyDataCustomAction {
+  type: 'custom';
+  children: React.ReactNode;
+}
+
 export function EmptyState({
   title,
   icon,
   description,
-  actionLabel,
-  actionHref,
   action,
   learnMore,
 }: EmptyDataProps) {
@@ -58,11 +69,13 @@ export function EmptyState({
         <EmptyDescription>{description}</EmptyDescription>
       </EmptyHeader>
       <EmptyContent className="flex-row justify-center gap-2">
-        {actionLabel && actionHref ? (
-          <Button render={<a href={actionHref} />}>{actionLabel}</Button>
-        ) : action ? (
-          action
-        ) : null}
+        {action && action.type === 'href' ? (
+          <Button render={<a href={action.href} />}>
+            <HugeiconsIcon icon={Add02Icon} /> {action.label}
+          </Button>
+        ) : (
+          action?.children
+        )}
       </EmptyContent>
       {learnMore && (
         <Button

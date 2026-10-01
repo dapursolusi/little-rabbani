@@ -1,7 +1,7 @@
 import { ReactNode } from 'react';
 
 import { LeanKid } from '@/features/kid/types';
-import { DatabaseIcon } from '@hugeicons/core-free-icons';
+import { ChildIcon, DatabaseIcon } from '@hugeicons/core-free-icons';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { Modal } from '@/components/shared/modal';
@@ -77,7 +77,18 @@ export default function DCRKidObservation({
   existingObservations: DCRObservation[];
   disabled?: boolean;
 }) {
-  return (
+  console.log('unfilledKids length:', unfilledKids.length);
+  return unfilledKids.length === 0 ? (
+    <EmptyState
+      icon={ChildIcon}
+      title="Belum ada data anak untuk batch saat ini."
+      action={{
+        type: 'href',
+        label: 'Tambah Registrasi Anak',
+        href: '/dashboard/registration',
+      }}
+    />
+  ) : (
     <Accordion multiple className="border rounded-md py-1 px-2">
       {unfilledKids.length > 0 && (
         <AccordionItem value="unfilled" className="border-b last:border-0">
