@@ -8,6 +8,7 @@ import {
   pgTable,
   text,
   timestamp,
+  uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
 
@@ -88,6 +89,9 @@ export const kidEnrollment = pgTable(
     index('kid_enrollment_kid_id_idx').on(table.kidId),
     index('kid_enrollment_term_id_idx').on(table.termId),
     index('kid_enrollment_class_session_id_idx').on(table.classSessionId),
+    uniqueIndex('kid_enrollment_active_unique')
+      .on(table.termId, table.kidId)
+      .where(sql`${table.deletedAt} is null`),
   ]
 );
 
