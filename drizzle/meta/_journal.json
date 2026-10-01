@@ -43,6 +43,20 @@
       "when": 1790064088479,
       "tag": "0005_petite_sir_ram",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1790861898745,
+      "tag": "0006_odd_hitman",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1790862364411,
+      "tag": "0009_smart_whistler",
+      "breakpoints": true
     }
   ]
 }

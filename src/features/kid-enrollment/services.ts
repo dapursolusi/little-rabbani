@@ -130,9 +130,16 @@ export async function createKidsEnrollments(input: KidEnrollmentInput) {
       };
     } catch (error) {
       console.error('createKidsEnrollments: ', error);
+      const isDuplicate =
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === '23505';
       return {
         success: false as const,
-        error: 'Gagal membuat pendaftaran anak. Coba lagi nanti.',
+        error: isDuplicate
+          ? 'Beberapa murid sudah terdaftar di batch dan sesi ini.'
+          : 'Gagal membuat pendaftaran anak. Coba lagi nanti.',
       };
     }
   });
@@ -179,9 +186,17 @@ export async function saveEnrollmentChanges(input: SaveEnrollmentChangesInput) {
       return { success: true as const, data: result };
     } catch (error) {
       console.error('saveEnrollmentChanges: ', error);
+      // ponytail: check unique violation code — Postgres 23505 = duplicate key
+      const isDuplicate =
+        typeof error === 'object' &&
+        error !== null &&
+        'code' in error &&
+        (error as { code: string }).code === '23505';
       return {
         success: false as const,
-        error: 'Gagal menyimpan perubahan pendaftaran. Coba lagi nanti.',
+        error: isDuplicate
+          ? 'Beberapa murid sudah terdaftar di batch dan sesi ini.'
+          : 'Gagal menyimpan perubahan pendaftaran. Coba lagi nanti.',
       };
     }
   });

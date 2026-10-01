@@ -150,7 +150,11 @@ export default function UpdateEnrolledKids({
               footer={
                 <Button
                   className="flex justify-center items-center gap-3"
-                  onClick={() => onAdd?.(selectedRows)}
+                  onClick={() => {
+                    onAdd?.(selectedRows);
+                    setSelectedRows(new Set());
+                    setIsAddKidModalOpen(false);
+                  }}
                   disabled={noAvailableKids}
                 >
                   <HugeiconsIcon icon={Add02Icon} />
