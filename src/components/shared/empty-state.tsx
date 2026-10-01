@@ -1,7 +1,11 @@
 import Link from 'next/link';
 
 import { isIconSvgElement } from '@/utils/icon-checker';
-import { ArrowUpRight01Icon } from '@hugeicons/core-free-icons';
+import {
+  Alert01Icon,
+  ArrowUpRight01Icon,
+  Database01Icon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 
 import { Button } from '@/components/ui/button';
@@ -46,7 +50,9 @@ export function EmptyState({
             ) : (
               icon
             )
-          ) : null}
+          ) : (
+            <HugeiconsIcon icon={Alert01Icon} size={60} />
+          )}
         </EmptyMedia>
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDescription>{description}</EmptyDescription>

@@ -7,6 +7,7 @@ import DailyClassReportClient from '@/features/daily-class-report/components/dcr
 import * as kidEnrollmentAction from '@/features/kid-enrollment/actions';
 import * as termAction from '@/features/term/actions';
 import * as themeAction from '@/features/theme/actions';
+import { getLocalDateString } from '@/utils/date-local';
 
 export default async function DailyClassReportPage({
   searchParams,
@@ -39,7 +40,7 @@ export default async function DailyClassReportPage({
     await kidEnrollmentAction.getCurrentTermKidEnrollmentsByClassSession(
       classSessionId
     );
-  const todayDate = new Date().toISOString().split('T')[0];
+  const todayDate = getLocalDateString();
   const existingDCRs = await dcrAction.getDCRs({
     date: { year: Number(todayDate.slice(0, 4)) },
     classSessionId,
