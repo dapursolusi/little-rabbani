@@ -56,7 +56,7 @@ export default function DailyClassReportClient({
   const currentDCR = existingDCRsResults.data?.find(
     (dcr) => dcr.date === currentDate
   );
-  const existingObservations = existingObservationsResults.data;
+  const existingObservations = existingObservationsResults.data ?? [];
   const unfilledKids = availableKids.filter(
     (kid) => !existingObservations?.some((obs) => obs.kidId === kid.id)
   );
