@@ -1,5 +1,5 @@
 import { ENROLLMENT_STATUS } from '@/features/kid-enrollment/constants';
-import { relations, sql } from 'drizzle-orm';
+import { isNull, relations, sql } from 'drizzle-orm';
 import {
   boolean,
   check,
@@ -91,7 +91,7 @@ export const kidEnrollment = pgTable(
     index('kid_enrollment_class_session_id_idx').on(table.classSessionId),
     uniqueIndex('kid_enrollment_active_unique')
       .on(table.termId, table.kidId)
-      .where(sql`${table.deletedAt} is null`),
+      .where(isNull(table.deletedAt)),
   ]
 );
 

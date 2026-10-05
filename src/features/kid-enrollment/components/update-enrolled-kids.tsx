@@ -22,7 +22,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 
-function CheckboxInTable({
+export function CheckboxInTable({
   kids,
   selectedRows,
   onSelectedRowsChange,

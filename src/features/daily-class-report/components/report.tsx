@@ -178,9 +178,7 @@ export default function DailyReport({
         </Button>
       )}
 
-      {!allFilled && (
-        <EmptyState title="Observasi anak belum terisi semua!" action />
-      )}
+      {!allFilled && <EmptyState title="Observasi anak belum terisi semua!" />}
 
       {/* Kid list */}
       <div className="flex flex-col gap-2">

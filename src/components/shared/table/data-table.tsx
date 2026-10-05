@@ -5,7 +5,11 @@ import * as React from 'react';
 import Link from 'next/link';
 
 import { isIconSvgElement } from '@/utils/icon-checker';
-import { Add02Icon, PlusSignIcon } from '@hugeicons/core-free-icons';
+import {
+  Add02Icon,
+  Database01Icon,
+  PlusSignIcon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 import {
   type CellData,
@@ -85,8 +89,13 @@ interface DataTableProps<TData extends RowData, TValue extends CellData> {
     customActionLabel?: string;
     customActionIcon?: IconSvgElement | React.ReactNode;
   };
+  emptyState: {
+    icon?: IconSvgElement | React.ReactNode;
+    createFreshRow?: DataTableCreateRow;
+  };
   createForm?: TableFormProps;
   createHref?: string;
+  createNewRow?: DataTableCreateRow;
   emptyStateIcon?: IconSvgElement | React.ReactNode;
   toolbar?: {
     showAll?: boolean;
@@ -99,12 +108,32 @@ interface DataTableProps<TData extends RowData, TValue extends CellData> {
   getRowClassName?: (row: TData) => string | undefined;
 }
 
+type DataTableCreateRow =
+  DataTableCreateRowHref | DataTableCreateRowForm | DataTableCreateRowCustom;
+interface DataTableCreateRowHref {
+  type: 'href';
+  href: string;
+}
+
+interface DataTableCreateRowForm {
+  type: 'form';
+  form: React.ReactNode;
+  meta?: { label: string; domain?: string };
+}
+
+interface DataTableCreateRowCustom {
+  type: 'custom';
+  children: React.ReactNode;
+}
+
 export function DataTable<TData extends RowData, TValue extends CellData>({
   columns,
   data,
   meta,
+  emptyState,
   createForm,
   createHref,
+  createNewRow,
   emptyStateIcon,
   toolbar,
   customAction,
@@ -241,25 +270,53 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
   };
 
   if (data.length === 0) {
-    return (
-      <EmptyState
-        title={`Belum ada ${meta.label.toLowerCase()}`}
-        description={`Mulai dengan menambahkan ${meta.label.toLowerCase()} baru.`}
-        actionLabel={`${meta.customActionLabel ?? 'Tambah'} ${meta.label}`}
-        actionHref={createHref}
-        action={
-          createForm && (
-            <SaveModal
-              metaLabel={meta.label}
-              form={createForm as TableFormProps}
-              open={modalOpen}
-              onOpenChange={setModalOpen}
-            />
-          )
-        }
-        icon={emptyStateIcon}
-      />
-    );
+    const type = emptyState.createFreshRow?.type;
+    if (type === 'href')
+      return (
+        <EmptyState
+          title={`Belum ada ${meta.label.toLowerCase()}`}
+          description={`Mulai dengan menambahkan ${meta.label.toLowerCase()} baru.`}
+          action={{
+            type: 'href',
+            label: `${meta.customActionLabel ?? 'Tambah'} ${meta.label}`,
+            href: emptyState.createFreshRow?.href as string,
+          }}
+          icon={emptyState.icon ?? Database01Icon}
+        />
+      );
+    if (type === 'form')
+      return (
+        <EmptyState
+          title={`Belum ada ${meta.label.toLowerCase()}`}
+          description={`Mulai dengan menambahkan ${meta.label.toLowerCase()} baru.`}
+          action={{
+            type: 'custom',
+            children: (
+              <SaveModal
+                metaLabel={meta.label}
+                form={createForm as TableFormProps}
+                open={modalOpen}
+                onOpenChange={setModalOpen}
+              />
+            ),
+          }}
+          icon={emptyState.icon ?? Database01Icon}
+        />
+      );
+
+    if (type === 'custom')
+      return (
+        <EmptyState
+          title={`Belum ada ${meta.label.toLowerCase()}`}
+          description={`Mulai dengan menambahkan ${meta.label.toLowerCase()} baru.`}
+          action={{
+            type: 'custom',
+            children: emptyState.createFreshRow?.children as React.ReactNode,
+          }}
+          icon={emptyState.icon ?? Database01Icon}
+        />
+      );
+    return null;
   }
 
   return (
