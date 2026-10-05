@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { reportTemplate } from '@/db/schema/report-template';
+import { reportTemplate } from '@/db/schema/report';
 import { eq } from 'drizzle-orm';
 
 export async function findDefault() {

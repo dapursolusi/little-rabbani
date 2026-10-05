@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { reportTemplate } from '@/db/schema/report-template';
+import { reportTemplate } from '@/db/schema/report';
 import { eq } from 'drizzle-orm';
 
 const DEFAULT_TEMPLATE = `Assalamualaikum Bunda {{nickName}}

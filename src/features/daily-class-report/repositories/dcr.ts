@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { dailyClassReport, dcrObservation } from '@/db/schema/daily';
+import { dailyClassReport } from '@/db/schema/daily';
 import { subTheme } from '@/db/schema/theme';
 import { and, eq, gte, lt } from 'drizzle-orm';
 
@@ -74,44 +74,26 @@ export async function findByIdWithObservations(id: string) {
   });
 }
 
+export async function findByIdWithReports(id: string) {
+  return await db.query.dailyClassReport.findFirst({
+    where: eq(dailyClassReport.id, id),
+    with: {
+      observations: {
+        with: {
+          kid: { columns: { id: true, name: true, nickName: true } },
+          kidReport: true,
+        },
+      },
+    },
+  });
+}
+
 export async function findSubThemeNameById(id: string): Promise<string | null> {
   const st = await db.query.subTheme.findFirst({
     where: eq(subTheme.id, id),
     columns: { name: true },
   });
   return st?.name ?? null;
-}
-
-export async function updateNarratives(
-  dcrId: string,
-  updates: Array<{ kidId: string; narrativeGenerated: string }>
-) {
-  await db.transaction(async (tx) => {
-    for (const u of updates) {
-      await tx
-        .update(dcrObservation)
-        .set({ narrativeGenerated: u.narrativeGenerated })
-        .where(
-          and(
-            eq(dcrObservation.dcrId, dcrId),
-            eq(dcrObservation.kidId, u.kidId)
-          )
-        );
-    }
-  });
-}
-
-export async function saveNarrativeEdited(
-  dcrId: string,
-  kidId: string,
-  narrativeEdited: string
-) {
-  await db
-    .update(dcrObservation)
-    .set({ narrativeEdited })
-    .where(
-      and(eq(dcrObservation.dcrId, dcrId), eq(dcrObservation.kidId, kidId))
-    );
 }
 
 export async function findMany({
@@ -153,5 +135,30 @@ export async function findMany({
 
   return await db.query.dailyClassReport.findMany({
     where: filters.length ? and(...filters) : undefined,
+    with: {
+      observations: {
+        columns: {
+          id: true,
+          dcrId: true,
+          kidId: true,
+          mood: true,
+          appetite: true,
+          attendance: true,
+          notes: true,
+        },
+        with: {
+          kid: { columns: { id: true, name: true, nickName: true } },
+          kidReport: {
+            columns: {
+              id: true,
+              dcrObservationId: true,
+              narrative: true,
+              sentAt: true,
+              reportStatus: true,
+            },
+          },
+        },
+      },
+    },
   });
 }

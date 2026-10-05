@@ -15,7 +15,7 @@ export type TemplateData = Record<string, string | null | undefined>;
  *
  * Pure function — no side effects, no DB calls. Test seam #1.
  */
-export function expandTemplate(template: string, data: TemplateData): string {
+export function renderTemplate(template: string, data: TemplateData): string {
   // Pre-cleanse description and notes
   const cleaned = { ...data };
   if (cleaned.description) {

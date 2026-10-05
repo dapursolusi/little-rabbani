@@ -3,11 +3,7 @@
 import { useCallback, useState } from 'react';
 
 import { LeanKid } from '@/features/kid/types';
-import {
-  AiMagicIcon,
-  Copy01Icon,
-  SquareArrowDown01Icon,
-} from '@hugeicons/core-free-icons';
+import { Copy01Icon, SquareArrowDown01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
@@ -23,10 +19,6 @@ import {
 import { Item, ItemContent, ItemTitle } from '@/components/ui/item';
 import { Textarea } from '@/components/ui/textarea';
 
-import {
-  generateReports,
-  saveNarrativeEdited,
-} from '../actions/generate-report';
 import {
   KID_APPETITE_LABELS,
   KID_MOOD_LABELS,
@@ -44,7 +36,6 @@ export default function DailyReport({
   unfilledKids: LeanKid[];
   availableKids: LeanKid[];
 }) {
-  const [generating, setGenerating] = useState(false);
   // Per-kid state: { [kidId]: { narrative, editedNarrative } }
   const [kidReports, setKidReports] = useState<
     Record<
@@ -62,7 +53,7 @@ export default function DailyReport({
       { narrative: string; editedNarrative: string; saved: boolean }
     > = {};
     for (const obs of existingObservations) {
-      const narrative = obs.narrativeEdited ?? obs.narrativeGenerated ?? '';
+      const narrative = obs.kidReport?.narrative;
       if (narrative) {
         initial[obs.kidId] = {
           narrative,
@@ -74,45 +65,6 @@ export default function DailyReport({
     return initial;
   });
   const [expandedKid, setExpandedKid] = useState<string | null>(null);
-  const [dcrId, setDcrId] = useState<string | null>(() => {
-    return existingObservations[0]?.dcrId ?? null;
-  });
-
-  const handleGenerate = useCallback(async () => {
-    // Find the DCR ID from the first observation
-    const firstObs = existingObservations[0];
-    if (!firstObs) {
-      toast.error('Belum ada data observasi.');
-      return;
-    }
-    const id = firstObs.dcrId;
-    setDcrId(id);
-    setGenerating(true);
-
-    const result = await generateReports(id);
-    if (!result.success) {
-      toast.error(result.error);
-      setGenerating(false);
-      return;
-    }
-
-    const reports: Record<
-      string,
-      { narrative: string; editedNarrative: string; saved: boolean }
-    > = {};
-    for (const r of result.data) {
-      reports[r.kidId] = {
-        narrative: r.narrative,
-        editedNarrative: r.narrative,
-        saved: true,
-      };
-    }
-    setKidReports(reports);
-    toast.success(
-      'Laporan berhasil dibuat untuk ' + result.data.length + ' anak.'
-    );
-    setGenerating(false);
-  }, [existingObservations]);
 
   const handleEditNarrative = useCallback((kidId: string, text: string) => {
     setKidReports((prev) => ({
@@ -120,37 +72,6 @@ export default function DailyReport({
       [kidId]: { ...prev[kidId], editedNarrative: text, saved: false },
     }));
   }, []);
-
-  const handleSaveEdit = useCallback(
-    async (kidId: string) => {
-      const report = kidReports[kidId];
-      if (!report || !dcrId) return;
-
-      try {
-        const result = await saveNarrativeEdited(
-          dcrId,
-          kidId,
-          report.editedNarrative
-        );
-        if (result.success) {
-          setKidReports((prev) => ({
-            ...prev,
-            [kidId]: {
-              ...prev[kidId],
-              narrative: report.editedNarrative,
-              saved: true,
-            },
-          }));
-          toast.success('Narasi disimpan.');
-        } else {
-          toast.error(result.error);
-        }
-      } catch {
-        toast.error('Gagal menyimpan narasi.');
-      }
-    },
-    [kidReports, dcrId]
-  );
 
   const handleCopy = useCallback(async (text: string, kidName: string) => {
     try {
@@ -162,22 +83,9 @@ export default function DailyReport({
   }, []);
 
   const allFilled = unfilledKids.length === 0;
-  const hasGeneratedReports = Object.keys(kidReports).length > 0;
 
   return (
     <div className="space-y-4">
-      {/* Generate button */}
-      {allFilled && !hasGeneratedReports && (
-        <Button
-          onClick={handleGenerate}
-          disabled={generating}
-          className="mx-auto w-full max-w-150"
-        >
-          <HugeiconsIcon icon={AiMagicIcon} className="mr-2" />
-          {generating ? 'Membuat Laporan...' : 'Buat Laporan Harian Anak'}
-        </Button>
-      )}
-
       {!allFilled && <EmptyState title="Observasi anak belum terisi semua!" />}
 
       {/* Kid list */}
@@ -265,12 +173,7 @@ export default function DailyReport({
                             className="w-full text-sm"
                           />
                           <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleSaveEdit(ak.id)}
-                              disabled={report.saved}
-                            >
+                            <Button variant="outline" size="sm" disabled>
                               {report.saved ? 'Tersimpan' : 'Simpan'}
                             </Button>
                             <Button

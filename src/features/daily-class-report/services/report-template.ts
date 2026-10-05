@@ -1,5 +1,5 @@
+import { seedDefaultTemplate } from '../../../db/seeds/report-template';
 import * as repo from '../repositories/report-template';
-import { seedDefaultTemplate } from './seed-template';
 
 export async function getDefaultTemplate() {
   try {

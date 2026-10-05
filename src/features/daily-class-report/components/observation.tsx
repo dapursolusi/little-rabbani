@@ -78,7 +78,7 @@ export default function DCRKidObservation({
   disabled?: boolean;
 }) {
   console.log('unfilledKids length:', unfilledKids.length);
-  return unfilledKids.length === 0 ? (
+  return unfilledKids.length === 0 && existingObservations.length === 0 ? (
     <EmptyState
       icon={ChildIcon}
       title="Belum ada data anak untuk batch saat ini."

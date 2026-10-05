@@ -43,24 +43,23 @@ export default function DailyClassReportClient({
   availableKids,
   defaultClassSessionId,
   existingDCRsResults,
-  existingObservationsResults,
 }: {
   classSessions: ClassSession[];
   themes: Theme[];
   availableKids: LeanKid[];
   defaultClassSessionId?: string;
   existingDCRsResults: ActionResult<DailyClassReport[]>;
-  existingObservationsResults: ActionResult<DCRObservation[]>;
 }) {
   const currentDate = getLocalDateString();
   const currentDCR = existingDCRsResults.data?.find(
     (dcr) => dcr.date === currentDate
   );
-  const existingObservations = existingObservationsResults.data ?? [];
+  const existingObservations = existingDCRsResults.data?.find(
+    (dcr) => dcr.date === currentDate
+  )?.observations;
   const unfilledKids = availableKids.filter(
     (kid) => !existingObservations?.some((obs) => obs.kidId === kid.id)
   );
-
   const tabs: ContentTabsProps['tabs'] = [
     {
       triggerValue: 'input',
