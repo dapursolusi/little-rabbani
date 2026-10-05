@@ -3,6 +3,7 @@
 import { useCallback, useState } from 'react';
 
 import { LeanKid } from '@/features/kid/types';
+import { renderDailyReportTemplate } from '@/utils/template';
 import { Copy01Icon, SquareArrowDown01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
@@ -25,16 +26,18 @@ import {
   REPORT_STATUS_BADGE,
   REPORT_STATUS_LABELS,
 } from '../constants';
-import { DCRObservation } from '../types';
+import { DailyClassReport } from '../types';
 
 export default function DailyReport({
-  existingObservations,
+  existingDCR,
   unfilledKids,
   availableKids,
+  defaultReportTemplate,
 }: {
-  existingObservations: DCRObservation[];
+  existingDCR: DailyClassReport;
   unfilledKids: LeanKid[];
   availableKids: LeanKid[];
+  defaultReportTemplate: string;
 }) {
   // Per-kid state: { [kidId]: { narrative, editedNarrative } }
   const [kidReports, setKidReports] = useState<
@@ -42,22 +45,20 @@ export default function DailyReport({
       string,
       {
         narrative: string;
-        editedNarrative: string;
         saved: boolean;
       }
     >
   >(() => {
-    // Pre-populate from existing observations (narrative_edited ?? narrative_generated)
-    const initial: Record<
-      string,
-      { narrative: string; editedNarrative: string; saved: boolean }
-    > = {};
-    for (const obs of existingObservations) {
-      const narrative = obs.kidReport?.narrative;
+    const initial: Record<string, { narrative: string; saved: boolean }> = {};
+    for (const obs of existingDCR.observations) {
+      const defaultTemplateNarrative = renderDailyReportTemplate({
+        template: defaultReportTemplate,
+        input: { dcr: existingDCR, observation: obs },
+      });
+      const narrative = obs.kidReport?.narrative ?? defaultTemplateNarrative;
       if (narrative) {
         initial[obs.kidId] = {
           narrative,
-          editedNarrative: narrative,
           saved: true,
         };
       }
@@ -69,7 +70,7 @@ export default function DailyReport({
   const handleEditNarrative = useCallback((kidId: string, text: string) => {
     setKidReports((prev) => ({
       ...prev,
-      [kidId]: { ...prev[kidId], editedNarrative: text, saved: false },
+      [kidId]: { ...prev[kidId], narrative: text, saved: false },
     }));
   }, []);
 
@@ -91,7 +92,7 @@ export default function DailyReport({
       {/* Kid list */}
       <div className="flex flex-col gap-2">
         {availableKids.map((ak) => {
-          const obs = existingObservations.find((o) => o.kidId === ak.id);
+          const obs = existingDCR.observations.find((o) => o.kidId === ak.id);
           const isPresent = obs?.attendance === 'present';
           const report = kidReports[ak.id];
 
@@ -156,16 +157,14 @@ export default function DailyReport({
                           </CardHeader>
                           <CardContent>{obs.notes ?? '—'}</CardContent>
                         </Card>
-                      </div>
+                        {/* Generated narrative */}
 
-                      {/* Generated narrative */}
-                      {report && (
-                        <div className="space-y-2 border rounded-lg p-3 bg-muted/30">
+                        <div className="space-y-2 col-span-2 border rounded-lg p-3 bg-muted/30">
                           <label className="text-sm font-medium">
                             Narasi Laporan
                           </label>
                           <Textarea
-                            value={report.editedNarrative}
+                            value={report?.narrative ?? ''}
                             onChange={(e) =>
                               handleEditNarrative(ak.id, e.target.value)
                             }
@@ -174,13 +173,13 @@ export default function DailyReport({
                           />
                           <div className="flex gap-2">
                             <Button variant="outline" size="sm" disabled>
-                              {report.saved ? 'Tersimpan' : 'Simpan'}
+                              {report?.saved ? 'Tersimpan' : 'Simpan'}
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                handleCopy(report.editedNarrative, ak.name)
+                                handleCopy(report.narrative, ak.name)
                               }
                             >
                               <HugeiconsIcon
@@ -191,7 +190,7 @@ export default function DailyReport({
                             </Button>
                           </div>
                         </div>
-                      )}
+                      </div>
                     </CollapsibleContent>
                   )}
                 </Collapsible>

@@ -16,7 +16,7 @@ import ContentTabs, {
 } from '@/components/shared/content-tabs';
 import { EmptyState } from '@/components/shared/empty-state';
 
-import { DCRObservation, DailyClassReport } from '../types';
+import { DCRObservation, DailyClassReport, ReportTemplate } from '../types';
 import { DailyClassReportForm } from './form';
 import DCRHistory from './history';
 import DCRKidObservation from './observation';
@@ -43,12 +43,14 @@ export default function DailyClassReportClient({
   availableKids,
   defaultClassSessionId,
   existingDCRsResults,
+  defaultReportTemplate,
 }: {
   classSessions: ClassSession[];
   themes: Theme[];
   availableKids: LeanKid[];
   defaultClassSessionId?: string;
   existingDCRsResults: ActionResult<DailyClassReport[]>;
+  defaultReportTemplate: ReportTemplate['content'];
 }) {
   const currentDate = getLocalDateString();
   const currentDCR = existingDCRsResults.data?.find(
@@ -97,9 +99,10 @@ export default function DailyClassReportClient({
         <div>
           <DateInformation />
           <DailyReport
-            existingObservations={existingObservations as DCRObservation[]}
+            existingDCR={currentDCR as DailyClassReport}
             unfilledKids={unfilledKids}
             availableKids={availableKids}
+            defaultReportTemplate={defaultReportTemplate}
           />
         </div>
       ),

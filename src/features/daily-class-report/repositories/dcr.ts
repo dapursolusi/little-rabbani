@@ -136,6 +136,12 @@ export async function findMany({
   return await db.query.dailyClassReport.findMany({
     where: filters.length ? and(...filters) : undefined,
     with: {
+      subTheme: {
+        columns: { name: true },
+        with: {
+          theme: { columns: { name: true } },
+        },
+      },
       observations: {
         columns: {
           id: true,

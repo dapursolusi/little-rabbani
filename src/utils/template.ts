@@ -1,3 +1,13 @@
+import {
+  KID_APPETITE_LABELS,
+  KID_ATTENDANCE_LABELS,
+  KID_MOOD_LABELS,
+} from '@/features/daily-class-report/constants';
+import {
+  DCRObservation,
+  DailyClassReport,
+} from '@/features/daily-class-report/types';
+
 import { cleanseText } from './text';
 
 /**
@@ -41,4 +51,29 @@ export function renderTemplate(template: string, data: TemplateData): string {
   });
 
   return result;
+}
+
+export function renderDailyReportTemplate({
+  template,
+  input,
+}: {
+  template: string;
+  input: {
+    observation: DCRObservation;
+    dcr: Pick<DailyClassReport, 'description' | 'subTheme'>;
+  };
+}): string {
+  const data: TemplateData = {
+    nickName: input.observation.kid.nickName ?? input.observation.kid.name,
+    fullName: input.observation.kid.name,
+    subThemeName: input.dcr.subTheme?.name ?? '',
+    description: input.dcr.description ?? '',
+    mood: input.observation.mood ? KID_MOOD_LABELS[input.observation.mood] : '',
+    appetite: input.observation.appetite
+      ? KID_APPETITE_LABELS[input.observation.appetite]
+      : '',
+    attendance: KID_ATTENDANCE_LABELS[input.observation.attendance],
+    notes: input.observation.notes ?? '',
+  };
+  return renderTemplate(template, data);
 }
