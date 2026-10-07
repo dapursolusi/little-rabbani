@@ -150,7 +150,7 @@ export async function createKid(input: {
       if (input.guardianId) {
         const existingGuardian = await guardianRepo.findById(input.guardianId);
         if (!existingGuardian) {
-          return { success: false as const, error: 'Wali tidak ditemukan' };
+          return { success: false as const, message: 'Wali tidak ditemukan' };
         }
         const newKid = await kidRepo.insert({
           ...input.kid,
@@ -204,11 +204,12 @@ export async function createKid(input: {
         return { ok: true as const, data: newKid.name };
       });
 
-      if (!transactionResult.ok) return transactionResult;
+      if (!transactionResult.ok)
+        return { success: false as const, message: transactionResult.reason };
       return { success: true as const, data: transactionResult.data };
     } catch (error) {
       console.error('createKid', error);
-      return { success: false as const, error: 'Gagal menambahkan murid' };
+      return { success: false as const, message: 'Gagal menambahkan murid' };
     }
   });
 }
@@ -226,7 +227,7 @@ export async function updateKid(
       if (input.guardianId) {
         const existingGuardian = await guardianRepo.findById(input.guardianId);
         if (!existingGuardian) {
-          return { success: false as const, error: 'Wali tidak ditemukan' };
+          return { success: false as const, message: 'Wali tidak ditemukan' };
         }
         const updatedKid = await kidRepo.update(kidId, {
           ...input.kid,
@@ -234,7 +235,7 @@ export async function updateKid(
         });
 
         if (!updatedKid) {
-          return { success: false as const, error: 'Murid tidak ditemukan' };
+          return { success: false as const, message: 'Murid tidak ditemukan' };
         }
 
         return { success: true as const, data: updatedKid.name };
@@ -244,7 +245,7 @@ export async function updateKid(
       if (!existingKid) {
         return {
           success: false as const,
-          error: 'Data murid yang ingin diubah tidak ditemukan',
+          message: 'Data murid yang ingin diubah tidak ditemukan',
         };
       }
 
@@ -274,17 +275,17 @@ export async function updateKid(
       });
 
       if (!transactionResult.ok) {
-        const error =
+        const errorMessage =
           transactionResult.reason === 'email-conflict'
             ? 'Email wali sudah pernah terdaftar, gunakan data wali sebelumnya atau daftar wali yang baru'
             : transactionResult.reason === 'not-found'
               ? 'Wali yang dipilih tidak ditemukan'
               : 'Nomor telepon wali sudah pernah terdaftar, gunakan data wali sebelumnya atau daftar wali yang baru';
-        return { success: false as const, error };
+        return { success: false as const, message: errorMessage };
       }
 
       if (!transactionResult.updatedKid) {
-        return { success: false as const, error: 'Murid tidak ditemukan' };
+        return { success: false as const, message: 'Murid tidak ditemukan' };
       }
 
       return {
@@ -293,7 +294,7 @@ export async function updateKid(
       };
     } catch (error) {
       console.error('updateKid', error);
-      return { success: false as const, error: 'Gagal memperbarui murid' };
+      return { success: false as const, message: 'Gagal memperbarui murid' };
     }
   });
 }
@@ -305,7 +306,7 @@ export async function deleteKid(id: string) {
       return { success: true as const, data: undefined };
     } catch (error) {
       console.error('deleteKid', error);
-      return { success: false as const, error: 'Gagal menghapus murid' };
+      return { success: false as const, message: 'Gagal menghapus murid' };
     }
   });
 }
@@ -328,7 +329,7 @@ export async function searchGuardians(search: string) {
       return { success: true as const, data };
     } catch (error) {
       console.error('searchGuardians', error);
-      return { success: false as const, error: 'Gagal mencari wali' };
+      return { success: false as const, message: 'Gagal mencari wali' };
     }
   });
 }

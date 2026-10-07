@@ -52,16 +52,5 @@ export async function updateTerm(id: string, input: Record<string, unknown>) {
 }
 
 export async function deleteTerm(id: string) {
-  return requireOwner(async () => {
-    try {
-      await db
-        .update(term)
-        .set({ deletedAt: new Date() })
-        .where(eq(term.id, id));
-      return { success: true as const, data: undefined };
-    } catch (error) {
-      console.error('deleteTerm', error);
-      return { success: false as const, error: 'Gagal menghapus batch' };
-    }
-  });
+  return await termService.deleteTerm(id);
 }

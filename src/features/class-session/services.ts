@@ -15,20 +15,20 @@ export async function checkOverlappingClassSession({
 
     if (overlappingClassSession) {
       return {
-        success: false,
-        error: `Sesi ${overlappingClassSession.name} sudah berjalan di waktu yang sama. (${overlappingClassSession.startTime} - ${overlappingClassSession.endTime})`,
+        success: false as const,
+        message: `Sesi ${overlappingClassSession.name} sudah berjalan di waktu yang sama. (${overlappingClassSession.startTime} - ${overlappingClassSession.endTime})`,
       };
     }
 
     return {
-      success: true,
+      success: true as const,
       data: null,
     };
   } catch (error) {
     console.error('checkOverlappingClassSession', error);
     return {
       success: false,
-      error: 'Gagal mengecek sesi kelas. Coba muat ulang halaman.',
+      message: 'Gagal mengecek sesi kelas. Coba muat ulang halaman.',
     };
   }
 }
@@ -54,7 +54,7 @@ export async function createClassSession(input: ClassSessionInput) {
       console.error('createClassSession', error);
       return {
         success: false,
-        error: 'Gagal menambahkan sesi kelas baru',
+        message: 'Gagal menambahkan sesi kelas baru',
       };
     }
   });
@@ -68,7 +68,7 @@ export async function updateClassSession(id: string, input: ClassSessionInput) {
         endTime: input.endTime,
       });
 
-      if (!overlapCheck?.success) {
+      if (!overlapCheck.success) {
         return overlapCheck;
       }
 
@@ -80,7 +80,10 @@ export async function updateClassSession(id: string, input: ClassSessionInput) {
       };
     } catch (error) {
       console.error('updateClassSession', error);
-      return { success: false as const, error: 'Gagal memperbarui sesi kelas' };
+      return {
+        success: false as const,
+        message: 'Gagal memperbarui sesi kelas',
+      };
     }
   });
 }
@@ -92,7 +95,7 @@ export async function getClassSessions() {
       return { success: true as const, data: classSessions };
     } catch (error) {
       console.error('getClassSessions', error);
-      return { success: false as const, error: 'Gagal memuat sesi kelas' };
+      return { success: false as const, message: 'Gagal memuat sesi kelas' };
     }
   });
 }
@@ -104,7 +107,7 @@ export async function deleteClassSession(id: string) {
       if (totalClassSessions === 1) {
         return {
           success: false as const,
-          error:
+          message:
             'Sesi kelas ini tidak dapat dihapus karena tidak ada sesi lainnya. Buat sesi kelas baru terlebih dahulu sebelum menghapus sesi ini.',
         };
       }
@@ -113,7 +116,7 @@ export async function deleteClassSession(id: string) {
 
       return { success: true as const, data: deleted.name };
     } catch {
-      return { success: false as const, error: 'Gagal menghapus sesi' };
+      return { success: false as const, message: 'Gagal menghapus sesi' };
     }
   });
 }

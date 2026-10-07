@@ -53,10 +53,6 @@ export async function getSubThemes(params?: { themeId?: string }) {
   return themeService.getSubThemes(params);
 }
 
-export async function getSubTheme(id: string) {
-  return themeService.getSubTheme(id);
-}
-
 export async function createSubTheme(input: Record<string, unknown>) {
   const parsed = parseInput({
     schema: subThemeFormSchema,

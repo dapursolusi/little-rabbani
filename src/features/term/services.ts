@@ -84,7 +84,10 @@ export async function checkCurrentTerm() {
     return { success: true as const, data: insertedTerm };
   } catch (error) {
     console.error('checkCurrentTerm', error);
-    return { success: false as const, error: 'Gagal memeriksa batch saat ini' };
+    return {
+      success: false as const,
+      message: 'Gagal memeriksa batch saat ini',
+    };
   }
 }
 
@@ -129,7 +132,7 @@ export async function checkNextTerm() {
     console.error('checkNextTerm', error);
     return {
       success: false as const,
-      error: 'Gagal menyiapkan batch berikutnya',
+      message: 'Gagal menyiapkan batch berikutnya',
     };
   }
 }
@@ -149,7 +152,7 @@ export async function createTerm(input: TermInput) {
       if (conflictingTerm) {
         return {
           success: false as const,
-          error:
+          message:
             'Batch untuk tanggal tersebut bertabrakan dengan batch yang sudah ada. Silahkan pilih tanggal yang lain atau periksa lagi.',
         };
       }
@@ -163,7 +166,10 @@ export async function createTerm(input: TermInput) {
       return { success: true as const, data: newTerm.name };
     } catch (error) {
       console.error('createTerm', error);
-      return { success: false as const, error: 'Gagal menambahkan batch baru' };
+      return {
+        success: false as const,
+        message: 'Gagal menambahkan batch baru',
+      };
     }
   });
 }
@@ -173,7 +179,7 @@ export async function updateTerm(id: string, input: TermInput) {
     try {
       const existing = await termRepo.findById(id);
       if (!existing) {
-        return { success: false as const, error: 'Batch tidak ditemukan' };
+        return { success: false as const, message: 'Batch tidak ditemukan' };
       }
 
       const inputStartDate = new Date(input.startDate)
@@ -187,7 +193,7 @@ export async function updateTerm(id: string, input: TermInput) {
       if (conflictingTerm) {
         return {
           success: false as const,
-          error:
+          message:
             'Batch untuk tanggal tersebut bertabrakan dengan batch yang sudah ada. Silahkan pilih tanggal yang lain atau periksa lagi.',
         };
       }
@@ -214,7 +220,7 @@ export async function updateTerm(id: string, input: TermInput) {
       return { success: true as const, data: undefined };
     } catch (error) {
       console.error('updateTerm', error);
-      return { success: false as const, error: 'Gagal memperbarui batch' };
+      return { success: false as const, message: 'Gagal memperbarui batch' };
     }
   });
 }
@@ -226,7 +232,7 @@ export async function deleteTerm(id: string) {
       return { success: true as const, data: undefined };
     } catch (error) {
       console.error('deleteTerm', error);
-      return { success: false as const, error: 'Gagal menghapus batch' };
+      return { success: false as const, message: 'Gagal menghapus batch' };
     }
   });
 }

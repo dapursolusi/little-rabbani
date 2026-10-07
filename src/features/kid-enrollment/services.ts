@@ -137,7 +137,7 @@ export async function createKidsEnrollments(input: KidEnrollmentInput) {
         (error as { code: string }).code === '23505';
       return {
         success: false as const,
-        error: isDuplicate
+        message: isDuplicate
           ? 'Beberapa murid sudah terdaftar di batch dan sesi ini.'
           : 'Gagal membuat pendaftaran anak. Coba lagi nanti.',
       };
@@ -194,7 +194,7 @@ export async function saveEnrollmentChanges(input: SaveEnrollmentChangesInput) {
         (error as { code: string }).code === '23505';
       return {
         success: false as const,
-        error: isDuplicate
+        message: isDuplicate
           ? 'Beberapa murid sudah terdaftar di batch dan sesi ini.'
           : 'Gagal menyimpan perubahan pendaftaran. Coba lagi nanti.',
       };
