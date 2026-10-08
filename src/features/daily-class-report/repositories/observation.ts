@@ -36,6 +36,28 @@ export async function findObservation({
   });
 }
 
+export async function findByIdWithKid(id: string) {
+  return await db.query.dcrObservation.findFirst({
+    where: eq(dcrObservation.id, id),
+    columns: {
+      id: true,
+      dcrId: true,
+      attendance: true,
+      mood: true,
+      appetite: true,
+      notes: true,
+    },
+    with: {
+      kid: {
+        columns: {
+          name: true,
+          nickName: true,
+        },
+      },
+    },
+  });
+}
+
 export async function findMany({
   dcrId,
   kidId,

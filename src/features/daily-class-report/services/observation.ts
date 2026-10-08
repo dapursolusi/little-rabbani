@@ -99,7 +99,7 @@ export async function getDCRObservationsByDcrId(
 ): Promise<ActionResult<DCRObservation[]>> {
   try {
     const observations = await observationRepo.findMany({ dcrId });
-    return { success: true as const, data: observations };
+    return { success: true as const, data: observations as DCRObservation[] };
   } catch (error) {
     console.error('getDCRObservationsByDcrId', error);
     return {
@@ -123,7 +123,7 @@ export async function getDCRObservationsByDate(
         success: false as const,
         message: 'Laporan harian tidak ditemukan',
       };
-    return { success: true as const, data: observations };
+    return { success: true as const, data: observations as DCRObservation[] };
   } catch (error) {
     console.error('getDCRObservationsByDate', error);
     return {

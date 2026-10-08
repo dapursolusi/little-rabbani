@@ -105,7 +105,7 @@ export default function DCRKidObservation({
         </AccordionItem>
       )}
 
-      {existingObservations.length > 0 ? (
+      {existingObservations?.length > 0 ? (
         Object.entries(KID_ATTENDANCE_LABELS).map(([attendance, label]) => {
           const observations = existingObservations.filter(
             (observation) => observation.attendance === attendance

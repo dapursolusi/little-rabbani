@@ -9,13 +9,13 @@ import { Kid } from '../kid/types';
 import { SubTheme } from '../theme/types';
 
 export type DailyClassReport = typeof dailyClassReport.$inferSelect & {
-  observations: DCRObservation[];
-  subTheme?: SubTheme;
+  observations?: DCRObservation[];
+  subTheme?: SubTheme | null;
 };
 
 export type DCRObservation = typeof dcrObservation.$inferSelect & {
-  kid: Pick<Kid, 'id' | 'name' | 'nickName'>;
-  kidReport?: DailyKidReport;
+  kid?: Kid | null;
+  kidReport?: DailyKidReport | null;
 };
 
 export type DailyKidReport = typeof dailyKidReport.$inferSelect;

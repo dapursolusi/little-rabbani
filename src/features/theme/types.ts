@@ -1,12 +1,7 @@
-import type { BaseDTOResponse } from '@/types';
+import { subTheme, theme } from '@/db/schema';
 
-export interface Theme extends BaseDTOResponse {
-  name: string;
-  subThemes?: Array<{ id: string; name: string }>;
-}
+export type Theme = typeof theme.$inferSelect;
 
-export interface SubTheme extends BaseDTOResponse {
-  name: string;
-  themeId: string;
-  theme?: { id: string; name: string };
-}
+export type SubTheme = typeof subTheme.$inferSelect & {
+  theme: Theme | null;
+};

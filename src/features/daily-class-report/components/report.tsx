@@ -3,7 +3,10 @@
 import { useCallback, useState } from 'react';
 
 import { LeanKid } from '@/features/kid/types';
-import { renderDailyReportTemplate } from '@/utils/template';
+import {
+  DailyReportTemplateRenderData,
+  renderDailyReportTemplate,
+} from '@/utils/template';
 import { Copy01Icon, SquareArrowDown01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
@@ -44,35 +47,52 @@ export default function DailyReport({
     Record<
       string,
       {
-        narrative: string;
-        saved: boolean;
+        defaultNarrative: string;
+        existingNarrative: string | null;
+        editedNarrative: string;
       }
     >
   >(() => {
-    const initial: Record<string, { narrative: string; saved: boolean }> = {};
-    for (const obs of existingDCR.observations) {
-      const defaultTemplateNarrative = renderDailyReportTemplate({
-        template: defaultReportTemplate,
-        input: { dcr: existingDCR, observation: obs },
-      });
-      const narrative = obs.kidReport?.narrative ?? defaultTemplateNarrative;
-      if (narrative) {
-        initial[obs.kidId] = {
-          narrative,
-          saved: true,
-        };
+    const initial: Record<
+      string,
+      {
+        defaultNarrative: string;
+        existingNarrative: string | null;
+        editedNarrative: string;
       }
+    > = {};
+    for (const obs of existingDCR?.observations ?? []) {
+      const defaultNarrative = renderDailyReportTemplate({
+        template: defaultReportTemplate,
+        dcrData: {
+          dcr: existingDCR,
+          observation: obs,
+        } satisfies DailyReportTemplateRenderData,
+      });
+      const existingNarrative = obs.kidReport?.narrative?.trim() ?? null;
+
+      initial[obs.kidId] = {
+        defaultNarrative,
+        existingNarrative,
+        editedNarrative: existingNarrative ?? defaultNarrative,
+      };
     }
     return initial;
   });
   const [expandedKid, setExpandedKid] = useState<string | null>(null);
 
-  const handleEditNarrative = useCallback((kidId: string, text: string) => {
-    setKidReports((prev) => ({
-      ...prev,
-      [kidId]: { ...prev[kidId], narrative: text, saved: false },
-    }));
-  }, []);
+  const handleEditNarrative = useCallback(
+    ({ kidId, text }: { kidId: string; text: string }) => {
+      setKidReports((prev) => ({
+        ...prev,
+        [kidId]: {
+          ...prev[kidId],
+          editedNarrative: text,
+        },
+      }));
+    },
+    []
+  );
 
   const handleCopy = useCallback(async (text: string, kidName: string) => {
     try {
@@ -80,6 +100,15 @@ export default function DailyReport({
       toast.success(`Laporan ${kidName} disalin ke clipboard.`);
     } catch {
       toast.error('Gagal menyalin. Silakan salin manual.');
+    }
+  }, []);
+
+  const handleSave = useCallback(async (text: string) => {
+    try {
+    } catch {
+      toast.error(
+        'Gagal menyimpan perubahan laporan. Coba beberapa saat lagi.'
+      );
     }
   }, []);
 
@@ -92,9 +121,15 @@ export default function DailyReport({
       {/* Kid list */}
       <div className="flex flex-col gap-2">
         {availableKids.map((ak) => {
-          const obs = existingDCR.observations.find((o) => o.kidId === ak.id);
+          const obs = existingDCR?.observations?.find((o) => o.kidId === ak.id);
           const isPresent = obs?.attendance === 'present';
           const report = kidReports[ak.id];
+          const baseline =
+            report?.existingNarrative ?? report?.defaultNarrative ?? '';
+          const hasChanges = report
+            ? report.editedNarrative !== baseline
+            : false;
+          const hasExistingReport = !!report?.existingNarrative;
 
           if (!isPresent) return null;
 
@@ -111,14 +146,18 @@ export default function DailyReport({
                     <div className="flex items-center gap-2">
                       <Badge
                         className={
-                          report
+                          hasChanges
                             ? REPORT_STATUS_BADGE.draft
-                            : REPORT_STATUS_BADGE.ready
+                            : hasExistingReport
+                              ? REPORT_STATUS_BADGE.edited
+                              : REPORT_STATUS_BADGE.template
                         }
                       >
-                        {report
+                        {hasChanges
                           ? REPORT_STATUS_LABELS.draft
-                          : REPORT_STATUS_LABELS.ready}
+                          : hasExistingReport
+                            ? REPORT_STATUS_LABELS.edited
+                            : REPORT_STATUS_LABELS.template}
                       </Badge>
                       <HugeiconsIcon
                         icon={SquareArrowDown01Icon}
@@ -130,10 +169,10 @@ export default function DailyReport({
                   {obs && (
                     <CollapsibleContent className="space-y-3 py-2">
                       {/* Observation data */}
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-4 gap-2">
                         {obs.mood && obs.appetite && (
                           <>
-                            <Card>
+                            <Card className="sm:col-span-1">
                               <CardHeader>
                                 <CardTitle>Mood:</CardTitle>
                               </CardHeader>
@@ -141,7 +180,7 @@ export default function DailyReport({
                                 {KID_MOOD_LABELS[obs.mood]}
                               </CardContent>
                             </Card>
-                            <Card>
+                            <Card className="sm:col-span-1">
                               <CardHeader>
                                 <CardTitle>Makan:</CardTitle>
                               </CardHeader>
@@ -159,27 +198,43 @@ export default function DailyReport({
                         </Card>
                         {/* Generated narrative */}
 
-                        <div className="space-y-2 col-span-2 border rounded-lg p-3 bg-muted/30">
+                        <div className="space-y-2 col-span-full border rounded-lg p-3 bg-muted/30">
                           <label className="text-sm font-medium">
                             Narasi Laporan
                           </label>
                           <Textarea
-                            value={report?.narrative ?? ''}
+                            value={
+                              report?.editedNarrative ??
+                              report?.existingNarrative ??
+                              ''
+                            }
                             onChange={(e) =>
-                              handleEditNarrative(ak.id, e.target.value)
+                              handleEditNarrative({
+                                kidId: ak.id,
+                                text: e.target.value,
+                              })
                             }
                             rows={8}
                             className="w-full text-sm"
                           />
                           <div className="flex gap-2">
-                            <Button variant="outline" size="sm" disabled>
-                              {report?.saved ? 'Tersimpan' : 'Simpan'}
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={!hasChanges}
+                              onClick={() => {}}
+                            >
+                              Simpan
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                handleCopy(report.narrative, ak.name)
+                                handleCopy(
+                                  report.editedNarrative ??
+                                    report.existingNarrative,
+                                  ak.name
+                                )
                               }
                             >
                               <HugeiconsIcon

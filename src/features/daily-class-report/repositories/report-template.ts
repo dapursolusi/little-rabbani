@@ -1,10 +1,20 @@
 import { db } from '@/db';
 import { reportTemplate } from '@/db/schema/report';
-import { eq } from 'drizzle-orm';
+import { and, eq, isNull } from 'drizzle-orm';
 
 export async function findDefault() {
   return await db.query.reportTemplate.findFirst({
     where: eq(reportTemplate.name, 'default'),
+  });
+}
+
+export async function findById(id: string) {
+  return await db.query.reportTemplate.findFirst({
+    where: and(isNull(reportTemplate.deletedAt), eq(reportTemplate.id, id)),
+    columns: {
+      name: true,
+      content: true,
+    },
   });
 }
 

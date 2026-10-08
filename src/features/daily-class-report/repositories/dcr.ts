@@ -58,6 +58,10 @@ export async function findDCR({
 export async function findById(id: string) {
   return await db.query.dailyClassReport.findFirst({
     where: eq(dailyClassReport.id, id),
+    columns: {
+      id: true,
+      date: true,
+    },
   });
 }
 
@@ -69,6 +73,20 @@ export async function findByIdWithObservations(id: string) {
         with: {
           kid: { columns: { id: true, name: true, nickName: true } },
         },
+      },
+    },
+  });
+}
+
+export async function findByIdWithReportData(id: string) {
+  return await db.query.dailyClassReport.findFirst({
+    where: eq(dailyClassReport.id, id),
+    columns: {
+      description: true,
+    },
+    with: {
+      subTheme: {
+        columns: { name: true },
       },
     },
   });

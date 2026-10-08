@@ -1,13 +1,19 @@
+import * as themeService from '@/features/theme/services';
 import { ActionResult } from '@/types';
-import { TemplateData, renderTemplate } from '@/utils/template';
+import {
+  TemplateData,
+  renderDailyReportTemplate,
+  renderTemplate,
+} from '@/utils/template';
 
 import {
   KID_APPETITE_LABELS,
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
 } from '../constants';
-import { dcrRepo } from '../repositories';
+import { dailyKidReportRepo, dcrRepo, observationRepo } from '../repositories';
 import * as templateRepo from '../repositories/report-template';
+import { DailyKidReportInput } from '../validation';
 
 export type GeneratedReport = {
   kidId: string;
@@ -34,7 +40,8 @@ export async function generateDailyKidReportsByDcrId(
     let subThemeName = '';
     if (existingDCR.subThemeId) {
       subThemeName =
-        (await dcrRepo.findSubThemeNameById(existingDCR.subThemeId)) ?? '';
+        (await themeService.getSubThemeById(existingDCR.subThemeId)).data
+          ?.name ?? '';
     }
 
     const template = tmpl.content;
@@ -94,6 +101,75 @@ export async function getDailyKidReportsByDcrId(
     return {
       success: false as const,
       message: 'Gagal mengambil laporan harian.',
+    };
+  }
+}
+
+export async function saveReportNarration(input: DailyKidReportInput) {
+  try {
+    // 1. Validate observation and load required report data
+    const existingObservation = await observationRepo.findByIdWithKid(
+      input.dcrObservationId
+    );
+    if (!existingObservation) {
+      return {
+        success: false as const,
+        message:
+          'Data observasi tidak ditemukan. Isi observasi terlebih dahulu',
+      };
+    }
+    const dcr = await dcrRepo.findByIdWithReportData(existingObservation.dcrId);
+    if (!dcr)
+      return {
+        success: false as const,
+        message: 'Data laporan harian tidak ditemukan',
+      };
+
+    // 2. Generate default narrative from default report template
+    const defaultReportTemplate = (await templateRepo.findDefault())?.content;
+
+    const defaultNarrative = renderDailyReportTemplate({
+      template: defaultReportTemplate as string,
+      dcrData: { dcr, observation: existingObservation },
+    });
+
+    // 3. Skip saving if the narrative was not manually edited
+    const hasDifferentFromDefault = input.narrative !== defaultNarrative;
+    if (!hasDifferentFromDefault) {
+      return {
+        success: true as const,
+        data: null,
+      };
+    }
+
+    //4. Save edited report data
+    const existingKidReport = await dailyKidReportRepo.findByDcrObservationId(
+      existingObservation.id
+    );
+    if (!existingKidReport) {
+      await dailyKidReportRepo.insert({
+        dcrObservationId: input.dcrObservationId,
+        narrative: input.narrative,
+        statusReport: 'edited',
+      });
+      return {
+        success: true as const,
+        message: 'Narasi laporan berhasi disimpan',
+      };
+    }
+    await dailyKidReportRepo.update(existingKidReport.id, {
+      narrative: input.narrative,
+      statusReport: 'edited',
+    });
+    return {
+      success: true as const,
+      message: 'Narasi laporan berhasil diperbarui',
+    };
+  } catch (error) {
+    console.error('saveReportNarration:', error);
+    return {
+      success: false as const,
+      message: 'Gagal menyimpan draft laporan',
     };
   }
 }

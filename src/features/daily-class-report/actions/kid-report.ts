@@ -7,6 +7,7 @@ import { uuidSchema } from '@/lib/validation/common';
 
 import { dailyKidReportService } from '../services';
 import { GeneratedReport } from '../services/kid-report';
+import { DailyKidReportSchema } from '../validation';
 
 export async function generateDailyKidReportsByDcrId(input: unknown) {
   const parsed = parseInput({
@@ -36,4 +37,18 @@ export async function getDailyKidReportsByDcrId(input: unknown) {
     >;
   }
   return await dailyKidReportService.getDailyKidReportsByDcrId(parsed.data);
+}
+
+export async function saveReportNarration(input: unknown) {
+  const parsed = parseInput({
+    input,
+    schema: DailyKidReportSchema,
+    fallbackError: `(saveReportNarration): Input tidak lolos validasi`,
+  });
+  if (!parsed.success)
+    return {
+      success: false as const,
+      message: parsed.error,
+    };
+  return await dailyKidReportService.saveReportNarration(parsed.data);
 }

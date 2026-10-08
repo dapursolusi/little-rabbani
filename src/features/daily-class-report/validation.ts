@@ -1,6 +1,12 @@
+import { dailyKidReport } from '@/db/schema';
 import z from 'zod';
 
-import { KID_APPETITE, KID_ATTENDANCE, KID_MOOD } from './constants';
+import {
+  KID_APPETITE,
+  KID_ATTENDANCE,
+  KID_MOOD,
+  REPORT_STATUS,
+} from './constants';
 
 export const dailyClassReportSchema = z.object({
   classSessionId: z.uuid('Sesi kelas wajib dipilih'),
@@ -29,6 +35,20 @@ export const dcrObservationSchema = z
       message: 'Porsi yang dimakan wajib diisi jika anak hadir',
     }
   );
+
+export const DailyKidReportSchema = z
+  .object({
+    dcrObservationId: z.uuid('Harus berisi ID laporan harian'),
+    narrative: z.string().optional(),
+    statusReport: z.enum(REPORT_STATUS),
+    sentAt: z.iso.date().optional(),
+  })
+  .refine((data) => data.statusReport === 'sent', {
+    path: ['sentAt'],
+    message: 'Tanggal dikirim haru diisi',
+  });
+
+export type DailyKidReportInput = z.infer<typeof DailyKidReportSchema>;
 
 export type DailyClassReportInput = z.infer<typeof dailyClassReportSchema>;
 

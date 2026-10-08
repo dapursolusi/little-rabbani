@@ -9,4 +9,5 @@ export const reportTemplate = pgTable('report_template', {
     .notNull()
     .defaultNow()
     .$onUpdateFn(() => new Date()),
+  deletedAt: timestamp('deleted_at'),
 });
