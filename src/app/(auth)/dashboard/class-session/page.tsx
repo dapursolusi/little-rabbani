@@ -19,12 +19,19 @@ export default async function ClassSessionListPage() {
 
   return (
     <DataTable
-      data={result.data}
+      data={result.data ?? []}
       columns={classSessionColumns}
       meta={{ label: 'Sesi Kelas', domain: 'class-session' }}
       createForm={{
         createForm: <ClassSessionForm />,
         meta: { label: 'Sesi Kelas', domain: 'class-session' },
+      }}
+      emptyState={{
+        createFreshRow: {
+          type: 'form',
+          form: <ClassSessionForm />,
+          meta: { label: 'Sesi Kelas', domain: 'class-session' },
+        },
       }}
     />
   );

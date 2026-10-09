@@ -35,12 +35,24 @@ export type ActionResult<T> =
   | {
       success: true;
       message?: string;
-      data?: T | null;
+      data: T;
       error?: never;
     }
   | {
       success: false;
       message: string;
       data?: never;
-      error?: Record<string, string[]>;
+      error?: ActionError;
+    };
+
+export type ActionError =
+  | {
+      type: 'validation';
+      message?: string;
+      fieldErrors: Record<string, string[]>;
+    }
+  | {
+      type: 'not_found' | 'conflict' | 'internal';
+      message?: string;
+      fieldErrors?: never;
     };

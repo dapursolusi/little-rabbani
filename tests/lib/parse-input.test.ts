@@ -13,13 +13,28 @@ describe('parseInput', () => {
     expect(r).toEqual({ success: true, data: { name: 'Budi' } });
   });
 
-  it('returns the first issue message on failure', () => {
+  it('returns the fallback message on failure', () => {
     const r = parseInput({
       schema,
       input: { name: '' },
       fallbackError: 'Fallback',
     });
-    expect(r).toEqual({ success: false, error: 'name: Nama wajib diisi' });
+    expect(r).toEqual({ success: false, message: 'Fallback' });
+  });
+
+  it('attaches field errors when withError is set', () => {
+    const r = parseInput({
+      schema,
+      input: { name: '' },
+      fallbackError: 'Fallback',
+      withError: true,
+    });
+    expect(r.success).toBe(false);
+    if (!r.success) {
+      expect(r.message).toBe('Fallback');
+      expect(r.error?.type).toBe('validation');
+      expect(r.error?.fieldErrors.name).toEqual(['Nama wajib diisi']);
+    }
   });
 
   it('prefixes the issue with its field path', () => {
@@ -34,10 +49,15 @@ describe('parseInput', () => {
       schema: flatKid,
       input: { kid: { name: 'GT1' } },
       fallbackError: 'Fallback',
+      withError: true,
     });
     expect(r).toEqual({
       success: false,
-      error: 'name: Invalid input: expected string, received undefined',
+      message: 'Fallback',
+      error: {
+        type: 'validation',
+        fieldErrors: { name: ['Invalid input: expected string, received undefined'] },
+      },
     });
   });
 });

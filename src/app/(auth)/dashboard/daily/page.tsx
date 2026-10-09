@@ -29,9 +29,9 @@ export default async function DailyClassReportPage({
   ) {
     return (
       <section className="p-4 text-center text-destructive">
-        {!csResults.success && csResults.error}
-        {!themeResults.success && themeResults.error}
-        {!currentTermResults.success && currentTermResults.error}
+        {!csResults.success && csResults.message}
+        {!themeResults.success && themeResults.message}
+        {!currentTermResults.success && currentTermResults.message}
       </section>
     );
   }
@@ -50,8 +50,8 @@ export default async function DailyClassReportPage({
 
   return (
     <DailyClassReportClient
-      classSessions={csResults.data}
-      themes={themeResults.data}
+      classSessions={csResults.data ?? []}
+      themes={themeResults.data ?? []}
       availableKids={currentTermKidsResults.data?.map((ctk) => ctk.kid) ?? []}
       defaultClassSessionId={classSessionId}
       existingDCRsResults={existingDCRsResults}

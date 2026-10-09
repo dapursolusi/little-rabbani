@@ -4,6 +4,7 @@ import { type ReactNode, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
+import { ActionResult } from '@/types';
 import type { FormField } from '@/types/field';
 import { toast } from 'sonner';
 import type { ZodObject, ZodRawShape } from 'zod';
@@ -15,18 +16,18 @@ import { DialogFooter } from '@/components/ui/dialog';
 
 import { DataTableRowActions } from './data-table-row-action';
 
-interface RowActionsDialogProps {
+interface RowActionsDialogProps<T> {
   id: string;
   rowName: string;
   title: string;
   description: string;
   deleteAction: (id: string) => void;
   /** Link the row's Edit action to a dedicated edit page. */
-  edit: RowActionsEdit;
+  edit: RowActionsEdit<T>;
   extendedActions?: ReactNode;
 }
 
-export type RowActionsEdit = RowActionsEditHref | RowActionsEditForm;
+export type RowActionsEdit<T> = RowActionsEditHref | RowActionsEditForm<T>;
 export interface RowActionsEditHref {
   href: string;
   action?: never;
@@ -35,18 +36,18 @@ export interface RowActionsEditHref {
   schema?: never;
 }
 
-export interface RowActionsEditForm {
+export interface RowActionsEditForm<T> {
   href?: never;
   action: (
     id: string,
     data: Record<string, unknown>
-  ) => Promise<{ success: boolean; error?: string }> | void;
+  ) => Promise<ActionResult<T>> | void;
   formFields: FormField[];
   initialData: Record<string, unknown>;
   schema: ZodObject<ZodRawShape>;
 }
 
-export function RowActionsDialog({
+export function RowActionsDialog<T>({
   id,
   rowName,
   title,
@@ -54,7 +55,7 @@ export function RowActionsDialog({
   deleteAction,
   edit,
   extendedActions,
-}: RowActionsDialogProps) {
+}: RowActionsDialogProps<T>) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const inlineEdit = Boolean(edit.href as string) === false;
@@ -94,7 +95,7 @@ export function RowActionsDialog({
                   setOpen(false);
                   router.refresh();
                 } else {
-                  toast.error(result?.error);
+                  toast.error(result?.message);
                 }
               }}
               submitChildren={

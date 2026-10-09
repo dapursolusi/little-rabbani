@@ -20,12 +20,12 @@ describe('requireOwner auth gate', () => {
     mocks.getSession.mockResolvedValue({
       user: { id: 'owner-1', role: 'owner' },
     });
-    const handler = vi.fn(async () => ({ ok: true }));
+    const handler = vi.fn(async () => ({ success: true as const, data: null }));
 
     const result = await requireOwner(handler);
 
     expect(handler).toHaveBeenCalledTimes(1);
-    expect(result).toEqual({ ok: true });
+    expect(result).toEqual({ success: true, data: null });
   });
 
   it('redirects an unauthenticated caller without running the handler', async () => {
@@ -34,7 +34,7 @@ describe('requireOwner auth gate', () => {
     mocks.redirect.mockImplementation(() => {
       throw new Error('NEXT_REDIRECT');
     });
-    const handler = vi.fn(async () => ({ ok: true }));
+    const handler = vi.fn(async () => ({ success: true as const, data: null }));
 
     await expect(requireOwner(handler)).rejects.toThrow('NEXT_REDIRECT');
 
@@ -46,14 +46,14 @@ describe('requireOwner auth gate', () => {
     mocks.getSession.mockResolvedValue({
       user: { id: 'teacher-1', role: 'teacher' },
     });
-    const handler = vi.fn(async () => ({ ok: true }));
+    const handler = vi.fn(async () => ({ success: true as const, data: null }));
 
     const result = await requireOwner(handler);
 
     expect(handler).not.toHaveBeenCalled();
     expect(result).toEqual({
       success: false,
-      error: 'Akses ditolak. Hanya Owner yang dapat melakukan tindakan ini.',
+      message: 'Akses ditolak. Hanya Owner yang dapat melakukan tindakan ini.',
     });
   });
 });

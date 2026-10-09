@@ -24,10 +24,10 @@ export default function ReportTemplateClient({
     setSaving(true);
     const result = await saveTemplate({ content });
     if (result.success) {
-      toast.success('Template berhasil disimpan');
+      toast.success(result.message ?? 'Template berhasil disimpan');
       router.refresh();
     } else {
-      toast.error(result.error);
+      toast.error(result.message);
     }
     setSaving(false);
   };

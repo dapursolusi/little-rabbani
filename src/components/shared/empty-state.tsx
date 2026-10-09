@@ -5,8 +5,6 @@ import {
   Add02Icon,
   Alert01Icon,
   ArrowUpRight01Icon,
-  Database01Icon,
-  LinkSquare02Icon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon, IconSvgElement } from '@hugeicons/react';
 

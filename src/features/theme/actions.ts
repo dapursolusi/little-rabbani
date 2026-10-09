@@ -17,7 +17,7 @@ export async function getTheme(id: string) {
   return themeService.getTheme(id);
 }
 
-export async function createTheme(input: Record<string, unknown>) {
+export async function createTheme(input: unknown) {
   const parsed = parseInput({
     schema: themeFormSchema,
     input,
@@ -28,7 +28,7 @@ export async function createTheme(input: Record<string, unknown>) {
   return themeService.createTheme(parsed.data);
 }
 
-export async function updateTheme(id: string, input: Record<string, unknown>) {
+export async function updateTheme(id: string, input: unknown) {
   const parsed = parseInput({
     schema: themeFormSchema,
     input,

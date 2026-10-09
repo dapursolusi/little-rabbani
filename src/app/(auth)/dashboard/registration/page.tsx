@@ -33,14 +33,16 @@ export default async function KidEnrollmentListPage({
 
   if (!termResult.success) {
     return (
-      <div className="p-4 text-center text-destructive">{termResult.error}</div>
+      <div className="p-4 text-center text-destructive">
+        {termResult.message}
+      </div>
     );
   }
 
   if (!classSessionResult.success) {
     return (
       <div className="p-4 text-center text-destructive">
-        {classSessionResult.error}
+        {classSessionResult.message}
       </div>
     );
   }
@@ -57,7 +59,7 @@ export default async function KidEnrollmentListPage({
     <KidEnrollmentClient
       key={`${effectiveTermId}-${classSessionId}`}
       terms={termResult.data}
-      classSessions={classSessionResult.data}
+      classSessions={classSessionResult.data ?? []}
       data={enrollmentsResult.data as unknown as KidEnrollment[]}
       selectedTermId={effectiveTermId}
       selectedClassSessionId={classSessionId}

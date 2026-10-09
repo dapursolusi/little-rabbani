@@ -95,8 +95,6 @@ interface DataTableProps<TData extends RowData, TValue extends CellData> {
   };
   createForm?: TableFormProps;
   createHref?: string;
-  createNewRow?: DataTableCreateRow;
-  emptyStateIcon?: IconSvgElement | React.ReactNode;
   toolbar?: {
     showAll?: boolean;
     showColumnVisibility?: boolean;
@@ -133,8 +131,6 @@ export function DataTable<TData extends RowData, TValue extends CellData>({
   emptyState,
   createForm,
   createHref,
-  createNewRow,
-  emptyStateIcon,
   toolbar,
   customAction,
   getRowClassName,

@@ -1,3 +1,4 @@
+import { ActionResult } from '@/types';
 import { z } from 'zod';
 
 /**
@@ -9,20 +10,35 @@ export function parseInput<S extends z.ZodType>({
   schema,
   input,
   fallbackError,
+  withError = false,
 }: {
   schema: S;
   input: unknown;
   fallbackError?: string;
-}): { success: true; data: z.infer<S> } | { success: false; error: string } {
+  withError?: boolean;
+}): ActionResult<z.output<S>> {
   const parsed = schema.safeParse(input);
+
   if (!parsed.success) {
     const first = parsed.error.issues[0];
-    const path = first?.path?.length ? first.path.join('.') : null;
-    const message = path ? `${path}: ${first.message}` : first.message;
+    const path = first?.path.join('.') || '_root';
+
     return {
-      success: false as const,
-      error: message || (fallbackError ?? 'Data tidak valid'),
+      success: false,
+      message: fallbackError ?? 'Data tidak valid',
+      ...(withError && {
+        error: {
+          type: 'validation',
+          fieldErrors: {
+            [path]: [first.message],
+          },
+        },
+      }),
     };
   }
-  return { success: true as const, data: parsed.data };
+
+  return {
+    success: true,
+    data: parsed.data,
+  };
 }

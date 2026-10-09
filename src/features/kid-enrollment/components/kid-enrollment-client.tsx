@@ -1,14 +1,18 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Term } from '@/features/term/types';
-import { ContractsIcon, DatabaseSyncIcon } from '@hugeicons/core-free-icons';
-import { Add02Icon, AddTeamIcon } from '@hugeicons/core-free-icons';
+import {
+  Add02Icon,
+  AddTeamIcon,
+  ContractsIcon,
+  DatabaseSyncIcon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
@@ -254,7 +258,7 @@ export default function KidEnrollmentClient({
         setEnrolledKids(fresh.data as KidEnrollment[]);
       }
     } else {
-      toast.error(result.error);
+      toast.error(result.message);
     }
   }, [
     selectedTermId,
@@ -416,7 +420,7 @@ export default function KidEnrollmentClient({
                               setEnrolledKids(fresh.data as KidEnrollment[]);
                             }
                           } else {
-                            toast.error(result.error);
+                            toast.error(result.message);
                           }
                         }}
                         disabled={availableKids.length === 0}
@@ -429,86 +433,6 @@ export default function KidEnrollmentClient({
                 ),
               },
             }}
-            createNewRow={
-              showAllSessions
-                ? {
-                    type: 'custom',
-                    children: (
-                      <div className="p-4 text-center text-muted-foreground">
-                        Pilih sesi kelas untuk menambahkan murid baru.
-                      </div>
-                    ),
-                  }
-                : {
-                    type: 'custom',
-                    children: (
-                      <Modal
-                        title="Tambah Murid ke Batch"
-                        description=""
-                        trigger={{
-                          icon: AddTeamIcon,
-                          text: 'Tambah Murid ke Batch',
-                        }}
-                        content={
-                          <CheckboxInTable
-                            selectedRows={selectedRows}
-                            onSelectedRowsChange={setSelectedRows}
-                            kids={availableKids.map((kid) => ({
-                              id: kid.id,
-                              name: kid.name,
-                            }))}
-                          />
-                        }
-                        open={isAddKidModalOpen}
-                        onOpenChange={setIsAddKidModalOpen}
-                        footer={
-                          <Button
-                            className="flex justify-center items-center gap-3"
-                            onClick={async () => {
-                              const result =
-                                await kidEnrollmentAction.saveEnrollmentChanges(
-                                  {
-                                    termId: selectedTermId ?? '',
-                                    classSessionId:
-                                      selectedClassSessionId ?? '',
-                                    created: Array.from(selectedRows).map(
-                                      (kidId) => ({
-                                        kidId,
-                                        status: 'enrolled',
-                                      })
-                                    ),
-                                  }
-                                );
-                              if (result.success) {
-                                toast.success('Murid berhasil ditambahkan');
-                                setSelectedRows(new Set());
-                                setIsAddKidModalOpen(false);
-                                const fresh =
-                                  await kidEnrollmentAction.getKidsEnrollments({
-                                    termId: selectedTermId ?? '',
-                                    classSessionId:
-                                      selectedClassSessionId ?? '',
-                                  });
-                                if (fresh.success) {
-                                  setEnrolledKids(
-                                    fresh.data as KidEnrollment[]
-                                  );
-                                }
-                              } else {
-                                toast.error(result.error);
-                              }
-                            }}
-                            disabled={availableKids.length === 0}
-                          >
-                            <HugeiconsIcon icon={Add02Icon} />
-                            Tambah ke Pendaftaran Batch
-                          </Button>
-                        }
-                      />
-                    ),
-                  }
-            }
-            emptyStateIcon={ContractsIcon}
             toolbar={{
               showAll: !isUpdateMode,
             }}

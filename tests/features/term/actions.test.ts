@@ -110,7 +110,7 @@ describe('createTerm', () => {
 
     expect(result.success).toBe(false);
     if (result.success) return;
-    expect(result.error).toContain('bertabrakan');
+    expect(result.message).toContain('bertabrakan');
     expect(mocks.insert).not.toHaveBeenCalled();
   });
 
@@ -133,7 +133,7 @@ describe('createTerm', () => {
 
     expect(result).toEqual({
       success: false,
-      error: 'Gagal menambahkan batch baru',
+      message: 'Gagal menambahkan batch baru',
     });
   });
 
@@ -291,7 +291,7 @@ describe('checkNextTerm', () => {
 
     expect(result).toEqual({
       success: false,
-      error: 'Gagal menyiapkan batch berikutnya',
+      message: 'Gagal menyiapkan batch berikutnya',
     });
   });
 });
@@ -395,7 +395,7 @@ describe('updateTerm', () => {
 
     expect(result).toEqual({
       success: false,
-      error: 'Batch tidak ditemukan',
+      message: 'Batch tidak ditemukan',
     });
     expect(mocks.update).not.toHaveBeenCalled();
   });
@@ -420,7 +420,7 @@ describe('deleteTerm', () => {
 
     const result = await deleteTerm('T1');
 
-    expect(result).toEqual({ success: false, error: 'Gagal menghapus batch' });
+    expect(result).toEqual({ success: false, message: 'Gagal menghapus batch' });
   });
 
   it('blocks a non-owner', async () => {

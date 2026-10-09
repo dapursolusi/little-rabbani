@@ -33,10 +33,7 @@ export async function createClassSession(input: unknown) {
   return await classSessionService.createClassSession(data);
 }
 
-export async function updateClassSession(
-  id: string,
-  input: Record<string, unknown>
-) {
+export async function updateClassSession(id: string, input: unknown) {
   const parsed = parseInput({
     schema: ClassSessionSchema,
     input,
