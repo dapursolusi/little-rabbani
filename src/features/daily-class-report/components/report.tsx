@@ -23,13 +23,16 @@ import {
 import { Item, ItemContent, ItemTitle } from '@/components/ui/item';
 import { Textarea } from '@/components/ui/textarea';
 
+import { dailyKidReportAction } from '../actions';
 import {
   KID_APPETITE_LABELS,
   KID_MOOD_LABELS,
+  REPORT_STATUS,
   REPORT_STATUS_BADGE,
   REPORT_STATUS_LABELS,
+  ReportStatus,
 } from '../constants';
-import { DailyClassReport } from '../types';
+import { DailyClassReport, DailyKidReport } from '../types';
 
 export default function DailyReport({
   existingDCR,
@@ -81,18 +84,21 @@ export default function DailyReport({
   });
   const [expandedKid, setExpandedKid] = useState<string | null>(null);
 
-  const handleEditNarrative = useCallback(
-    ({ kidId, text }: { kidId: string; text: string }) => {
-      setKidReports((prev) => ({
-        ...prev,
-        [kidId]: {
-          ...prev[kidId],
-          editedNarrative: text,
-        },
-      }));
-    },
-    []
-  );
+  const handleEditNarrative = ({
+    kidId,
+    text,
+  }: {
+    kidId: string;
+    text: string;
+  }) => {
+    setKidReports((prev) => ({
+      ...prev,
+      [kidId]: {
+        ...prev[kidId],
+        editedNarrative: text,
+      },
+    }));
+  };
 
   const handleCopy = useCallback(async (text: string, kidName: string) => {
     try {
@@ -103,14 +109,27 @@ export default function DailyReport({
     }
   }, []);
 
-  const handleSave = useCallback(async (text: string) => {
+  const handleSaveNarrative = async ({
+    dcrObservationId,
+    narrative,
+  }: Pick<DailyKidReport, 'dcrObservationId' | 'narrative'>) => {
     try {
+      const result = await dailyKidReportAction.saveReportNarration({
+        dcrObservationId,
+        narrative,
+        reportStatus: 'edited',
+      });
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      toast.success(result.message);
     } catch {
-      toast.error(
-        'Gagal menyimpan perubahan laporan. Coba beberapa saat lagi.'
-      );
+      toast.error('Terjadi kesalahan. Coba beberapa saat lagi.');
     }
-  }, []);
+  };
 
   const allFilled = unfilledKids.length === 0;
 
@@ -172,7 +191,7 @@ export default function DailyReport({
                       <div className="grid grid-cols-4 gap-2">
                         {obs.mood && obs.appetite && (
                           <>
-                            <Card className="sm:col-span-1">
+                            <Card className="col-span-2 sm:col-span-1">
                               <CardHeader>
                                 <CardTitle>Mood:</CardTitle>
                               </CardHeader>
@@ -180,7 +199,7 @@ export default function DailyReport({
                                 {KID_MOOD_LABELS[obs.mood]}
                               </CardContent>
                             </Card>
-                            <Card className="sm:col-span-1">
+                            <Card className="col-span-2 sm:col-span-1">
                               <CardHeader>
                                 <CardTitle>Makan:</CardTitle>
                               </CardHeader>
@@ -190,7 +209,7 @@ export default function DailyReport({
                             </Card>
                           </>
                         )}
-                        <Card className="col-span-2">
+                        <Card className="col-span-full sm:col-span-2">
                           <CardHeader>
                             <CardTitle>📝 Catatan:</CardTitle>
                           </CardHeader>
@@ -222,7 +241,12 @@ export default function DailyReport({
                               variant="outline"
                               size="sm"
                               disabled={!hasChanges}
-                              onClick={() => {}}
+                              onClick={() => {
+                                handleSaveNarrative({
+                                  dcrObservationId: obs.id,
+                                  narrative: report?.editedNarrative ?? '',
+                                });
+                              }}
                             >
                               Simpan
                             </Button>

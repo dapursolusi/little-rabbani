@@ -53,6 +53,6 @@ export async function saveTemplate(input: { content: string }) {
     return { success: true as const, data: tmpl };
   } catch (error) {
     console.error('saveTemplate:', error);
-    return { success: false as const, error: 'Gagal menyimpan template.' };
+    return { success: false as const, message: 'Gagal menyimpan template.' };
   }
 }

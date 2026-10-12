@@ -1,6 +1,6 @@
 import { ReactNode } from 'react';
 
-import { LeanKid } from '@/features/kid/types';
+import { Kid, LeanKid } from '@/features/kid/types';
 import { ChildIcon, DatabaseIcon } from '@hugeicons/core-free-icons';
 
 import { EmptyState } from '@/components/shared/empty-state';
@@ -77,7 +77,6 @@ export default function DCRKidObservation({
   existingObservations: DCRObservation[];
   disabled?: boolean;
 }) {
-  console.log('unfilledKids length:', unfilledKids.length);
   return unfilledKids.length === 0 && existingObservations.length === 0 ? (
     <EmptyState
       icon={ChildIcon}
@@ -128,7 +127,7 @@ export default function DCRKidObservation({
                   observation.attendance === 'present' ? (
                     <KidObservationModal
                       key={observation.id}
-                      kid={observation.kid}
+                      kid={observation.kid as Kid}
                       observation={observation}
                       isEditMode
                       disabled={disabled}
@@ -139,7 +138,7 @@ export default function DCRKidObservation({
                           key={observation.id}
                         >
                           <ItemContent>
-                            <ItemTitle>{observation.kid.nickName}</ItemTitle>
+                            <ItemTitle>{observation.kid?.nickName}</ItemTitle>
 
                             <Separator />
 
@@ -183,7 +182,7 @@ export default function DCRKidObservation({
                   ) : (
                     <KidObservationModal
                       key={observation.id}
-                      kid={observation.kid}
+                      kid={observation.kid as Kid}
                       observation={observation as DCRObservation}
                       isEditMode
                       disabled={disabled}

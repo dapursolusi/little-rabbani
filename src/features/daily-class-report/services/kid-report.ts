@@ -5,6 +5,7 @@ import {
   renderDailyReportTemplate,
   renderTemplate,
 } from '@/utils/template';
+import { boolean } from 'zod';
 
 import {
   KID_APPETITE_LABELS,
@@ -13,6 +14,7 @@ import {
 } from '../constants';
 import { dailyKidReportRepo, dcrRepo, observationRepo } from '../repositories';
 import * as templateRepo from '../repositories/report-template';
+import { DailyKidReport } from '../types';
 import { DailyKidReportInput } from '../validation';
 
 export type GeneratedReport = {
@@ -105,7 +107,9 @@ export async function getDailyKidReportsByDcrId(
   }
 }
 
-export async function saveReportNarration(input: DailyKidReportInput) {
+export async function saveReportNarration(
+  input: DailyKidReportInput
+): Promise<ActionResult<DailyKidReport | null>> {
   try {
     // 1. Validate observation and load required report data
     const existingObservation = await observationRepo.findByIdWithKid(
@@ -135,35 +139,42 @@ export async function saveReportNarration(input: DailyKidReportInput) {
 
     // 3. Skip saving if the narrative was not manually edited
     const hasDifferentFromDefault = input.narrative !== defaultNarrative;
+    const existingKidReport = await dailyKidReportRepo.findByDcrObservationId(
+      existingObservation.id
+    );
+
     if (!hasDifferentFromDefault) {
+      if (existingKidReport) {
+        await dailyKidReportRepo.remove(existingKidReport.id);
+      }
       return {
         success: true as const,
+        message: 'Data sama dengan template',
         data: null,
       };
     }
 
     //4. Save edited report data
-    const existingKidReport = await dailyKidReportRepo.findByDcrObservationId(
-      existingObservation.id
-    );
     if (!existingKidReport) {
       await dailyKidReportRepo.insert({
         dcrObservationId: input.dcrObservationId,
         narrative: input.narrative,
-        statusReport: 'edited',
+        reportStatus: 'edited',
       });
       return {
         success: true as const,
         message: 'Narasi laporan berhasi disimpan',
+        data: null,
       };
     }
     await dailyKidReportRepo.update(existingKidReport.id, {
       narrative: input.narrative,
-      statusReport: 'edited',
+      reportStatus: 'edited',
     });
     return {
       success: true as const,
       message: 'Narasi laporan berhasil diperbarui',
+      data: null,
     };
   } catch (error) {
     console.error('saveReportNarration:', error);

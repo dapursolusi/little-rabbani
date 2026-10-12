@@ -13,7 +13,7 @@ export async function insert(input: DailyKidReportInput) {
 // Find
 export async function findByDcrObservationId(id: string) {
   return db.query.dailyKidReport.findFirst({
-    where: eq(dailyKidReport.id, id),
+    where: eq(dailyKidReport.dcrObservationId, id),
     columns: { id: true },
   });
 }
@@ -22,9 +22,13 @@ export async function findByDcrObservationId(id: string) {
 
 export async function update(
   id: string,
-  input: Pick<DailyKidReportInput, 'narrative' | 'statusReport' | 'sentAt'>
+  input: Pick<DailyKidReportInput, 'narrative' | 'reportStatus' | 'sentAt'>
 ) {
   await db.update(dailyKidReport).set(input).where(eq(dailyKidReport.id, id));
 }
 
 // Remove
+
+export async function remove(id: string) {
+  await db.delete(dailyKidReport).where(eq(dailyKidReport.id, id));
+}

@@ -1,4 +1,3 @@
-import { dailyKidReport } from '@/db/schema';
 import z from 'zod';
 
 import {
@@ -39,13 +38,13 @@ export const dcrObservationSchema = z
 export const DailyKidReportSchema = z
   .object({
     dcrObservationId: z.uuid('Harus berisi ID laporan harian'),
-    narrative: z.string().optional(),
-    statusReport: z.enum(REPORT_STATUS),
-    sentAt: z.iso.date().optional(),
+    narrative: z.string().nullish(),
+    reportStatus: z.enum(REPORT_STATUS),
+    sentAt: z.iso.date().nullish(),
   })
-  .refine((data) => data.statusReport === 'sent', {
+  .refine((data) => data.reportStatus !== 'sent' || !!data.sentAt, {
     path: ['sentAt'],
-    message: 'Tanggal dikirim haru diisi',
+    message: 'Tanggal dikirim harus diisi',
   });
 
 export type DailyKidReportInput = z.infer<typeof DailyKidReportSchema>;

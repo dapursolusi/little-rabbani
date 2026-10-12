@@ -1,13 +1,11 @@
 'use server';
 
-import { ActionResult } from '@/types';
 import z from 'zod';
 
 import { parseInput } from '@/lib/actions/parse-input';
 import { isoDateSchema, uuidSchema } from '@/lib/validation/common';
 
 import { observationService } from '../services';
-import { DCRObservation } from '../types';
 import { dcrObservationSchema } from '../validation';
 
 export async function createKidObservation({
@@ -34,15 +32,7 @@ export async function updateKidObservation(input: unknown) {
     schema: dcrObservationSchema,
     fallbackError: 'Data observasi kelas tidak valid',
   });
-  if (!parsed.success) {
-    return {
-      success: false as const,
-      error: {
-        type: ['ACTION_VALIDATION'],
-      },
-      message: parsed.error,
-    };
-  }
+  if (!parsed.success) return parsed;
   return await observationService.updateKidObservation(parsed.data);
 }
 
@@ -72,14 +62,7 @@ export async function getDCRObservationsByDate(
     input: dateInput,
     fallbackError: 'Data input (tanggal) tidak valid',
   });
-  if (!parsedDate.success)
-    return {
-      success: false as const,
-      error: {
-        type: ['ACTION_VALIDATION'],
-      },
-      message: parsedDate.error,
-    } as ActionResult<DCRObservation[]>;
+  if (!parsedDate.success) return parsedDate;
   const date = parsedDate.data;
 
   const parsedOpts = parseInput({
@@ -89,14 +72,7 @@ export async function getDCRObservationsByDate(
     input: optsInput,
     fallbackError: 'Data input (opsi) tidak valid',
   });
-  if (!parsedOpts.success)
-    return {
-      success: false as const,
-      error: {
-        type: ['ACTION_VALIDATION'],
-      },
-      message: parsedOpts.error,
-    } as ActionResult<DCRObservation[]>;
+  if (!parsedOpts.success) return parsedOpts;
   const { classSessionId } = parsedOpts.data;
   return await observationService.getDCRObservationsByDate(date, {
     classSessionId,
