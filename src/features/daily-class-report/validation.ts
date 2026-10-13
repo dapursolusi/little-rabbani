@@ -40,7 +40,7 @@ export const DailyKidReportSchema = z
     dcrObservationId: z.uuid('Harus berisi ID laporan harian'),
     narrative: z.string().nullish(),
     reportStatus: z.enum(REPORT_STATUS),
-    sentAt: z.iso.date().nullish(),
+    sentAt: z.date().nullish(),
   })
   .refine((data) => data.reportStatus !== 'sent' || !!data.sentAt, {
     path: ['sentAt'],

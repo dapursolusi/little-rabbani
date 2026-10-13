@@ -7,7 +7,6 @@ import {
 import { relations, sql } from 'drizzle-orm';
 import {
   check,
-  date,
   index,
   pgEnum,
   pgTable,
@@ -131,7 +130,9 @@ export const dailyKidReport = pgTable(
       .references(() => dcrObservation.id, { onDelete: 'restrict' }),
     narrative: text('narrative'),
     reportStatus: reportStatusEnum('report_status').default('template'),
-    sentAt: date('sent_at'),
+    sentAt: timestamp('sent_at', {
+      withTimezone: true,
+    }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .notNull()

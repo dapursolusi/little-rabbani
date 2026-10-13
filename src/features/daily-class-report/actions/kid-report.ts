@@ -38,3 +38,15 @@ export async function saveReportNarration(input: unknown) {
   if (!parsed.success) return parsed;
   return dailyKidReportService.saveReportNarration(parsed.data);
 }
+
+export async function markReportAsSent(input: unknown) {
+  const parsed = parseInput({
+    input,
+    schema: uuidSchema,
+    fallbackError: 'ID Laporan harian tidak valid',
+  });
+  if (!parsed.success) return parsed;
+  return dailyKidReportService.markReportAsSent({
+    dcrObservationId: parsed.data,
+  });
+}

@@ -14,7 +14,7 @@ export async function insert(input: DailyKidReportInput) {
 export async function findByDcrObservationId(id: string) {
   return db.query.dailyKidReport.findFirst({
     where: eq(dailyKidReport.dcrObservationId, id),
-    columns: { id: true },
+    columns: { id: true, narrative: true, reportStatus: true },
   });
 }
 

@@ -1,11 +1,13 @@
 import * as themeService from '@/features/theme/services';
 import { ActionResult } from '@/types';
 import {
+  DailyReportTemplateRenderData,
   TemplateData,
   renderDailyReportTemplate,
   renderTemplate,
 } from '@/utils/template';
-import { boolean } from 'zod';
+
+import { logger } from '@/lib/logger';
 
 import {
   KID_APPETITE_LABELS,
@@ -17,11 +19,61 @@ import * as templateRepo from '../repositories/report-template';
 import { DailyKidReport } from '../types';
 import { DailyKidReportInput } from '../validation';
 
+// Types
+
 export type GeneratedReport = {
   kidId: string;
   kidName: string;
   narrative: string;
 };
+
+// Helpers
+
+async function getValidatedDataByDcrObservationId(dcrObservationId: string) {
+  const observation = await observationRepo.findByIdWithKid(dcrObservationId);
+  if (!observation) {
+    return {
+      success: false as const,
+      message: 'Data observasi tidak ditemukan. Isi observasi terlebih dahulu',
+    };
+  }
+  const dcr = await dcrRepo.findByIdWithReportData(observation.dcrId);
+  if (!dcr)
+    return {
+      success: false as const,
+      message: 'Data laporan harian kelas tidak ditemukan',
+    };
+  const dailyKidReport = await dailyKidReportRepo.findByDcrObservationId(
+    observation.id
+  );
+
+  return {
+    success: true as const,
+    data: { dcr, observation, dailyKidReport },
+  };
+}
+
+async function generateDefaultNarrative({
+  dcr,
+  observation,
+}: DailyReportTemplateRenderData) {
+  const defaultReportTemplate = (await templateRepo.findDefault())?.content;
+  if (!defaultReportTemplate)
+    return {
+      success: false as const,
+      message: 'Belum ada template yang disimpan',
+    };
+
+  const defaultNarrative = renderDailyReportTemplate({
+    template: defaultReportTemplate,
+    dcrData: { dcr, observation },
+  });
+
+  return {
+    success: true as const,
+    data: defaultNarrative,
+  };
+}
 
 export async function generateDailyKidReportsByDcrId(
   dcrId: string
@@ -80,6 +132,8 @@ export async function generateDailyKidReportsByDcrId(
   }
 }
 
+// Read
+
 export async function getDailyKidReportsByDcrId(
   dcrId: string
 ): Promise<ActionResult<unknown>> {
@@ -107,41 +161,40 @@ export async function getDailyKidReportsByDcrId(
   }
 }
 
+// Upsert
+
 export async function saveReportNarration(
   input: DailyKidReportInput
 ): Promise<ActionResult<DailyKidReport | null>> {
   try {
     // 1. Validate observation and load required report data
-    const existingObservation = await observationRepo.findByIdWithKid(
+    const context = await getValidatedDataByDcrObservationId(
       input.dcrObservationId
     );
-    if (!existingObservation) {
+    if (!context.success) return context;
+    const {
+      dcr,
+      observation,
+      dailyKidReport: existingKidReport,
+    } = context.data;
+
+    const isDailyKidReportSent = existingKidReport?.reportStatus === 'sent';
+    if (isDailyKidReportSent)
       return {
-        success: false as const,
-        message:
-          'Data observasi tidak ditemukan. Isi observasi terlebih dahulu',
-      };
-    }
-    const dcr = await dcrRepo.findByIdWithReportData(existingObservation.dcrId);
-    if (!dcr)
-      return {
-        success: false as const,
-        message: 'Data laporan harian tidak ditemukan',
+        success: false,
+        message: 'Laporan yang sudah terkirim tidak bisa dirubah lagi',
       };
 
     // 2. Generate default narrative from default report template
-    const defaultReportTemplate = (await templateRepo.findDefault())?.content;
-
-    const defaultNarrative = renderDailyReportTemplate({
-      template: defaultReportTemplate as string,
-      dcrData: { dcr, observation: existingObservation },
+    const defaultNarrativeResults = await generateDefaultNarrative({
+      dcr,
+      observation,
     });
+    if (!defaultNarrativeResults.success) return defaultNarrativeResults;
+    const defaultNarrative = defaultNarrativeResults.data;
 
     // 3. Skip saving if the narrative was not manually edited
     const hasDifferentFromDefault = input.narrative !== defaultNarrative;
-    const existingKidReport = await dailyKidReportRepo.findByDcrObservationId(
-      existingObservation.id
-    );
 
     if (!hasDifferentFromDefault) {
       if (existingKidReport) {
@@ -177,10 +230,69 @@ export async function saveReportNarration(
       data: null,
     };
   } catch (error) {
+    logger.error(
+      { err: error, dcrObservationId: input.dcrObservationId },
+      'Failed to save report narration'
+    );
     console.error('saveReportNarration:', error);
     return {
       success: false as const,
       message: 'Gagal menyimpan draft laporan',
+    };
+  }
+}
+
+export async function markReportAsSent({
+  dcrObservationId,
+}: {
+  dcrObservationId: string;
+}) {
+  try {
+    // 1. Validate observation and load required report data
+    const context = await getValidatedDataByDcrObservationId(dcrObservationId);
+    if (!context.success) return context;
+    const { dcr, observation, dailyKidReport } = context.data;
+    if (!dailyKidReport)
+      return {
+        success: false as const,
+        message:
+          'Tidak ada laporan sebelumnya. Buat observasi terlebih dahulu.',
+      };
+
+    const isDailyKidReportSent = dailyKidReport.reportStatus === 'sent';
+    if (isDailyKidReportSent)
+      return {
+        success: true as const,
+        message: 'Status laporan sudah terkirim sebelumnya',
+      };
+
+    // 2. Persist narrative and marking sent
+    const hasSavedNarrative =
+      dailyKidReport.reportStatus === 'edited' &&
+      Boolean(dailyKidReport.narrative?.trim());
+    const defaultNarrativeResults = await generateDefaultNarrative({
+      dcr,
+      observation,
+    });
+    if (!defaultNarrativeResults.success) return defaultNarrativeResults;
+    const defaultNarrative = defaultNarrativeResults.data;
+    await dailyKidReportRepo.update(dailyKidReport.id, {
+      narrative: hasSavedNarrative ? undefined : defaultNarrative,
+      reportStatus: 'sent',
+      sentAt: new Date(),
+    });
+    return {
+      success: true as const,
+      message: 'Status laporan menjadi terkirim',
+    };
+  } catch (error) {
+    logger.error(
+      { err: error, dcrObservationId },
+      'Failed to mark report as sent '
+    );
+    return {
+      success: false as const,
+      message: 'Gagal menandai laporan terkirim',
     };
   }
 }
