@@ -7,7 +7,12 @@ import {
   DailyReportTemplateRenderData,
   renderDailyReportTemplate,
 } from '@/utils/template';
-import { Copy01Icon, SquareArrowDown01Icon } from '@hugeicons/core-free-icons';
+import {
+  BadgeCheckIcon,
+  Copy01Icon,
+  SquareArrowDown01Icon,
+  Tick04Icon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
@@ -27,62 +32,72 @@ import { dailyKidReportAction } from '../actions';
 import {
   KID_APPETITE_LABELS,
   KID_MOOD_LABELS,
-  REPORT_STATUS,
   REPORT_STATUS_BADGE,
   REPORT_STATUS_LABELS,
-  ReportStatus,
 } from '../constants';
-import { DailyClassReport, DailyKidReport } from '../types';
+import {
+  DailyClassReportItem,
+  DailyKidReport,
+  DailyKidReportItem,
+} from '../types';
+
+interface DailyReportProps {
+  existingDCR: DailyClassReportItem;
+  unfilledKids: LeanKid[];
+  availableKids: LeanKid[];
+  defaultReportTemplate: string;
+  onSaveNarrativeSuccess: ({
+    dcrObservationId,
+    dailyKidReport,
+  }: {
+    dcrObservationId: string;
+    dailyKidReport: DailyKidReportItem | null;
+  }) => void;
+}
 
 export default function DailyReport({
   existingDCR,
   unfilledKids,
   availableKids,
   defaultReportTemplate,
-}: {
-  existingDCR: DailyClassReport;
-  unfilledKids: LeanKid[];
-  availableKids: LeanKid[];
-  defaultReportTemplate: string;
-}) {
+  onSaveNarrativeSuccess,
+}: DailyReportProps) {
   // Per-kid state: { [kidId]: { narrative, editedNarrative } }
-  const [kidReports, setKidReports] = useState<
-    Record<
-      string,
-      {
-        defaultNarrative: string;
-        existingNarrative: string | null;
-        editedNarrative: string;
-      }
-    >
-  >(() => {
-    const initial: Record<
-      string,
-      {
-        defaultNarrative: string;
-        existingNarrative: string | null;
-        editedNarrative: string;
-      }
-    > = {};
-    for (const obs of existingDCR?.observations ?? []) {
-      const defaultNarrative = renderDailyReportTemplate({
-        template: defaultReportTemplate,
-        dcrData: {
-          dcr: existingDCR,
-          observation: obs,
-        } satisfies DailyReportTemplateRenderData,
-      });
-      const existingNarrative = obs.kidReport?.narrative?.trim() ?? null;
-
-      initial[obs.kidId] = {
-        defaultNarrative,
-        existingNarrative,
-        editedNarrative: existingNarrative ?? defaultNarrative,
-      };
+  const kidReports: Record<
+    string,
+    {
+      defaultNarrative: string;
+      existingNarrative: string | null;
     }
+  > = {};
+  for (const obs of existingDCR?.observations ?? []) {
+    const defaultNarrative = renderDailyReportTemplate({
+      template: defaultReportTemplate,
+      dcrData: {
+        dcr: existingDCR,
+        observation: obs,
+      } satisfies DailyReportTemplateRenderData,
+    });
+
+    kidReports[obs.kidId] = {
+      defaultNarrative,
+      existingNarrative: obs.kidReport?.narrative ?? null,
+    };
+  }
+
+  const [expandedKid, setExpandedKid] = useState<string | null>(null);
+
+  const [editedNarratives, setEditedNarratives] = useState<
+    Record<string, string>
+  >(() => {
+    const initial: Record<string, string> = {};
+
+    for (const [kidId, report] of Object.entries(kidReports)) {
+      initial[kidId] = report.existingNarrative ?? report.defaultNarrative;
+    }
+
     return initial;
   });
-  const [expandedKid, setExpandedKid] = useState<string | null>(null);
 
   const handleEditNarrative = ({
     kidId,
@@ -91,13 +106,37 @@ export default function DailyReport({
     kidId: string;
     text: string;
   }) => {
-    setKidReports((prev) => ({
+    setEditedNarratives((prev) => ({
       ...prev,
-      [kidId]: {
-        ...prev[kidId],
-        editedNarrative: text,
-      },
+      [kidId]: text,
     }));
+  };
+
+  const handleSaveNarrative = async ({
+    dcrObservationId,
+    narrative,
+  }: Pick<DailyKidReport, 'dcrObservationId' | 'narrative'>) => {
+    try {
+      const result = await dailyKidReportAction.saveReportNarrative({
+        dcrObservationId,
+        narrative,
+        reportStatus: 'edited',
+      });
+
+      if (!result.success) {
+        toast.error(result.message);
+        return;
+      }
+
+      onSaveNarrativeSuccess({
+        dcrObservationId,
+        dailyKidReport: result.data,
+      });
+
+      toast.success(result.message);
+    } catch {
+      toast.error('Terjadi kesalahan. Coba beberapa saat lagi.');
+    }
   };
 
   const handleCopy = useCallback(async (text: string, kidName: string) => {
@@ -109,25 +148,22 @@ export default function DailyReport({
     }
   }, []);
 
-  const handleSaveNarrative = async ({
+  const handleMarkSentReport = async ({
     dcrObservationId,
-    narrative,
-  }: Pick<DailyKidReport, 'dcrObservationId' | 'narrative'>) => {
+  }: {
+    dcrObservationId: string;
+  }) => {
     try {
-      const result = await dailyKidReportAction.saveReportNarration({
+      const result = await dailyKidReportAction.markReportAsSent({
         dcrObservationId,
-        narrative,
-        reportStatus: 'edited',
       });
-
       if (!result.success) {
         toast.error(result.message);
         return;
       }
-
       toast.success(result.message);
     } catch {
-      toast.error('Terjadi kesalahan. Coba beberapa saat lagi.');
+      toast.error('Gagal merubah status laporan menjadi terkirim.');
     }
   };
 
@@ -143,12 +179,19 @@ export default function DailyReport({
           const obs = existingDCR?.observations?.find((o) => o.kidId === ak.id);
           const isPresent = obs?.attendance === 'present';
           const report = kidReports[ak.id];
+          const editedKidNarrative = editedNarratives[ak.id];
+          const isReportSent = obs?.kidReport?.reportStatus === 'sent';
           const baseline =
             report?.existingNarrative ?? report?.defaultNarrative ?? '';
-          const hasChanges = report
-            ? report.editedNarrative !== baseline
-            : false;
+          const hasChanges = editedKidNarrative !== baseline;
           const hasExistingReport = !!report?.existingNarrative;
+          const getReportStatusKey = () => {
+            if (isReportSent) return 'sent';
+            if (hasChanges) return 'draft'; // If user edited either existing or template, it's a draft
+            if (hasExistingReport) return 'edited'; // Has DB data, but no new edits right now
+            return 'template'; // No DB data, unmodified template
+          };
+          const statusKey = getReportStatusKey();
 
           if (!isPresent) return null;
 
@@ -163,20 +206,8 @@ export default function DailyReport({
                   <CollapsibleTrigger className="flex items-center justify-between w-full [&[data-panel-open]_.chevron]:-rotate-180">
                     <ItemTitle>{ak.name}</ItemTitle>
                     <div className="flex items-center gap-2">
-                      <Badge
-                        className={
-                          hasChanges
-                            ? REPORT_STATUS_BADGE.draft
-                            : hasExistingReport
-                              ? REPORT_STATUS_BADGE.edited
-                              : REPORT_STATUS_BADGE.template
-                        }
-                      >
-                        {hasChanges
-                          ? REPORT_STATUS_LABELS.draft
-                          : hasExistingReport
-                            ? REPORT_STATUS_LABELS.edited
-                            : REPORT_STATUS_LABELS.template}
+                      <Badge className={REPORT_STATUS_BADGE[statusKey]}>
+                        {REPORT_STATUS_LABELS[statusKey]}
                       </Badge>
                       <HugeiconsIcon
                         icon={SquareArrowDown01Icon}
@@ -222,11 +253,7 @@ export default function DailyReport({
                             Narasi Laporan
                           </label>
                           <Textarea
-                            value={
-                              report?.editedNarrative ??
-                              report?.existingNarrative ??
-                              ''
-                            }
+                            value={editedKidNarrative}
                             onChange={(e) =>
                               handleEditNarrative({
                                 kidId: ak.id,
@@ -242,10 +269,12 @@ export default function DailyReport({
                               size="sm"
                               disabled={!hasChanges}
                               onClick={() => {
+                                console.log('before:', report);
                                 handleSaveNarrative({
                                   dcrObservationId: obs.id,
-                                  narrative: report?.editedNarrative ?? '',
+                                  narrative: editedKidNarrative,
                                 });
+                                console.log('after:', report);
                               }}
                             >
                               Simpan
@@ -254,11 +283,7 @@ export default function DailyReport({
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                handleCopy(
-                                  report.editedNarrative ??
-                                    report.existingNarrative,
-                                  ak.name
-                                )
+                                handleCopy(editedKidNarrative, ak.name)
                               }
                             >
                               <HugeiconsIcon
@@ -266,6 +291,19 @@ export default function DailyReport({
                                 data-icon="inline-start"
                               />
                               Salin
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              size="sm"
+                              disabled={isReportSent}
+                            >
+                              <HugeiconsIcon
+                                icon={
+                                  isReportSent ? Tick04Icon : BadgeCheckIcon
+                                }
+                                data-icon="inline-start"
+                              />
+                              Terkirim
                             </Button>
                           </div>
                         </div>

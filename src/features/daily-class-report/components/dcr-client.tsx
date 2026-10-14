@@ -1,4 +1,6 @@
 'use client';
+import { useState } from 'react';
+
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Theme } from '@/features/theme/types';
@@ -16,7 +18,12 @@ import ContentTabs, {
 } from '@/components/shared/content-tabs';
 import { EmptyState } from '@/components/shared/empty-state';
 
-import { DCRObservation, DailyClassReport, ReportTemplate } from '../types';
+import {
+  DailyClassReportItem,
+  DailyClassReportList,
+  DailyKidReportItem,
+  ReportTemplate,
+} from '../types';
 import { DailyClassReportForm } from './form';
 import DCRHistory from './history';
 import DCRKidObservation from './observation';
@@ -49,19 +56,39 @@ export default function DailyClassReportClient({
   themes: Theme[];
   availableKids: LeanKid[];
   defaultClassSessionId?: string;
-  existingDCRsResults: ActionResult<DailyClassReport[]>;
+  existingDCRsResults: ActionResult<DailyClassReportList>;
   defaultReportTemplate: ReportTemplate['content'];
 }) {
   const currentDate = getLocalDateString();
-  const currentDCR = existingDCRsResults.data?.find(
-    (dcr) => dcr.date === currentDate
-  );
-  const existingObservations = existingDCRsResults.data?.find(
-    (dcr) => dcr.date === currentDate
-  )?.observations;
+  const [currentDcr, setCurrentDcr] = useState<
+    DailyClassReportItem | undefined
+  >(existingDCRsResults.data?.find((dcr) => dcr.date === currentDate));
+  const existingObservations = currentDcr?.observations;
   const unfilledKids = availableKids.filter(
     (kid) => !existingObservations?.some((obs) => obs.kidId === kid.id)
   );
+
+  const handleSaveNarrativeSuccess = ({
+    dcrObservationId,
+    dailyKidReport,
+  }: {
+    dcrObservationId: string;
+    dailyKidReport: DailyKidReportItem | null;
+  }) => {
+    setCurrentDcr((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        observations: prev.observations.map((obs) =>
+          obs.id === dcrObservationId
+            ? { ...obs, kidReport: dailyKidReport }
+            : obs
+        ),
+      };
+    });
+  };
+
   const tabs: ContentTabsProps['tabs'] = [
     {
       triggerValue: 'input',
@@ -74,12 +101,12 @@ export default function DailyClassReportClient({
             classSessions={classSessions}
             themes={themes}
             defaultClassSessionId={defaultClassSessionId}
-            existingDCR={currentDCR}
+            existingDCR={currentDcr}
           />
           {defaultClassSessionId ? (
             <DCRKidObservation
               unfilledKids={unfilledKids}
-              existingObservations={existingObservations as DCRObservation[]}
+              existingObservations={existingObservations ?? []}
             />
           ) : (
             <EmptyState
@@ -98,12 +125,17 @@ export default function DailyClassReportClient({
       children: (
         <div>
           <DateInformation />
-          <DailyReport
-            existingDCR={currentDCR as DailyClassReport}
-            unfilledKids={unfilledKids}
-            availableKids={availableKids}
-            defaultReportTemplate={defaultReportTemplate}
-          />
+          {currentDcr ? (
+            <DailyReport
+              existingDCR={currentDcr}
+              unfilledKids={unfilledKids}
+              availableKids={availableKids}
+              defaultReportTemplate={defaultReportTemplate}
+              onSaveNarrativeSuccess={handleSaveNarrativeSuccess}
+            />
+          ) : (
+            <EmptyState title="Belum ada data observasi kelas dan anak-anak" />
+          )}
         </div>
       ),
       maxWidthPx: '900px',
@@ -119,6 +151,7 @@ export default function DailyClassReportClient({
 
   return (
     <div className="py-2 px-2">
+      {/* <div>{JSON.stringify(currentDcr?.observations)}</div> */}
       <ContentTabs tabs={tabs} fullWidth />
     </div>
   );

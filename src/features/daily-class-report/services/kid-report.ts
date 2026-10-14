@@ -16,7 +16,7 @@ import {
 } from '../constants';
 import { dailyKidReportRepo, dcrRepo, observationRepo } from '../repositories';
 import * as templateRepo from '../repositories/report-template';
-import { DailyKidReport } from '../types';
+import { DailyKidReportItem } from '../types';
 import { DailyKidReportInput } from '../validation';
 
 // Types
@@ -163,9 +163,9 @@ export async function getDailyKidReportsByDcrId(
 
 // Upsert
 
-export async function saveReportNarration(
+export async function saveReportNarrative(
   input: DailyKidReportInput
-): Promise<ActionResult<DailyKidReport | null>> {
+): Promise<ActionResult<DailyKidReportItem | null>> {
   try {
     // 1. Validate observation and load required report data
     const context = await getValidatedDataByDcrObservationId(
@@ -209,7 +209,7 @@ export async function saveReportNarration(
 
     //4. Save edited report data
     if (!existingKidReport) {
-      await dailyKidReportRepo.insert({
+      const newReport = await dailyKidReportRepo.insert({
         dcrObservationId: input.dcrObservationId,
         narrative: input.narrative,
         reportStatus: 'edited',
@@ -217,17 +217,20 @@ export async function saveReportNarration(
       return {
         success: true as const,
         message: 'Narasi laporan berhasi disimpan',
-        data: null,
+        data: newReport,
       };
     }
-    await dailyKidReportRepo.update(existingKidReport.id, {
-      narrative: input.narrative,
-      reportStatus: 'edited',
-    });
+    const updatedReport = await dailyKidReportRepo.update(
+      existingKidReport.id,
+      {
+        narrative: input.narrative,
+        reportStatus: 'edited',
+      }
+    );
     return {
       success: true as const,
       message: 'Narasi laporan berhasil diperbarui',
-      data: null,
+      data: updatedReport,
     };
   } catch (error) {
     logger.error(

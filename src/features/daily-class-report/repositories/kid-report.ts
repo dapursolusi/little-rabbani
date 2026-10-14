@@ -7,10 +7,18 @@ import { DailyKidReportInput } from '../validation';
 // Insert
 
 export async function insert(input: DailyKidReportInput) {
-  await db.insert(dailyKidReport).values(input);
+  const [inserted] = await db.insert(dailyKidReport).values(input).returning({
+    id: dailyKidReport.id,
+    dcrObservationId: dailyKidReport.dcrObservationId,
+    narrative: dailyKidReport.narrative,
+    reportStatus: dailyKidReport.reportStatus,
+    sentAt: dailyKidReport.sentAt,
+  });
+  return inserted;
 }
 
 // Find
+
 export async function findByDcrObservationId(id: string) {
   return db.query.dailyKidReport.findFirst({
     where: eq(dailyKidReport.dcrObservationId, id),
@@ -24,7 +32,18 @@ export async function update(
   id: string,
   input: Pick<DailyKidReportInput, 'narrative' | 'reportStatus' | 'sentAt'>
 ) {
-  await db.update(dailyKidReport).set(input).where(eq(dailyKidReport.id, id));
+  const [updated] = await db
+    .update(dailyKidReport)
+    .set(input)
+    .where(eq(dailyKidReport.id, id))
+    .returning({
+      id: dailyKidReport.id,
+      dcrObservationId: dailyKidReport.dcrObservationId,
+      narrative: dailyKidReport.narrative,
+      reportStatus: dailyKidReport.reportStatus,
+      sentAt: dailyKidReport.sentAt,
+    });
+  return updated;
 }
 
 // Remove

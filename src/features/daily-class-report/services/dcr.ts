@@ -3,7 +3,7 @@ import { isWithinEditWindow } from '@/utils/date';
 import { getLocalDateString } from '@/utils/date-local';
 
 import { dcrRepo } from '../repositories';
-import { DailyClassReport } from '../types';
+import { DailyClassReport, DailyClassReportList } from '../types';
 import { DailyClassReportInput } from '../validation';
 
 export async function getOrCreateDCR({
@@ -80,7 +80,7 @@ export async function getDCRByDate(
 export async function getDCRs(input: {
   classSessionId?: string;
   date?: { year?: number; month?: number };
-}): Promise<ActionResult<DailyClassReport[]>> {
+}): Promise<ActionResult<DailyClassReportList>> {
   try {
     const defaultYear = Number(getLocalDateString().slice(0, 4));
     const dcrs = await dcrRepo.findMany({
@@ -91,7 +91,7 @@ export async function getDCRs(input: {
     });
     return {
       success: true as const,
-      data: dcrs as DailyClassReport[],
+      data: dcrs,
     };
   } catch (error) {
     console.error('getDCRs :', error);

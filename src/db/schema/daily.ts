@@ -112,10 +112,7 @@ export const dcrObservationRelationship = relations(
       fields: [dcrObservation.kidId],
       references: [kid.id],
     }),
-    kidReport: one(dailyKidReport, {
-      fields: [dcrObservation.id],
-      references: [dailyKidReport.dcrObservationId],
-    }),
+    kidReport: one(dailyKidReport),
   })
 );
 

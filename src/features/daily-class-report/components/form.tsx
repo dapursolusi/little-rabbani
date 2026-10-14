@@ -12,7 +12,7 @@ import {
   dailyClassReportFormFields,
   dcrObservationFormFields,
 } from '../fields';
-import { DCRObservation, DailyClassReport } from '../types';
+import { DailyClassReportItem, DcrObservationList } from '../types';
 import { dailyClassReportSchema, dcrObservationSchema } from '../validation';
 
 export function DailyClassReportForm({
@@ -24,7 +24,7 @@ export function DailyClassReportForm({
   classSessions: ClassSession[];
   themes: Theme[];
   defaultClassSessionId?: string;
-  existingDCR?: DailyClassReport;
+  existingDCR?: DailyClassReportItem;
 }) {
   const router = useRouter();
   const pushParam = (key: 'classSessionId', value: string | null) => {
@@ -67,7 +67,7 @@ export function DCRObservationForm({
   disabled,
 }: {
   kid: LeanKid;
-  observation?: DCRObservation;
+  observation?: DcrObservationList[number];
   isEditMode?: boolean;
   disabled?: boolean;
 }) {

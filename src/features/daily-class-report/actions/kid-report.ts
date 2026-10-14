@@ -1,5 +1,7 @@
 'use server';
 
+import z from 'zod';
+
 import { parseInput } from '@/lib/actions/parse-input';
 import { uuidSchema } from '@/lib/validation/common';
 
@@ -26,8 +28,8 @@ export async function getDailyKidReportsByDcrId(input: unknown) {
   return dailyKidReportService.getDailyKidReportsByDcrId(parsed.data);
 }
 
-export async function saveReportNarration(input: unknown) {
-  const actionName = saveReportNarration.name;
+export async function saveReportNarrative(input: unknown) {
+  const actionName = saveReportNarrative.name;
 
   const parsed = parseInput({
     input,
@@ -36,17 +38,17 @@ export async function saveReportNarration(input: unknown) {
     withError: true,
   });
   if (!parsed.success) return parsed;
-  return dailyKidReportService.saveReportNarration(parsed.data);
+  return dailyKidReportService.saveReportNarrative(parsed.data);
 }
 
 export async function markReportAsSent(input: unknown) {
   const parsed = parseInput({
     input,
-    schema: uuidSchema,
+    schema: z.object({ dcrObservationId: uuidSchema }),
     fallbackError: 'ID Laporan harian tidak valid',
   });
   if (!parsed.success) return parsed;
   return dailyKidReportService.markReportAsSent({
-    dcrObservationId: parsed.data,
+    dcrObservationId: parsed.data.dcrObservationId,
   });
 }
