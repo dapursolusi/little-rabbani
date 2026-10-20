@@ -3,7 +3,7 @@ import { isWithinEditWindow } from '@/utils/date';
 import { getLocalDateString } from '@/utils/date-local';
 
 import { dcrRepo } from '../repositories';
-import { DailyClassReport, DailyClassReportList } from '../types';
+import { DailyClassReportList, DailyClassReportRecord } from '../types';
 import { DailyClassReportInput } from '../validation';
 
 export async function getOrCreateDCR({
@@ -21,11 +21,13 @@ export async function getOrCreateDCR({
     return { success: true as const, data: dcr };
   } catch (error) {
     console.error('checkExistingDCR', error);
-    return { success: false as const, error: 'Gagal memuat laporan harian' };
+    return { success: false as const, message: 'Gagal memuat laporan harian' };
   }
 }
 
-export async function saveDCR(input: DailyClassReportInput) {
+export async function saveDCR(
+  input: DailyClassReportInput
+): Promise<ActionResult<DailyClassReportRecord>> {
   try {
     if (input.date && !isWithinEditWindow(input.date)) {
       return {
@@ -40,7 +42,7 @@ export async function saveDCR(input: DailyClassReportInput) {
 
     const updated = await dcrRepo.update({
       input,
-      dcrId: existingDCRResults.data?.id as string,
+      dcrId: existingDCRResults.data?.id ?? '',
     });
     return {
       success: true as const,
@@ -49,7 +51,10 @@ export async function saveDCR(input: DailyClassReportInput) {
     };
   } catch (error) {
     console.error('saveDCR: ', error);
-    return { success: false as const, error: 'Gagal menyimpan laporan harian' };
+    return {
+      success: false as const,
+      message: 'Gagal menyimpan laporan harian',
+    };
   }
 }
 
@@ -63,7 +68,7 @@ export async function getDCRByDate(
     if (!dcr) {
       return {
         success: false as const,
-        error: `Laporan harian tanggal ${date} tidak ditemukan / belum dibuat`,
+        message: `Laporan harian tanggal ${date} tidak ditemukan / belum dibuat`,
       };
     }
 
@@ -72,7 +77,7 @@ export async function getDCRByDate(
     console.error('getDCRByDate', error);
     return {
       success: false as const,
-      error: 'Gagal memuat data laporan harian',
+      message: 'Gagal memuat data laporan harian',
     };
   }
 }

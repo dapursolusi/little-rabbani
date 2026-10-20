@@ -3,6 +3,7 @@ import { dailyClassReport } from '@/db/schema/daily';
 import { subTheme } from '@/db/schema/theme';
 import { and, eq, gte, lt } from 'drizzle-orm';
 
+import { DcrWithKidObservation } from '../types';
 import { DailyClassReportInput } from '../validation';
 
 export async function insert(input: DailyClassReportInput) {
@@ -34,16 +35,16 @@ export async function findDCR({
 }: {
   date?: string;
   classSessionId?: string;
-}) {
+}): Promise<DcrWithKidObservation | undefined> {
   const filters = [
     date ? eq(dailyClassReport.date, date) : undefined,
     classSessionId
       ? eq(dailyClassReport.classSessionId, classSessionId)
       : undefined,
   ].filter((f) => f !== undefined);
-  if (filters.length === 0) return null;
+  if (filters.length === 0) return undefined;
 
-  return await db.query.dailyClassReport.findFirst({
+  return db.query.dailyClassReport.findFirst({
     where: and(...filters),
     with: {
       observations: {

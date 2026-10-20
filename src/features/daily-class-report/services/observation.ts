@@ -4,7 +4,11 @@ import { isWithinEditWindow } from '@/utils/date';
 import { dcrService } from '.';
 import * as kidService from '../../kid/services';
 import { dcrRepo, observationRepo } from '../repositories';
-import { DCRObservation } from '../types';
+import {
+  DCRObservation,
+  DcrObservationItem,
+  DcrObservationList,
+} from '../types';
 import { DCRObservationInput } from '../validation';
 
 export async function createKidObservation({
@@ -13,7 +17,7 @@ export async function createKidObservation({
 }: {
   input: DCRObservationInput;
   classSessionId: string;
-}): Promise<ActionResult<DCRObservation>> {
+}): Promise<ActionResult<DcrObservationItem>> {
   try {
     if (!classSessionId)
       return {
@@ -45,7 +49,8 @@ export async function createKidObservation({
       ...input,
       dcrId: dcr.data?.id,
     });
-    return { success: true as const, data: kidObservation as DCRObservation };
+
+    return { success: true as const, data: kidObservation };
   } catch (error) {
     console.error('createKidObservation', error);
     return {
@@ -57,7 +62,7 @@ export async function createKidObservation({
 
 export async function updateKidObservation(
   input: DCRObservationInput
-): Promise<ActionResult<DCRObservation>> {
+): Promise<ActionResult<DcrObservationItem>> {
   try {
     const existing = await observationRepo.findObservation({
       dcrId: input.dcrId,
@@ -83,7 +88,7 @@ export async function updateKidObservation(
     return {
       success: true as const,
       message: 'Berhasil mengupdate observasi',
-      data: updated as DCRObservation,
+      data: updated,
     };
   } catch (error) {
     console.error('updateKidObservation: ', error);
@@ -96,10 +101,10 @@ export async function updateKidObservation(
 
 export async function getDCRObservationsByDcrId(
   dcrId: string
-): Promise<ActionResult<DCRObservation[]>> {
+): Promise<ActionResult<DcrObservationList>> {
   try {
     const observations = await observationRepo.findMany({ dcrId });
-    return { success: true as const, data: observations as DCRObservation[] };
+    return { success: true as const, data: observations as DcrObservationList };
   } catch (error) {
     console.error('getDCRObservationsByDcrId', error);
     return {

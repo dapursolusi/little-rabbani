@@ -249,44 +249,60 @@ export async function markReportAsSent({
   dcrObservationId,
 }: {
   dcrObservationId: string;
-}) {
+}): Promise<ActionResult<DailyKidReportItem | null>> {
   try {
     // 1. Validate observation and load required report data
     const context = await getValidatedDataByDcrObservationId(dcrObservationId);
     if (!context.success) return context;
     const { dcr, observation, dailyKidReport } = context.data;
-    if (!dailyKidReport)
-      return {
-        success: false as const,
-        message:
-          'Tidak ada laporan sebelumnya. Buat observasi terlebih dahulu.',
-      };
 
-    const isDailyKidReportSent = dailyKidReport.reportStatus === 'sent';
-    if (isDailyKidReportSent)
-      return {
-        success: true as const,
-        message: 'Status laporan sudah terkirim sebelumnya',
-      };
-
-    // 2. Persist narrative and marking sent
-    const hasSavedNarrative =
-      dailyKidReport.reportStatus === 'edited' &&
-      Boolean(dailyKidReport.narrative?.trim());
+    // 2. Generate default narrative
     const defaultNarrativeResults = await generateDefaultNarrative({
       dcr,
       observation,
     });
     if (!defaultNarrativeResults.success) return defaultNarrativeResults;
     const defaultNarrative = defaultNarrativeResults.data;
-    await dailyKidReportRepo.update(dailyKidReport.id, {
-      narrative: hasSavedNarrative ? undefined : defaultNarrative,
+
+    // 3a. Persist narrative if no persisted report yet
+    if (!dailyKidReport) {
+      const inserted = await dailyKidReportRepo.insert({
+        dcrObservationId,
+        narrative: defaultNarrative,
+        reportStatus: 'sent',
+        sentAt: new Date(),
+      });
+
+      return {
+        success: true as const,
+        message: 'Laporan berhasil disimpan dengan status terkirim',
+        data: inserted,
+      };
+    }
+
+    // 3b. Persist narrative if there is persisted report
+    const isDailyKidReportSent = dailyKidReport.reportStatus === 'sent';
+    if (isDailyKidReportSent)
+      return {
+        success: true as const,
+        message: 'Status laporan sudah terkirim sebelumnya',
+        data: dailyKidReport,
+      };
+
+    // 2. Persist narrative and marking sent
+    const hasPersistedNarrative =
+      dailyKidReport.reportStatus === 'edited' &&
+      Boolean(dailyKidReport.narrative?.trim());
+
+    const updated = await dailyKidReportRepo.update(dailyKidReport.id, {
+      narrative: hasPersistedNarrative ? undefined : defaultNarrative,
       reportStatus: 'sent',
       sentAt: new Date(),
     });
     return {
       success: true as const,
       message: 'Status laporan menjadi terkirim',
+      data: updated,
     };
   } catch (error) {
     logger.error(
