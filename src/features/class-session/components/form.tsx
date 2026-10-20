@@ -20,8 +20,8 @@ export default function ClassSessionForm({
         startTime: '',
         endTime: '',
       }}
-      onSuccess={onSuccess}
-      onSubmit={async (data) => {
+      onSuccessAction={onSuccess}
+      onSubmitAction={async (data) => {
         return createClassSession(data);
       }}
     />

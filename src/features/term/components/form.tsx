@@ -16,10 +16,10 @@ export default function TermForm({ onSuccess }: { onSuccess?: () => void }) {
         startDate: new Date(),
         endDate: new Date(),
       }}
-      onSuccess={onSuccess}
-      onSubmit={async (data) => {
+      onSubmitAction={async (data) => {
         return createTerm(data);
       }}
+      onSuccessAction={onSuccess}
     />
   );
 }

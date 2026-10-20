@@ -69,8 +69,8 @@ export default function KidForm({
       }
       meta={{ label: 'Data murid' }}
       isEditMode={isEdit}
-      onSuccess={() => route.push('/dashboard/kid')}
-      onSubmit={async (data) => {
+      onSuccessAction={() => route.push('/dashboard/kid')}
+      onSubmitAction={async (data) => {
         const result =
           data.guardianMode === 'existing'
             ? isEdit

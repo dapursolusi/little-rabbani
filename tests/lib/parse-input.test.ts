@@ -33,7 +33,7 @@ describe('parseInput', () => {
     if (!r.success) {
       expect(r.message).toBe('Fallback');
       expect(r.error?.type).toBe('validation');
-      expect(r.error?.fieldErrors.name).toEqual(['Nama wajib diisi']);
+      expect(r.error?.fieldErrors?.name).toEqual(['Nama wajib diisi']);
     }
   });
 

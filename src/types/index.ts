@@ -2,8 +2,11 @@ import { ExtractTablesWithRelations } from 'drizzle-orm';
 import { NeonQueryResultHKT } from 'drizzle-orm/neon-serverless';
 import { PgTransaction } from 'drizzle-orm/pg-core';
 
-export interface BaseDTOResponse {
+export interface BaseDTOResponse extends DbTableAuditFields {
   id: string;
+}
+
+export interface DbTableAuditFields {
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;

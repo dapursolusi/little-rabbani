@@ -32,10 +32,10 @@ export default function KidEnrollmentForm({
         classSessionId: classSessions[0]?.id,
         kids: [],
       }}
-      onSubmit={(data) => {
+      onSubmitAction={(data) => {
         return kidEnrollmentActions.createKidsEnrollments(data);
       }}
-      onSuccess={() => router.push('/dashboard/registration')}
+      onSuccessAction={() => router.push('/dashboard/registration')}
     />
   );
 }

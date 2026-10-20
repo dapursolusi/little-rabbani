@@ -85,7 +85,7 @@ export function RowActionsDialog<T>({
               initialData={edit.initialData ?? {}}
               isEditMode
               meta={{ label: title }}
-              onSubmit={async (data) => {
+              onSubmitAction={async (data) => {
                 const result = await edit.action(
                   id,
                   data as Record<string, unknown>

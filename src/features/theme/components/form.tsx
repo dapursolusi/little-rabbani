@@ -13,10 +13,10 @@ export function ThemeForm({ onSuccess }: { onSuccess?: () => void }) {
       initialData={{
         name: '',
       }}
-      onSuccess={onSuccess}
-      onSubmit={async (data) => {
+      onSubmitAction={async (data) => {
         return createTheme(data);
       }}
+      onSuccessAction={onSuccess}
     />
   );
 }
@@ -36,10 +36,10 @@ export function SubThemeForm({
         name: '',
         themeId: '',
       }}
-      onSuccess={onSuccess}
-      onSubmit={async (data) => {
+      onSubmitAction={async (data) => {
         return createSubTheme(data);
       }}
+      onSuccessAction={onSuccess}
     />
   );
 }
