@@ -324,7 +324,11 @@ export async function searchGuardians(search: string) {
         secondContactPhone: row.secondContactPhone,
         kids: row.kidNames
           .filter((n): n is string => typeof n === 'string' && n.length > 0)
-          .map((kidName, i) => ({ id: `${row.id}-${i}`, name: kidName })),
+          .map((kidName, i) => ({
+            id: `${row.id}-${i}`,
+            name: kidName,
+            nickName: kidName,
+          })),
       }));
       return { success: true as const, data };
     } catch (error) {

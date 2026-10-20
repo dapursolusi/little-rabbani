@@ -25,7 +25,7 @@ export async function findMany({
         : undefined
     ),
     with: {
-      kid: { columns: { id: true, name: true } },
+      kid: { columns: { id: true, name: true, nickName: true } },
       classSession: { columns: { name: true } },
       term: { columns: { name: true } },
     },

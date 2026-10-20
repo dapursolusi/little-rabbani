@@ -105,7 +105,11 @@ export default function KidEnrollmentClient({
       if (kidData) {
         setAvailableKids((current) => [
           ...current,
-          { id: kidData.kidId, name: kidData.kid.name },
+          {
+            id: kidData.kidId,
+            name: kidData.kid.name,
+            nickName: kidData.kid.nickName,
+          },
         ]);
       }
       setCreated((prev) => prev.filter((k) => k.kidId !== kidId));
@@ -214,7 +218,7 @@ export default function KidEnrollmentClient({
           createdAt: new Date(),
           updatedAt: new Date(),
           deletedAt: null,
-          kid: { id: kid.id, name: kid.name },
+          kid: { id: kid.id, name: kid.name, nickName: kid.nickName },
           classSession: { name: '' },
           term: { name: '' },
         }));
@@ -387,6 +391,7 @@ export default function KidEnrollmentClient({
                         kids={availableKids.map((kid) => ({
                           id: kid.id,
                           name: kid.name,
+                          nickName: kid.nickName,
                         }))}
                       />
                     }

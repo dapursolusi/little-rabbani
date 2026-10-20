@@ -140,6 +140,7 @@ export default function UpdateEnrolledKids({
                       return {
                         id: kid.id,
                         name: kid.name,
+                        nickName: kid.nickName,
                       };
                     })}
                   />
