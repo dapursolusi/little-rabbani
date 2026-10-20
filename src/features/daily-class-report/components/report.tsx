@@ -12,6 +12,7 @@ import {
   Copy01Icon,
   SquareArrowDown01Icon,
   Tick04Icon,
+  TickDouble03Icon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
@@ -27,6 +28,11 @@ import {
 } from '@/components/ui/collapsible';
 import { Item, ItemContent, ItemTitle } from '@/components/ui/item';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import { dailyKidReportAction } from '../actions';
 import {
@@ -53,6 +59,13 @@ interface DailyReportProps {
     dcrObservationId: string;
     dailyKidReport: DailyKidReportItem | null;
   }) => void;
+  onMarkSentReportSuccess: ({
+    dcrObservationId,
+    dailyKidReport,
+  }: {
+    dcrObservationId: string;
+    dailyKidReport: DailyKidReportItem | null;
+  }) => void;
 }
 
 export default function DailyReport({
@@ -61,6 +74,7 @@ export default function DailyReport({
   availableKids,
   defaultReportTemplate,
   onSaveNarrativeSuccess,
+  onMarkSentReportSuccess,
 }: DailyReportProps) {
   // Per-kid state: { [kidId]: { narrative, editedNarrative } }
   const kidReports: Record<
@@ -161,6 +175,11 @@ export default function DailyReport({
         toast.error(result.message);
         return;
       }
+      onMarkSentReportSuccess({
+        dcrObservationId,
+        dailyKidReport: result.data,
+      });
+
       toast.success(result.message);
     } catch {
       toast.error('Gagal merubah status laporan menjadi terkirim.');
@@ -260,25 +279,76 @@ export default function DailyReport({
                                 text: e.target.value,
                               })
                             }
+                            disabled={isReportSent}
                             rows={8}
                             className="w-full text-sm"
                           />
-                          <div className="flex gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              disabled={!hasChanges}
-                              onClick={() => {
-                                console.log('before:', report);
-                                handleSaveNarrative({
-                                  dcrObservationId: obs.id,
-                                  narrative: editedKidNarrative,
-                                });
-                                console.log('after:', report);
-                              }}
-                            >
-                              Simpan
-                            </Button>
+                          <div className="flex items-center justify-between">
+                            <div className="flex gap-2 items-center">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={!hasChanges}
+                                onClick={() => {
+                                  handleSaveNarrative({
+                                    dcrObservationId: obs.id,
+                                    narrative: editedKidNarrative,
+                                  });
+                                }}
+                              >
+                                Simpan
+                              </Button>
+                              <Tooltip>
+                                <TooltipTrigger
+                                  render={
+                                    isReportSent ? (
+                                      <Badge>
+                                        {' '}
+                                        <HugeiconsIcon
+                                          icon={TickDouble03Icon}
+                                          size={36}
+                                          data-icon="inline-start"
+                                        />
+                                        Terkirim
+                                      </Badge>
+                                    ) : (
+                                      <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        disabled={isReportSent}
+                                        onClick={() => {
+                                          handleMarkSentReport({
+                                            dcrObservationId: obs.id,
+                                          });
+                                        }}
+                                      >
+                                        <HugeiconsIcon
+                                          icon={
+                                            isReportSent
+                                              ? Tick04Icon
+                                              : BadgeCheckIcon
+                                          }
+                                          data-icon="inline-start"
+                                        />
+                                        {'Tandai Terkirim'}
+                                      </Button>
+                                    )
+                                  }
+                                />
+                                {isReportSent && obs.kidReport?.sentAt && (
+                                  <TooltipContent>{`Terkirim: ${new Intl.DateTimeFormat(
+                                    'id-ID',
+                                    {
+                                      timeZone: 'Asia/Jakarta',
+                                      dateStyle: 'medium',
+                                      timeStyle: 'short',
+                                    }
+                                  ).format(
+                                    obs.kidReport?.sentAt
+                                  )}`}</TooltipContent>
+                                )}
+                              </Tooltip>
+                            </div>
                             <Button
                               variant="outline"
                               size="sm"
@@ -291,19 +361,6 @@ export default function DailyReport({
                                 data-icon="inline-start"
                               />
                               Salin
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              size="sm"
-                              disabled={isReportSent}
-                            >
-                              <HugeiconsIcon
-                                icon={
-                                  isReportSent ? Tick04Icon : BadgeCheckIcon
-                                }
-                                data-icon="inline-start"
-                              />
-                              Terkirim
                             </Button>
                           </div>
                         </div>

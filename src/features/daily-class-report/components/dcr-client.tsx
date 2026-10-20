@@ -22,6 +22,7 @@ import {
   DailyClassReportItem,
   DailyClassReportList,
   DailyKidReportItem,
+  DcrObservationItem,
   ReportTemplate,
 } from '../types';
 import { DailyClassReportForm } from './form';
@@ -89,6 +90,38 @@ export default function DailyClassReportClient({
     });
   };
 
+  const handleMarkSentReportSuccess = ({
+    dcrObservationId,
+    dailyKidReport,
+  }: {
+    dcrObservationId: string;
+    dailyKidReport: DailyKidReportItem | null;
+  }) => {
+    setCurrentDcr((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        observations: prev.observations.map((obs) =>
+          obs.id === dcrObservationId
+            ? { ...obs, kidReport: dailyKidReport }
+            : obs
+        ),
+      };
+    });
+  };
+
+  const handleObservationFormSuccess = (result: DcrObservationItem) => {
+    setCurrentDcr((prev) => {
+      if (!prev) return prev;
+
+      return {
+        ...prev,
+        observations: [...prev.observations, result],
+      };
+    });
+  };
+
   const tabs: ContentTabsProps['tabs'] = [
     {
       triggerValue: 'input',
@@ -107,6 +140,7 @@ export default function DailyClassReportClient({
             <DCRKidObservation
               unfilledKids={unfilledKids}
               existingObservations={existingObservations ?? []}
+              onObservationFormSuccess={handleObservationFormSuccess}
             />
           ) : (
             <EmptyState
@@ -132,6 +166,7 @@ export default function DailyClassReportClient({
               availableKids={availableKids}
               defaultReportTemplate={defaultReportTemplate}
               onSaveNarrativeSuccess={handleSaveNarrativeSuccess}
+              onMarkSentReportSuccess={handleMarkSentReportSuccess}
             />
           ) : (
             <EmptyState title="Belum ada data observasi kelas dan anak-anak" />
@@ -151,7 +186,6 @@ export default function DailyClassReportClient({
 
   return (
     <div className="py-2 px-2">
-      {/* <div>{JSON.stringify(currentDcr?.observations)}</div> */}
       <ContentTabs tabs={tabs} fullWidth />
     </div>
   );

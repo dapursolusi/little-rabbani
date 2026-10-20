@@ -12,7 +12,11 @@ import {
   dailyClassReportFormFields,
   dcrObservationFormFields,
 } from '../fields';
-import { DailyClassReportItem, DcrObservationList } from '../types';
+import {
+  DailyClassReportItem,
+  DcrObservationItem,
+  DcrObservationList,
+} from '../types';
 import { dailyClassReportSchema, dcrObservationSchema } from '../validation';
 
 export function DailyClassReportForm({
@@ -52,7 +56,7 @@ export function DailyClassReportForm({
           ? (existingDCR?.description ?? '')
           : '',
       }}
-      onSubmit={async (data) => {
+      onSubmitAction={async (data) => {
         return await dcrAction.saveDCR(data);
       }}
       isEditMode
@@ -65,11 +69,13 @@ export function DCRObservationForm({
   observation,
   isEditMode,
   disabled,
+  onFormSuccess,
 }: {
   kid: LeanKid;
   observation?: DcrObservationList[number];
   isEditMode?: boolean;
   disabled?: boolean;
+  onFormSuccess?: (result: DcrObservationItem) => void;
 }) {
   return (
     <FormFieldGenerator
@@ -84,8 +90,10 @@ export function DCRObservationForm({
         appetite: isEditMode ? (observation?.appetite ?? undefined) : undefined,
         notes: isEditMode ? (observation?.notes ?? undefined) : undefined,
       }}
-      onSubmit={async (data) => {
-        if (disabled) return;
+      onSubmitAction={async (data) => {
+        if (disabled) {
+          return;
+        }
 
         if (isEditMode) {
           return await observationAction.updateKidObservation(data);
@@ -105,6 +113,7 @@ export function DCRObservationForm({
       meta={{ label: 'Observasi Anak' }}
       isEditMode={isEditMode}
       disabled={disabled}
+      onSuccessAction={onFormSuccess}
     />
   );
 }

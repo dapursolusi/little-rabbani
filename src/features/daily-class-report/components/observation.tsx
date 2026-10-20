@@ -25,7 +25,7 @@ import {
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
 } from '../constants';
-import { DcrObservationList } from '../types';
+import { DcrObservationItem, DcrObservationList } from '../types';
 import { DCRObservationForm } from './form';
 
 export function KidObservationModal({
@@ -34,12 +34,14 @@ export function KidObservationModal({
   isEditMode,
   disabled,
   triggerRender,
+  onFormSuccess,
 }: {
   kid: LeanKid;
   observation?: DcrObservationList[number];
   isEditMode?: boolean;
   disabled?: boolean;
   triggerRender?: ReactNode;
+  onFormSuccess?: (result: DcrObservationItem) => void;
 }) {
   return (
     <Modal
@@ -61,6 +63,7 @@ export function KidObservationModal({
             observation={observation}
             isEditMode={isEditMode}
             disabled={disabled}
+            onFormSuccess={onFormSuccess}
           />
         </div>
       }
@@ -72,10 +75,12 @@ export default function DCRKidObservation({
   unfilledKids,
   existingObservations,
   disabled,
+  onObservationFormSuccess,
 }: {
   unfilledKids: LeanKid[];
   existingObservations: DcrObservationList;
   disabled?: boolean;
+  onObservationFormSuccess?: (result: DcrObservationItem) => void;
 }) {
   return unfilledKids.length === 0 && existingObservations.length === 0 ? (
     <EmptyState
@@ -98,7 +103,12 @@ export default function DCRKidObservation({
 
           <AccordionContent className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 my-2">
             {unfilledKids.map((kid) => (
-              <KidObservationModal key={kid.id} kid={kid} disabled={disabled} />
+              <KidObservationModal
+                key={kid.id}
+                kid={kid}
+                disabled={disabled}
+                onFormSuccess={onObservationFormSuccess}
+              />
             ))}
           </AccordionContent>
         </AccordionItem>
@@ -131,6 +141,7 @@ export default function DCRKidObservation({
                       observation={observation}
                       isEditMode
                       disabled={disabled}
+                      onFormSuccess={onObservationFormSuccess}
                       triggerRender={
                         <Item
                           variant="outline"
@@ -186,6 +197,7 @@ export default function DCRKidObservation({
                       observation={observation}
                       isEditMode
                       disabled={disabled}
+                      onFormSuccess={onObservationFormSuccess}
                     />
                   )
                 )}
