@@ -40,6 +40,7 @@ import {
   KID_MOOD_LABELS,
   REPORT_STATUS_BADGE,
   REPORT_STATUS_LABELS,
+  ReportStatus,
 } from '../constants';
 import {
   DailyClassReportItem,
@@ -203,14 +204,14 @@ export default function DailyReport({
           const baseline =
             report?.existingNarrative ?? report?.defaultNarrative ?? '';
           const hasChanges = editedKidNarrative !== baseline;
-          const hasExistingReport = !!report?.existingNarrative;
-          const getReportStatusKey = () => {
-            if (isReportSent) return 'sent';
-            if (hasChanges) return 'draft'; // If user edited either existing or template, it's a draft
-            if (hasExistingReport) return 'edited'; // Has DB data, but no new edits right now
-            return 'template'; // No DB data, unmodified template
-          };
-          const statusKey = getReportStatusKey();
+          // Persisted status comes from the server (via obs.kidReport);
+          // 'draft' is a client-only overlay for unsaved textarea edits.
+          const statusKey: ReportStatus = hasChanges
+            ? 'draft'
+            : !obs?.kidReport?.reportStatus ||
+                obs.kidReport.reportStatus === 'template'
+              ? 'template'
+              : obs.kidReport.reportStatus;
 
           if (!isPresent) return null;
 

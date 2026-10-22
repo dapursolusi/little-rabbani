@@ -1,19 +1,11 @@
-import * as themeService from '@/features/theme/services';
 import { ActionResult } from '@/types';
 import {
   DailyReportTemplateRenderData,
-  TemplateData,
   renderDailyReportTemplate,
-  renderTemplate,
 } from '@/utils/template';
 
 import { logger } from '@/lib/logger';
 
-import {
-  KID_APPETITE_LABELS,
-  KID_ATTENDANCE_LABELS,
-  KID_MOOD_LABELS,
-} from '../constants';
 import { dailyKidReportRepo, dcrRepo, observationRepo } from '../repositories';
 import * as templateRepo from '../repositories/report-template';
 import { DailyKidReportItem } from '../types';
@@ -90,12 +82,12 @@ export async function generateDailyKidReportsByDcrId(
     if (!tmpl) {
       throw new Error('Template laporan belum diatur.');
     }
+
     // Resolve sub-theme name via repository
     let subThemeName = '';
     if (existingDCR.subThemeId) {
       subThemeName =
-        (await themeService.getSubThemeById(existingDCR.subThemeId)).data
-          ?.name ?? '';
+        (await dcrRepo.findSubThemeNameById(existingDCR.subThemeId)) ?? '';
     }
 
     const template = tmpl.content;
@@ -103,18 +95,17 @@ export async function generateDailyKidReportsByDcrId(
     for (const obs of existingDCR.observations) {
       if (obs.attendance !== 'present') continue;
 
-      const data: TemplateData = {
-        nickName: obs.kid.nickName ?? obs.kid.name,
-        fullName: obs.kid.name,
-        subThemeName,
-        description: existingDCR.description ?? '',
-        mood: obs.mood ? KID_MOOD_LABELS[obs.mood] : '',
-        appetite: obs.appetite ? KID_APPETITE_LABELS[obs.appetite] : '',
-        attendance: KID_ATTENDANCE_LABELS[obs.attendance],
-        notes: obs.notes ?? '',
-      };
+      const narrative = renderDailyReportTemplate({
+        template,
+        dcrData: {
+          dcr: {
+            description: existingDCR.description,
+            subTheme: subThemeName ? { name: subThemeName } : null,
+          },
+          observation: obs,
+        } satisfies DailyReportTemplateRenderData,
+      });
 
-      const narrative = renderTemplate(template, data);
       reports.push({ kidId: obs.kidId, kidName: obs.kid.name, narrative });
     }
 
@@ -247,8 +238,10 @@ export async function saveReportNarrative(
 
 export async function markReportAsSent({
   dcrObservationId,
+  now = new Date(),
 }: {
   dcrObservationId: string;
+  now?: Date;
 }): Promise<ActionResult<DailyKidReportItem | null>> {
   try {
     // 1. Validate observation and load required report data
@@ -270,7 +263,7 @@ export async function markReportAsSent({
         dcrObservationId,
         narrative: defaultNarrative,
         reportStatus: 'sent',
-        sentAt: new Date(),
+        sentAt: now,
       });
 
       return {
@@ -289,7 +282,7 @@ export async function markReportAsSent({
         data: dailyKidReport,
       };
 
-    // 2. Persist narrative and marking sent
+    // Persist narrative and marking sent
     const hasPersistedNarrative =
       dailyKidReport.reportStatus === 'edited' &&
       Boolean(dailyKidReport.narrative?.trim());
@@ -297,7 +290,7 @@ export async function markReportAsSent({
     const updated = await dailyKidReportRepo.update(dailyKidReport.id, {
       narrative: hasPersistedNarrative ? undefined : defaultNarrative,
       reportStatus: 'sent',
-      sentAt: new Date(),
+      sentAt: now,
     });
     return {
       success: true as const,
