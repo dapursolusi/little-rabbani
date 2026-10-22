@@ -1,5 +1,7 @@
 import { ActionResult } from '@/types';
 
+import { logger } from '@/lib/logger';
+
 import { seedDefaultTemplate } from '../../../db/seeds/report-template';
 import { reportTemplateRepo } from '../repositories';
 import * as repo from '../repositories/report-template';
@@ -19,7 +21,7 @@ export async function getDefaultTemplate() {
     }
     return { success: true as const, data: tmpl };
   } catch (error) {
-    console.error('getDefaultTemplate:', error);
+    logger.error({ err: error }, 'getDefaultTemplate');
     return { success: false as const, error: 'Gagal memuat template laporan.' };
   }
 }
@@ -39,7 +41,7 @@ export async function getTemplateById(
       data: template,
     };
   } catch (error) {
-    console.error('getTemplateByid: ', error);
+    logger.error({ err: error }, 'getTemplateById');
     return {
       success: false as const,
       message: 'Gagal memuat template laporan',
@@ -52,7 +54,7 @@ export async function saveTemplate(input: { content: string }) {
     const tmpl = await repo.upsert({ name: 'default', content: input.content });
     return { success: true as const, data: tmpl };
   } catch (error) {
-    console.error('saveTemplate:', error);
+    logger.error({ err: error }, 'saveTemplate');
     return { success: false as const, message: 'Gagal menyimpan template.' };
   }
 }

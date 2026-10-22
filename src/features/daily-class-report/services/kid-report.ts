@@ -124,7 +124,7 @@ export async function generateDailyKidReportsByDcrId(
       data: reports,
     };
   } catch (error) {
-    console.error('generateDailyKidReportsByDcrId:', error);
+    logger.error({ err: error }, 'generateDailyKidReportsByDcrId');
     return {
       success: false as const,
       message: 'Gagal membuat laporan harian.',
@@ -153,7 +153,7 @@ export async function getDailyKidReportsByDcrId(
       data: dcr,
     };
   } catch (error) {
-    console.error('getDailyKidReportsByDcrId:', error);
+    logger.error({ err: error }, 'getDailyKidReportsByDcrId');
     return {
       success: false as const,
       message: 'Gagal mengambil laporan harian.',
@@ -237,7 +237,7 @@ export async function saveReportNarrative(
       { err: error, dcrObservationId: input.dcrObservationId },
       'Failed to save report narration'
     );
-    console.error('saveReportNarration:', error);
+
     return {
       success: false as const,
       message: 'Gagal menyimpan draft laporan',

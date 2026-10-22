@@ -2,6 +2,8 @@ import { ActionResult } from '@/types';
 import { isWithinEditWindow } from '@/utils/date';
 import { getLocalDateString } from '@/utils/date-local';
 
+import { logger } from '@/lib/logger';
+
 import { dcrRepo } from '../repositories';
 import { DailyClassReportList, DailyClassReportRecord } from '../types';
 import { DailyClassReportInput } from '../validation';
@@ -20,7 +22,7 @@ export async function getOrCreateDCR({
     const dcr = await dcrRepo.insert({ date: iso, classSessionId });
     return { success: true as const, data: dcr };
   } catch (error) {
-    console.error('checkExistingDCR', error);
+    logger.error({ err: error }, 'checkExistingDCR');
     return { success: false as const, message: 'Gagal memuat laporan harian' };
   }
 }
@@ -50,7 +52,7 @@ export async function saveDCR(
       data: updated,
     };
   } catch (error) {
-    console.error('saveDCR: ', error);
+    logger.error({ err: error }, 'saveDCR');
     return {
       success: false as const,
       message: 'Gagal menyimpan laporan harian',
@@ -74,7 +76,7 @@ export async function getDCRByDate(
 
     return { success: true as const, data: dcr };
   } catch (error) {
-    console.error('getDCRByDate', error);
+    logger.error({ err: error }, 'getDCRByDate');
     return {
       success: false as const,
       message: 'Gagal memuat data laporan harian',
@@ -99,7 +101,7 @@ export async function getDCRs(input: {
       data: dcrs,
     };
   } catch (error) {
-    console.error('getDCRs :', error);
+    logger.error({ err: error }, 'getDCRs');
     return {
       success: false as const,
       message: 'Gagal memuat data kegiatan harian',

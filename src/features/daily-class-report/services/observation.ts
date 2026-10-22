@@ -1,6 +1,8 @@
 import { ActionResult } from '@/types';
 import { isWithinEditWindow } from '@/utils/date';
 
+import { logger } from '@/lib/logger';
+
 import { dcrService } from '.';
 import * as kidService from '../../kid/services';
 import { dcrRepo, observationRepo } from '../repositories';
@@ -52,7 +54,7 @@ export async function createKidObservation({
 
     return { success: true as const, data: kidObservation };
   } catch (error) {
-    console.error('createKidObservation', error);
+    logger.error({ err: error }, 'createKidObservation');
     return {
       success: false as const,
       message: 'Gagal membuat observasi anak. Coba lagi nanti.',
@@ -91,7 +93,7 @@ export async function updateKidObservation(
       data: updated,
     };
   } catch (error) {
-    console.error('updateKidObservation: ', error);
+    logger.error({ err: error }, 'updateKidObservation');
     return {
       success: false as const,
       message: 'Gagal mengupdate observasi anak. Coba lagi beberapa saat.',
@@ -106,7 +108,7 @@ export async function getDCRObservationsByDcrId(
     const observations = await observationRepo.findMany({ dcrId });
     return { success: true as const, data: observations as DcrObservationList };
   } catch (error) {
-    console.error('getDCRObservationsByDcrId', error);
+    logger.error({ err: error }, 'getDCRObservationsByDcrId');
     return {
       success: false as const,
       message: 'Gagal memuat observasi anak. Coba lagi nanti.',
@@ -130,7 +132,7 @@ export async function getDCRObservationsByDate(
       };
     return { success: true as const, data: observations as DCRObservation[] };
   } catch (error) {
-    console.error('getDCRObservationsByDate', error);
+    logger.error({ err: error }, 'getDCRObservationsByDate');
     return {
       success: false as const,
       message: 'Gagal memuat observasi anak. Coba lagi nanti.',
