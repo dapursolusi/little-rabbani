@@ -2,6 +2,7 @@ import {
   KID_APPETITE,
   KID_ATTENDANCE,
   KID_MOOD,
+  REPORT_STATUS,
 } from '@/features/daily-class-report/constants';
 import { relations, sql } from 'drizzle-orm';
 import {
@@ -110,6 +111,48 @@ export const dcrObservationRelationship = relations(
     kid: one(kid, {
       fields: [dcrObservation.kidId],
       references: [kid.id],
+    }),
+    kidReport: one(dailyKidReport),
+  })
+);
+
+export const reportStatusEnum = pgEnum('report_status', REPORT_STATUS);
+
+export const dailyKidReport = pgTable(
+  'daily_report',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    dcrObservationId: uuid('dcr_observation_id')
+      .notNull()
+      .references(() => dcrObservation.id, { onDelete: 'restrict' }),
+    narrative: text('narrative'),
+    reportStatus: reportStatusEnum('report_status').default('template'),
+    sentAt: timestamp('sent_at', {
+      withTimezone: true,
+    }),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => ({
+    dcrObservationIdx: index('daily_report_dcr_observation_idx').on(
+      table.dcrObservationId
+    ),
+    dcrObservationUniq: unique('daily_report_dcr_observation_uniq').on(
+      table.dcrObservationId
+    ),
+  })
+);
+
+export const dailyKidReportRelationship = relations(
+  dailyKidReport,
+  ({ one }) => ({
+    observation: one(dcrObservation, {
+      fields: [dailyKidReport.dcrObservationId],
+      references: [dcrObservation.id],
     }),
   })
 );

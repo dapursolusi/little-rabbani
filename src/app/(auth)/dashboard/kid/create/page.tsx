@@ -16,8 +16,8 @@ export default async function CreateKidPage() {
   if (!termResults.success || !classSessionResults.success) {
     return (
       <div className="p-4 text-center text-destructive">
-        {(termResults as { error: string }).error ||
-          (classSessionResults as { error: string }).error ||
+        {termResults.message ||
+          classSessionResults.message ||
           'Gagal memuat data'}
       </div>
     );

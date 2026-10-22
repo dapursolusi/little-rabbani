@@ -42,11 +42,11 @@ export default function GuardianPicker({
         const res = await searchGuardians(q);
         if (active) {
           if (res.success) {
-            setResults(res.data);
+            setResults(res.data ?? []);
             setError('');
           } else {
             setResults([]);
-            setError(res.error);
+            setError(res.message);
           }
         }
       } catch {

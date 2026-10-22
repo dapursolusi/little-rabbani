@@ -1,17 +1,12 @@
-import { BaseDTOResponse } from '@/types';
-
-import { GuardianInput, UpdateKidInput } from './validation';
+import { guardian, kid } from '@/db/schema';
 
 // ponytail: lean subset of Kid (id, name) for guardian kids badges — not full Kid objects
-export interface LeanKid {
-  id: string;
-  name: string;
-}
+export type LeanKid = Pick<Kid, 'id' | 'name' | 'nickName'>;
 
-export interface Guardian extends GuardianInput, BaseDTOResponse {
-  kids?: LeanKid[];
-}
+export type Guardian = typeof guardian.$inferSelect & {
+  kids: Kid[] | null;
+};
 
-export interface Kid extends UpdateKidInput, BaseDTOResponse {
-  guardian: Guardian;
-}
+export type Kid = typeof kid.$inferSelect & {
+  guardian: Guardian | null;
+};

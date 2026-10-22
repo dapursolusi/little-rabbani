@@ -1,10 +1,16 @@
 import { ActionResult } from '@/types';
 import { isWithinEditWindow } from '@/utils/date';
 
+import { logger } from '@/lib/logger';
+
 import { dcrService } from '.';
 import * as kidService from '../../kid/services';
 import { dcrRepo, observationRepo } from '../repositories';
-import { DCRObservation } from '../types';
+import {
+  DCRObservation,
+  DcrObservationItem,
+  DcrObservationList,
+} from '../types';
 import { DCRObservationInput } from '../validation';
 
 export async function createKidObservation({
@@ -13,7 +19,7 @@ export async function createKidObservation({
 }: {
   input: DCRObservationInput;
   classSessionId: string;
-}): Promise<ActionResult<DCRObservation>> {
+}): Promise<ActionResult<DcrObservationItem>> {
   try {
     if (!classSessionId)
       return {
@@ -45,9 +51,10 @@ export async function createKidObservation({
       ...input,
       dcrId: dcr.data?.id,
     });
-    return { success: true as const, data: kidObservation as DCRObservation };
+
+    return { success: true as const, data: kidObservation };
   } catch (error) {
-    console.error('createKidObservation', error);
+    logger.error({ err: error }, 'createKidObservation');
     return {
       success: false as const,
       message: 'Gagal membuat observasi anak. Coba lagi nanti.',
@@ -57,7 +64,7 @@ export async function createKidObservation({
 
 export async function updateKidObservation(
   input: DCRObservationInput
-): Promise<ActionResult<DCRObservation>> {
+): Promise<ActionResult<DcrObservationItem>> {
   try {
     const existing = await observationRepo.findObservation({
       dcrId: input.dcrId,
@@ -83,10 +90,10 @@ export async function updateKidObservation(
     return {
       success: true as const,
       message: 'Berhasil mengupdate observasi',
-      data: updated as DCRObservation,
+      data: updated,
     };
   } catch (error) {
-    console.error('updateKidObservation: ', error);
+    logger.error({ err: error }, 'updateKidObservation');
     return {
       success: false as const,
       message: 'Gagal mengupdate observasi anak. Coba lagi beberapa saat.',
@@ -96,12 +103,12 @@ export async function updateKidObservation(
 
 export async function getDCRObservationsByDcrId(
   dcrId: string
-): Promise<ActionResult<DCRObservation[]>> {
+): Promise<ActionResult<DcrObservationList>> {
   try {
     const observations = await observationRepo.findMany({ dcrId });
-    return { success: true as const, data: observations };
+    return { success: true as const, data: observations as DcrObservationList };
   } catch (error) {
-    console.error('getDCRObservationsByDcrId', error);
+    logger.error({ err: error }, 'getDCRObservationsByDcrId');
     return {
       success: false as const,
       message: 'Gagal memuat observasi anak. Coba lagi nanti.',
@@ -123,9 +130,9 @@ export async function getDCRObservationsByDate(
         success: false as const,
         message: 'Laporan harian tidak ditemukan',
       };
-    return { success: true as const, data: observations };
+    return { success: true as const, data: observations as DCRObservation[] };
   } catch (error) {
-    console.error('getDCRObservationsByDate', error);
+    logger.error({ err: error }, 'getDCRObservationsByDate');
     return {
       success: false as const,
       message: 'Gagal memuat observasi anak. Coba lagi nanti.',

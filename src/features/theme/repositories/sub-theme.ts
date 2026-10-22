@@ -18,6 +18,10 @@ export async function findMany(params?: { themeId?: string }) {
 export async function findById(id: string) {
   return await db.query.subTheme.findFirst({
     where: and(isNull(subTheme.deletedAt), eq(subTheme.id, id)),
+    columns: {
+      id: true,
+      name: true,
+    },
   });
 }
 

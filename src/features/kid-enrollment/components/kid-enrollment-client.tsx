@@ -7,11 +7,19 @@ import { useRouter } from 'next/navigation';
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Term } from '@/features/term/types';
-import { ContractsIcon, DatabaseSyncIcon } from '@hugeicons/core-free-icons';
+import {
+  Add02Icon,
+  AddTeamIcon,
+  ContractsIcon,
+  DatabaseSyncIcon,
+} from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
+import { Modal } from '@/components/shared/modal';
 import { DataTable } from '@/components/shared/table/data-table';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import {
   Select,
@@ -33,7 +41,7 @@ import {
 import { EnrollmentStatus } from '../constants';
 import { KidEnrollment } from '../types';
 import { KidToBeEnrolled } from '../validation';
-import UpdateEnrolledKids from './update-enrolled-kids';
+import UpdateEnrolledKids, { CheckboxInTable } from './update-enrolled-kids';
 
 export default function KidEnrollmentClient({
   data,
@@ -59,6 +67,8 @@ export default function KidEnrollmentClient({
   const [updated, setUpdated] = useState<Map<string, KidEnrollment>>(new Map());
 
   const [deleted, setDeleted] = useState<Set<string>>(new Set());
+  const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
+  const [isAddKidModalOpen, setIsAddKidModalOpen] = useState(false);
 
   // Merge into the current query string so pushing one param keeps the others
   // (?termId stays when a class session is picked, and vice versa).
@@ -95,7 +105,11 @@ export default function KidEnrollmentClient({
       if (kidData) {
         setAvailableKids((current) => [
           ...current,
-          { id: kidData.kidId, name: kidData.kid.name },
+          {
+            id: kidData.kidId,
+            name: kidData.kid.name,
+            nickName: kidData.kid.nickName,
+          },
         ]);
       }
       setCreated((prev) => prev.filter((k) => k.kidId !== kidId));
@@ -152,19 +166,39 @@ export default function KidEnrollmentClient({
   }, [isUpdateMode, data]);
 
   // Fetch available kids when entering update mode
+  const fetchAvailableKids = useCallback(async () => {
+    return kidEnrollmentAction.getAvailableKids({
+      termId: selectedTermId ?? '',
+      classSessionId: selectedClassSessionId ?? '',
+    });
+  }, [selectedTermId, selectedClassSessionId]);
   useEffect(() => {
     if (!isUpdateMode) return;
-    const fetchAvailable = async () => {
-      const result = await kidEnrollmentAction.getAvailableKids({
-        termId: selectedTermId ?? '',
-        classSessionId: selectedClassSessionId ?? '',
-      });
+
+    const fetch = async () => {
+      const result = await fetchAvailableKids();
+
       if (result.success) {
         setAvailableKids(result.data);
       }
     };
-    fetchAvailable();
-  }, [isUpdateMode, selectedTermId, selectedClassSessionId]);
+
+    void fetch();
+  }, [isUpdateMode, fetchAvailableKids]);
+
+  useEffect(() => {
+    if (!isAddKidModalOpen) return;
+
+    const fetch = async () => {
+      const result = await fetchAvailableKids();
+
+      if (result.success) {
+        setAvailableKids(result.data);
+      }
+    };
+
+    void fetch();
+  }, [isAddKidModalOpen, fetchAvailableKids]);
 
   const handleAdd = useCallback(
     async (kidIds: Set<string>) => {
@@ -184,7 +218,7 @@ export default function KidEnrollmentClient({
           createdAt: new Date(),
           updatedAt: new Date(),
           deletedAt: null,
-          kid: { id: kid.id, name: kid.name },
+          kid: { id: kid.id, name: kid.name, nickName: kid.nickName },
           classSession: { name: '' },
           term: { name: '' },
         }));
@@ -228,7 +262,7 @@ export default function KidEnrollmentClient({
         setEnrolledKids(fresh.data as KidEnrollment[]);
       }
     } else {
-      toast.error(result.error);
+      toast.error(result.message);
     }
   }, [
     selectedTermId,
@@ -334,14 +368,76 @@ export default function KidEnrollmentClient({
               customActionIcon: DatabaseSyncIcon,
               domain: 'registration',
             }}
-            createForm={{
-              meta: {
-                label: 'Pendaftaran Murid',
-                domain: 'registration',
+            emptyState={{
+              icon: ContractsIcon,
+              createFreshRow: {
+                type: 'custom',
+                children: showAllSessions ? (
+                  <div className="p-4 text-center text-muted-foreground">
+                    Pilih sesi kelas untuk menambahkan murid baru.
+                  </div>
+                ) : (
+                  <Modal
+                    title="Tambah Murid ke Batch"
+                    description=""
+                    trigger={{
+                      icon: AddTeamIcon,
+                      text: 'Tambah Murid ke Batch',
+                    }}
+                    content={
+                      <CheckboxInTable
+                        selectedRows={selectedRows}
+                        onSelectedRowsChange={setSelectedRows}
+                        kids={availableKids.map((kid) => ({
+                          id: kid.id,
+                          name: kid.name,
+                          nickName: kid.nickName,
+                        }))}
+                      />
+                    }
+                    open={isAddKidModalOpen}
+                    onOpenChange={setIsAddKidModalOpen}
+                    footer={
+                      <Button
+                        className="flex justify-center items-center gap-3"
+                        onClick={async () => {
+                          const result =
+                            await kidEnrollmentAction.saveEnrollmentChanges({
+                              termId: selectedTermId ?? '',
+                              classSessionId: selectedClassSessionId ?? '',
+                              created: Array.from(selectedRows).map(
+                                (kidId) => ({
+                                  kidId,
+                                  status: 'enrolled',
+                                })
+                              ),
+                            });
+                          if (result.success) {
+                            toast.success('Murid berhasil ditambahkan');
+                            setSelectedRows(new Set());
+                            setIsAddKidModalOpen(false);
+                            const fresh =
+                              await kidEnrollmentAction.getKidsEnrollments({
+                                termId: selectedTermId ?? '',
+                                classSessionId: selectedClassSessionId ?? '',
+                              });
+                            if (fresh.success) {
+                              setEnrolledKids(fresh.data as KidEnrollment[]);
+                            }
+                          } else {
+                            toast.error(result.message);
+                          }
+                        }}
+                        disabled={availableKids.length === 0}
+                      >
+                        <HugeiconsIcon icon={Add02Icon} />
+                        Tambah ke Pendaftaran Batch
+                      </Button>
+                    }
+                  />
+                ),
               },
-              createForm: <div></div>,
             }}
-            emptyStateIcon={ContractsIcon}
             toolbar={{
               showAll: !isUpdateMode,
             }}

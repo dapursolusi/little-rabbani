@@ -13,7 +13,7 @@ export default async function KidListPage() {
 
   if (!result.success) {
     return (
-      <div className="p-4 text-center text-destructive">{result.error}</div>
+      <div className="p-4 text-center text-destructive">{result.message}</div>
     );
   }
 
@@ -25,6 +25,12 @@ export default async function KidListPage() {
       data={kids}
       meta={{ label: 'Murid', domain: 'kid' }}
       createHref="/dashboard/kid/create"
+      emptyState={{
+        createFreshRow: {
+          type: 'href',
+          href: '/dashboard/kid/create',
+        },
+      }}
     />
   );
 }

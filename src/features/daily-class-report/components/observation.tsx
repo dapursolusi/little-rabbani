@@ -1,8 +1,7 @@
 import { ReactNode } from 'react';
 
-import { LeanKid } from '@/features/kid/types';
-import { ActionResult } from '@/types';
-import { DatabaseIcon } from '@hugeicons/core-free-icons';
+import { Kid, LeanKid } from '@/features/kid/types';
+import { ChildIcon, DatabaseIcon } from '@hugeicons/core-free-icons';
 
 import { EmptyState } from '@/components/shared/empty-state';
 import { Modal } from '@/components/shared/modal';
@@ -26,7 +25,7 @@ import {
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
 } from '../constants';
-import { type DCRObservation } from '../types';
+import { DcrObservationItem, DcrObservationList } from '../types';
 import { DCRObservationForm } from './form';
 
 export function KidObservationModal({
@@ -35,12 +34,14 @@ export function KidObservationModal({
   isEditMode,
   disabled,
   triggerRender,
+  onFormSuccess,
 }: {
   kid: LeanKid;
-  observation?: DCRObservation;
+  observation?: DcrObservationList[number];
   isEditMode?: boolean;
   disabled?: boolean;
   triggerRender?: ReactNode;
+  onFormSuccess?: (result: DcrObservationItem) => void;
 }) {
   return (
     <Modal
@@ -62,6 +63,7 @@ export function KidObservationModal({
             observation={observation}
             isEditMode={isEditMode}
             disabled={disabled}
+            onFormSuccess={onFormSuccess}
           />
         </div>
       }
@@ -70,37 +72,49 @@ export function KidObservationModal({
 }
 
 export default function DCRKidObservation({
-  availableKids,
-  existingObservationsResults,
+  unfilledKids,
+  existingObservations,
   disabled,
+  onObservationFormSuccess,
 }: {
-  availableKids: LeanKid[];
-  existingObservationsResults: ActionResult<DCRObservation[]>;
+  unfilledKids: LeanKid[];
+  existingObservations: DcrObservationList;
   disabled?: boolean;
+  onObservationFormSuccess?: (result: DcrObservationItem) => void;
 }) {
-  const existingObservations = existingObservationsResults.data ?? [];
-
-  const unfilledKids = availableKids.filter(
-    (kid) => !existingObservations.some((obs) => obs.kidId === kid.id)
-  );
-
-  return (
+  return unfilledKids.length === 0 && existingObservations.length === 0 ? (
+    <EmptyState
+      icon={ChildIcon}
+      title="Belum ada data anak untuk batch saat ini."
+      action={{
+        type: 'href',
+        label: 'Tambah Registrasi Anak',
+        href: '/dashboard/registration',
+      }}
+    />
+  ) : (
     <Accordion multiple className="border rounded-md py-1 px-2">
       {unfilledKids.length > 0 && (
         <AccordionItem value="unfilled" className="border-b last:border-0">
           <AccordionTrigger>
-            Belum Diisi ({unfilledKids.length})
+            <span className="text-orange-400 mr-1">⚠ </span> Belum Diisi (
+            {unfilledKids.length})
           </AccordionTrigger>
 
           <AccordionContent className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 my-2">
             {unfilledKids.map((kid) => (
-              <KidObservationModal key={kid.id} kid={kid} disabled={disabled} />
+              <KidObservationModal
+                key={kid.id}
+                kid={kid}
+                disabled={disabled}
+                onFormSuccess={onObservationFormSuccess}
+              />
             ))}
           </AccordionContent>
         </AccordionItem>
       )}
 
-      {existingObservationsResults.success ? (
+      {existingObservations?.length > 0 ? (
         Object.entries(KID_ATTENDANCE_LABELS).map(([attendance, label]) => {
           const observations = existingObservations.filter(
             (observation) => observation.attendance === attendance
@@ -123,10 +137,11 @@ export default function DCRKidObservation({
                   observation.attendance === 'present' ? (
                     <KidObservationModal
                       key={observation.id}
-                      kid={observation.kid}
+                      kid={observation.kid as Kid}
                       observation={observation}
                       isEditMode
                       disabled={disabled}
+                      onFormSuccess={onObservationFormSuccess}
                       triggerRender={
                         <Item
                           variant="outline"
@@ -134,7 +149,7 @@ export default function DCRKidObservation({
                           key={observation.id}
                         >
                           <ItemContent>
-                            <ItemTitle>{observation.kid.nickName}</ItemTitle>
+                            <ItemTitle>{observation.kid?.nickName}</ItemTitle>
 
                             <Separator />
 
@@ -178,10 +193,11 @@ export default function DCRKidObservation({
                   ) : (
                     <KidObservationModal
                       key={observation.id}
-                      kid={observation.kid}
-                      observation={observation as DCRObservation}
+                      kid={observation.kid as Kid}
+                      observation={observation}
                       isEditMode
                       disabled={disabled}
+                      onFormSuccess={onObservationFormSuccess}
                     />
                   )
                 )}

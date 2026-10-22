@@ -19,17 +19,10 @@ export async function getCurrentTermKidEnrollmentsByClassSession(
     schema: uuidSchema,
     fallbackError: 'Data batch tidak valid',
   });
-  if (!parsed.success)
-    return {
-      success: false as const,
-      error: {
-        type: ['ACTION_VALIDATION'],
-      },
-      message: 'Tipe ID sesi kelas tidak valid',
-    };
-  const classSessionId = parsed.data;
+  if (!parsed.success) return parsed;
+
   return await kidEnrollmentService.getCurrentTermKidEnrollmentsByClassSession(
-    classSessionId
+    parsed.data
   );
 }
 

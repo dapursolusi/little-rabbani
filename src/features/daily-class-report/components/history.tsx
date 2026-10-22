@@ -3,16 +3,16 @@ import { useEffect, useMemo, useState } from 'react';
 import { Calendar } from '@/components/ui/calendar';
 
 import { dcrAction } from '../actions';
-import { DailyClassReport } from '../types';
+import { DailyClassReportList } from '../types';
 
 export default function DCRHistory({
   defaultDcrs,
 }: {
-  defaultDcrs: DailyClassReport[];
+  defaultDcrs: DailyClassReportList;
 }) {
   const today = useMemo(() => new Date(new Date().toDateString()), []);
   const [month, setMonth] = useState<Date>(today);
-  const [dcrs, setDcrs] = useState<DailyClassReport[]>(defaultDcrs);
+  const [dcrs, setDcrs] = useState<DailyClassReportList>(defaultDcrs);
 
   // Fast Set lookup for dates that have DCRs
   const dcrDates = useMemo(() => new Set(dcrs.map((d) => d.date)), [dcrs]);
@@ -22,7 +22,7 @@ export default function DCRHistory({
       const result = await dcrAction.getDCRs({
         date: { year: month.getFullYear(), month: month.getMonth() + 1 },
       });
-      if (result.success) setDcrs(result.data as DailyClassReport[]);
+      if (result.success) setDcrs(result.data);
     }
     fetch();
   }, [month.getFullYear(), month.getMonth()]);
@@ -38,7 +38,14 @@ export default function DCRHistory({
         fixedWeeks
         modifiers={{
           haveDCR: (date: Date) =>
-            dcrDates.has(date.toISOString().split('T')[0]),
+            dcrDates.has(
+              new Intl.DateTimeFormat('fr-CA', {
+                timeZone: 'Asia/Jakarta',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+              }).format(date)
+            ),
           today: (date: Date) => date.getTime() === today.getTime(),
           weekend: (date) => [0, 6].includes(date.getDay()),
           greyedPast: (date: Date) => date < today,

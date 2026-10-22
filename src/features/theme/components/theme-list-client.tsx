@@ -31,6 +31,13 @@ export function ThemeListClient({ themes, subThemes }: ThemeListClientProps) {
             createForm: <ThemeForm />,
             meta: { label: 'Tema', domain: 'theme' },
           }}
+          emptyState={{
+            createFreshRow: {
+              type: 'form',
+              form: <ThemeForm />,
+              meta: { label: 'Tema', domain: 'theme' },
+            },
+          }}
         />
       ),
     },
@@ -46,6 +53,13 @@ export function ThemeListClient({ themes, subThemes }: ThemeListClientProps) {
           createForm={{
             createForm: <SubThemeForm themes={themes} />,
             meta: { label: 'Sub Tema', domain: 'subTheme' },
+          }}
+          emptyState={{
+            createFreshRow: {
+              type: 'form',
+              form: <SubThemeForm themes={themes} />,
+              meta: { label: 'Sub Tema', domain: 'subTheme' },
+            },
           }}
         />
       ),

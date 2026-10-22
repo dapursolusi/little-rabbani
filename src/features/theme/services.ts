@@ -19,7 +19,7 @@ export async function getThemes(params?: {
       return { success: true as const, data: items, total };
     } catch (error) {
       console.error('getThemes', error);
-      return { success: false as const, error: 'Gagal mengambil data tema' };
+      return { success: false as const, message: 'Gagal mengambil data tema' };
     }
   });
 }
@@ -29,12 +29,12 @@ export async function getTheme(id: string) {
     try {
       const result = await themeRepo.findById(id);
       if (!result) {
-        return { success: false as const, error: 'Tema tidak ditemukan' };
+        return { success: false as const, message: 'Tema tidak ditemukan' };
       }
       return { success: true as const, data: result };
     } catch (error) {
       console.error('getTheme', error);
-      return { success: false as const, error: 'Gagal mengambil data tema' };
+      return { success: false as const, message: 'Gagal mengambil data tema' };
     }
   });
 }
@@ -46,7 +46,7 @@ export async function createTheme(input: ThemeInput) {
       return { success: true as const, data: newItem };
     } catch (error) {
       console.error('createTheme', error);
-      return { success: false as const, error: 'Gagal membuat tema' };
+      return { success: false as const, message: 'Gagal membuat tema' };
     }
   });
 }
@@ -56,12 +56,12 @@ export async function updateTheme(id: string, input: ThemeInput) {
     try {
       const updated = await themeRepo.update(id, input);
       if (!updated) {
-        return { success: false as const, error: 'Tema tidak ditemukan' };
+        return { success: false as const, message: 'Tema tidak ditemukan' };
       }
       return { success: true as const, data: updated };
     } catch (error) {
       console.error('updateTheme', error);
-      return { success: false as const, error: 'Gagal memperbarui tema' };
+      return { success: false as const, message: 'Gagal memperbarui tema' };
     }
   });
 }
@@ -71,12 +71,12 @@ export async function deleteTheme(id: string) {
     try {
       const deleted = await themeRepo.remove(id);
       if (!deleted) {
-        return { success: false as const, error: 'Tema tidak ditemukan' };
+        return { success: false as const, message: 'Tema tidak ditemukan' };
       }
       return { success: true as const, data: deleted };
     } catch (error) {
       console.error('deleteTheme', error);
-      return { success: false as const, error: 'Gagal menghapus tema' };
+      return { success: false as const, message: 'Gagal menghapus tema' };
     }
   });
 }
@@ -88,7 +88,7 @@ export async function getActiveThemes() {
       return { success: true as const, data: items };
     } catch (error) {
       console.error('getActiveThemes', error);
-      return { success: false as const, error: 'Gagal mengambil data tema' };
+      return { success: false as const, message: 'Gagal mengambil data tema' };
     }
   });
 }
@@ -104,28 +104,26 @@ export async function getSubThemes(params?: { themeId?: string }) {
       console.error('getSubThemes', error);
       return {
         success: false as const,
-        error: 'Gagal mengambil data sub tema',
+        message: 'Gagal mengambil data sub tema',
       };
     }
   });
 }
 
-export async function getSubTheme(id: string) {
-  return requireOwner(async () => {
-    try {
-      const result = await subThemeRepo.findById(id);
-      if (!result) {
-        return { success: false as const, error: 'Sub tema tidak ditemukan' };
-      }
-      return { success: true as const, data: result };
-    } catch (error) {
-      console.error('getSubTheme', error);
-      return {
-        success: false as const,
-        error: 'Gagal mengambil data sub tema',
-      };
+export async function getSubThemeById(id: string) {
+  try {
+    const result = await subThemeRepo.findById(id);
+    if (!result) {
+      return { success: false as const, message: 'Sub tema tidak ditemukan' };
     }
-  });
+    return { success: true as const, data: result };
+  } catch (error) {
+    console.error('getSubTheme', error);
+    return {
+      success: false as const,
+      message: 'Gagal mengambil data sub tema',
+    };
+  }
 }
 
 export async function createSubTheme(input: SubThemeInput) {
@@ -135,7 +133,7 @@ export async function createSubTheme(input: SubThemeInput) {
       return { success: true as const, data: newItem };
     } catch (error) {
       console.error('createSubTheme', error);
-      return { success: false as const, error: 'Gagal membuat sub tema' };
+      return { success: false as const, message: 'Gagal membuat sub tema' };
     }
   });
 }
@@ -145,12 +143,12 @@ export async function updateSubTheme(id: string, input: SubThemeInput) {
     try {
       const updated = await subThemeRepo.update(id, input);
       if (!updated) {
-        return { success: false as const, error: 'Sub tema tidak ditemukan' };
+        return { success: false as const, message: 'Sub tema tidak ditemukan' };
       }
       return { success: true as const, data: updated };
     } catch (error) {
       console.error('updateSubTheme', error);
-      return { success: false as const, error: 'Gagal memperbarui sub tema' };
+      return { success: false as const, message: 'Gagal memperbarui sub tema' };
     }
   });
 }
@@ -160,12 +158,12 @@ export async function deleteSubTheme(id: string) {
     try {
       const deleted = await subThemeRepo.remove(id);
       if (!deleted) {
-        return { success: false as const, error: 'Sub tema tidak ditemukan' };
+        return { success: false as const, message: 'Sub tema tidak ditemukan' };
       }
       return { success: true as const, data: deleted };
     } catch (error) {
       console.error('deleteSubTheme', error);
-      return { success: false as const, error: 'Gagal menghapus sub tema' };
+      return { success: false as const, message: 'Gagal menghapus sub tema' };
     }
   });
 }
@@ -182,7 +180,7 @@ export async function getActiveSubThemes(params?: {
       console.error('getActiveSubThemes', error);
       return {
         success: false as const,
-        error: 'Gagal mengambil data sub tema',
+        message: 'Gagal mengambil data sub tema',
       };
     }
   });

@@ -1,12 +1,10 @@
 'use server';
-import { ActionResult } from '@/types';
 import z from 'zod';
 
 import { parseInput } from '@/lib/actions/parse-input';
 import { uuidSchema } from '@/lib/validation/common';
 
 import { dcrService } from '../services';
-import { DailyClassReport } from '../types';
 import { dailyClassReportSchema } from '../validation';
 
 export async function getOrCreateDCR({
@@ -19,14 +17,7 @@ export async function getOrCreateDCR({
     input: classSessionId,
     fallbackError: 'Data batch tidak valid',
   });
-  if (!parsed.success)
-    return {
-      success: false as const,
-      error: {
-        type: ['ACTION_VALIDATION'],
-      },
-      message: 'Tipe ID sesi kelas tidak valid',
-    } as ActionResult<{ id: string }>;
+  if (!parsed.success) return parsed;
   return await dcrService.getOrCreateDCR({ classSessionId: parsed.data });
 }
 
@@ -44,15 +35,7 @@ export async function getDCRs(input: unknown = {}) {
     }),
     fallbackError: 'getDCRs: Opsi input tidak valid',
   });
-  if (!parsed.success) {
-    return {
-      success: false as const,
-      error: {
-        type: ['ACTION_VALIDATION'],
-      },
-      message: parsed.error,
-    } as ActionResult<DailyClassReport[]>;
-  }
+  if (!parsed.success) return parsed;
   return await dcrService.getDCRs(parsed.data);
 }
 
@@ -62,11 +45,6 @@ export async function saveDCR(input: unknown) {
     schema: dailyClassReportSchema,
     fallbackError: 'saveDCR: Validasi input gagal',
   });
-  if (!parsed.success)
-    return {
-      success: false as const,
-      error: { type: ['ACTION_VALIDATION'] },
-      message: parsed.error,
-    };
+  if (!parsed.success) return parsed;
   return await dcrService.saveDCR(parsed.data);
 }

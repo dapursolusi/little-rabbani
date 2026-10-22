@@ -1,8 +1,11 @@
 import { ActionResult } from '@/types';
 import { isWithinEditWindow } from '@/utils/date';
+import { getLocalDateString } from '@/utils/date-local';
+
+import { logger } from '@/lib/logger';
 
 import { dcrRepo } from '../repositories';
-import { DailyClassReport } from '../types';
+import { DailyClassReportList, DailyClassReportRecord } from '../types';
 import { DailyClassReportInput } from '../validation';
 
 export async function getOrCreateDCR({
@@ -11,8 +14,7 @@ export async function getOrCreateDCR({
   classSessionId: string;
 }) {
   try {
-    const today = new Date();
-    const iso = today.toISOString().split('T')[0];
+    const iso = getLocalDateString();
 
     const existing = await dcrRepo.findDCR({ date: iso, classSessionId });
     if (existing) return { success: true as const, data: existing };
@@ -20,12 +22,14 @@ export async function getOrCreateDCR({
     const dcr = await dcrRepo.insert({ date: iso, classSessionId });
     return { success: true as const, data: dcr };
   } catch (error) {
-    console.error('checkExistingDCR', error);
-    return { success: false as const, error: 'Gagal memuat laporan harian' };
+    logger.error({ err: error }, 'checkExistingDCR');
+    return { success: false as const, message: 'Gagal memuat laporan harian' };
   }
 }
 
-export async function saveDCR(input: DailyClassReportInput) {
+export async function saveDCR(
+  input: DailyClassReportInput
+): Promise<ActionResult<DailyClassReportRecord>> {
   try {
     if (input.date && !isWithinEditWindow(input.date)) {
       return {
@@ -40,7 +44,7 @@ export async function saveDCR(input: DailyClassReportInput) {
 
     const updated = await dcrRepo.update({
       input,
-      dcrId: existingDCRResults.data?.id as string,
+      dcrId: existingDCRResults.data?.id ?? '',
     });
     return {
       success: true as const,
@@ -48,8 +52,11 @@ export async function saveDCR(input: DailyClassReportInput) {
       data: updated,
     };
   } catch (error) {
-    console.error('saveDCR: ', error);
-    return { success: false as const, error: 'Gagal menyimpan laporan harian' };
+    logger.error({ err: error }, 'saveDCR');
+    return {
+      success: false as const,
+      message: 'Gagal menyimpan laporan harian',
+    };
   }
 }
 
@@ -63,16 +70,16 @@ export async function getDCRByDate(
     if (!dcr) {
       return {
         success: false as const,
-        error: `Laporan harian tanggal ${date} tidak ditemukan / belum dibuat`,
+        message: `Laporan harian tanggal ${date} tidak ditemukan / belum dibuat`,
       };
     }
 
     return { success: true as const, data: dcr };
   } catch (error) {
-    console.error('getDCRByDate', error);
+    logger.error({ err: error }, 'getDCRByDate');
     return {
       success: false as const,
-      error: 'Gagal memuat data laporan harian',
+      message: 'Gagal memuat data laporan harian',
     };
   }
 }
@@ -80,9 +87,9 @@ export async function getDCRByDate(
 export async function getDCRs(input: {
   classSessionId?: string;
   date?: { year?: number; month?: number };
-}): Promise<ActionResult<DailyClassReport[]>> {
+}): Promise<ActionResult<DailyClassReportList>> {
   try {
-    const defaultYear = new Date().getFullYear();
+    const defaultYear = Number(getLocalDateString().slice(0, 4));
     const dcrs = await dcrRepo.findMany({
       date: {
         year: input.date?.year ?? defaultYear,
@@ -91,10 +98,10 @@ export async function getDCRs(input: {
     });
     return {
       success: true as const,
-      data: dcrs as DailyClassReport[],
+      data: dcrs,
     };
   } catch (error) {
-    console.error('getDCRs :', error);
+    logger.error({ err: error }, 'getDCRs');
     return {
       success: false as const,
       message: 'Gagal memuat data kegiatan harian',

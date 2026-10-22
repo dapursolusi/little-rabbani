@@ -1,14 +1,12 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
+import { ActionResult } from '@/types';
+
 import { auth } from '@/lib/auth';
 
-export type ActionResult<T = void> =
-  | { success: true; data: T; error?: never }
-  | { success: false; data?: never; error: string };
-
 /** Wrap the ActionResult in an auth gate — the single "is this an owner?" check. */
-export async function requireOwner<T>(handler: () => Promise<T>) {
+export async function requireOwner<T>(handler: () => Promise<ActionResult<T>>) {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -20,7 +18,7 @@ export async function requireOwner<T>(handler: () => Promise<T>) {
   if (session.user.role !== 'owner') {
     return {
       success: false as const,
-      error: 'Akses ditolak. Hanya Owner yang dapat melakukan tindakan ini.',
+      message: 'Akses ditolak. Hanya Owner yang dapat melakukan tindakan ini.',
     };
   }
 

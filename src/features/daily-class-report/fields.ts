@@ -49,6 +49,7 @@ export const dailyClassReportFormFields = ({
     label: 'Deskripsi',
     type: 'textarea',
     fullWidth: true,
+    placeholder: 'Contoh: Anak-anak belajar mewarnai masjid dengan rapi',
   },
 ];
 
@@ -89,6 +90,7 @@ export const dcrObservationFormFieldsPresentAttendance = ({
       label: { text: 'Catatan (Opsional)', className: 'text-primary' },
       type: 'textarea',
       fullWidth: true,
+      placeholder: 'Contoh: Ahmad sangat antusias dan menyelesaikan tugasnya',
     },
   ];
 };

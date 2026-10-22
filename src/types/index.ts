@@ -2,8 +2,11 @@ import { ExtractTablesWithRelations } from 'drizzle-orm';
 import { NeonQueryResultHKT } from 'drizzle-orm/neon-serverless';
 import { PgTransaction } from 'drizzle-orm/pg-core';
 
-export interface BaseDTOResponse {
+export interface BaseDTOResponse extends DbTableAuditFields {
   id: string;
+}
+
+export interface DbTableAuditFields {
   createdAt: Date;
   updatedAt: Date;
   deletedAt?: Date | null;
@@ -35,12 +38,24 @@ export type ActionResult<T> =
   | {
       success: true;
       message?: string;
-      data?: T | null;
+      data: T;
       error?: never;
     }
   | {
       success: false;
       message: string;
       data?: never;
-      error?: Record<string, string[]>;
+      error?: ActionError;
+    };
+
+export type ActionError =
+  | {
+      type: 'validation';
+      message?: string;
+      fieldErrors: Record<string, string[]>;
+    }
+  | {
+      type: 'not_found' | 'conflict' | 'internal';
+      message?: string;
+      fieldErrors?: never;
     };

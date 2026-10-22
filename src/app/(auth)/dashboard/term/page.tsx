@@ -25,6 +25,13 @@ export default async function TermListPage() {
         createForm: <TermForm />,
         meta: { label: 'Batch', domain: 'term' },
       }}
+      emptyState={{
+        createFreshRow: {
+          type: 'form',
+          form: <TermForm />,
+          meta: { label: 'Batch', domain: 'term' },
+        },
+      }}
     />
   );
 }

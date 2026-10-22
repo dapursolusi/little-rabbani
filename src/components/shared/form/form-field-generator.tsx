@@ -29,14 +29,17 @@ import InputFieldRenderer from './input-field-renderer';
 export type DefaultFormFieldsProps<
   S extends z.ZodObject<z.ZodRawShape>,
   TForm extends FieldValues = S['_output'],
+  TSuccess = TForm,
 > = {
   schema: S;
   initialData: Record<string, unknown>;
   formFields: FormField[] | ((watch: (name: string) => unknown) => FormField[]);
   submitChildren?: ReactNode | ((ctx: { isSubmitting: boolean }) => ReactNode);
   meta?: { label: string };
-  onSuccess?: () => void;
-  onSubmit: (data: TForm) => unknown | Promise<unknown>;
+  onSuccessAction?: (result: TSuccess) => void;
+  onSubmitAction: (
+    data: TForm
+  ) => Promise<ActionResult<TSuccess | null> | undefined> | void;
   isEditMode?: boolean;
   disabled?: boolean;
 };
@@ -44,17 +47,18 @@ export type DefaultFormFieldsProps<
 export default function FormFieldGenerator<
   S extends z.ZodObject<z.ZodRawShape>,
   TForm extends FieldValues = S['_output'],
+  TSuccess = TForm,
 >({
   schema,
   initialData,
   formFields,
-  onSubmit: onSubmitProp,
+  onSubmitAction,
   submitChildren,
   meta,
-  onSuccess,
+  onSuccessAction,
   isEditMode,
   disabled,
-}: DefaultFormFieldsProps<S, TForm>) {
+}: DefaultFormFieldsProps<S, TForm, TSuccess>) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -99,21 +103,22 @@ export default function FormFieldGenerator<
     return groups;
   }, [fields]);
 
-  async function onSubmit(data: TForm): Promise<void> {
-    if (typeof onSubmitProp !== 'function') {
+  async function onSubmit(data: TForm) {
+    if (typeof onSubmitAction !== 'function') {
       return;
     }
     setIsSubmitting(true);
     try {
-      const result = await onSubmitProp(data);
+      const result = await onSubmitAction(data);
       if (!result) return;
-      const r = result as ActionResult<TForm>;
+      const r = result;
       if (r.success) {
         toast.success(
           `${meta?.label ?? 'Data'} berhasil ${isEditMode ? 'diperbarui' : 'ditambahkan'}`
         );
         router.refresh();
-        onSuccess?.();
+        if (!r.data) return;
+        onSuccessAction?.(r.data);
       } else {
         toast.error((!r.success && r.message) ?? 'Gagal menyimpan data');
       }

@@ -201,14 +201,6 @@ export default function SelectEnrolledKidsTable({
               </TableCell>
             </TableRow>
           ))}
-          {/* <TableRow>
-            <TableCell colSpan={3} className="text-center">
-              <Button className="flex justify-center items-center gap-3">
-                <HugeiconsIcon icon={SaveIcon} />
-                Simpan
-              </Button>
-            </TableCell>
-          </TableRow> */}
         </TableBody>
       </Table>
     </>

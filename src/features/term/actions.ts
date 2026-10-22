@@ -2,7 +2,7 @@
 
 import { db } from '@/db';
 import { term } from '@/db/schema';
-import { eq, isNull } from 'drizzle-orm';
+import { isNull } from 'drizzle-orm';
 
 import { parseInput } from '@/lib/actions/parse-input';
 import { requireOwner } from '@/lib/actions/require-owner';
@@ -40,7 +40,7 @@ export async function createTerm(input: unknown) {
   return await termService.createTerm(data);
 }
 
-export async function updateTerm(id: string, input: Record<string, unknown>) {
+export async function updateTerm(id: string, input: unknown) {
   const parsed = parseInput({
     schema: TermSchema,
     input,
@@ -52,16 +52,5 @@ export async function updateTerm(id: string, input: Record<string, unknown>) {
 }
 
 export async function deleteTerm(id: string) {
-  return requireOwner(async () => {
-    try {
-      await db
-        .update(term)
-        .set({ deletedAt: new Date() })
-        .where(eq(term.id, id));
-      return { success: true as const, data: undefined };
-    } catch (error) {
-      console.error('deleteTerm', error);
-      return { success: false as const, error: 'Gagal menghapus batch' };
-    }
-  });
+  return await termService.deleteTerm(id);
 }

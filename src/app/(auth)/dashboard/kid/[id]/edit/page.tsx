@@ -33,7 +33,7 @@ export default async function EditKidPage({ params }: EditKidPageProps) {
   if (!results.every((result) => result.success)) {
     return (
       <div className="p-4 text-center text-destructive">
-        {results.find((result) => !result.success)?.error}
+        {results.find((result) => !result.success)?.message}
       </div>
     );
   }
