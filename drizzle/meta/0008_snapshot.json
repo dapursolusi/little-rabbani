@@ -111,12 +111,8 @@
           "name": "account_user_id_user_id_fk",
           "tableFrom": "account",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -204,12 +200,8 @@
           "name": "session_user_id_user_id_fk",
           "tableFrom": "session",
           "tableTo": "user",
-          "columnsFrom": [
-            "user_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["user_id"],
+          "columnsTo": ["id"],
           "onDelete": "cascade",
           "onUpdate": "no action"
         }
@@ -219,9 +211,7 @@
         "session_token_unique": {
           "name": "session_token_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "token"
-          ]
+          "columns": ["token"]
         }
       },
       "policies": {},
@@ -293,9 +283,7 @@
         "user_email_unique": {
           "name": "user_email_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "email"
-          ]
+          "columns": ["email"]
         }
       },
       "policies": {},
@@ -446,12 +434,8 @@
           "name": "daily_class_report_class_session_id_class_session_id_fk",
           "tableFrom": "daily_class_report",
           "tableTo": "class_session",
-          "columnsFrom": [
-            "class_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["class_session_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -459,12 +443,8 @@
           "name": "daily_class_report_sub_theme_id_sub_theme_id_fk",
           "tableFrom": "daily_class_report",
           "tableTo": "sub_theme",
-          "columnsFrom": [
-            "sub_theme_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["sub_theme_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -474,10 +454,7 @@
         "dcr_class_session_id_date_idx": {
           "name": "dcr_class_session_id_date_idx",
           "nullsNotDistinct": false,
-          "columns": [
-            "class_session_id",
-            "date"
-          ]
+          "columns": ["class_session_id", "date"]
         }
       },
       "policies": {},
@@ -592,12 +569,8 @@
           "name": "dcr_observation_daily_class_report_id_daily_class_report_id_fk",
           "tableFrom": "dcr_observation",
           "tableTo": "daily_class_report",
-          "columnsFrom": [
-            "daily_class_report_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["daily_class_report_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -605,12 +578,8 @@
           "name": "dcr_observation_kid_id_kid_id_fk",
           "tableFrom": "dcr_observation",
           "tableTo": "kid",
-          "columnsFrom": [
-            "kid_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["kid_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -620,10 +589,7 @@
         "dcr_id_kid_id_idx": {
           "name": "dcr_id_kid_id_idx",
           "nullsNotDistinct": false,
-          "columns": [
-            "daily_class_report_id",
-            "kid_id"
-          ]
+          "columns": ["daily_class_report_id", "kid_id"]
         }
       },
       "policies": {},
@@ -692,9 +658,7 @@
         "class_session_name_unique": {
           "name": "class_session_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -838,12 +802,8 @@
           "name": "kid_enrollment_term_id_term_id_fk",
           "tableFrom": "kid_enrollment",
           "tableTo": "term",
-          "columnsFrom": [
-            "term_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["term_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -851,12 +811,8 @@
           "name": "kid_enrollment_class_session_id_class_session_id_fk",
           "tableFrom": "kid_enrollment",
           "tableTo": "class_session",
-          "columnsFrom": [
-            "class_session_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["class_session_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         },
@@ -864,12 +820,8 @@
           "name": "kid_enrollment_kid_id_kid_id_fk",
           "tableFrom": "kid_enrollment",
           "tableTo": "kid",
-          "columnsFrom": [
-            "kid_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["kid_id"],
+          "columnsTo": ["id"],
           "onDelete": "no action",
           "onUpdate": "no action"
         }
@@ -944,9 +896,7 @@
         "term_name_unique": {
           "name": "term_name_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name"
-          ]
+          "columns": ["name"]
         }
       },
       "policies": {},
@@ -1060,9 +1010,7 @@
         "guardian_phone_unique": {
           "name": "guardian_phone_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "phone"
-          ]
+          "columns": ["phone"]
         }
       },
       "policies": {},
@@ -1169,12 +1117,8 @@
           "name": "kid_guardian_id_guardian_id_fk",
           "tableFrom": "kid",
           "tableTo": "guardian",
-          "columnsFrom": [
-            "guardian_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["guardian_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1184,10 +1128,7 @@
         "kid_name_dob_unique": {
           "name": "kid_name_dob_unique",
           "nullsNotDistinct": false,
-          "columns": [
-            "name",
-            "dob"
-          ]
+          "columns": ["name", "dob"]
         }
       },
       "policies": {},
@@ -1260,12 +1201,8 @@
           "name": "sub_theme_theme_id_theme_id_fk",
           "tableFrom": "sub_theme",
           "tableTo": "theme",
-          "columnsFrom": [
-            "theme_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
+          "columnsFrom": ["theme_id"],
+          "columnsTo": ["id"],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1327,67 +1264,37 @@
     "public.role": {
       "name": "role",
       "schema": "public",
-      "values": [
-        "owner",
-        "teacher"
-      ]
+      "values": ["owner", "teacher"]
     },
     "public.kid_appetite": {
       "name": "kid_appetite",
       "schema": "public",
-      "values": [
-        "good",
-        "fair",
-        "small",
-        "none"
-      ]
+      "values": ["good", "fair", "small", "none"]
     },
     "public.kid_attendance": {
       "name": "kid_attendance",
       "schema": "public",
-      "values": [
-        "present",
-        "absent",
-        "excused",
-        "sick"
-      ]
+      "values": ["present", "absent", "excused", "sick"]
     },
     "public.kid_mood": {
       "name": "kid_mood",
       "schema": "public",
-      "values": [
-        "happy",
-        "angry",
-        "sad",
-        "fear",
-        "bored",
-        "shy"
-      ]
+      "values": ["happy", "angry", "sad", "fear", "bored", "shy"]
     },
     "public.enrollment_status": {
       "name": "enrollment_status",
       "schema": "public",
-      "values": [
-        "waiting",
-        "enrolled"
-      ]
+      "values": ["waiting", "enrolled"]
     },
     "public.active_status": {
       "name": "active_status",
       "schema": "public",
-      "values": [
-        "active",
-        "inactive",
-        "alumni"
-      ]
+      "values": ["active", "inactive", "alumni"]
     },
     "public.gender": {
       "name": "gender",
       "schema": "public",
-      "values": [
-        "male",
-        "female"
-      ]
+      "values": ["male", "female"]
     },
     "public.guardian_relationship": {
       "name": "guardian_relationship",
