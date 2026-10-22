@@ -1,9 +1,8 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-
 import {
   markReportAsSent,
   saveReportNarrative,
 } from '@/features/daily-class-report/services/kid-report';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
   findObservationWithKid: vi.fn(),
@@ -60,18 +59,22 @@ const EDITED_ROW = {
   id: 'R1',
   dcrObservationId: 'OBS1',
   narrative: EDITED,
-  reportStatus: 'edited',
-  sentAt: null,
+  reportStatus: 'edited' as const,
+  sentAt: null as Date | null,
 };
 const SENT_ROW = {
   id: 'R1',
   dcrObservationId: 'OBS1',
   narrative: DEFAULT,
-  reportStatus: 'sent',
+  reportStatus: 'sent' as const,
   sentAt: FIXED_NOW,
 };
 
-function seedContext({ existing }: { existing?: typeof EDITED_ROW }) {
+function seedContext({
+  existing,
+}: {
+  existing?: typeof EDITED_ROW | typeof SENT_ROW;
+}) {
   mocks.findObservationWithKid.mockResolvedValue(OBS);
   mocks.findDcrWithReportData.mockResolvedValue(DCR);
   mocks.findExistingReport.mockResolvedValue(existing);
@@ -92,7 +95,7 @@ describe('saveReportNarrative', () => {
     narrative: EDITED,
     reportStatus: 'edited',
     sentAt: null,
-  };
+  } as const;
   const defaultInput = { ...editedInput, narrative: DEFAULT };
 
   it('rule 1: edited narrative + no existing report → inserts with status edited', async () => {
@@ -194,7 +197,7 @@ describe('markReportAsSent', () => {
       id: 'R1',
       dcrObservationId: 'OBS1',
       narrative: 'custom draft narasi',
-      reportStatus: 'edited',
+      reportStatus: 'edited' as const,
       sentAt: null,
     };
     seedContext({ existing: editedRow });
