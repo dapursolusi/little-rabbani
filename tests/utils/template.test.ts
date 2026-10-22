@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { renderTemplate } from '@/utils/template';
+import { describe, expect, it } from 'vitest';
 
 describe('renderTemplate', () => {
   it('replaces simple placeholders', () => {

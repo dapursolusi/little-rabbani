@@ -1,6 +1,5 @@
-import { describe, expect, it } from 'vitest';
-
 import { cleanseText } from '@/utils/text';
+import { describe, expect, it } from 'vitest';
 
 describe('cleanseText', () => {
   it('trims whitespace', () => {

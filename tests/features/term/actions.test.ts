@@ -420,7 +420,10 @@ describe('deleteTerm', () => {
 
     const result = await deleteTerm('T1');
 
-    expect(result).toEqual({ success: false, message: 'Gagal menghapus batch' });
+    expect(result).toEqual({
+      success: false,
+      message: 'Gagal menghapus batch',
+    });
   });
 
   it('blocks a non-owner', async () => {

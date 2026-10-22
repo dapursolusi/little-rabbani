@@ -56,7 +56,9 @@ describe('parseInput', () => {
       message: 'Fallback',
       error: {
         type: 'validation',
-        fieldErrors: { name: ['Invalid input: expected string, received undefined'] },
+        fieldErrors: {
+          name: ['Invalid input: expected string, received undefined'],
+        },
       },
     });
   });
