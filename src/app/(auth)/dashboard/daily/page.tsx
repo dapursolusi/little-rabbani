@@ -3,7 +3,7 @@ import {
   dcrAction,
   reportTemplateAction,
 } from '@/features/daily-class-report/actions';
-import DailyClassReportClient from '@/features/daily-class-report/components/dcr-client';
+import DailyClassReportClient from '@/features/daily-class-report/components/client';
 import * as kidEnrollmentAction from '@/features/kid-enrollment/actions';
 import * as termAction from '@/features/term/actions';
 import * as themeAction from '@/features/theme/actions';

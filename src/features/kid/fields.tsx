@@ -6,6 +6,10 @@ import {
 } from '@/features/kid/constants';
 import { FormField } from '@/types/field';
 
+import {
+  classSessionIdField,
+  termIdField,
+} from '@/components/shared/form/fields';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { ClassSession } from '../class-session/types';
@@ -156,23 +160,7 @@ export const kidFormFields = ({
     {
       groupLabel: 'Registrasi Batch (Opsional)',
     },
-    {
-      name: 'termId',
-      label: 'Batch',
-      type: 'select',
-      selectOptions: terms.map((term) => ({
-        value: term.id,
-        label: term.name,
-      })),
-    },
-    {
-      name: 'classSessionId',
-      label: 'Sesi Kelas',
-      type: 'select',
-      selectOptions: classSessions.map((cs) => ({
-        value: cs.id,
-        label: cs.name,
-      })),
-    },
+    termIdField({ terms }),
+    classSessionIdField({ classSessions }),
   ];
 };

@@ -1,5 +1,7 @@
 'use client';
-import { FormField, SelectOptionGroup } from '@/types/field';
+import { FormField } from '@/types/field';
+
+import { classSessionIdField } from '@/components/shared/form/fields';
 
 import { ClassSession } from '../class-session/types';
 import { Theme } from '../theme/types';
@@ -20,17 +22,7 @@ export const dailyClassReportFormFields = ({
   themes: Theme[];
   onValueChangeAction: (value: string) => void;
 }): FormField[] => [
-  {
-    name: 'classSessionId',
-    label: 'Sesi',
-    type: 'select',
-    fullWidth: true,
-    selectOptions: classSessions.map((cs) => ({
-      value: cs.id,
-      label: `${cs.name} (${cs.startTime} - ${cs.endTime})`,
-    })),
-    onValueChange: onValueChangeAction,
-  },
+  classSessionIdField({ classSessions, onValueChangeAction }),
   {
     name: 'subThemeId',
     label: 'Sub Tema',
@@ -38,11 +30,12 @@ export const dailyClassReportFormFields = ({
     fullWidth: true,
     selectOptions: themes.map((t) => ({
       group: t.name,
-      options: t.subThemes?.map((st) => ({
-        value: st.id,
-        label: st.name,
-      })),
-    })) as SelectOptionGroup[],
+      options:
+        t.subThemes?.map((st) => ({
+          value: st.id,
+          label: st.name,
+        })) ?? [],
+    })),
   },
   {
     name: 'description',

@@ -1,6 +1,6 @@
 import * as classSessionAction from '@/features/class-session/actions';
 import * as kidEnrollmentAction from '@/features/kid-enrollment/actions';
-import KidEnrollmentClient from '@/features/kid-enrollment/components/kid-enrollment-client';
+import KidEnrollmentClient from '@/features/kid-enrollment/components/client';
 import { KidEnrollment } from '@/features/kid-enrollment/types';
 import * as termAction from '@/features/term/actions';
 

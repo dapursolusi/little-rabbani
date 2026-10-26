@@ -1,5 +1,5 @@
 import { getSubThemes, getThemes } from '@/features/theme/actions';
-import { ThemeListClient } from '@/features/theme/components/theme-list-client';
+import { ThemeListClient } from '@/features/theme/components/client';
 
 import { baseMetadata } from '@/lib/metadata';
 

@@ -2,6 +2,11 @@ import { ClassSession } from '@/features/class-session/types';
 import { Term } from '@/features/term/types';
 import { FormField } from '@/types/field';
 
+import {
+  classSessionIdField,
+  termIdField,
+} from '@/components/shared/form/fields';
+
 import { Kid } from '../kid/types';
 import SelectEnrolledKidsTable from './components/select-enrolled-kids';
 
@@ -15,26 +20,11 @@ export const kidEnrollmentFormFields = ({
   kids: Kid[];
 }): FormField[] => {
   return [
-    {
-      name: 'termId',
-      label: 'Batch',
-      type: 'select',
-      fullWidth: true,
-      selectOptions: terms.map((term) => ({
-        value: term.id,
-        label: term.name,
-      })),
-    },
-    {
-      name: 'classSessionId',
-      label: 'Sesi',
-      type: 'select',
-      fullWidth: true,
-      selectOptions: classSessions.map((cs) => ({
-        value: cs.id,
-        label: `${cs.name} (${cs.startTime} - ${cs.endTime})`,
-      })) || [{ value: 'all', label: 'Semua Sesi' }],
-    },
+    termIdField({ terms }),
+    classSessionIdField({
+      classSessions,
+      extraOptions: [{ value: 'all', label: 'Semua Sesi' }],
+    }),
     {
       name: 'kids',
       label: 'Anak-anak',

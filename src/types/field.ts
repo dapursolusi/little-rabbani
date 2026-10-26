@@ -24,6 +24,7 @@ export type FormFieldGroupHeader = {
 };
 
 export type FormFieldInput = FormFieldBase & CustomHTMLInputType;
+export type FormFieldSelectInput = FormFieldBase & CustomHTMLInputTypeSelect;
 
 /**
  * One entry in a `FormField[]`. Either an input field (bound to a form value
@@ -56,15 +57,23 @@ export type CustomHTMLInputTypeCustom = {
 
 export type CustomHTMLInputTypeSelect = {
   type: 'select';
-  selectOptions: SelectOption[] | SelectOptionGroup[];
+  selectOptions: SelectOptionWithoutGroup[] | SelectOptionWithGroup[];
   onValueChange?: (value: string) => void;
 };
 
-export type SelectOption = { value: string; label: string };
-
-export interface SelectOptionGroup {
+export interface SelectOption {
+  value: string;
+  label: string;
+}
+export interface SelectOptionWithoutGroup extends SelectOption {
+  group?: never;
+  options?: never;
+}
+export interface SelectOptionWithGroup {
   group: string;
   options: SelectOption[];
+  value?: never;
+  label?: never;
 }
 
 export type CustomHTMLInputTypeSwitch = {

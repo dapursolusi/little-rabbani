@@ -320,7 +320,7 @@ export default function KidEnrollmentClient({
             onValueChange={(classSessionId) =>
               pushParam('classSessionId', classSessionId)
             }
-            value={selectedClassSessionId ?? 'all'}
+            value={selectedClassSessionId ?? 'Pilih Sesi Kelas'}
           >
             <SelectTrigger className="w-100">
               <SelectValue>
