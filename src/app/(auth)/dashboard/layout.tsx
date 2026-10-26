@@ -1,5 +1,6 @@
 import { headers } from 'next/headers';
 
+import { navGroups, schools } from '@/config/navigation';
 import * as termAction from '@/features/term/actions';
 
 import { AppSidebar } from '@/components/layout/app-sidebar';
@@ -30,7 +31,11 @@ export default async function DashboardLayout({
   return (
     <TooltipProvider>
       <SidebarProvider defaultOpen={true}>
-        <AppSidebar user={session?.user} />
+        <AppSidebar
+          user={session?.user}
+          navGroups={navGroups}
+          schools={schools}
+        />
         <SidebarInset>
           {/* Top bar */}
           <header className="sticky top-0 z-10 flex items-center gap-2 border-b border bg-card px-4 py-2">
