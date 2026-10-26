@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Term } from '@/features/term/types';
+import { pushParam } from '@/utils/search-params';
 import {
   Add02Icon,
   AddTeamIcon,
@@ -69,17 +70,6 @@ export default function KidEnrollmentClient({
   const [deleted, setDeleted] = useState<Set<string>>(new Set());
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isAddKidModalOpen, setIsAddKidModalOpen] = useState(false);
-
-  // Merge into the current query string so pushing one param keeps the others
-  // (?termId stays when a class session is picked, and vice versa).
-  const pushParam = (
-    key: 'termId' | 'classSessionId',
-    value: string | null
-  ) => {
-    const params = new URLSearchParams(window.location.search);
-    params.set(key, value ?? '');
-    router.push(`?${params.toString()}`);
-  };
 
   const showAllSessions = selectedClassSessionId === 'all';
   const columns = showAllSessions
@@ -285,7 +275,9 @@ export default function KidEnrollmentClient({
           </Label>
           <Select
             id="term-select"
-            onValueChange={(termId) => pushParam('termId', termId)}
+            onValueChange={(termId) =>
+              pushParam({ key: 'termId', value: termId, router })
+            }
             value={selectedTermId ?? terms[0]?.id ?? ''}
           >
             <SelectTrigger className="w-100">
@@ -318,7 +310,11 @@ export default function KidEnrollmentClient({
           <Select
             id="class-session-select"
             onValueChange={(classSessionId) =>
-              pushParam('classSessionId', classSessionId)
+              pushParam({
+                key: 'classSessionId',
+                value: classSessionId,
+                router,
+              })
             }
             value={selectedClassSessionId ?? 'Pilih Sesi Kelas'}
           >

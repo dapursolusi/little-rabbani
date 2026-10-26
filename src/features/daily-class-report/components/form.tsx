@@ -4,6 +4,7 @@ import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Theme } from '@/features/theme/types';
 import { getLocalDateString } from '@/utils/date-local';
+import { pushParam } from '@/utils/search-params';
 
 import FormFieldGenerator from '@/components/shared/form/form-field-generator';
 
@@ -31,11 +32,6 @@ export function DailyClassReportForm({
   existingDCR?: DailyClassReportItem;
 }) {
   const router = useRouter();
-  const pushParam = (key: 'classSessionId', value: string | null) => {
-    const params = new URLSearchParams(window.location.search);
-    params.set(key, value ?? '');
-    router.push(`?${params.toString()}`);
-  };
   return (
     <FormFieldGenerator
       schema={dailyClassReportSchema}
@@ -43,7 +39,7 @@ export function DailyClassReportForm({
         classSessions,
         themes,
         onValueChangeAction: (classSessionId) => {
-          pushParam('classSessionId', classSessionId);
+          pushParam({ key: 'classSessionId', value: classSessionId, router });
         },
       })}
       initialData={{
