@@ -1,7 +1,7 @@
 import {
   type CustomHTMLInputTypeSelect,
   type FormFieldInput,
-  type SelectOptionGroup,
+  type SelectOptionWithGroup,
 } from '@/types/field';
 import type {
   ControllerFieldState,
@@ -49,7 +49,7 @@ export default function InputFieldRenderer<
         label: string;
       }[];
       const selectedLabel = grouped
-        ? (options as SelectOptionGroup[])
+        ? (options as SelectOptionWithGroup[])
             .flatMap((g) => g.options)
             .find((opt) => opt.value === field.value)?.label
         : flatOpts.find((opt) => opt.value === field.value)?.label;
@@ -77,7 +77,7 @@ export default function InputFieldRenderer<
           </SelectTrigger>
           <SelectContent align="center">
             {grouped
-              ? (options as SelectOptionGroup[]).map((group) => (
+              ? (options as SelectOptionWithGroup[]).map((group) => (
                   <SelectGroup key={group.group}>
                     <SelectLabel>{group.group}</SelectLabel>
                     {group.options.length > 0 ? (
