@@ -6,10 +6,12 @@ import { useRouter } from 'next/navigation';
 import { ClassSession } from '@/features/class-session/types';
 import { KidEnrollment } from '@/features/kid-enrollment/types';
 import { Term } from '@/features/term/types';
+import { pushParam } from '@/utils/search-params';
 import { ChildIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
-import FormFieldGenerator from '@/components/shared/form/form-field-generator';
+import ClassSessionSelector from '@/components/features/class-session/class-session-selector';
+import TermSelector from '@/components/features/term/term-selector';
 import {
   Item,
   ItemContent,
@@ -18,9 +20,6 @@ import {
   ItemHeader,
   ItemTitle,
 } from '@/components/ui/item';
-
-import { monthlyReportFormFields } from '../fields';
-import { monthlyReportSchema } from '../validation';
 
 interface MonthlyReportClientProps {
   currentTermId: string;
@@ -38,14 +37,19 @@ export default function MonthlyReportClient({
   const router = useRouter();
   return (
     <div>
-      <FormFieldGenerator
-        formFields={monthlyReportFormFields({ terms, classSessions, router })}
-        initialData={{
-          termId: '',
-          classSessionId: '',
-        }}
-        schema={monthlyReportSchema}
-        onSubmitAction={() => {}}
+      <TermSelector
+        terms={terms}
+        value={currentTermId}
+        onValueChange={(termId) =>
+          pushParam({ key: 'termId', value: termId, router })
+        }
+      />
+      <ClassSessionSelector
+        classSessions={classSessions}
+        value={currentClassSessionId}
+        onValueChange={(classSessionId) =>
+          pushParam({ key: 'classSessionId', value: classSessionId, router })
+        }
       />
       <div className="flex w-full max-w-full flex-col gap-6">
         <ItemGroup className="grid grid-cols-4 gap-4">

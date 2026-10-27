@@ -17,18 +17,11 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
+import ClassSessionSelector from '@/components/features/class-session/class-session-selector';
+import TermSelector from '@/components/features/term/term-selector';
 import { Modal } from '@/components/shared/modal';
 import { DataTable } from '@/components/shared/table/data-table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 
 import * as kidEnrollmentAction from '../actions';
@@ -266,76 +259,26 @@ export default function KidEnrollmentClient({
   return (
     <div className="p-4 sm:p-6 flex flex-col gap-4">
       <div className="flex gap-4 items-center justify-between">
-        <div className="flex flex-col gap-4 items-start">
-          <Label
-            htmlFor="term-select"
-            className="text-sm font-medium text-muted-foreground"
-          >
-            Batch
-          </Label>
-          <Select
-            id="term-select"
-            onValueChange={(termId) =>
-              pushParam({ key: 'termId', value: termId, router })
-            }
-            value={selectedTermId ?? terms[0]?.id ?? ''}
-          >
-            <SelectTrigger className="w-100">
-              <SelectValue>
-                {terms.find((term) => term.id === selectedTermId)?.name ??
-                  'Pilih Batch'}
-                {selectedTermId === currentTermId && (
-                  <Badge>Sedang Berjalan</Badge>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {terms.map((term) => (
-                <SelectItem key={term.id} value={term.id}>
-                  {term.name}
-                  {term.id === currentTermId && <Badge>Sedang Berjalan</Badge>}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <TermSelector
+          terms={terms}
+          value={selectedTermId}
+          onValueChange={(termId) =>
+            pushParam({ key: 'termId', value: termId, router })
+          }
+          ongoingTermId={currentTermId}
+        />
         <Separator orientation="vertical" />
-        <div className="flex flex-col gap-4 items-start">
-          <Label
-            htmlFor="class-session-select"
-            className="text-sm font-medium text-muted-foreground"
-          >
-            Sesi Kelas
-          </Label>
-          <Select
-            id="class-session-select"
-            onValueChange={(classSessionId) =>
-              pushParam({
-                key: 'classSessionId',
-                value: classSessionId,
-                router,
-              })
-            }
-            value={selectedClassSessionId ?? 'Pilih Sesi Kelas'}
-          >
-            <SelectTrigger className="w-100">
-              <SelectValue>
-                {selectedClassSessionId
-                  ? classSessions.find((cs) => cs.id === selectedClassSessionId)
-                      ?.name
-                  : 'Pilih Semua Sesi Kelas'}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Pilih Semua Sesi Kelas</SelectItem>
-              {classSessions.map((cs) => (
-                <SelectItem key={cs.id} value={cs.id}>
-                  {cs.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <ClassSessionSelector
+          classSessions={classSessions}
+          value={selectedClassSessionId}
+          onValueChange={(classSessionId) =>
+            pushParam({
+              key: 'classSessionId',
+              value: classSessionId,
+              router,
+            })
+          }
+        />
       </div>
       <Separator />
       <NewKidIdsContext.Provider value={newKidIds}>
