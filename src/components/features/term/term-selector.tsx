@@ -1,5 +1,6 @@
 import { useState } from 'react';
 
+import { useOngoingTerm } from '@/contexts/ongoing-term';
 import { Term } from '@/features/term/types';
 
 import { Badge } from '@/components/ui/badge';
@@ -14,13 +15,13 @@ import {
 
 function OngoingTermBadge({
   termId,
-  ongoingTermId,
 }: {
   termId: string;
   ongoingTermId?: string;
 }) {
-  if (!ongoingTermId) return null;
-  if (termId === ongoingTermId) return <Badge>Sedang Berjalan</Badge>;
+  const { ongoingTerm } = useOngoingTerm();
+  if (!ongoingTerm?.id) return null;
+  if (termId === ongoingTerm.id) return <Badge>Sedang Berjalan</Badge>;
 }
 
 export default function TermSelector({
@@ -28,27 +29,28 @@ export default function TermSelector({
   value,
   defaultValue,
   onValueChange,
-  ongoingTermId,
 }: {
   terms: Term[];
   value?: string;
   defaultValue?: string;
   onValueChange?: (val: string) => void;
-  ongoingTermId?: string;
 }) {
+  const { ongoingTerm } = useOngoingTerm();
   const [internalValue, setInternalValue] = useState<string>(
-    defaultValue ?? terms[0]?.id ?? ''
+    defaultValue ?? ''
   );
-  const selectedTermId = value ?? internalValue;
+  const selectedTermId =
+    value !== undefined ? value : internalValue || ongoingTerm?.id || '';
   const handleValueChange = (termId: string | null) => {
-    if (!termId) return null;
+    if (termId === null) return;
 
-    if (!value) {
+    if (value === undefined) {
       setInternalValue(termId);
     }
 
     onValueChange?.(termId);
   };
+  console.log({ value, defaultValue, internalValue, selectedTermId });
 
   return (
     <div className="flex flex-col gap-3 items-start mb-1.5">
@@ -61,26 +63,20 @@ export default function TermSelector({
       <Select
         id="term-select"
         onValueChange={handleValueChange}
-        value={selectedTermId ?? terms[0]?.id ?? ''}
+        value={selectedTermId}
       >
         <SelectTrigger className="w-full">
           <SelectValue>
             {terms.find((term) => term.id === selectedTermId)?.name ??
               'Pilih Batch'}
-            <OngoingTermBadge
-              termId={selectedTermId}
-              ongoingTermId={ongoingTermId}
-            />
+            <OngoingTermBadge termId={selectedTermId} />
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           {terms.map((term) => (
             <SelectItem key={term.id} value={term.id}>
               {term.name}
-              <OngoingTermBadge
-                termId={term.id}
-                ongoingTermId={ongoingTermId}
-              />
+              <OngoingTermBadge termId={term.id} />
             </SelectItem>
           ))}
         </SelectContent>
