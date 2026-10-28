@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
+import { useOngoingTerm } from '@/contexts/ongoing-term';
 import { ClassSession } from '@/features/class-session/types';
 import { KidEnrollment } from '@/features/kid-enrollment/types';
 import { Term } from '@/features/term/types';
@@ -30,6 +31,8 @@ interface MonthlyReportClientProps {
 }
 
 export default function MonthlyReportClient({
+  currentTermId,
+  currentClassSessionId,
   terms,
   classSessions,
   currentKids,
@@ -39,7 +42,6 @@ export default function MonthlyReportClient({
     <div>
       <TermSelector
         terms={terms}
-        value={currentTermId}
         onValueChange={(termId) =>
           pushParam({ key: 'termId', value: termId, router })
         }
@@ -51,31 +53,40 @@ export default function MonthlyReportClient({
           pushParam({ key: 'classSessionId', value: classSessionId, router })
         }
       />
-      <div className="flex w-full max-w-full flex-col gap-6">
-        <ItemGroup className="grid grid-cols-4 gap-4">
-          {currentKids.map((ck) => (
-            <Item
-              key={ck.kid.name}
-              variant="outline"
-              render={<Link href={`/dashboard/report/kid/${ck.kidId}`}></Link>}
-            >
-              <ItemHeader>
-                {
-                  <HugeiconsIcon
-                    icon={ChildIcon}
-                    size="100"
-                    className="text-center"
-                  />
+
+      {currentTermId ? (
+        <div className="flex w-full max-w-full flex-col gap-6">
+          <ItemGroup className="grid grid-cols-4 gap-4">
+            {currentKids.map((ck) => (
+              <Item
+                key={ck.kid.name}
+                variant="outline"
+                render={
+                  <Link
+                    href={`/dashboard/report/kid/${ck.kidId}?termId=${currentTermId}&classSessionId=${currentClassSessionId}`}
+                  ></Link>
                 }
-              </ItemHeader>
-              <ItemContent>
-                <ItemTitle>{ck.kid.name}</ItemTitle>
-                <ItemDescription>{ck.kid.nickName}</ItemDescription>
-              </ItemContent>
-            </Item>
-          ))}
-        </ItemGroup>
-      </div>
+              >
+                <ItemHeader>
+                  {
+                    <HugeiconsIcon
+                      icon={ChildIcon}
+                      size="100"
+                      className="text-center"
+                    />
+                  }
+                </ItemHeader>
+                <ItemContent>
+                  <ItemTitle>{ck.kid.name}</ItemTitle>
+                  <ItemDescription>{ck.kid.nickName}</ItemDescription>
+                </ItemContent>
+              </Item>
+            ))}
+          </ItemGroup>
+        </div>
+      ) : (
+        <p>Pilih batch terlebih dahulu!</p>
+      )}
     </div>
   );
 }

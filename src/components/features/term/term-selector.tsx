@@ -29,11 +29,13 @@ export default function TermSelector({
   value,
   defaultValue,
   onValueChange,
+  showLabel = true,
 }: {
   terms: Term[];
   value?: string;
   defaultValue?: string;
   onValueChange?: (val: string) => void;
+  showLabel?: boolean;
 }) {
   const { ongoingTerm } = useOngoingTerm();
   const [internalValue, setInternalValue] = useState<string>(
@@ -54,12 +56,14 @@ export default function TermSelector({
 
   return (
     <div className="flex flex-col gap-3 items-start mb-1.5">
-      <Label
-        htmlFor="term-select"
-        className="text-sm font-medium text-muted-foreground"
-      >
-        Batch
-      </Label>
+      {showLabel && (
+        <Label
+          htmlFor="term-select"
+          className="text-sm font-medium text-muted-foreground"
+        >
+          Batch
+        </Label>
+      )}
       <Select
         id="term-select"
         onValueChange={handleValueChange}

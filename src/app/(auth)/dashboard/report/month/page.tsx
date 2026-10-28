@@ -1,3 +1,5 @@
+import { redirect } from 'next/navigation';
+
 import * as classSessionAction from '@/features/class-session/actions';
 import * as kidEnrollmentAction from '@/features/kid-enrollment/actions';
 import MonthlyReportClient from '@/features/report/month/components/client';
@@ -10,36 +12,49 @@ export default async function MonthlyReportPage({
 }) {
   const { termId, classSessionId } = await searchParams;
 
-  const [termsResults, classSessionsResults] = await Promise.all([
-    termAction.getTerms(),
-    classSessionAction.getClassSessions(),
-  ]);
+  const [termsResults, currentTermResults, classSessionsResults] =
+    await Promise.all([
+      termAction.getTerms(),
+      termAction.checkCurrentTerm(),
+      classSessionAction.getClassSessions(),
+    ]);
 
-  if (!termsResults.success || !classSessionsResults.success) {
+  if (
+    !termsResults.success ||
+    !currentTermResults.success ||
+    !classSessionsResults.success
+  ) {
     <p>Terjadi kesalahan silahkan muat ulang!</p>;
   }
 
-  const kidsResults = await kidEnrollmentAction.getKidsEnrollments({
-    termId,
-    classSessionId,
-  });
-
-  if (!kidsResults.success) {
-    <p>Terjadi kesalahan memuat data anak, silahkan muat ulang!</p>;
+  if (!termId && currentTermResults.success && currentTermResults.data?.id) {
+    redirect(`/dashboard/report/month?termId=${currentTermResults.data?.id}`);
   }
+
+  const kidsResults = termId
+    ? await kidEnrollmentAction.getKidsEnrollments({
+        termId,
+        classSessionId,
+      })
+    : null;
+
+  if (termId && !kidsResults?.success)
+    return <p>Terjadi kesalahan memuat data anak, silahkan muat ulang!</p>;
 
   return (
     <div className="mx-auto max-w-225">
       <p className="pb-4 font-semibold text-center">
         Laporan Bulanan Orang Tua
       </p>
-      <MonthlyReportClient
-        terms={termsResults.data ?? []}
-        classSessions={classSessionsResults.data ?? []}
-        currentTermId={termId ?? ''}
-        currentClassSessionId={classSessionId ?? ''}
-        currentKids={kidsResults.data ?? []}
-      />
+      {termsResults.success && (
+        <MonthlyReportClient
+          terms={termsResults.data ?? []}
+          classSessions={classSessionsResults.data ?? []}
+          currentTermId={termId ?? ''}
+          currentClassSessionId={classSessionId ?? ''}
+          currentKids={kidsResults?.data ?? []}
+        />
+      )}
     </div>
   );
 }
