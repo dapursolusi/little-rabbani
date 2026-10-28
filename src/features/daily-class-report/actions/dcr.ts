@@ -2,7 +2,7 @@
 import z from 'zod';
 
 import { parseInput } from '@/lib/actions/parse-input';
-import { uuidSchema } from '@/lib/validation/common';
+import { uuidSchema } from '@/lib/validation/common.schema';
 
 import { dcrService } from '../services';
 import { dailyClassReportSchema } from '../validation';

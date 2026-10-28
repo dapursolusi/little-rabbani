@@ -1,6 +1,6 @@
 'use server';
 import { parseInput } from '@/lib/actions/parse-input';
-import { uuidSchema } from '@/lib/validation/common';
+import { uuidSchema } from '@/lib/validation/common.schema';
 
 import * as kidEnrollmentService from './services';
 import { KidEnrollmentSchema, SaveEnrollmentChangesSchema } from './validation';
