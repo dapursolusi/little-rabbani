@@ -18,6 +18,7 @@ import {
 
 import { dcrObservation } from './daily';
 import { kidEnrollment } from './enrollment';
+import { monthlyKidReport } from './report';
 
 // ─────────────── Guardian / Parent ───────────────
 
@@ -98,4 +99,5 @@ export const kidRelations = relations(kid, ({ one, many }) => ({
   }),
   enrollments: many(kidEnrollment),
   dcrObservations: many(dcrObservation),
+  monthlyReports: many(monthlyKidReport),
 }));

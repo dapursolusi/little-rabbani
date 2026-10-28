@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 
 import KidReportClient from '@/features/report/kid/components/client';
+import * as kidReportService from '@/features/report/kid/services';
 import { getLocalDateString } from '@/utils/date-local';
 
 export default async function KidReportPage({
@@ -10,27 +11,29 @@ export default async function KidReportPage({
   params: Promise<{ id: string }>;
   searchParams: Promise<{
     termId: string;
-    classSessionId: string;
     month: string;
   }>;
 }) {
-  const { id } = await params;
+  const { id: kidId } = await params;
   const currentYearMonth = getLocalDateString().slice(0, 7);
-  const { termId, classSessionId, month: yearMonthParam } = await searchParams;
+  const { termId, month: yearMonthParam } = await searchParams;
   if (!yearMonthParam) {
     redirect(
-      `/dashboard/report/kid/${id}?termId=${termId}&classSessionId=${classSessionId}&month=${currentYearMonth}`
+      `/dashboard/report/kid/${kidId}?termId=${termId}&month=${currentYearMonth}`
     );
+  }
+  const kidDataResult = await kidReportService.getKidMonthlyReport({
+    termId,
+    kidId,
+    month: yearMonthParam,
+  });
+  if (!kidDataResult) {
+    <p>Terjadi Kesalahan</p>;
   }
 
   return (
     <div>
-      <p>{currentYearMonth}</p>
-      <KidReportClient
-        kidId={id}
-        termId={termId}
-        classSessionId={classSessionId}
-      />
+      <KidReportClient kidId={kidId} termId={termId} />
     </div>
   );
 }

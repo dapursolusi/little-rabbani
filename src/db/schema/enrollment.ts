@@ -14,6 +14,7 @@ import {
 
 import { dailyClassReport } from './daily';
 import { kid } from './kids';
+import { monthlyKidReport } from './report';
 
 export const term = pgTable(
   'term',
@@ -35,6 +36,7 @@ export const term = pgTable(
 
 export const termRelations = relations(term, ({ many }) => ({
   kidEnrollments: many(kidEnrollment),
+  monthlyKidReports: many(monthlyKidReport),
 }));
 
 export const classSession = pgTable(

@@ -2,6 +2,7 @@ import { db } from '@/db';
 import { ActionResult } from '@/types';
 
 import { requireOwner } from '@/lib/actions/require-owner';
+import { logger } from '@/lib/logger';
 
 import { LeanKid } from '../kid/types';
 import * as termService from '../term/services';
@@ -107,6 +108,29 @@ export async function getAvailableKids({
     return {
       success: false as const,
       error: 'Gagal memuat data. Coba muat ulang halaman.',
+    };
+  }
+}
+
+export async function verifyKidEnrollment({
+  termId,
+  kidId,
+}: {
+  termId: string;
+  kidId: string;
+}) {
+  try {
+    const isEnrolled = await kidEnrollmentRepo.hasKidEnrollment({
+      termId,
+      kidId,
+    });
+    if (!isEnrolled) return { success: false as const };
+    return { success: true as const };
+  } catch (error) {
+    logger.error({ err: error }, 'verifyKidEnrollment');
+    return {
+      success: false as const,
+      message: 'Terjadi kesalahan verifikasi registrasi batch anak',
     };
   }
 }

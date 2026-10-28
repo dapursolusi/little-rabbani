@@ -56,14 +56,14 @@ export default function MonthlyReportClient({
 
       {currentTermId ? (
         <div className="flex w-full max-w-full flex-col gap-6">
-          <ItemGroup className="grid grid-cols-4 gap-4">
+          <ItemGroup className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
             {currentKids.map((ck) => (
               <Item
                 key={ck.kid.name}
                 variant="outline"
                 render={
                   <Link
-                    href={`/dashboard/report/kid/${ck.kidId}?termId=${currentTermId}&classSessionId=${currentClassSessionId}`}
+                    href={`/dashboard/report/kid/${ck.kidId}?termId=${currentTermId}`}
                   ></Link>
                 }
               >
@@ -71,8 +71,7 @@ export default function MonthlyReportClient({
                   {
                     <HugeiconsIcon
                       icon={ChildIcon}
-                      size="100"
-                      className="text-center"
+                      className="mx-auto max-h-25 max-w-25 size-full"
                     />
                   }
                 </ItemHeader>

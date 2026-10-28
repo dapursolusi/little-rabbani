@@ -44,6 +44,10 @@ export async function getKid(id: string) {
   }
 }
 
+export async function getKidBasicInfo(id: string) {
+  return kidRepo.findBasicInfo(id);
+}
+
 /** Narrow interface — the test surface; a fake tx only needs these shapes. */
 export interface GuardianTx {
   query: {

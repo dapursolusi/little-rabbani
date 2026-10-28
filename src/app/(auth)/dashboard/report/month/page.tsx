@@ -42,7 +42,7 @@ export default async function MonthlyReportPage({
     return <p>Terjadi kesalahan memuat data anak, silahkan muat ulang!</p>;
 
   return (
-    <div className="mx-auto max-w-225">
+    <div className="mx-auto max-w-300">
       <p className="pb-4 font-semibold text-center">
         Laporan Bulanan Orang Tua
       </p>

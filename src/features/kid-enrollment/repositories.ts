@@ -6,6 +6,22 @@ import { SQL, and, eq, exists, inArray, isNull, not } from 'drizzle-orm';
 import { EnrollmentStatus } from './constants';
 import { LeanKidEnrollment } from './types';
 
+export async function hasKidEnrollment({
+  termId,
+  kidId,
+}: {
+  termId: string;
+  kidId: string;
+}) {
+  return db.query.kidEnrollment.findFirst({
+    where: and(
+      eq(kidEnrollment.termId, termId),
+      eq(kidEnrollment.kidId, kidId)
+    ),
+    columns: { id: true },
+  });
+}
+
 export async function findMany({
   termId,
   classSessionId,

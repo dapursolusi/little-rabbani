@@ -28,13 +28,11 @@ import { Textarea } from '@/components/ui/textarea';
 interface KidReportClientProps {
   kidId: string;
   termId: string;
-  classSessionId: string;
 }
 
 export default function KidReportClient({
   kidId,
   termId,
-  classSessionId,
 }: KidReportClientProps) {
   return (
     <div>
