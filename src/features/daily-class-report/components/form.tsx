@@ -3,7 +3,7 @@ import { useRouter } from 'next/navigation';
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Theme } from '@/features/theme/types';
-import { getLocalDateString } from '@/utils/date-local';
+import { getLocalDateString } from '@/utils/date';
 import { pushParam } from '@/utils/search-params';
 
 import FormFieldGenerator from '@/components/shared/form/form-field-generator';

@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 
 import KidReportClient from '@/features/report/kid/components/client';
 import * as kidReportService from '@/features/report/kid/services';
-import { getLocalDateString } from '@/utils/date-local';
+import { getLocalDateString } from '@/utils/date';
 
 export default async function KidReportPage({
   params,

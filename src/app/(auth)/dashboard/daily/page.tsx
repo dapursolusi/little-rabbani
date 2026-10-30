@@ -7,7 +7,7 @@ import DailyClassReportClient from '@/features/daily-class-report/components/cli
 import * as kidEnrollmentAction from '@/features/kid-enrollment/actions';
 import * as termAction from '@/features/term/actions';
 import * as themeAction from '@/features/theme/actions';
-import { getLocalDateString } from '@/utils/date-local';
+import { getLocalDateString } from '@/utils/date';
 
 export default async function DailyClassReportPage({
   searchParams,

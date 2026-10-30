@@ -5,7 +5,7 @@ import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Theme } from '@/features/theme/types';
 import { ActionResult } from '@/types';
-import { getLocalDateString } from '@/utils/date-local';
+import { getLocalDateString } from '@/utils/date';
 import {
   Audit01Icon,
   FilePenIcon,
