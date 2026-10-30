@@ -18,7 +18,7 @@ export async function hasKidEnrollment({
       eq(kidEnrollment.termId, termId),
       eq(kidEnrollment.kidId, kidId)
     ),
-    columns: { id: true },
+    columns: { id: true, classSessionId: true },
   });
 }
 
@@ -77,6 +77,22 @@ export async function findAvailableKids({
         )
       )
     ),
+  });
+}
+
+export async function findCsIdByTermId({
+  kidId,
+  termId,
+}: {
+  kidId: string;
+  termId: string;
+}) {
+  return db.query.kidEnrollment.findFirst({
+    where: and(
+      eq(kidEnrollment.termId, termId),
+      eq(kidEnrollment.kidId, kidId)
+    ),
+    columns: { classSessionId: true },
   });
 }
 

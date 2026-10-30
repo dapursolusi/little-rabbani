@@ -2,6 +2,8 @@ import { redirect } from 'next/navigation';
 
 import KidReportClient from '@/features/report/kid/components/client';
 import * as kidReportService from '@/features/report/kid/services';
+import * as monthlyReportService from '@/features/report/month/services';
+import * as termService from '@/features/term/services';
 import { getLocalDateString } from '@/utils/date';
 
 export default async function KidReportPage({
@@ -31,9 +33,23 @@ export default async function KidReportPage({
     <p>Terjadi Kesalahan</p>;
   }
 
+  const terms = (await termService.getTerms()).data ?? [];
+  const academicDetailsResult =
+    await monthlyReportService.getMonthlyAcademicDetails({
+      kidId,
+      termId,
+      month: yearMonthParam,
+    });
+
   return (
     <div>
-      <KidReportClient kidId={kidId} termId={termId} />
+      <KidReportClient
+        currentKidId={kidId}
+        currentTermId={termId}
+        kidDetails={kidDataResult.data}
+        terms={terms}
+        academicDetails={academicDetailsResult.data}
+      />
     </div>
   );
 }

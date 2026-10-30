@@ -52,7 +52,6 @@ export default function TermSelector({
 
     onValueChange?.(termId);
   };
-  console.log({ value, defaultValue, internalValue, selectedTermId });
 
   return (
     <div className="flex flex-col gap-3 items-start mb-1.5">

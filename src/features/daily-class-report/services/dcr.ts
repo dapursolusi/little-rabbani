@@ -26,6 +26,20 @@ export async function getOrCreateDCR({
   }
 }
 
+export async function getTotalDcrByMonth(input: {
+  classSessionId: string;
+  month: string;
+}) {
+  return await dcrRepo.countByMonth(input);
+}
+
+export async function getDcrsByMonth(input: {
+  classSessionId: string;
+  month: string;
+}) {
+  return await dcrRepo.findManyByMonth(input);
+}
+
 export async function saveDCR(
   input: DailyClassReportInput
 ): Promise<ActionResult<DailyClassReportRecord>> {

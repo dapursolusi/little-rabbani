@@ -1,6 +1,12 @@
 'use client';
 
 import {
+  KID_APPETITE_LABELS,
+  KID_ATTENDANCE_LABELS,
+  KID_MOOD_LABELS,
+} from '@/features/daily-class-report/constants';
+import { TermData } from '@/features/term/types';
+import {
   ChevronDown,
   SquareChevronLeftIcon,
   SquareChevronRightIcon,
@@ -25,15 +31,26 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 
+import { MonthlyAcademicDetails, MonthlyKidReportDetail } from '../types';
+
 interface KidReportClientProps {
-  kidId: string;
-  termId: string;
+  currentKidId: string;
+  currentTermId: string;
+  terms: TermData[];
+  kidDetails: MonthlyKidReportDetail;
+  academicDetails: MonthlyAcademicDetails;
 }
 
 export default function KidReportClient({
-  kidId,
-  termId,
+  currentKidId,
+  currentTermId,
+  terms,
+  kidDetails,
+  academicDetails,
 }: KidReportClientProps) {
+  const totalAttendance = kidDetails?.dcrObservations.filter(
+    (obs) => obs.attendance === 'present'
+  ).length;
   return (
     <div>
       {/* Kid Info & Batch Selector  */}
@@ -43,11 +60,11 @@ export default function KidReportClient({
           <AvatarFallback>TEST</AvatarFallback>
         </Avatar>
         <div></div>
-        (Ghani) Ghani Sulaiman
+        {`(${kidDetails?.nickName}) ${kidDetails?.name}`}
         <TermSelector terms={[]} showLabel={false} />
       </div>
       {/* Month Selector */}
-      <div className="my-2 flex items-center justify-between p-4 border-2 rounded-xl">
+      <div className="my-2 flex items-center justify-between border-2 rounded-xl">
         <Button
           render={<HugeiconsIcon icon={SquareChevronLeftIcon} size={100} />}
           className="w-fit"
@@ -67,7 +84,9 @@ export default function KidReportClient({
             <ItemContent>
               <ItemTitle>Kehadiran</ItemTitle>
               <ItemDescription>
-                <Badge>15</Badge>
+                <Badge>
+                  {totalAttendance}/{academicDetails?.dcrs.length}
+                </Badge>
               </ItemDescription>
             </ItemContent>
           </Item>
@@ -86,19 +105,40 @@ export default function KidReportClient({
             <span>Riwayat Observasi Bulan Ini</span>
             <HugeiconsIcon icon={ChevronDown} />
           </CollapsibleTrigger>
-          <CollapsibleContent className="w-full bg-accent/80 my-2 p-3 border-2 rounded-md">
-            <div className="flex items-baseline gap-2 py-2">
-              <div className="min-w-25">
-                <Badge>Senin, 12 Okt</Badge>
+          <CollapsibleContent className="w-full bg-accent/80 my-2 p-3 border-2 rounded-md max-h-80 overflow-auto">
+            {kidDetails?.dcrObservations.map((obs) => (
+              <div key={obs.id}>
+                <div className="flex items-baseline gap-2 py-2">
+                  <div className="min-w-25">
+                    <Badge>
+                      {Intl.DateTimeFormat('id-ID', {
+                        weekday: 'long',
+                        day: '2-digit',
+                        month: 'short',
+                      }).format(new Date(obs.dcr.date))}
+                    </Badge>
+                  </div>
+                  <Separator orientation="vertical" className="" />
+                  {obs.attendance === 'present' ? (
+                    <div>
+                      <p className="flex items-center gap-2">
+                        <span>{`⭐`}</span>
+                        <Separator orientation="vertical" />
+                        <span>{`Mood: ${obs.mood && KID_MOOD_LABELS[obs.mood]}`}</span>
+                        <Separator orientation="vertical" />
+                        <span>{`Makan: ${obs.appetite && KID_APPETITE_LABELS[obs.appetite]}`}</span>
+                      </p>
+
+                      <p>{`Catatan: ${obs.notes ?? '—'}`}</p>
+                      <p>Partipasi aktif</p>
+                    </div>
+                  ) : (
+                    <div>{KID_ATTENDANCE_LABELS[obs.attendance]}</div>
+                  )}
+                </div>
+                <Separator />
               </div>
-              <Separator orientation="vertical" className="" />
-              <div>
-                <p>Hadir-Mood-Makan</p>
-                <p>Catatan</p>
-                <p>Partipasi aktif</p>
-              </div>
-            </div>
-            <Separator />
+            ))}
             <div className="flex items-baseline gap-2 py-2">
               <div className="min-w-25">
                 <Badge>Selasa, 13 Okt</Badge>

@@ -20,8 +20,8 @@ export async function findNext(todayStr: string) {
   });
 }
 
-export async function findAll() {
-  return await db.query.term.findMany({
+export async function findMany() {
+  return db.query.term.findMany({
     where: isNull(term.deletedAt),
     orderBy: (t, { desc }) => [desc(t.createdAt)],
   });

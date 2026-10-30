@@ -2,7 +2,6 @@ import { db } from '@/db';
 import { ActionResult } from '@/types';
 
 import { requireOwner } from '@/lib/actions/require-owner';
-import { logger } from '@/lib/logger';
 
 import { LeanKid } from '../kid/types';
 import * as termService from '../term/services';
@@ -119,20 +118,21 @@ export async function verifyKidEnrollment({
   termId: string;
   kidId: string;
 }) {
-  try {
-    const isEnrolled = await kidEnrollmentRepo.hasKidEnrollment({
-      termId,
-      kidId,
-    });
-    if (!isEnrolled) return { success: false as const };
-    return { success: true as const };
-  } catch (error) {
-    logger.error({ err: error }, 'verifyKidEnrollment');
-    return {
-      success: false as const,
-      message: 'Terjadi kesalahan verifikasi registrasi batch anak',
-    };
+  return kidEnrollmentRepo.hasKidEnrollment({
+    termId,
+    kidId,
+  });
+}
+
+export async function getKidClassSessionIdByTermId(input: {
+  kidId: string;
+  termId: string;
+}) {
+  const enrollment = await kidEnrollmentRepo.findCsIdByTermId(input);
+  if (!enrollment) {
+    throw new Error('Kid enrollment not found');
   }
+  return enrollment?.classSessionId;
 }
 
 export async function createKidsEnrollments(input: KidEnrollmentInput) {

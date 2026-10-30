@@ -1,4 +1,5 @@
 import { requireOwner } from '@/lib/actions/require-owner';
+import { logger } from '@/lib/logger';
 
 import * as termRepo from './repositories';
 import { TermInput } from './validation';
@@ -53,7 +54,7 @@ export async function checkCurrentTerm() {
 
     if (currentTerm) return { success: true as const, data: currentTerm };
 
-    const terms = await termRepo.findAll();
+    const terms = await termRepo.findMany();
     const latestTerm = terms[0];
 
     // Only auto-create when the latest batch has actually ended — never on top
@@ -91,6 +92,22 @@ export async function checkCurrentTerm() {
   }
 }
 
+export async function getTerms() {
+  try {
+    const terms = await termRepo.findMany();
+    return {
+      success: true as const,
+      data: terms,
+    };
+  } catch (error) {
+    logger.error({ err: error }, 'getTerms');
+    return {
+      success: false as const,
+      message: 'Gagal memuat data batch',
+    };
+  }
+}
+
 export async function checkNextTerm() {
   const today = new Date().toISOString().split('T')[0];
   try {
@@ -105,7 +122,7 @@ export async function checkNextTerm() {
     // "app untouched for months" edge case (creates a fresh current term).
     if (!currentTerm) return { success: true as const, data: undefined };
 
-    const terms = await termRepo.findAll();
+    const terms = await termRepo.findMany();
 
     // Term N+1 starts the day after term N ends — no overlap, no gap.
     const duration =

@@ -46,3 +46,10 @@ export function getLocalDateString({
     day: '2-digit',
   }).format(now);
 }
+
+export function startOfNextMonthDate(yearMonth: string) {
+  const nextMonth = new Date(`${yearMonth}-01T00:00:00Z`);
+  nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+
+  return nextMonth.toISOString().slice(0, 10);
+}

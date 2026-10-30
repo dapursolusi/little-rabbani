@@ -1,10 +1,48 @@
 import { db } from '@/db';
 import { dailyClassReport } from '@/db/schema/daily';
 import { subTheme } from '@/db/schema/theme';
-import { and, eq, gte, lt } from 'drizzle-orm';
+import { startOfNextMonthDate } from '@/utils/date';
+import { and, eq, gte, isNull, lt } from 'drizzle-orm';
 
 import { DcrWithKidObservation } from '../types';
 import { DailyClassReportInput } from '../validation';
+
+export async function countByMonth({
+  classSessionId,
+  month: yearMonth,
+}: {
+  classSessionId: string;
+  month: string;
+}) {
+  return db.$count(
+    dailyClassReport,
+    and(
+      eq(dailyClassReport.classSessionId, classSessionId),
+      gte(dailyClassReport.date, `${yearMonth}-01`),
+      lt(dailyClassReport.date, startOfNextMonthDate(yearMonth)),
+      isNull(dailyClassReport.deletedAt)
+    )
+  );
+}
+
+export async function findManyByMonth({
+  classSessionId,
+  month: yearMonth,
+}: {
+  classSessionId: string;
+  month: string;
+}) {
+  const reports = await db.query.dailyClassReport.findMany({
+    where: and(
+      eq(dailyClassReport.classSessionId, classSessionId),
+      gte(dailyClassReport.date, `${yearMonth}-01`),
+      lt(dailyClassReport.date, startOfNextMonthDate(yearMonth)),
+      isNull(dailyClassReport.deletedAt)
+    ),
+    columns: { id: true, date: true },
+  });
+  return reports;
+}
 
 export async function insert(input: DailyClassReportInput) {
   const [inserted] = await db
