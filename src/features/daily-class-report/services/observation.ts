@@ -6,11 +6,7 @@ import { logger } from '@/lib/logger';
 import { dcrService } from '.';
 import * as kidService from '../../kid/services';
 import { dcrRepo, observationRepo } from '../repositories';
-import {
-  DCRObservation,
-  DcrObservationItem,
-  DcrObservationList,
-} from '../types';
+import { DcrObservation } from '../types';
 import { DCRObservationInput } from '../validation';
 
 export async function createKidObservation({
@@ -19,7 +15,7 @@ export async function createKidObservation({
 }: {
   input: DCRObservationInput;
   classSessionId: string;
-}): Promise<ActionResult<DcrObservationItem>> {
+}): Promise<ActionResult<DcrObservation>> {
   try {
     if (!classSessionId)
       return {
@@ -38,7 +34,7 @@ export async function createKidObservation({
       dcrId: dcr.data?.id,
     });
 
-    const kidName = (await kidService.getKid(input.kidId)).data?.name;
+    const kidName = (await kidService.getKid(input.kidId)).name;
 
     if (existingToday) {
       return {
@@ -64,7 +60,7 @@ export async function createKidObservation({
 
 export async function updateKidObservation(
   input: DCRObservationInput
-): Promise<ActionResult<DcrObservationItem>> {
+): Promise<ActionResult<DcrObservation>> {
   try {
     const existing = await observationRepo.findObservation({
       dcrId: input.dcrId,
@@ -103,10 +99,10 @@ export async function updateKidObservation(
 
 export async function getDCRObservationsByDcrId(
   dcrId: string
-): Promise<ActionResult<DcrObservationList>> {
+): Promise<ActionResult<DcrObservation[]>> {
   try {
     const observations = await observationRepo.findMany({ dcrId });
-    return { success: true as const, data: observations as DcrObservationList };
+    return { success: true as const, data: observations };
   } catch (error) {
     logger.error({ err: error }, 'getDCRObservationsByDcrId');
     return {
@@ -119,23 +115,8 @@ export async function getDCRObservationsByDcrId(
 export async function getDCRObservationsByDate(
   date: string,
   { classSessionId }: { classSessionId?: string }
-): Promise<ActionResult<DCRObservation[]>> {
-  try {
-    const dcrResults = await dcrService.getDCRByDate(date, {
-      classSessionId,
-    });
-    const observations = dcrResults.data?.observations;
-    if (!dcrResults.success)
-      return {
-        success: false as const,
-        message: 'Laporan harian tidak ditemukan',
-      };
-    return { success: true as const, data: observations as DCRObservation[] };
-  } catch (error) {
-    logger.error({ err: error }, 'getDCRObservationsByDate');
-    return {
-      success: false as const,
-      message: 'Gagal memuat observasi anak. Coba lagi nanti.',
-    };
-  }
+) {
+  return dcrService.getDCRByDate(date, {
+    classSessionId,
+  });
 }

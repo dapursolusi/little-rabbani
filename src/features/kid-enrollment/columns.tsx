@@ -1,8 +1,8 @@
 import { createContext, memo, useContext } from 'react';
 
 import {
-  ENROLLMENT_STATUS,
   ENROLLMENT_STATUS_LABELS,
+  ENROLLMENT_STATUS_VALUES,
   EnrollmentStatus,
 } from '@/features/kid-enrollment/constants';
 import { Cancel02Icon, Undo02Icon } from '@hugeicons/core-free-icons';
@@ -20,7 +20,7 @@ import {
 } from '@/components/ui/select';
 
 import { getDeterministicClass } from '../../utils/badge-color';
-import { KidEnrollment } from './types';
+import { KidEnrollment, KidEnrollmentWithRelations } from './types';
 
 export const NewKidIdsContext = createContext<Set<string>>(new Set());
 
@@ -127,7 +127,7 @@ function StatusCell({ row }: { row: { original: KidEnrollment } }) {
         </span>
       </SelectTrigger>
       <SelectContent>
-        {ENROLLMENT_STATUS.map((s) => (
+        {ENROLLMENT_STATUS_VALUES.map((s) => (
           <SelectItem key={s} value={s}>
             {ENROLLMENT_STATUS_LABELS[s]}
           </SelectItem>
@@ -139,7 +139,7 @@ function StatusCell({ row }: { row: { original: KidEnrollment } }) {
 
 export const kidEnrollmentColumns: ColumnDef<
   AppTableFeatures,
-  KidEnrollment
+  KidEnrollmentWithRelations
 >[] = [
   {
     accessorKey: 'kid.name',
@@ -161,7 +161,7 @@ export const kidEnrollmentColumns: ColumnDef<
 
 export const kidEnrollmentSessionColumn: ColumnDef<
   AppTableFeatures,
-  KidEnrollment
+  KidEnrollmentWithRelations
 > = {
   accessorKey: 'classSession.name',
   header: 'Sesi Kelas',
@@ -185,7 +185,7 @@ export const kidEnrollmentSessionColumn: ColumnDef<
 
 export const kidEnrollmentActionColumn: ColumnDef<
   AppTableFeatures,
-  KidEnrollment
+  KidEnrollmentWithRelations
 > = {
   id: 'actions',
   header: 'Aksi',
@@ -246,7 +246,7 @@ function UpdateActionCell({ row }: { row: { original: KidEnrollment } }) {
 
 export const kidEnrollmentUpdateActionColumn: ColumnDef<
   AppTableFeatures,
-  KidEnrollment
+  KidEnrollmentWithRelations
 > = {
   id: 'update-actions',
   header: '',

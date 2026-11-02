@@ -1,7 +1,7 @@
 import { headers } from 'next/headers';
 import { redirect } from 'next/navigation';
 
-import { getDefaultTemplate } from '@/features/daily-class-report/actions/report-template';
+import { reportTemplateService } from '@/features/daily-class-report/services';
 
 import { auth } from '@/lib/auth';
 import { baseMetadata } from '@/lib/metadata';
@@ -15,8 +15,8 @@ export default async function ReportTemplatePage() {
   if (!session) redirect('/login');
   if (session.user.role !== 'owner') redirect('/dashboard');
 
-  const result = await getDefaultTemplate();
-  const template = result.success ? result.data.content : '';
+  const template =
+    (await reportTemplateService.getDefaultTemplate()).content ?? '';
 
   return <ReportTemplateClient initialContent={template} />;
 }

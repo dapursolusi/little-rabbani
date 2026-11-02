@@ -1,5 +1,6 @@
 import { dcrService } from '@/features/daily-class-report/services';
 import * as kidEnrollmentService from '@/features/kid-enrollment/services';
+import * as termService from '@/features/term/services';
 import z from 'zod';
 
 import { parseInput } from '@/lib/actions/parse-input';
@@ -34,10 +35,7 @@ export async function getMonthlyAcademicDetails(input: MonthlyKidReportParams) {
       message:
         'Tidak ada data registrasi anak untuk batch saat ini. Pilih batch lain atau periksa registrasi anak',
     };
-  const totalClassSessions = await dcrService.getTotalDcrByMonth({
-    classSessionId,
-    month: yearMonth,
-  });
+  const terms = await termService.getTerms();
   const dcrs = await dcrService.getDcrsByMonth({
     classSessionId,
     month: yearMonth,

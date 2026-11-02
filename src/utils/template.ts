@@ -4,8 +4,8 @@ import {
   KID_MOOD_LABELS,
 } from '@/features/daily-class-report/constants';
 import {
-  DCRObservation,
   DailyClassReport,
+  DcrObservation,
 } from '@/features/daily-class-report/types';
 import { Kid } from '@/features/kid/types';
 import { SubTheme } from '@/features/theme/types';
@@ -61,7 +61,7 @@ export interface DailyReportTemplateRenderData {
 }
 
 export type DailyReportTemplateRenderObservationData = Pick<
-  DCRObservation,
+  DcrObservation,
   'attendance' | 'mood' | 'appetite' | 'notes'
 > & {
   kid?: Pick<Kid, 'name' | 'nickName'> | null;

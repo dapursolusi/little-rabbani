@@ -1,12 +1,9 @@
-import * as classSessionAction from '@/features/class-session/actions';
-import {
-  dcrAction,
-  reportTemplateAction,
-} from '@/features/daily-class-report/actions';
+import * as classSessionService from '@/features/class-session/services';
+import { reportTemplateAction } from '@/features/daily-class-report/actions';
 import DailyClassReportClient from '@/features/daily-class-report/components/client';
-import * as kidEnrollmentAction from '@/features/kid-enrollment/actions';
-import * as termAction from '@/features/term/actions';
-import * as themeAction from '@/features/theme/actions';
+import { dcrService } from '@/features/daily-class-report/services';
+import * as kidEnrollmentService from '@/features/kid-enrollment/services';
+import * as themeService from '@/features/theme/services';
 import { getLocalDateString } from '@/utils/date';
 
 export default async function DailyClassReportPage({
@@ -15,49 +12,35 @@ export default async function DailyClassReportPage({
   searchParams: Promise<{ classSessionId?: string }>;
 }) {
   const { classSessionId } = await searchParams;
-
-  const [csResults, themeResults, currentTermResults] = await Promise.all([
-    classSessionAction.getClassSessions(),
-    themeAction.getThemes(),
-    termAction.checkCurrentTerm(),
-  ]);
-
-  if (
-    !csResults.success ||
-    !themeResults.success ||
-    !currentTermResults.success
-  ) {
-    return (
-      <section className="p-4 text-center text-destructive">
-        {!csResults.success && csResults.message}
-        {!themeResults.success && themeResults.message}
-        {!currentTermResults.success && currentTermResults.message}
-      </section>
-    );
-  }
-
-  const currentTermKidsResults =
-    await kidEnrollmentAction.getCurrentTermKidEnrollmentsByClassSession(
-      classSessionId
-    );
   const todayDate = getLocalDateString();
-  const existingDCRsResults = await dcrAction.getDCRs({
-    date: { year: Number(todayDate.slice(0, 4)) },
-    classSessionId,
-  });
-  const defaultReportTemplateResults =
-    await reportTemplateAction.getDefaultTemplate();
+
+  const [
+    classSessions,
+    themes,
+    enrolledKids,
+    existingDCRs,
+    defaultReportTemplate,
+  ] = await Promise.all([
+    classSessionService.getClassSessions(),
+    themeService.getThemes(),
+    kidEnrollmentService.getCurrentTermEnrolledKidsByClassSession(
+      classSessionId ?? ''
+    ),
+    dcrService.getDCRs({
+      date: { year: Number(todayDate.slice(0, 4)) },
+      classSessionId,
+    }),
+    reportTemplateAction.getDefaultTemplate(),
+  ]);
 
   return (
     <DailyClassReportClient
-      classSessions={csResults.data ?? []}
-      themes={themeResults.data ?? []}
-      availableKids={currentTermKidsResults.data?.map((ctk) => ctk.kid) ?? []}
+      classSessions={classSessions}
+      themes={themes.items}
+      enrolledKids={enrolledKids}
       defaultClassSessionId={classSessionId}
-      existingDCRsResults={existingDCRsResults}
-      defaultReportTemplate={
-        defaultReportTemplateResults.data?.content as string
-      }
+      existingDCRs={existingDCRs}
+      defaultReportTemplate={defaultReportTemplate.content ?? ''}
     />
   );
 }

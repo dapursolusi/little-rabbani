@@ -6,20 +6,6 @@ import * as kidService from './services';
 import { LeanKid } from './types';
 import { CreateKidSchema, GuardianSchema, UpdateKidSchema } from './validation';
 
-// ── Reads ─────────────────────────────────────────────
-
-export async function getKids(searchParams?: URLSearchParams) {
-  const search = searchParams?.get('search') ?? undefined;
-  const limit = Number(searchParams?.get('limit') ?? 50);
-  const offset = Number(searchParams?.get('offset') ?? 0);
-
-  return await kidService.getKids({ limit, offset, search });
-}
-
-export async function getKid(id: string) {
-  return kidService.getKid(id);
-}
-
 // ── Mutations ─────────────────────────────────────────
 
 export async function createKid(input: {

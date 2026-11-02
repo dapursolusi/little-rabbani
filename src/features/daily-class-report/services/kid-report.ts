@@ -8,7 +8,7 @@ import { logger } from '@/lib/logger';
 
 import { dailyKidReportRepo, dcrRepo, observationRepo } from '../repositories';
 import * as templateRepo from '../repositories/report-template';
-import { DailyKidReportItem } from '../types';
+import { DailyKidReport } from '../types';
 import { DailyKidReportInput } from '../validation';
 
 // Types
@@ -156,7 +156,7 @@ export async function getDailyKidReportsByDcrId(
 
 export async function saveReportNarrative(
   input: DailyKidReportInput
-): Promise<ActionResult<DailyKidReportItem | null>> {
+): Promise<ActionResult<DailyKidReport | null>> {
   try {
     // 1. Validate observation and load required report data
     const context = await getValidatedDataByDcrObservationId(
@@ -242,7 +242,7 @@ export async function markReportAsSent({
 }: {
   dcrObservationId: string;
   now?: Date;
-}): Promise<ActionResult<DailyKidReportItem | null>> {
+}): Promise<ActionResult<DailyKidReport | null>> {
   try {
     // 1. Validate observation and load required report data
     const context = await getValidatedDataByDcrObservationId(dcrObservationId);

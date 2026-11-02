@@ -4,7 +4,7 @@ import { FormField } from '@/types/field';
 import { classSessionIdField } from '@/components/shared/form/fields';
 
 import { ClassSession } from '../class-session/types';
-import { Theme } from '../theme/types';
+import { ThemeWithSubThemes } from '../theme/types';
 import {
   KID_APPETITE_LABELS,
   KID_ATTENDANCE_LABELS,
@@ -19,7 +19,7 @@ export const dailyClassReportFormFields = ({
   onValueChangeAction,
 }: {
   classSessions: ClassSession[];
-  themes: Theme[];
+  themes: ThemeWithSubThemes[];
   onValueChangeAction: (value: string) => void;
 }): FormField[] => [
   classSessionIdField({ classSessions, onValueChangeAction }),

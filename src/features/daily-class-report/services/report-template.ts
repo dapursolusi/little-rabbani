@@ -4,26 +4,16 @@ import { logger } from '@/lib/logger';
 
 import { seedDefaultTemplate } from '../../../db/seeds/report-template';
 import { reportTemplateRepo } from '../repositories';
-import * as repo from '../repositories/report-template';
 import { ReportTemplate } from '../types';
 
 export async function getDefaultTemplate() {
-  try {
-    // Seed default on first read if not exists
-    await seedDefaultTemplate();
+  await seedDefaultTemplate();
 
-    const tmpl = await repo.findDefault();
-    if (!tmpl) {
-      return {
-        success: false as const,
-        error: 'Template laporan belum diatur.',
-      };
-    }
-    return { success: true as const, data: tmpl };
-  } catch (error) {
-    logger.error({ err: error }, 'getDefaultTemplate');
-    return { success: false as const, error: 'Gagal memuat template laporan.' };
+  const tmpl = await reportTemplateRepo.findDefault();
+  if (!tmpl) {
+    throw new Error('Template laporan belum diatur.');
   }
+  return tmpl;
 }
 
 export async function getTemplateById(
@@ -51,7 +41,10 @@ export async function getTemplateById(
 
 export async function saveTemplate(input: { content: string }) {
   try {
-    const tmpl = await repo.upsert({ name: 'default', content: input.content });
+    const tmpl = await reportTemplateRepo.upsert({
+      name: 'default',
+      content: input.content,
+    });
     return { success: true as const, data: tmpl };
   } catch (error) {
     logger.error({ err: error }, 'saveTemplate');

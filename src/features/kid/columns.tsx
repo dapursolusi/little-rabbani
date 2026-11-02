@@ -10,11 +10,11 @@ import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
 import { formatAge } from '@/lib/format';
 
 import { deleteKid } from './actions';
-import { Kid } from './types';
+import { KidWithGuardian } from './types';
 
 // v9: first generic is the shared table feature set — `meta` is typed by its
 // `columnMeta` slot (AppColumnMeta: title/enableSearch/filter).
-export const kidColumns: ColumnDef<AppTableFeatures, Kid>[] = [
+export const kidColumns: ColumnDef<AppTableFeatures, KidWithGuardian>[] = [
   {
     accessorKey: 'name',
     meta: { title: 'Nama', enableSearch: true },

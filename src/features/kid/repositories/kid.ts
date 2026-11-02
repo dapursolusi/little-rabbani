@@ -3,7 +3,15 @@ import { kid } from '@/db/schema';
 import { TransactionClient } from '@/types';
 import { SQL, eq, sql } from 'drizzle-orm';
 
+import { LeanKid } from '../types';
 import { UpdateKidInput } from '../validation';
+
+// Column Selection
+export const leanKidColumnSelection = {
+  id: true,
+  nickName: true,
+  name: true,
+} as const satisfies Record<keyof LeanKid, boolean>;
 
 // Insert
 
@@ -31,7 +39,7 @@ export async function findMany(
   offset?: number,
   where?: SQL<unknown>
 ) {
-  return await db.query.kid.findMany({
+  return db.query.kid.findMany({
     where,
     with: { guardian: true },
     orderBy: (kid, { desc }) => [desc(kid.createdAt)],
@@ -50,11 +58,7 @@ export async function findById(id: string) {
 export async function findBasicInfo(id: string) {
   return db.query.kid.findFirst({
     where: eq(kid.id, id),
-    columns: {
-      id: true,
-      nickName: true,
-      name: true,
-    },
+    columns: leanKidColumnSelection,
   });
 }
 

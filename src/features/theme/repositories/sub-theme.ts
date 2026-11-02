@@ -2,7 +2,17 @@ import { db } from '@/db';
 import { subTheme } from '@/db/schema';
 import { and, eq, isNull } from 'drizzle-orm';
 
+import { SubTheme } from '../types';
 import type { SubThemeInput } from '../validation';
+import { themeColumnSelection } from './theme';
+
+// Column Selection
+
+export const subThemeColumnSelection = {
+  id: true,
+  themeId: true,
+  name: true,
+} as const satisfies Record<keyof SubTheme, boolean>;
 
 export async function findMany(params?: { themeId?: string }) {
   const conditions = [isNull(subTheme.deletedAt)];
@@ -11,6 +21,15 @@ export async function findMany(params?: { themeId?: string }) {
   return await db.query.subTheme.findMany({
     where: and(...conditions),
     with: { theme: true },
+    orderBy: (st, { asc }) => [asc(st.name)],
+  });
+}
+
+export async function findManyWithTheme() {
+  return await db.query.subTheme.findMany({
+    where: isNull(subTheme.deletedAt),
+    columns: subThemeColumnSelection,
+    with: { theme: { columns: themeColumnSelection } },
     orderBy: (st, { asc }) => [asc(st.name)],
   });
 }

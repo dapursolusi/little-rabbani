@@ -196,8 +196,8 @@ describe('checkCurrentTerm', () => {
 
     const result = await checkCurrentTerm();
 
-    expect(result.success).toBe(true);
-    if (!result.success) return;
+    expect(result).toBe(true);
+    if (!result) return;
     expect(mocks.insert).toHaveBeenCalled();
     const values = mocks.insert.mock.results[0]!.value.values as ReturnType<
       typeof vi.fn

@@ -13,10 +13,10 @@ import {
   updateTheme,
 } from './actions';
 import { subThemeFields, themeFields } from './fields';
-import { SubTheme, Theme } from './types';
+import { SubTheme, Theme, ThemeWithSubThemes } from './types';
 import { subThemeSchema, themeSchema } from './validation';
 
-export const themeColumns: ColumnDef<AppTableFeatures, Theme>[] = [
+export const themeColumns: ColumnDef<AppTableFeatures, ThemeWithSubThemes>[] = [
   {
     accessorKey: 'name',
     meta: { title: 'Nama Tema', enableSearch: true },

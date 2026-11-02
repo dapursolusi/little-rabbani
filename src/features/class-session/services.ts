@@ -89,15 +89,7 @@ export async function updateClassSession(id: string, input: ClassSessionInput) {
 }
 
 export async function getClassSessions() {
-  return requireOwner(async () => {
-    try {
-      const classSessions = await classSessionRepo.findMany();
-      return { success: true as const, data: classSessions };
-    } catch (error) {
-      console.error('getClassSessions', error);
-      return { success: false as const, message: 'Gagal memuat sesi kelas' };
-    }
-  });
+  return classSessionRepo.findMany();
 }
 
 export async function deleteClassSession(id: string) {

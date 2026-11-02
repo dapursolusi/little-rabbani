@@ -1,9 +1,9 @@
 import { redirect } from 'next/navigation';
 
-import * as classSessionAction from '@/features/class-session/actions';
-import * as kidEnrollmentAction from '@/features/kid-enrollment/actions';
+import * as classSessionService from '@/features/class-session/services';
+import * as kidEnrollmentService from '@/features/kid-enrollment/services';
 import MonthlyReportClient from '@/features/report/month/components/client';
-import * as termAction from '@/features/term/actions';
+import * as termService from '@/features/term/services';
 
 export default async function MonthlyReportPage({
   searchParams,
@@ -12,47 +12,35 @@ export default async function MonthlyReportPage({
 }) {
   const { termId, classSessionId } = await searchParams;
 
-  const [termsResults, currentTermResults, classSessionsResults] =
-    await Promise.all([
-      termAction.getTerms(),
-      termAction.checkCurrentTerm(),
-      classSessionAction.getClassSessions(),
-    ]);
+  const [terms, classSessions, currentTerm] = await Promise.all([
+    termService.getTerms(),
+    classSessionService.getClassSessions(),
+    termService.checkCurrentTerm(),
+  ]);
 
-  if (
-    !termsResults.success ||
-    !currentTermResults.success ||
-    !classSessionsResults.success
-  ) {
-    <p>Terjadi kesalahan silahkan muat ulang!</p>;
+  if (!termId && currentTerm) {
+    redirect(`/dashboard/report/month?termId=${currentTerm.id}`);
   }
 
-  if (!termId && currentTermResults.success && currentTermResults.data?.id) {
-    redirect(`/dashboard/report/month?termId=${currentTermResults.data?.id}`);
-  }
-
-  const kidsResults = termId
-    ? await kidEnrollmentAction.getKidsEnrollments({
+  const enrolledKids = termId
+    ? await kidEnrollmentService.getKidsEnrollments({
         termId,
         classSessionId,
       })
     : null;
-
-  if (termId && !kidsResults?.success)
-    return <p>Terjadi kesalahan memuat data anak, silahkan muat ulang!</p>;
 
   return (
     <div className="mx-auto max-w-300">
       <p className="pb-4 font-semibold text-center">
         Laporan Bulanan Orang Tua
       </p>
-      {termsResults.success && (
+      {terms && (
         <MonthlyReportClient
-          terms={termsResults.data ?? []}
-          classSessions={classSessionsResults.data ?? []}
+          terms={terms}
+          classSessions={classSessions}
           currentTermId={termId ?? ''}
           currentClassSessionId={classSessionId ?? ''}
-          currentKids={kidsResults?.data ?? []}
+          enrolledKids={enrolledKids ?? []}
         />
       )}
     </div>

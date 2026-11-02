@@ -42,37 +42,33 @@ import {
   REPORT_STATUS_LABELS,
   ReportStatus,
 } from '../constants';
-import {
-  DailyClassReportItem,
-  DailyKidReport,
-  DailyKidReportItem,
-} from '../types';
+import { DailyClassReport, DailyKidReport } from '../types';
 
 interface DailyReportProps {
-  existingDCR: DailyClassReportItem;
+  existingDCR: DailyClassReport;
   unfilledKids: LeanKid[];
-  availableKids: LeanKid[];
+  enrolledKids: LeanKid[];
   defaultReportTemplate: string;
   onSaveNarrativeSuccess: ({
     dcrObservationId,
     dailyKidReport,
   }: {
     dcrObservationId: string;
-    dailyKidReport: DailyKidReportItem | null;
+    dailyKidReport: DailyKidReport | null;
   }) => void;
   onMarkSentReportSuccess: ({
     dcrObservationId,
     dailyKidReport,
   }: {
     dcrObservationId: string;
-    dailyKidReport: DailyKidReportItem | null;
+    dailyKidReport: DailyKidReport | null;
   }) => void;
 }
 
 export default function DailyReport({
   existingDCR,
   unfilledKids,
-  availableKids,
+  enrolledKids,
   defaultReportTemplate,
   onSaveNarrativeSuccess,
   onMarkSentReportSuccess,
@@ -195,11 +191,13 @@ export default function DailyReport({
 
       {/* Kid list */}
       <div className="flex flex-col gap-2">
-        {availableKids.map((ak) => {
-          const obs = existingDCR?.observations?.find((o) => o.kidId === ak.id);
+        {enrolledKids.map((kid) => {
+          const obs = existingDCR?.observations?.find(
+            (o) => o.kidId === kid.id
+          );
           const isPresent = obs?.attendance === 'present';
-          const report = kidReports[ak.id];
-          const editedKidNarrative = editedNarratives[ak.id];
+          const report = kidReports[kid.id];
+          const editedKidNarrative = editedNarratives[kid.id];
           const isReportSent = obs?.kidReport?.reportStatus === 'sent';
           const baseline =
             report?.existingNarrative ?? report?.defaultNarrative ?? '';
@@ -216,15 +214,15 @@ export default function DailyReport({
           if (!isPresent) return null;
 
           return (
-            <Item variant="outline" key={ak.id}>
+            <Item variant="outline" key={kid.id}>
               <ItemContent>
                 <Collapsible
                   className="group"
-                  open={expandedKid === ak.id}
-                  onOpenChange={(open) => setExpandedKid(open ? ak.id : null)}
+                  open={expandedKid === kid.id}
+                  onOpenChange={(open) => setExpandedKid(open ? kid.id : null)}
                 >
                   <CollapsibleTrigger className="flex items-center justify-between w-full [&[data-panel-open]_.chevron]:-rotate-180">
-                    <ItemTitle>{ak.name}</ItemTitle>
+                    <ItemTitle>{kid.name}</ItemTitle>
                     <div className="flex items-center gap-2">
                       <Badge className={REPORT_STATUS_BADGE[statusKey]}>
                         {REPORT_STATUS_LABELS[statusKey]}
@@ -276,7 +274,7 @@ export default function DailyReport({
                             value={editedKidNarrative}
                             onChange={(e) =>
                               handleEditNarrative({
-                                kidId: ak.id,
+                                kidId: kid.id,
                                 text: e.target.value,
                               })
                             }
@@ -354,7 +352,7 @@ export default function DailyReport({
                               variant="outline"
                               size="sm"
                               onClick={() =>
-                                handleCopy(editedKidNarrative, ak.name)
+                                handleCopy(editedKidNarrative, kid.name)
                               }
                             >
                               <HugeiconsIcon

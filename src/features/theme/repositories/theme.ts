@@ -2,12 +2,29 @@ import { db } from '@/db';
 import { theme } from '@/db/schema';
 import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
 
+import { Theme } from '../types';
 import type { ThemeInput } from '../validation';
+import { subThemeColumnSelection } from './sub-theme';
+
+export const themeColumnSelection = {
+  id: true,
+  name: true,
+} as const satisfies Record<keyof Theme, boolean>;
 
 export async function findMany() {
   return await db.query.theme.findMany({
     where: isNull(theme.deletedAt),
     orderBy: (t, { asc }) => [asc(t.name)],
+    columns: themeColumnSelection,
+  });
+}
+
+export async function findManyWithSubThemes() {
+  return await db.query.theme.findMany({
+    where: isNull(theme.deletedAt),
+    orderBy: (t, { asc }) => [asc(t.name)],
+    columns: themeColumnSelection,
+    with: { subThemes: { columns: subThemeColumnSelection } },
   });
 }
 
@@ -30,14 +47,14 @@ export async function findManyWithCount({
       orderBy: (t, { asc }) => [asc(t.name)],
       limit,
       offset,
-      with: { subThemes: true },
+      columns: themeColumnSelection,
+      with: { subThemes: { columns: subThemeColumnSelection } },
     }),
     db
       .select({ count: sql<number>`count(*)` })
       .from(theme)
       .where(where),
   ]);
-
   const total = totalResult?.[0]?.count ?? 0;
   return { items, total };
 }

@@ -1,10 +1,13 @@
 import { ActionResult } from '@/types';
 import { getLocalDateString, isWithinEditWindow } from '@/utils/date';
+import z from 'zod';
 
+import { parseInput } from '@/lib/actions/parse-input';
 import { logger } from '@/lib/logger';
+import { uuidSchema } from '@/lib/validation/common.schema';
 
 import { dcrRepo } from '../repositories';
-import { DailyClassReportList, DailyClassReportRecord } from '../types';
+import { DailyClassReportRecord } from '../types';
 import { DailyClassReportInput } from '../validation';
 
 export async function getOrCreateDCR({
@@ -24,13 +27,6 @@ export async function getOrCreateDCR({
     logger.error({ err: error }, 'checkExistingDCR');
     return { success: false as const, message: 'Gagal memuat laporan harian' };
   }
-}
-
-export async function getTotalDcrByMonth(input: {
-  classSessionId: string;
-  month: string;
-}) {
-  return await dcrRepo.countByMonth(input);
 }
 
 export async function getDcrsByMonth(input: {
@@ -77,47 +73,33 @@ export async function getDCRByDate(
   date: string,
   { classSessionId }: { classSessionId?: string }
 ) {
-  try {
-    const dcr = await dcrRepo.findDCR({ date, classSessionId });
-
-    if (!dcr) {
-      return {
-        success: false as const,
-        message: `Laporan harian tanggal ${date} tidak ditemukan / belum dibuat`,
-      };
-    }
-
-    return { success: true as const, data: dcr };
-  } catch (error) {
-    logger.error({ err: error }, 'getDCRByDate');
-    return {
-      success: false as const,
-      message: 'Gagal memuat data laporan harian',
-    };
-  }
+  return dcrRepo.findDCR({ date, classSessionId });
 }
 
 export async function getDCRs(input: {
   classSessionId?: string;
   date?: { year?: number; month?: number };
-}): Promise<ActionResult<DailyClassReportList>> {
-  try {
-    const defaultYear = Number(getLocalDateString().slice(0, 4));
-    const dcrs = await dcrRepo.findMany({
-      date: {
-        year: input.date?.year ?? defaultYear,
-        month: input.date?.month,
-      },
-    });
-    return {
-      success: true as const,
-      data: dcrs,
-    };
-  } catch (error) {
-    logger.error({ err: error }, 'getDCRs');
-    return {
-      success: false as const,
-      message: 'Gagal memuat data kegiatan harian',
-    };
-  }
+}) {
+  const parsed = parseInput({
+    input,
+    schema: z.object({
+      classSessionId: uuidSchema.optional(),
+      date: z
+        .object({
+          year: z.number().int().min(2025).max(2100).optional(),
+          month: z.number().int().min(1).max(12).optional(),
+        })
+        .optional(),
+    }),
+    fallbackError: 'getDCRs: Opsi input tidak valid',
+  });
+  if (!parsed.success) throw new Error(parsed.message);
+  const defaultYear = Number(getLocalDateString().slice(0, 4));
+  const dcrs = await dcrRepo.findMany({
+    date: {
+      year: input.date?.year ?? defaultYear,
+      month: input.date?.month,
+    },
+  });
+  return dcrs;
 }

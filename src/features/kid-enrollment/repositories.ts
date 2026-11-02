@@ -3,8 +3,19 @@ import { kid, kidEnrollment } from '@/db/schema';
 import { TransactionClient } from '@/types';
 import { SQL, and, eq, exists, inArray, isNull, not } from 'drizzle-orm';
 
+import { leanKidColumnSelection } from '../kid/repositories/kid';
 import { EnrollmentStatus } from './constants';
-import { LeanKidEnrollment } from './types';
+import { KidEnrollment, KidEnrollmentInsert } from './types';
+
+// Column Selection
+
+const kidEnrollmentColumnSelection = {
+  id: true,
+  kidId: true,
+  classSessionId: true,
+  termId: true,
+  status: true,
+} as const satisfies Record<keyof KidEnrollment, boolean>;
 
 export async function hasKidEnrollment({
   termId,
@@ -31,7 +42,7 @@ export async function findMany({
   classSessionId?: string;
   where?: SQL<unknown>;
 }) {
-  return await db.query.kidEnrollment.findMany({
+  return db.query.kidEnrollment.findMany({
     where: and(
       where,
       isNull(kidEnrollment.deletedAt),
@@ -40,10 +51,36 @@ export async function findMany({
         ? eq(kidEnrollment.classSessionId, classSessionId)
         : undefined
     ),
+    columns: kidEnrollmentColumnSelection,
     with: {
-      kid: { columns: { id: true, name: true, nickName: true } },
-      classSession: { columns: { name: true } },
-      term: { columns: { name: true } },
+      kid: { columns: leanKidColumnSelection },
+    },
+  });
+}
+
+export async function findManyWithRelations({
+  termId,
+  classSessionId,
+  where,
+}: {
+  termId?: string;
+  classSessionId?: string;
+  where?: SQL<unknown>;
+}) {
+  return db.query.kidEnrollment.findMany({
+    where: and(
+      where,
+      isNull(kidEnrollment.deletedAt),
+      termId ? eq(kidEnrollment.termId, termId) : undefined,
+      classSessionId
+        ? eq(kidEnrollment.classSessionId, classSessionId)
+        : undefined
+    ),
+    columns: kidEnrollmentColumnSelection,
+    with: {
+      kid: { columns: leanKidColumnSelection },
+      term: { columns: { id: true, name: true } },
+      classSession: { columns: { id: true, name: true } },
     },
   });
 }
@@ -97,7 +134,7 @@ export async function findCsIdByTermId({
 }
 
 export async function insertMany(
-  input: LeanKidEnrollment[],
+  input: KidEnrollmentInsert[],
   tx?: TransactionClient
 ) {
   const session = tx ? tx : db;

@@ -1,6 +1,5 @@
-import * as kidAction from '@/features/kid/actions';
 import { kidColumns } from '@/features/kid/columns';
-import { Kid } from '@/features/kid/types';
+import * as kidService from '@/features/kid/services';
 
 import { DataTable } from '@/components/shared/table/data-table';
 
@@ -9,20 +8,12 @@ import { baseMetadata } from '@/lib/metadata';
 export const metadata = { ...baseMetadata, title: 'Murid' };
 
 export default async function KidListPage() {
-  const result = await kidAction.getKids();
-
-  if (!result.success) {
-    return (
-      <div className="p-4 text-center text-destructive">{result.message}</div>
-    );
-  }
-
-  const kids = result.data as unknown as Kid[];
+  const kids = await kidService.getKids();
 
   return (
     <DataTable
       columns={kidColumns}
-      data={kids}
+      data={kids.items}
       meta={{ label: 'Murid', domain: 'kid' }}
       createHref="/dashboard/kid/create"
       emptyState={{

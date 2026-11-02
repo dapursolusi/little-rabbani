@@ -1,7 +1,7 @@
 import { db } from '@/db';
 import { guardian, kid } from '@/db/schema';
 import * as kidEnrollmentRepo from '@/features/kid-enrollment/repositories';
-import { ListParams, TransactionClient } from '@/types';
+import { TransactionClient } from '@/types';
 import { SQL, and, ilike, isNull } from 'drizzle-orm';
 
 import { requireOwner } from '@/lib/actions/require-owner';
@@ -10,38 +10,29 @@ import { GuardianSearchResult } from './actions';
 import { guardianRepo, kidRepo } from './repositories';
 import { CreateKidInput, GuardianInput, UpdateKidInput } from './validation';
 
-export async function getKids(params?: ListParams) {
-  return requireOwner(async () => {
-    const { search, limit = 50, offset = 0 } = params ?? {};
-    const conditions = search
-      ? [ilike(kid.name, `%${search}%`), isNull(kid.deletedAt)]
-      : [isNull(kid.deletedAt)];
-    const where = conditions.length > 0 ? and(...conditions) : undefined;
+export async function getKids(searchParams?: URLSearchParams) {
+  const search = searchParams?.get('search') ?? undefined;
+  const limit = Number(searchParams?.get('limit') ?? 50);
+  const offset = Number(searchParams?.get('offset') ?? 0);
+  const conditions = search
+    ? [ilike(kid.name, `%${search}%`), isNull(kid.deletedAt)]
+    : [isNull(kid.deletedAt)];
+  const where = conditions.length > 0 ? and(...conditions) : undefined;
 
-    const [kidsData, totalResult] = await Promise.all([
-      kidRepo.findMany(limit, offset, where),
-      kidRepo.count(where),
-    ]);
+  const [items, total] = await Promise.all([
+    kidRepo.findMany(limit, offset, where),
+    kidRepo.count(where),
+  ]);
 
-    return {
-      success: true as const,
-      data: kidsData,
-      total: totalResult?.[0]?.count ?? 0,
-    };
-  });
+  return { items, total };
 }
 
 export async function getKid(id: string) {
-  try {
-    const kid = await kidRepo.findById(id);
-    if (!kid) {
-      return { success: false as const, error: 'Murid tidak ditemukan' };
-    }
-    return { success: true as const, data: kid };
-  } catch (error) {
-    console.error('getKid', error);
-    return { success: false as const, error: 'Gagal mengambil data murid' };
+  const kid = await kidRepo.findById(id);
+  if (!kid) {
+    throw new Error('Murid tidak ditemukan');
   }
+  return kid;
 }
 
 export async function getKidBasicInfo(id: string) {

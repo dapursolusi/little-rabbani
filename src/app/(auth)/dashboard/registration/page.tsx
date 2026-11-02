@@ -1,8 +1,7 @@
-import * as classSessionAction from '@/features/class-session/actions';
-import * as kidEnrollmentAction from '@/features/kid-enrollment/actions';
+import * as classSessionService from '@/features/class-session/services';
 import KidEnrollmentClient from '@/features/kid-enrollment/components/client';
-import { KidEnrollment } from '@/features/kid-enrollment/types';
-import * as termAction from '@/features/term/actions';
+import * as kidEnrollmentService from '@/features/kid-enrollment/services';
+import * as termService from '@/features/term/services';
 
 export default async function KidEnrollmentListPage({
   searchParams,
@@ -11,59 +10,30 @@ export default async function KidEnrollmentListPage({
 }) {
   const { termId, classSessionId = 'all' } = await searchParams;
 
-  const [termResult, classSessionResult, currentTermResult] = await Promise.all(
-    [
-      termAction.getTerms(),
-      classSessionAction.getClassSessions(),
-      termAction.checkCurrentTerm(),
-    ]
-  );
+  const [terms, classSessions, currentTerm] = await Promise.all([
+    termService.getTerms(),
+    classSessionService.getClassSessions(),
+    termService.checkCurrentTerm(),
+  ]);
 
   // First load has no ?termId — default to the current term so the select
   // shows its name and the data matches. resolve once to avoid a parallel
   // checkCurrentTerm() auto-insert race.
-  const effectiveTermId =
-    termId ??
-    (currentTermResult.success ? currentTermResult.data.id : undefined);
 
-  const enrollmentsResult = await kidEnrollmentAction.getKidsEnrollments({
-    termId: effectiveTermId,
+  const enrollments = await kidEnrollmentService.getKidsEnrollments({
+    termId: termId ?? currentTerm?.id,
     classSessionId: classSessionId ?? undefined,
   });
 
-  if (!termResult.success) {
-    return (
-      <div className="p-4 text-center text-destructive">
-        {termResult.message}
-      </div>
-    );
-  }
-
-  if (!classSessionResult.success) {
-    return (
-      <div className="p-4 text-center text-destructive">
-        {classSessionResult.message}
-      </div>
-    );
-  }
-
-  if (!enrollmentsResult.success) {
-    return (
-      <div className="p-4 text-center text-destructive">
-        {enrollmentsResult.error}
-      </div>
-    );
-  }
-
   return (
     <KidEnrollmentClient
-      key={`${effectiveTermId}-${classSessionId}`}
-      terms={termResult.data}
-      classSessions={classSessionResult.data ?? []}
-      data={enrollmentsResult.data as unknown as KidEnrollment[]}
-      selectedTermId={effectiveTermId}
+      key={`${currentTerm?.id}-${classSessionId}`}
+      terms={terms}
+      classSessions={classSessions}
+      data={enrollments}
+      selectedTermId={currentTerm?.id}
       selectedClassSessionId={classSessionId}
-      currentTermId={currentTermResult.success ? currentTermResult.data.id : ''}
+      currentTermId={currentTerm?.id}
     />
   );
 }

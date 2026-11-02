@@ -32,8 +32,8 @@ import {
   kidEnrollmentSessionColumn,
   kidEnrollmentUpdateActionColumn,
 } from '../columns';
-import { EnrollmentStatus } from '../constants';
-import { KidEnrollment } from '../types';
+import { ENROLLMENT_STATUS, EnrollmentStatus } from '../constants';
+import { KidEnrollment, KidEnrollmentWithRelations } from '../types';
 import { KidToBeEnrolled } from '../validation';
 import UpdateEnrolledKids, { CheckboxInTable } from './update-enrolled-kids';
 
@@ -45,7 +45,7 @@ export default function KidEnrollmentClient({
   selectedClassSessionId,
   currentTermId,
 }: {
-  data: KidEnrollment[];
+  data: KidEnrollmentWithRelations[];
   terms: Term[];
   selectedTermId?: string;
   classSessions: ClassSession[];
@@ -55,7 +55,8 @@ export default function KidEnrollmentClient({
   const router = useRouter();
   const [isUpdateMode, setIsUpdateMode] = useState<boolean>(false);
   const [availableKids, setAvailableKids] = useState<LeanKid[]>([]);
-  const [enrolledKids, setEnrolledKids] = useState(data);
+  const [enrolledKids, setEnrolledKids] =
+    useState<KidEnrollmentWithRelations[]>(data);
   const [created, setCreated] = useState<KidToBeEnrolled[]>([]);
 
   const [updated, setUpdated] = useState<Map<string, KidEnrollment>>(new Map());
@@ -192,18 +193,23 @@ export default function KidEnrollmentClient({
       }));
 
       setEnrolledKids((current) => {
-        const newKids: KidEnrollment[] = selectedKids.map((kid) => ({
+        const newKids = selectedKids.map((kid) => ({
           id: crypto.randomUUID(),
           termId: selectedTermId ?? '',
           classSessionId: selectedClassSessionId ?? '',
           kidId: kid.id,
-          status: 'enrolled',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: null,
+          status: ENROLLMENT_STATUS.ENROLLED,
           kid: { id: kid.id, name: kid.name, nickName: kid.nickName },
-          classSession: { name: '' },
-          term: { name: '' },
+          classSession: {
+            id: selectedClassSessionId ?? '',
+            name:
+              classSessions.find((cs) => cs.id === selectedClassSessionId)
+                ?.name ?? '',
+          },
+          term: {
+            id: selectedTermId ?? '',
+            name: terms.find((t) => t.id === selectedTermId)?.name ?? '',
+          },
         }));
         return [...newKids, ...current];
       });
@@ -233,17 +239,11 @@ export default function KidEnrollmentClient({
     if (result.success) {
       toast.success('Perubahan pendaftaran berhasil disimpan');
       setIsUpdateMode(false);
+      setSelectedRows(new Set());
       setCreated([]);
       setUpdated(new Map());
       setDeleted(new Set());
-      // Re-fetch fresh data so local state matches server
-      const fresh = await kidEnrollmentAction.getKidsEnrollments({
-        termId: selectedTermId ?? '',
-        classSessionId: selectedClassSessionId ?? '',
-      });
-      if (fresh.success) {
-        setEnrolledKids(fresh.data as KidEnrollment[]);
-      }
+      setEnrolledKids(result.data ?? []);
     } else {
       toast.error(result.message);
     }
@@ -265,7 +265,6 @@ export default function KidEnrollmentClient({
           onValueChange={(termId) =>
             pushParam({ key: 'termId', value: termId, router })
           }
-          ongoingTermId={currentTermId}
         />
         <Separator orientation="vertical" />
         <ClassSessionSelector
@@ -339,34 +338,7 @@ export default function KidEnrollmentClient({
                     footer={
                       <Button
                         className="flex justify-center items-center gap-3"
-                        onClick={async () => {
-                          const result =
-                            await kidEnrollmentAction.saveEnrollmentChanges({
-                              termId: selectedTermId ?? '',
-                              classSessionId: selectedClassSessionId ?? '',
-                              created: Array.from(selectedRows).map(
-                                (kidId) => ({
-                                  kidId,
-                                  status: 'enrolled',
-                                })
-                              ),
-                            });
-                          if (result.success) {
-                            toast.success('Murid berhasil ditambahkan');
-                            setSelectedRows(new Set());
-                            setIsAddKidModalOpen(false);
-                            const fresh =
-                              await kidEnrollmentAction.getKidsEnrollments({
-                                termId: selectedTermId ?? '',
-                                classSessionId: selectedClassSessionId ?? '',
-                              });
-                            if (fresh.success) {
-                              setEnrolledKids(fresh.data as KidEnrollment[]);
-                            }
-                          } else {
-                            toast.error(result.message);
-                          }
-                        }}
+                        onClick={handleSave}
                         disabled={availableKids.length === 0}
                       >
                         <HugeiconsIcon icon={Add02Icon} />

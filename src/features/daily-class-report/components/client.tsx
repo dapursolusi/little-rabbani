@@ -3,8 +3,7 @@ import { useState } from 'react';
 
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
-import { Theme } from '@/features/theme/types';
-import { ActionResult } from '@/types';
+import { ThemeWithSubThemes } from '@/features/theme/types';
 import { getLocalDateString } from '@/utils/date';
 import {
   Audit01Icon,
@@ -19,10 +18,9 @@ import ContentTabs, {
 import { EmptyState } from '@/components/shared/empty-state';
 
 import {
-  DailyClassReportItem,
-  DailyClassReportList,
-  DailyKidReportItem,
-  DcrObservationItem,
+  DailyClassReport,
+  DailyKidReport,
+  DcrObservation,
   ReportTemplate,
 } from '../types';
 import { DailyClassReportForm } from './form';
@@ -48,24 +46,24 @@ function DateInformation() {
 export default function DailyClassReportClient({
   classSessions,
   themes,
-  availableKids,
+  enrolledKids,
   defaultClassSessionId,
-  existingDCRsResults,
+  existingDCRs,
   defaultReportTemplate,
 }: {
   classSessions: ClassSession[];
-  themes: Theme[];
-  availableKids: LeanKid[];
+  themes: ThemeWithSubThemes[];
+  enrolledKids: LeanKid[];
   defaultClassSessionId?: string;
-  existingDCRsResults: ActionResult<DailyClassReportList>;
+  existingDCRs: DailyClassReport[];
   defaultReportTemplate: ReportTemplate['content'];
 }) {
   const currentDate = getLocalDateString();
-  const [currentDcr, setCurrentDcr] = useState<
-    DailyClassReportItem | undefined
-  >(existingDCRsResults.data?.find((dcr) => dcr.date === currentDate));
+  const [currentDcr, setCurrentDcr] = useState<DailyClassReport | undefined>(
+    existingDCRs.find((dcr) => dcr.date === currentDate)
+  );
   const existingObservations = currentDcr?.observations;
-  const unfilledKids = availableKids.filter(
+  const unfilledKids = enrolledKids.filter(
     (kid) => !existingObservations?.some((obs) => obs.kidId === kid.id)
   );
 
@@ -74,7 +72,7 @@ export default function DailyClassReportClient({
     dailyKidReport,
   }: {
     dcrObservationId: string;
-    dailyKidReport: DailyKidReportItem | null;
+    dailyKidReport: DailyKidReport | null;
   }) => {
     setCurrentDcr((prev) => {
       if (!prev) return prev;
@@ -95,7 +93,7 @@ export default function DailyClassReportClient({
     dailyKidReport,
   }: {
     dcrObservationId: string;
-    dailyKidReport: DailyKidReportItem | null;
+    dailyKidReport: DailyKidReport | null;
   }) => {
     setCurrentDcr((prev) => {
       if (!prev) return prev;
@@ -111,7 +109,7 @@ export default function DailyClassReportClient({
     });
   };
 
-  const handleObservationFormSuccess = (result: DcrObservationItem) => {
+  const handleObservationFormSuccess = (result: DcrObservation) => {
     setCurrentDcr((prev) => {
       if (!prev) return prev;
 
@@ -163,7 +161,7 @@ export default function DailyClassReportClient({
             <DailyReport
               existingDCR={currentDcr}
               unfilledKids={unfilledKids}
-              availableKids={availableKids}
+              enrolledKids={enrolledKids}
               defaultReportTemplate={defaultReportTemplate}
               onSaveNarrativeSuccess={handleSaveNarrativeSuccess}
               onMarkSentReportSuccess={handleMarkSentReportSuccess}
@@ -179,7 +177,7 @@ export default function DailyClassReportClient({
       triggerValue: 'history',
       triggerLabel: 'Riwayat',
       icon: HistoryIcon,
-      children: <DCRHistory defaultDcrs={existingDCRsResults.data ?? []} />,
+      children: <DCRHistory defaultDcrs={existingDCRs} />,
       maxWidthPx: '900px',
     },
   ];

@@ -25,7 +25,7 @@ import {
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
 } from '../constants';
-import { DcrObservationItem, DcrObservationList } from '../types';
+import { DcrObservation } from '../types';
 import { DCRObservationForm } from './form';
 
 export function KidObservationModal({
@@ -37,11 +37,11 @@ export function KidObservationModal({
   onFormSuccess,
 }: {
   kid: LeanKid;
-  observation?: DcrObservationList[number];
+  observation?: DcrObservation;
   isEditMode?: boolean;
   disabled?: boolean;
   triggerRender?: ReactNode;
-  onFormSuccess?: (result: DcrObservationItem) => void;
+  onFormSuccess?: (result: DcrObservation) => void;
 }) {
   return (
     <Modal
@@ -78,9 +78,9 @@ export default function DCRKidObservation({
   onObservationFormSuccess,
 }: {
   unfilledKids: LeanKid[];
-  existingObservations: DcrObservationList;
+  existingObservations: DcrObservation[];
   disabled?: boolean;
-  onObservationFormSuccess?: (result: DcrObservationItem) => void;
+  onObservationFormSuccess?: (result: DcrObservation) => void;
 }) {
   return unfilledKids.length === 0 && existingObservations.length === 0 ? (
     <EmptyState

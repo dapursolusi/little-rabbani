@@ -24,29 +24,26 @@ export default async function KidReportPage({
       `/dashboard/report/kid/${kidId}?termId=${termId}&month=${currentYearMonth}`
     );
   }
-  const kidDataResult = await kidReportService.getKidMonthlyReport({
-    termId,
-    kidId,
-    month: yearMonthParam,
-  });
-  if (!kidDataResult) {
-    <p>Terjadi Kesalahan</p>;
-  }
-
-  const terms = (await termService.getTerms()).data ?? [];
-  const academicDetailsResult =
-    await monthlyReportService.getMonthlyAcademicDetails({
+  const [kidDetails, terms, academicDetailsResult] = await Promise.all([
+    kidReportService.getKidMonthlyReport({
+      termId,
+      kidId,
+      month: yearMonthParam,
+    }),
+    termService.getTerms(),
+    monthlyReportService.getMonthlyAcademicDetails({
       kidId,
       termId,
       month: yearMonthParam,
-    });
-
+    }),
+  ]);
   return (
     <div>
       <KidReportClient
         currentKidId={kidId}
         currentTermId={termId}
-        kidDetails={kidDataResult.data}
+        currentMonth={yearMonthParam}
+        kidDetails={kidDetails}
         terms={terms}
         academicDetails={academicDetailsResult.data}
       />

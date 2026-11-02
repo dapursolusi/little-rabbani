@@ -2,7 +2,7 @@ import { useRouter } from 'next/navigation';
 
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
-import { Theme } from '@/features/theme/types';
+import { ThemeWithSubThemes } from '@/features/theme/types';
 import { getLocalDateString } from '@/utils/date';
 import { pushParam } from '@/utils/search-params';
 
@@ -13,11 +13,7 @@ import {
   dailyClassReportFormFields,
   dcrObservationFormFields,
 } from '../fields';
-import {
-  DailyClassReportItem,
-  DcrObservationItem,
-  DcrObservationList,
-} from '../types';
+import { DailyClassReport, DcrObservation } from '../types';
 import { dailyClassReportSchema, dcrObservationSchema } from '../validation';
 
 export function DailyClassReportForm({
@@ -27,9 +23,9 @@ export function DailyClassReportForm({
   existingDCR,
 }: {
   classSessions: ClassSession[];
-  themes: Theme[];
+  themes: ThemeWithSubThemes[];
   defaultClassSessionId?: string;
-  existingDCR?: DailyClassReportItem;
+  existingDCR?: DailyClassReport;
 }) {
   const router = useRouter();
   return (
@@ -68,10 +64,10 @@ export function DCRObservationForm({
   onFormSuccess,
 }: {
   kid: LeanKid;
-  observation?: DcrObservationList[number];
+  observation?: DcrObservation;
   isEditMode?: boolean;
   disabled?: boolean;
-  onFormSuccess?: (result: DcrObservationItem) => void;
+  onFormSuccess?: (result: DcrObservation) => void;
 }) {
   return (
     <FormFieldGenerator

@@ -47,6 +47,22 @@ export function getLocalDateString({
   }).format(now);
 }
 
+export function formatDate(
+  dateString: string,
+  { showWeekday = false }: { showWeekday?: boolean } = {}
+) {
+  const isDayExist = dateString.split('-')[2];
+  const date = new Date(dateString);
+
+  return new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'UTC',
+    weekday: showWeekday && isDayExist ? 'long' : undefined,
+    day: isDayExist ? 'numeric' : undefined,
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+}
+
 export function startOfNextMonthDate(yearMonth: string) {
   const nextMonth = new Date(`${yearMonth}-01T00:00:00Z`);
   nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);

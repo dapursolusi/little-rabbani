@@ -1,11 +1,22 @@
 import { db } from '@/db';
 import { dcrObservation } from '@/db/schema/daily';
+import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
 import { and, eq } from 'drizzle-orm';
 
-import { DcrObservationItem } from '../types';
+import { DcrObservation, DcrObservationData } from '../types';
 import { DCRObservationInput } from '../validation';
 
-// Constants
+// Column Selection
+
+export const dcrObservationColumnSelection = {
+  id: true,
+  dcrId: true,
+  kidId: true,
+  attendance: true,
+  mood: true,
+  appetite: true,
+  notes: true,
+} as const satisfies Record<keyof DcrObservationData, boolean>;
 
 // Insert
 
@@ -24,7 +35,7 @@ export async function insert(input: DCRObservationInput) {
     throw new Error('Inserted DCR Observation not found');
   }
 
-  return result satisfies DcrObservationItem;
+  return result satisfies DcrObservation;
 }
 
 // Find
@@ -32,15 +43,7 @@ export async function insert(input: DCRObservationInput) {
 export async function findById(id: string) {
   return db.query.dcrObservation.findFirst({
     where: eq(dcrObservation.id, id),
-    columns: {
-      id: true,
-      dcrId: true,
-      kidId: true,
-      attendance: true,
-      mood: true,
-      appetite: true,
-      notes: true,
-    },
+    columns: dcrObservationColumnSelection,
     with: {
       kid: { columns: { id: true, name: true, nickName: true } },
       kidReport: {
@@ -74,20 +77,10 @@ export async function findObservation({
 export async function findByIdWithKid(id: string) {
   return await db.query.dcrObservation.findFirst({
     where: eq(dcrObservation.id, id),
-    columns: {
-      id: true,
-      dcrId: true,
-      attendance: true,
-      mood: true,
-      appetite: true,
-      notes: true,
-    },
+    columns: dcrObservationColumnSelection,
     with: {
       kid: {
-        columns: {
-          name: true,
-          nickName: true,
-        },
+        columns: leanKidColumnSelection,
       },
     },
   });
@@ -108,16 +101,9 @@ export async function findMany({
 
   return await db.query.dcrObservation.findMany({
     where: and(...filters),
-    columns: {
-      id: true,
-      dcrId: true,
-      attendance: true,
-      mood: true,
-      appetite: true,
-      notes: true,
-    },
+    columns: dcrObservationColumnSelection,
     with: {
-      kid: { columns: { id: true, name: true } },
+      kid: { columns: leanKidColumnSelection },
       kidReport: {
         columns: {
           id: true,
@@ -155,7 +141,7 @@ export async function update(input: DCRObservationInput) {
     throw new Error('Updated DCR observation not found');
   }
 
-  return result satisfies DcrObservationItem;
+  return result satisfies DcrObservation;
 }
 
 // Remove

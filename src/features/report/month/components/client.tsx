@@ -3,9 +3,11 @@
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { useOngoingTerm } from '@/contexts/ongoing-term';
 import { ClassSession } from '@/features/class-session/types';
-import { KidEnrollment } from '@/features/kid-enrollment/types';
+import {
+  KidEnrollment,
+  KidEnrollmentWithKid,
+} from '@/features/kid-enrollment/types';
 import { Term } from '@/features/term/types';
 import { pushParam } from '@/utils/search-params';
 import { ChildIcon } from '@hugeicons/core-free-icons';
@@ -25,7 +27,7 @@ import {
 interface MonthlyReportClientProps {
   currentTermId: string;
   currentClassSessionId: string;
-  currentKids: KidEnrollment[];
+  enrolledKids: KidEnrollmentWithKid[];
   terms: Term[];
   classSessions: ClassSession[];
 }
@@ -35,7 +37,7 @@ export default function MonthlyReportClient({
   currentClassSessionId,
   terms,
   classSessions,
-  currentKids,
+  enrolledKids,
 }: MonthlyReportClientProps) {
   const router = useRouter();
   return (
@@ -57,13 +59,13 @@ export default function MonthlyReportClient({
       {currentTermId ? (
         <div className="flex w-full max-w-full flex-col gap-6">
           <ItemGroup className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-4">
-            {currentKids.map((ck) => (
+            {enrolledKids.map((ek) => (
               <Item
-                key={ck.kid.name}
+                key={ek.kid.name}
                 variant="outline"
                 render={
                   <Link
-                    href={`/dashboard/report/kid/${ck.kidId}?termId=${currentTermId}`}
+                    href={`/dashboard/report/kid/${ek.kidId}?termId=${currentTermId}`}
                   ></Link>
                 }
               >
@@ -76,8 +78,8 @@ export default function MonthlyReportClient({
                   }
                 </ItemHeader>
                 <ItemContent>
-                  <ItemTitle>{ck.kid.name}</ItemTitle>
-                  <ItemDescription>{ck.kid.nickName}</ItemDescription>
+                  <ItemTitle>{ek.kid.name}</ItemTitle>
+                  <ItemDescription>{ek.kid.nickName}</ItemDescription>
                 </ItemContent>
               </Item>
             ))}

@@ -1,32 +1,58 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { Calendar } from '@/components/ui/calendar';
 
+import { logger } from '@/lib/logger';
+
 import { dcrAction } from '../actions';
-import { DailyClassReportList } from '../types';
+import { DailyClassReport } from '../types';
 
 export default function DCRHistory({
   defaultDcrs,
 }: {
-  defaultDcrs: DailyClassReportList;
+  defaultDcrs: DailyClassReport[];
 }) {
   const today = useMemo(() => new Date(new Date().toDateString()), []);
   const [month, setMonth] = useState<Date>(today);
-  const [dcrs, setDcrs] = useState<DailyClassReportList>(defaultDcrs);
+  const [dcrs, setDcrs] = useState<DailyClassReport[]>(defaultDcrs);
+  const isInitialRender = useRef(true);
 
   // Fast Set lookup for dates that have DCRs
   const dcrDates = useMemo(() => new Set(dcrs.map((d) => d.date)), [dcrs]);
 
   useEffect(() => {
-    async function fetch() {
-      const result = await dcrAction.getDCRs({
-        date: { year: month.getFullYear(), month: month.getMonth() + 1 },
-      });
-      if (result.success) setDcrs(result.data);
+    if (isInitialRender.current) {
+      isInitialRender.current = false;
+      return;
     }
-    fetch();
-  }, [month.getFullYear(), month.getMonth()]);
 
+    let isActive = true;
+
+    async function fetchDCRs() {
+      try {
+        const data = await dcrAction.getDCRs({
+          date: {
+            year: month.getFullYear(),
+            month: month.getMonth() + 1,
+          },
+        });
+
+        if (isActive) {
+          setDcrs(data);
+        }
+      } catch (error) {
+        if (isActive) {
+          logger.error({ error }, 'Failed to fetch DCRs');
+        }
+      }
+    }
+
+    void fetchDCRs();
+
+    return () => {
+      isActive = false;
+    };
+  }, [month]);
   return (
     <div className="w-full max-w-225 mx-auto">
       <Calendar

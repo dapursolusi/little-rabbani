@@ -9,6 +9,9 @@ import {
 
 import * as termAction from '@/features/term/actions';
 import { TermData } from '@/features/term/types';
+import { toast } from 'sonner';
+
+import { logger } from '@/lib/logger';
 
 type OngoingTermContextValue = {
   ongoingTerm: TermData | null;
@@ -27,11 +30,17 @@ export function OngoingTermProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     async function fetchOngoingTerm() {
-      const results = await termAction.checkCurrentTerm();
-      if (results.success) {
-        setOngoingTerm(results.data);
+      try {
+        const ongoingTerm = await termAction.checkCurrentTerm();
+        if (ongoingTerm) {
+          setOngoingTerm(ongoingTerm);
+        }
+      } catch (error) {
+        logger.error({ error }, 'Failed to fetch ongoing term');
+        toast.error('Gagal memuat data term berjalan');
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
 
     void fetchOngoingTerm();
