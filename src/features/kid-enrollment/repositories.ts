@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { kid, kidEnrollment } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { TransactionClient } from '@/types';
 import { SQL, and, eq, exists, inArray, isNull, not } from 'drizzle-orm';
 
@@ -51,7 +52,7 @@ export async function findMany({
         ? eq(kidEnrollment.classSessionId, classSessionId)
         : undefined
     ),
-    columns: kidEnrollmentColumnSelection,
+    columns: omitAuditColumns,
     with: {
       kid: { columns: leanKidColumnSelection },
     },
@@ -76,7 +77,7 @@ export async function findManyWithRelations({
         ? eq(kidEnrollment.classSessionId, classSessionId)
         : undefined
     ),
-    columns: kidEnrollmentColumnSelection,
+    columns: omitAuditColumns,
     with: {
       kid: { columns: leanKidColumnSelection },
       term: { columns: { id: true, name: true } },
@@ -114,6 +115,7 @@ export async function findAvailableKids({
         )
       )
     ),
+    columns: omitAuditColumns,
   });
 }
 

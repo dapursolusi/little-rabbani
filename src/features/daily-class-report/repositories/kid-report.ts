@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { dailyKidReport } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { eq } from 'drizzle-orm';
 
 import { DailyKidReportInput } from '../validation';
@@ -22,13 +23,7 @@ export async function insert(input: DailyKidReportInput) {
 export async function findByDcrObservationId(id: string) {
   return db.query.dailyKidReport.findFirst({
     where: eq(dailyKidReport.dcrObservationId, id),
-    columns: {
-      id: true,
-      dcrObservationId: true,
-      narrative: true,
-      reportStatus: true,
-      sentAt: true,
-    },
+    columns: omitAuditColumns,
   });
 }
 

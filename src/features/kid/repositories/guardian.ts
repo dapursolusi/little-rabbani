@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { guardian, kid } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { TransactionClient } from '@/types';
 import { and, eq, ilike, isNotNull, isNull, ne, or, sql } from 'drizzle-orm';
 
@@ -9,7 +10,8 @@ export async function findById(id: string, tx?: TransactionClient) {
   const session = tx ? tx : db;
   return await session.query.guardian.findFirst({
     where: eq(guardian.id, id),
-    with: { kids: true },
+    columns: omitAuditColumns,
+    with: { kids: { columns: omitAuditColumns } },
   });
 }
 
@@ -25,7 +27,8 @@ export async function findByPhone(
       isNull(guardian.deletedAt),
       excludeId ? ne(guardian.id, excludeId) : undefined
     ),
-    with: { kids: true },
+    columns: omitAuditColumns,
+    with: { kids: { columns: omitAuditColumns } },
   });
 }
 

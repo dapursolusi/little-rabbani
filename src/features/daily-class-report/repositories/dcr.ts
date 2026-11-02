@@ -1,6 +1,7 @@
 import { db } from '@/db';
 import { dailyClassReport } from '@/db/schema/daily';
 import { subTheme } from '@/db/schema/theme';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
 import { startOfNextMonthDate } from '@/utils/date';
 import { and, eq, gte, isNull, lt } from 'drizzle-orm';
@@ -77,7 +78,7 @@ export async function findDCR({
 
   return db.query.dailyClassReport.findFirst({
     where: and(...filters),
-    columns: dcrColumnSelection,
+    columns: omitAuditColumns,
     with: {
       observations: {
         with: {
@@ -101,7 +102,7 @@ export async function findById(id: string) {
 export async function findByIdWithObservations(id: string) {
   return await db.query.dailyClassReport.findFirst({
     where: eq(dailyClassReport.id, id),
-    columns: dcrColumnSelection,
+    columns: omitAuditColumns,
     with: {
       observations: {
         with: {
@@ -187,13 +188,7 @@ export async function findMany({
 
   return await db.query.dailyClassReport.findMany({
     where: filters.length ? and(...filters) : undefined,
-    columns: {
-      id: true,
-      date: true,
-      classSessionId: true,
-      subThemeId: true,
-      description: true,
-    },
+    columns: omitAuditColumns,
     with: {
       subTheme: {
         columns: { name: true },
@@ -202,25 +197,11 @@ export async function findMany({
         },
       },
       observations: {
-        columns: {
-          id: true,
-          dcrId: true,
-          kidId: true,
-          mood: true,
-          appetite: true,
-          attendance: true,
-          notes: true,
-        },
+        columns: omitAuditColumns,
         with: {
-          kid: { columns: { id: true, name: true, nickName: true } },
+          kid: { columns: leanKidColumnSelection },
           kidReport: {
-            columns: {
-              id: true,
-              dcrObservationId: true,
-              narrative: true,
-              sentAt: true,
-              reportStatus: true,
-            },
+            columns: omitAuditColumns,
           },
         },
       },

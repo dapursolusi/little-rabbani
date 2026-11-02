@@ -1,22 +1,11 @@
 import { db } from '@/db';
 import { dcrObservation } from '@/db/schema/daily';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
 import { and, eq } from 'drizzle-orm';
 
-import { DcrObservation, DcrObservationData } from '../types';
+import { DcrObservation } from '../types';
 import { DCRObservationInput } from '../validation';
-
-// Column Selection
-
-export const dcrObservationColumnSelection = {
-  id: true,
-  dcrId: true,
-  kidId: true,
-  attendance: true,
-  mood: true,
-  appetite: true,
-  notes: true,
-} as const satisfies Record<keyof DcrObservationData, boolean>;
 
 // Insert
 
@@ -43,7 +32,7 @@ export async function insert(input: DCRObservationInput) {
 export async function findById(id: string) {
   return db.query.dcrObservation.findFirst({
     where: eq(dcrObservation.id, id),
-    columns: dcrObservationColumnSelection,
+    columns: omitAuditColumns,
     with: {
       kid: { columns: { id: true, name: true, nickName: true } },
       kidReport: {
@@ -77,7 +66,8 @@ export async function findObservation({
 export async function findByIdWithKid(id: string) {
   return await db.query.dcrObservation.findFirst({
     where: eq(dcrObservation.id, id),
-    columns: dcrObservationColumnSelection,
+    // columns: dcrObservationColumnSelection,
+    columns: omitAuditColumns,
     with: {
       kid: {
         columns: leanKidColumnSelection,
@@ -101,7 +91,7 @@ export async function findMany({
 
   return await db.query.dcrObservation.findMany({
     where: and(...filters),
-    columns: dcrObservationColumnSelection,
+    columns: omitAuditColumns,
     with: {
       kid: { columns: leanKidColumnSelection },
       kidReport: {

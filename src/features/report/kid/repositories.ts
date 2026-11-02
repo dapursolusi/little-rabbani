@@ -1,6 +1,8 @@
 // Find
 import { db } from '@/db';
 import { dcrObservation, kid, monthlyKidReport } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
+import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
 import { and, eq, inArray } from 'drizzle-orm';
 
 export async function findMonthlyReport({
@@ -16,20 +18,13 @@ export async function findMonthlyReport({
 }) {
   return db.query.kid.findFirst({
     where: eq(kid.id, kidId),
-    columns: { id: true, nickName: true, name: true },
+    columns: leanKidColumnSelection,
     with: {
       enrollments: {
         columns: { termId: true },
       },
       dcrObservations: {
-        columns: {
-          id: true,
-          dcrId: true,
-          attendance: true,
-          mood: true,
-          appetite: true,
-          notes: true,
-        },
+        columns: omitAuditColumns,
         with: { dcr: { columns: { date: true } } },
         where: inArray(dcrObservation.dcrId, dcrIds),
       },

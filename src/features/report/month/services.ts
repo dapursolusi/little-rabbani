@@ -46,3 +46,9 @@ export async function getMonthlyAcademicDetails(input: MonthlyKidReportParams) {
     data: { dcrs },
   };
 }
+
+export async function aggregateMonthlyReportData(input: {
+  kidId: string;
+  termId: string;
+  month: string;
+}) {}

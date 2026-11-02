@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { term } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { DbColumnSelection } from '@/types';
 import { and, eq, gt, gte, isNull, lt, lte } from 'drizzle-orm';
 
@@ -23,14 +24,14 @@ export async function findCurrent(todayStr: string) {
       lte(term.startDate, todayStr),
       gte(term.endDate, todayStr)
     ),
-    columns: termColumnSelection,
+    columns: omitAuditColumns,
   });
 }
 
 export async function findNext(todayStr: string) {
   return db.query.term.findFirst({
     where: and(isNull(term.deletedAt), gt(term.startDate, todayStr)),
-    columns: termColumnSelection,
+    columns: omitAuditColumns,
   });
 }
 
@@ -44,7 +45,7 @@ export async function findMany() {
 export async function findById(id: string) {
   return db.query.term.findFirst({
     where: and(isNull(term.deletedAt), eq(term.id, id)),
-    columns: termColumnSelection,
+    columns: omitAuditColumns,
   });
 }
 
@@ -96,6 +97,7 @@ export async function findOverlapping(startDate: string, endDate: string) {
       lt(term.startDate, endDate),
       gt(term.endDate, startDate)
     ),
+    columns: omitAuditColumns,
   });
 }
 

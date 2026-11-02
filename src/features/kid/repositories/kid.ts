@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { kid } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { TransactionClient } from '@/types';
 import { SQL, eq, sql } from 'drizzle-orm';
 
@@ -41,6 +42,7 @@ export async function findMany(
 ) {
   return db.query.kid.findMany({
     where,
+    columns: omitAuditColumns,
     with: { guardian: true },
     orderBy: (kid, { desc }) => [desc(kid.createdAt)],
     limit,
@@ -51,7 +53,8 @@ export async function findMany(
 export async function findById(id: string) {
   return await db.query.kid.findFirst({
     where: eq(kid.id, id),
-    with: { guardian: true },
+    columns: omitAuditColumns,
+    with: { guardian: { columns: omitAuditColumns } },
   });
 }
 

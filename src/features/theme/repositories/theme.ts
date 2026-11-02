@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { theme } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
 
 import { Theme } from '../types';
@@ -15,7 +16,7 @@ export async function findMany() {
   return await db.query.theme.findMany({
     where: isNull(theme.deletedAt),
     orderBy: (t, { asc }) => [asc(t.name)],
-    columns: themeColumnSelection,
+    columns: omitAuditColumns,
   });
 }
 
@@ -23,8 +24,8 @@ export async function findManyWithSubThemes() {
   return await db.query.theme.findMany({
     where: isNull(theme.deletedAt),
     orderBy: (t, { asc }) => [asc(t.name)],
-    columns: themeColumnSelection,
-    with: { subThemes: { columns: subThemeColumnSelection } },
+    columns: omitAuditColumns,
+    with: { subThemes: { columns: omitAuditColumns } },
   });
 }
 
@@ -47,8 +48,8 @@ export async function findManyWithCount({
       orderBy: (t, { asc }) => [asc(t.name)],
       limit,
       offset,
-      columns: themeColumnSelection,
-      with: { subThemes: { columns: subThemeColumnSelection } },
+      columns: omitAuditColumns,
+      with: { subThemes: { columns: omitAuditColumns } },
     }),
     db
       .select({ count: sql<number>`count(*)` })
@@ -62,6 +63,7 @@ export async function findManyWithCount({
 export async function findById(id: string) {
   return await db.query.theme.findFirst({
     where: and(isNull(theme.deletedAt), eq(theme.id, id)),
+    columns: omitAuditColumns,
   });
 }
 
