@@ -1,13 +1,7 @@
 // Find
 import { db } from '@/db';
-import {
-  dailyClassReport,
-  dcrObservation,
-  kid,
-  monthlyKidReport,
-} from '@/db/schema';
-import { startOfNextMonthDate } from '@/utils/date';
-import { and, eq, gte, inArray, isNull, lt } from 'drizzle-orm';
+import { dcrObservation, kid, monthlyKidReport } from '@/db/schema';
+import { and, eq, inArray } from 'drizzle-orm';
 
 export async function findMonthlyReport({
   kidId,

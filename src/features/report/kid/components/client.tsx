@@ -1,11 +1,15 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 import {
   KID_APPETITE_LABELS,
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
 } from '@/features/daily-class-report/constants';
-import { TermData } from '@/features/term/types';
+import { Term } from '@/features/term/types';
+import { formatDate } from '@/utils/date';
+import { pushParam } from '@/utils/search-params';
 import {
   ChevronDown,
   SquareChevronLeftIcon,
@@ -36,14 +40,47 @@ import { MonthlyAcademicDetails, MonthlyKidReportDetail } from '../types';
 interface KidReportClientProps {
   currentKidId: string;
   currentTermId: string;
-  terms: TermData[];
+  currentMonth: string;
+  terms: Term[];
   kidDetails: MonthlyKidReportDetail;
   academicDetails: MonthlyAcademicDetails;
+}
+
+function MonthPicker({ currentMonth }: { currentMonth: string }) {
+  const router = useRouter();
+  const handleChangeMonth = (offset: number) => {
+    const [year, monthNumber] = currentMonth.split('-').map(Number);
+
+    const date = new Date(year, monthNumber - 1 + offset, 1);
+
+    const changedMonth = [
+      date.getFullYear(),
+      String(date.getMonth() + 1).padStart(2, '0'),
+    ].join('-');
+
+    pushParam({ key: 'month', value: changedMonth, router });
+  };
+  return (
+    <div className="my-2 flex items-center justify-between border-2 rounded-xl">
+      <Button
+        render={<HugeiconsIcon icon={SquareChevronLeftIcon} size={100} />}
+        className="w-fit"
+        onClick={() => handleChangeMonth(-1)}
+      />
+      <span>{formatDate(currentMonth)}</span>
+      <Button
+        render={<HugeiconsIcon icon={SquareChevronRightIcon} size={100} />}
+        className="w-fit"
+        onClick={() => handleChangeMonth(1)}
+      />
+    </div>
+  );
 }
 
 export default function KidReportClient({
   currentKidId,
   currentTermId,
+  currentMonth,
   terms,
   kidDetails,
   academicDetails,
@@ -51,6 +88,7 @@ export default function KidReportClient({
   const totalAttendance = kidDetails?.dcrObservations.filter(
     (obs) => obs.attendance === 'present'
   ).length;
+
   return (
     <div>
       {/* Kid Info & Batch Selector  */}
@@ -64,17 +102,7 @@ export default function KidReportClient({
         <TermSelector terms={[]} showLabel={false} />
       </div>
       {/* Month Selector */}
-      <div className="my-2 flex items-center justify-between border-2 rounded-xl">
-        <Button
-          render={<HugeiconsIcon icon={SquareChevronLeftIcon} size={100} />}
-          className="w-fit"
-        />
-        <span>Oktober 2026</span>
-        <Button
-          render={<HugeiconsIcon icon={SquareChevronRightIcon} size={100} />}
-          className="w-fit"
-        />
-      </div>
+      <MonthPicker currentMonth={currentMonth} />
       {/* Report Content */}
       <div className="my-2 p-4 border-2 rounded-xl ">
         Ringkasan Data Observasi Bulan Ini
