@@ -22,6 +22,7 @@ import { Separator } from '@/components/ui/separator';
 
 import {
   KID_APPETITE_LABELS,
+  KID_ATTENDANCE,
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
 } from '../constants';
@@ -134,7 +135,7 @@ export default function DCRKidObservation({
 
               <AccordionContent className="grid sm:grid-cols-2 md:grid-cols-3 gap-2 my-2">
                 {observations.map((observation) =>
-                  observation.attendance === 'present' ? (
+                  observation.attendance === KID_ATTENDANCE.PRESENT ? (
                     <KidObservationModal
                       key={observation.id}
                       kid={observation.kid as Kid}

@@ -37,7 +37,9 @@ import {
 import { dailyKidReportAction } from '../actions';
 import {
   KID_APPETITE_LABELS,
+  KID_ATTENDANCE,
   KID_MOOD_LABELS,
+  REPORT_STATUS,
   REPORT_STATUS_BADGE,
   REPORT_STATUS_LABELS,
   ReportStatus,
@@ -131,7 +133,7 @@ export default function DailyReport({
       const result = await dailyKidReportAction.saveReportNarrative({
         dcrObservationId,
         narrative,
-        reportStatus: 'edited',
+        reportStatus: REPORT_STATUS.EDITED,
       });
 
       if (!result.success) {
@@ -195,20 +197,21 @@ export default function DailyReport({
           const obs = existingDCR?.observations?.find(
             (o) => o.kidId === kid.id
           );
-          const isPresent = obs?.attendance === 'present';
+          const isPresent = obs?.attendance === KID_ATTENDANCE.PRESENT;
           const report = kidReports[kid.id];
           const editedKidNarrative = editedNarratives[kid.id];
-          const isReportSent = obs?.kidReport?.reportStatus === 'sent';
+          const isReportSent =
+            obs?.kidReport?.reportStatus === REPORT_STATUS.SENT;
           const baseline =
             report?.existingNarrative ?? report?.defaultNarrative ?? '';
           const hasChanges = editedKidNarrative !== baseline;
           // Persisted status comes from the server (via obs.kidReport);
           // 'draft' is a client-only overlay for unsaved textarea edits.
           const statusKey: ReportStatus = hasChanges
-            ? 'draft'
+            ? REPORT_STATUS.DRAFT
             : !obs?.kidReport?.reportStatus ||
-                obs.kidReport.reportStatus === 'template'
-              ? 'template'
+                obs.kidReport.reportStatus === REPORT_STATUS.TEMPLATE
+              ? REPORT_STATUS.TEMPLATE
               : obs.kidReport.reportStatus;
 
           if (!isPresent) return null;

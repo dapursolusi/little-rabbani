@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 
 import {
   KID_APPETITE_LABELS,
+  KID_ATTENDANCE,
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
 } from '@/features/daily-class-report/constants';
@@ -86,7 +87,7 @@ export default function KidReportClient({
   academicDetails,
 }: KidReportClientProps) {
   const totalAttendance = kidDetails?.dcrObservations.filter(
-    (obs) => obs.attendance === 'present'
+    (obs) => obs.attendance === KID_ATTENDANCE.PRESENT
   ).length;
 
   return (
@@ -147,7 +148,7 @@ export default function KidReportClient({
                     </Badge>
                   </div>
                   <Separator orientation="vertical" className="" />
-                  {obs.attendance === 'present' ? (
+                  {obs.attendance === KID_ATTENDANCE.PRESENT ? (
                     <div>
                       <p className="flex items-center gap-2">
                         <span>{`⭐`}</span>

@@ -1,6 +1,6 @@
 'use client';
 
-import { GENDER_LABELS } from '@/features/kid/constants';
+import { GENDER_LABELS, type Gender } from '@/features/kid/constants';
 import type { ColumnDef } from '@tanstack/react-table';
 
 import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';
@@ -51,8 +51,8 @@ export const kidColumns: ColumnDef<AppTableFeatures, KidWithGuardian>[] = [
       return <DataTableColumnHeader column={column} title="Jenis Kelamin" />;
     },
     cell: ({ row }) => {
-      const gender = row.getValue('gender') as string;
-      return <span>{gender === 'male' ? 'Laki-laki' : 'Perempuan'}</span>;
+      const gender = row.getValue('gender') as Gender;
+      return <span>{GENDER_LABELS[gender]}</span>;
     },
   },
   {

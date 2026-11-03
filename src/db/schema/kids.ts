@@ -1,7 +1,8 @@
 import {
   ACTIVE_STATUS,
-  GENDERS,
-  GUARDIAN_RELATIONSHIPS,
+  ACTIVE_STATUS_VALUES,
+  GENDER_VALUES,
+  GUARDIAN_RELATIONSHIP_VALUES,
 } from '@/features/kid/constants';
 import { relations, sql } from 'drizzle-orm';
 import {
@@ -57,14 +58,14 @@ export const guardianRelations = relations(guardian, ({ many }) => ({
 
 // ─────────────── Kids ───────────────
 
-export const genderEnum = pgEnum('gender', GENDERS);
+export const genderEnum = pgEnum('gender', GENDER_VALUES);
 
 export const guardianRelationshipEnum = pgEnum(
   'guardian_relationship',
-  GUARDIAN_RELATIONSHIPS
+  GUARDIAN_RELATIONSHIP_VALUES
 );
 
-export const activeStatusEnum = pgEnum('active_status', ACTIVE_STATUS);
+export const activeStatusEnum = pgEnum('active_status', ACTIVE_STATUS_VALUES);
 
 export const kid = pgTable(
   'kid',
@@ -78,7 +79,9 @@ export const kid = pgTable(
       .notNull()
       .references(() => guardian.id, { onDelete: 'restrict' }),
     relationship: guardianRelationshipEnum('relationship').notNull(),
-    activeStatus: activeStatusEnum('active_status').notNull().default('active'),
+    activeStatus: activeStatusEnum('active_status')
+      .notNull()
+      .default(ACTIVE_STATUS.ACTIVE),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .notNull()

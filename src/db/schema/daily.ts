@@ -1,8 +1,9 @@
 import {
-  KID_APPETITE,
-  KID_ATTENDANCE,
-  KID_MOOD,
+  KID_APPETITE_VALUES,
+  KID_ATTENDANCE_VALUES,
+  KID_MOOD_VALUES,
   REPORT_STATUS,
+  REPORT_STATUS_VALUES,
 } from '@/features/daily-class-report/constants';
 import { relations, sql } from 'drizzle-orm';
 import {
@@ -61,9 +62,12 @@ export const dcrRelationship = relations(dailyClassReport, ({ one, many }) => ({
   observations: many(dcrObservation),
 }));
 
-export const kidAttendanceEnum = pgEnum('kid_attendance', KID_ATTENDANCE);
-export const kidMoodEnum = pgEnum('kid_mood', KID_MOOD);
-export const kidAppetiteEnum = pgEnum('kid_appetite', KID_APPETITE);
+export const kidAttendanceEnum = pgEnum(
+  'kid_attendance',
+  KID_ATTENDANCE_VALUES
+);
+export const kidMoodEnum = pgEnum('kid_mood', KID_MOOD_VALUES);
+export const kidAppetiteEnum = pgEnum('kid_appetite', KID_APPETITE_VALUES);
 
 export const dcrObservation = pgTable(
   'dcr_observation',
@@ -116,7 +120,7 @@ export const dcrObservationRelationship = relations(
   })
 );
 
-export const reportStatusEnum = pgEnum('report_status', REPORT_STATUS);
+export const reportStatusEnum = pgEnum('report_status', REPORT_STATUS_VALUES);
 
 export const dailyKidReport = pgTable(
   'daily_report',
@@ -126,7 +130,9 @@ export const dailyKidReport = pgTable(
       .notNull()
       .references(() => dcrObservation.id, { onDelete: 'restrict' }),
     narrative: text('narrative'),
-    reportStatus: reportStatusEnum('report_status').default('template'),
+    reportStatus: reportStatusEnum('report_status').default(
+      REPORT_STATUS.TEMPLATE
+    ),
     sentAt: timestamp('sent_at', {
       withTimezone: true,
     }),

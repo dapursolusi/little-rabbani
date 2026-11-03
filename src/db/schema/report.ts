@@ -1,4 +1,7 @@
-import { MONTHLY_REPORT_STATUS } from '@/features/report/constants';
+import {
+  MONTHLY_REPORT_STATUS,
+  MONTHLY_REPORT_STATUS_VALUES,
+} from '@/features/report/constants';
 import { relations } from 'drizzle-orm';
 import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 
@@ -19,7 +22,7 @@ export const reportTemplate = pgTable('report_template', {
 
 export const monthlyKidReportEnum = pgEnum(
   'monthly_report_status',
-  MONTHLY_REPORT_STATUS
+  MONTHLY_REPORT_STATUS_VALUES
 );
 
 export const monthlyKidReport = pgTable('monthly_kid_report', {
@@ -32,7 +35,9 @@ export const monthlyKidReport = pgTable('monthly_kid_report', {
     .references(() => term.id, { onDelete: 'cascade' }),
   month: text('month').notNull(),
   narrative: text('narrative'),
-  reportStatus: monthlyKidReportEnum('report_status').default('generated'),
+  reportStatus: monthlyKidReportEnum('report_status').default(
+    MONTHLY_REPORT_STATUS.GENERATED
+  ),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at')
     .notNull()

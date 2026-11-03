@@ -7,6 +7,7 @@ import { ClassSession } from '../class-session/types';
 import { ThemeWithSubThemes } from '../theme/types';
 import {
   KID_APPETITE_LABELS,
+  KID_ATTENDANCE,
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
   KidAttendance,
@@ -53,7 +54,7 @@ export const dcrObservationFormFieldsPresentAttendance = ({
 }): FormField[] => {
   const isPresent =
     (watch('attendance') as unknown) ===
-    ('present' as unknown as KidAttendance);
+    (KID_ATTENDANCE.PRESENT as unknown as KidAttendance);
   if (!isPresent) {
     return [];
   }

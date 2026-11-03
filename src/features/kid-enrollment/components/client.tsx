@@ -189,7 +189,7 @@ export default function KidEnrollmentClient({
       const selectedKids = availableKids.filter((kid) => kidIds.has(kid.id));
       const newEnrollments: KidToBeEnrolled[] = selectedKids.map((kid) => ({
         kidId: kid.id,
-        status: 'enrolled',
+        status: ENROLLMENT_STATUS.ENROLLED,
       }));
 
       setEnrolledKids((current) => {

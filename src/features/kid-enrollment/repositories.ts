@@ -1,6 +1,7 @@
 import { db } from '@/db';
 import { kid, kidEnrollment } from '@/db/schema';
 import { omitAuditColumns } from '@/db/selections/audit-columns';
+import { ACTIVE_STATUS } from '@/features/kid/constants';
 import { TransactionClient } from '@/types';
 import { SQL, and, eq, exists, inArray, isNull, not } from 'drizzle-orm';
 
@@ -96,7 +97,7 @@ export async function findAvailableKids({
   return await db.query.kid.findMany({
     where: and(
       isNull(kid.deletedAt),
-      eq(kid.activeStatus, 'active'),
+      eq(kid.activeStatus, ACTIVE_STATUS.ACTIVE),
       not(
         exists(
           db

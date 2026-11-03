@@ -1,5 +1,6 @@
 import { db } from '@/db';
 import { guardian, kid } from '@/db/schema';
+import { ENROLLMENT_STATUS } from '@/features/kid-enrollment/constants';
 import * as kidEnrollmentRepo from '@/features/kid-enrollment/repositories';
 import { TransactionClient } from '@/types';
 import { SQL, and, ilike, isNull } from 'drizzle-orm';
@@ -158,7 +159,7 @@ export async function createKid(input: {
               termId: input.termId,
               classSessionId: input.classSessionId,
               kidId: newKid.id,
-              status: 'enrolled',
+              status: ENROLLMENT_STATUS.ENROLLED,
             },
           ]);
         }
@@ -189,7 +190,7 @@ export async function createKid(input: {
                 termId: input.termId,
                 classSessionId: input.classSessionId,
                 kidId: newKid.id,
-                status: 'enrolled',
+                status: ENROLLMENT_STATUS.ENROLLED,
               },
             ],
             tx
