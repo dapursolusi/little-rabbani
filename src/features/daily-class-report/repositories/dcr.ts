@@ -1,23 +1,12 @@
 import { db } from '@/db';
-import { dailyClassReport } from '@/db/schema/daily';
+import { dailyClassReport, dcrObservation } from '@/db/schema/daily';
 import { subTheme } from '@/db/schema/theme';
 import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
 import { startOfNextMonthDate } from '@/utils/date';
-import { and, eq, gte, isNull, lt } from 'drizzle-orm';
+import { and, asc, eq, gte, isNull, lt } from 'drizzle-orm';
 
-import { DailyClassReportData } from '../types';
 import { DailyClassReportInput } from '../validation';
-
-// Column Selection
-
-export const dcrColumnSelection = {
-  id: true,
-  date: true,
-  classSessionId: true,
-  subThemeId: true,
-  description: true,
-} as const satisfies Record<keyof DailyClassReportData, boolean>;
 
 export async function findManyByMonth({
   classSessionId,
@@ -36,6 +25,42 @@ export async function findManyByMonth({
     columns: { id: true, date: true },
   });
   return reports;
+}
+
+export async function findManyWithObservationsByKidAndMonth({
+  classSessionId,
+  kidId,
+  yearMonth,
+}: {
+  classSessionId: string;
+  kidId: string;
+  yearMonth: string;
+}) {
+  return db.query.dailyClassReport.findMany({
+    where: and(
+      eq(dailyClassReport.classSessionId, classSessionId),
+      gte(dailyClassReport.date, `${yearMonth}-01`),
+      lt(dailyClassReport.date, startOfNextMonthDate(yearMonth)),
+      isNull(dailyClassReport.deletedAt)
+    ),
+    columns: omitAuditColumns,
+    with: {
+      observations: {
+        where: eq(dcrObservation.kidId, kidId),
+        columns: omitAuditColumns,
+        with: {
+          kid: { columns: leanKidColumnSelection },
+        },
+      },
+      subTheme: {
+        columns: { name: true },
+        with: {
+          theme: { columns: { name: true } },
+        },
+      },
+    },
+    orderBy: asc(dailyClassReport.id),
+  });
 }
 
 export async function insert(input: DailyClassReportInput) {
