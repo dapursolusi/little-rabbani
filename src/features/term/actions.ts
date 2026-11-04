@@ -4,8 +4,8 @@ import { db } from '@/db';
 import { term } from '@/db/schema';
 import { isNull } from 'drizzle-orm';
 
-import { parseInput } from '@/lib/actions/parse-input';
-import { requireOwner } from '@/lib/actions/require-owner';
+import { parseInput } from '@/lib/action/parse-input';
+import { requireOwner } from '@/lib/action/require-owner';
 
 import * as termService from './services';
 import { TermSchema } from './validation';

@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { requireOwner } from '@/lib/actions/require-owner';
+import { requireOwner } from '@/lib/action/require-owner';
 
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),

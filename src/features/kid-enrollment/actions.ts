@@ -1,5 +1,5 @@
 'use server';
-import { parseInput } from '@/lib/actions/parse-input';
+import { parseInput } from '@/lib/action/parse-input';
 
 import * as kidEnrollmentService from './services';
 import { KidEnrollmentSchema, SaveEnrollmentChangesSchema } from './validation';

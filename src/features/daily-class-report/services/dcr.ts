@@ -3,7 +3,7 @@ import { ActionResult } from '@/types';
 import { getLocalDateString, isWithinEditWindow } from '@/utils/date';
 import z from 'zod';
 
-import { parseInput } from '@/lib/actions/parse-input';
+import { parseInput } from '@/lib/action/parse-input';
 import { KidNotEnrolledError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { uuidSchema } from '@/lib/validation/common.schema';
@@ -33,7 +33,7 @@ export async function getOrCreateDCR({
 
 export async function getDcrsByMonth(input: {
   classSessionId: string;
-  month: string;
+  yearMonth: string;
 }) {
   return await dcrRepo.findManyByMonth(input);
 }
