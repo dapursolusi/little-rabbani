@@ -10,10 +10,10 @@ import { DailyClassReportInput } from '../validation';
 
 export async function findManyByMonth({
   classSessionId,
-  month: yearMonth,
+  yearMonth,
 }: {
   classSessionId: string;
-  month: string;
+  yearMonth: string;
 }) {
   const reports = await db.query.dailyClassReport.findMany({
     where: and(
@@ -59,7 +59,7 @@ export async function findManyWithObservationsByKidAndMonth({
         },
       },
     },
-    orderBy: asc(dailyClassReport.id),
+    orderBy: asc(dailyClassReport.date),
   });
 }
 

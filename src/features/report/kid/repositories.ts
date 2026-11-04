@@ -5,15 +5,14 @@ import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
 import { and, eq, inArray } from 'drizzle-orm';
 
+import { MonthlyKidReportParams } from '../types';
+
 export async function findMonthlyReport({
   kidId,
   termId,
-  month: yearMonth,
+  yearMonth,
   dcrIds,
-}: {
-  kidId: string;
-  termId: string;
-  month: string;
+}: MonthlyKidReportParams & {
   dcrIds: string[];
 }) {
   return db.query.kid.findFirst({

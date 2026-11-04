@@ -1,7 +1,3 @@
-import {
-  KID_ATTENDANCE,
-  KidAttendance,
-} from '@/features/daily-class-report/constants';
 import { dcrService } from '@/features/daily-class-report/services';
 import * as kidEnrollmentService from '@/features/kid-enrollment/services';
 import * as kidService from '@/features/kid/services';
@@ -9,14 +5,22 @@ import * as termService from '@/features/term/services';
 import { observationAggregator } from '@/utils/aggregate';
 import z from 'zod';
 
-import { parseInput } from '@/lib/actions/parse-input';
-import { NoKidObservationsError } from '@/lib/errors';
+import { parseInput } from '@/lib/action/parse-input';
+import {
+  NoDcrsError,
+  NoKidFoundError,
+  NoKidObservationsError,
+} from '@/lib/errors';
 import { isoYearMonthSchema, uuidSchema } from '@/lib/validation/common.schema';
 
 import { MonthlyKidReportParams } from '../types';
 
 // ============================================
 // SERVER ACTION USE CASES
+// ============================================
+
+// ============================================
+// SERVER COMPONENT QUERIES
 // ============================================
 
 // Read
@@ -28,11 +32,11 @@ export async function getMonthlyAcademicDetails(input: MonthlyKidReportParams) {
     schema: z.object({
       kidId: uuidSchema,
       termId: uuidSchema,
-      month: isoYearMonthSchema,
+      yearMonth: isoYearMonthSchema,
     }),
   });
   if (!parsed.success) return parsed;
-  const { kidId, termId, month: yearMonth } = parsed.data;
+  const { kidId, termId, yearMonth } = parsed.data;
 
   // 2. Validate batch and class session & load required data
   const classSessionId =
@@ -49,7 +53,7 @@ export async function getMonthlyAcademicDetails(input: MonthlyKidReportParams) {
   const terms = await termService.getTerms();
   const dcrs = await dcrService.getDcrsByMonth({
     classSessionId,
-    month: yearMonth,
+    yearMonth,
   });
 
   return {
@@ -62,7 +66,7 @@ export async function getMonthlyAcademicDetails(input: MonthlyKidReportParams) {
 // INTERNAL OPERATIONS
 // ============================================
 
-export async function aggregateMonthlyReportData({
+export async function aggregateMonthlyKidReportData({
   kidId,
   termId,
   yearMonth,
@@ -73,12 +77,20 @@ export async function aggregateMonthlyReportData({
 }) {
   const kidBasicInfo = await kidService.getKidBasicInfo(kidId);
 
+  if (!kidBasicInfo) {
+    throw new NoKidFoundError();
+  }
+
   const dcrsWithKidObservations =
     await dcrService.getDcrsWithObservationsByKidAndMonth({
       kidId,
       termId,
       yearMonth,
     });
+
+  if (dcrsWithKidObservations.length === 0) {
+    throw new NoDcrsError({ month: true });
+  }
 
   const observations = dcrsWithKidObservations
     .map((dcr) => dcr.observations)
