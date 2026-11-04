@@ -4,6 +4,13 @@
 
 Cross-feature components under `src/components/shared/`. Auto-generated shadcn base-nova under `src/components/ui/` — never edit.
 
+**Cross-feature feature components** (used by 2+ features, e.g. `TermSelector`, `ClassSessionSelector`) live under `src/components/features/<domain>/`. Entity-specific components stay in `src/features/<e>/components/`.
+
+## Export convention
+
+- **Default export** — feature components and single-consumer shared pieces (`form.tsx`, `client.tsx`, `form-field-generator.tsx`, selectors).
+- **Named export** — widely-consumed primitives (`DataTable`, `Modal`, `EmptyState`, `Pagination`, `SearchInput`, `ContentTabs`, `RowActionsDialog`, `PageBreadcrumbs`).
+
 ## cn() utility
 
 ```ts
@@ -14,7 +21,13 @@ import { cn } from '@/lib/utils';
 
 ## EmptyState
 
-`src/components/shared/empty-state.tsx` — renders when data list is empty. Props: `title`, `description`, `actionLabel`, `actionHref`, `action` (custom ReactNode), `icon`. Uses shadcn `Empty` primitives.
+`src/components/shared/empty-state.tsx` — renders when data list is empty. Props: `title`, `description`, `icon`, and `action` — a discriminated union `EmptyDataAction = HrefAction | CustomAction`:
+
+```tsx
+action={{ type: 'href', href: '/x', label: 'Tambah' }}
+// or
+action={{ type: 'custom', children: <...> }}
+```
 
 ## Modal
 
@@ -30,41 +43,52 @@ import { cn } from '@/lib/utils';
 
 ## Badge colors
 
-`src/utils/badge-color.ts` — `getDeterministicClass(name)` generates deterministic badge colors from a string. Used in table cells for entity badges.
+`src/utils/badge-color.ts` — `getDeterministicClass(name)` generates deterministic badge colors from a string. Used in table cells for entity badges. Status badges use `get-status-badge.tsx` (`src/components/shared/get-status-badge.tsx`).
 
 ## Icon handling
 
-`src/utils/icon-checker.ts` — `isIconSvgElement()` guard for Hugeicons icon type narrowing.
+Hugeicons exclusively (`@hugeicons/react` + `@hugeicons/core-free-icons`), wrapped as `<HugeiconsIcon icon={XIcon} />`. Icons are passed as data (`IconSvgElement`) through props and validated with `isIconSvgElement()` (`src/utils/icon-checker.ts`).
+
+## base-ui `render` composition
+
+Compose interactive primitives with `render=` props instead of children-wrapping triggers:
+
+```tsx
+<Item render={<Link href={...} />}>...</Item>
+<DialogTrigger render={<Button variant="default" render={trigger.render} />} />
+```
+
+Per-call classNames are inline utility strings; Tailwind v4 important-suffix (`w-full!`, `sm:col-span-2!`) is the idiom for overriding auto-generated ui tokens. No `cva()` outside `src/components/ui/`; `cn()` used sparingly.
 
 ## Format utilities
 
-`src/lib/format.ts`:
-
-- `formatDate(dateStr)` — "Senin, 1 Januari 2024"
-- `formatDateShort(dateStr)` — "Senin, 11 Agu"
-- `formatAge(dob)` — "3 tahun 5 bulan" from YYYY-MM-DD
+- `src/utils/date.ts` — `formatDate(dateStr)` ("Senin, 1 Januari 2024"), `getLocalDateString()`
+- `src/lib/format.ts` — `formatDateShort(dateStr)` ("Senin, 11 Agu"), `formatAge(dob)` ("3 tahun 5 bulan")
 
 ## Content tabs
 
-`src/components/shared/content-tabs.tsx` — tab navigation for content sections.
+`src/components/shared/content-tabs.tsx` — tab navigation for content sections. Props include `fullWidth` / `maxWidthPx`.
 
 ## Page breadcrumbs
 
-`src/components/shared/page-breadcrumbs.tsx` — breadcrumb navigation.
+`src/components/shared/page-breadcrumbs.tsx` — breadcrumb navigation (`segments: { label, href? }[]`). Currently used only by settings pages; other pages roll their own h1 header.
 
 ## Search input
 
-`src/components/shared/search-input.tsx` — standalone search input.
+`src/components/shared/search-input.tsx` — standalone debounced search input (setTimeout-in-useEffect debounce, no debounce lib).
+
+## Selectors (controlled-uncontrolled hybrid)
+
+`src/components/features/{term,class-session}/*-selector.tsx` — twin shape: `value?/defaultValue?/onValueChange?` props, `useState` fallback when `value === undefined`, `id` on both Label and Select.
 
 ## Logger
 
-`src/lib/logger.ts` — pino-based structured logger with PII redaction. `logger.info()`, `logger.error()`.
+`src/lib/logger.ts` — pino-based structured logger with PII redaction. `logger.info()`, `logger.error()`. Canonical for server code.
 
 ## Every page must
 
 1. Export `metadata` object using `baseMetadata`
-2. Handle error state (Alert component)
-3. Be responsive (mobile: stack, desktop: grid)
+2. Be responsive (mobile: stack, desktop: grid)
 
 ## Form field components
 
@@ -72,4 +96,4 @@ import { cn } from '@/lib/utils';
 
 ## Toast
 
-Sonner for all user-facing mutations. Pattern: `toast.success('...')` / `toast.error('...')`. Wired in `FormFieldGenerator` for all form submissions.
+Sonner for all user-facing mutations. Engine-owned forms toast inside `FormFieldGenerator` — consumers never double-toast. Hand-rolled mutations: `toast.success(result.message ?? default)` / `toast.error(result.message)`. Copy is Indonesian.

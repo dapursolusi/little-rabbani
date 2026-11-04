@@ -11,6 +11,7 @@ Split into per-stack files. Code wins if doc disagrees — update doc in same ch
 | DataTable (TanStack v9)    | [tables.md](patterns/tables.md)         |
 | Auth (Better Auth)         | [auth.md](patterns/auth.md)             |
 | Shared UI                  | [shared-ui.md](patterns/shared-ui.md)   |
+| Debt                       | [violations.md](patterns/violations.md) |
 
 Extract a new pattern only after a repeatable shape lands. Promote to AGENTS.md only after 3+ entities use it unchanged. Add a new stack file when patterns grow too large.
 
@@ -33,8 +34,10 @@ These are decisions, not in-flux patterns — they live in AGENTS.md:
   by hand. Brand customization happens via tokens in `globals.css` or
   per-call classNames.
 - **Discriminated-union action results** (`{ success: true, data } | { success:
-false, error }` with `as const`) — clients narrow with `if (!result.success)`.
-  `parseInput()` produces one directly from a failed zod parse.
+false, message }` with `as const`) — failure string field is `message`; `error`
+is an optional structured `ActionError`. Clients narrow with
+`if (!result.success)`. `parseInput()` produces one directly from a failed zod
+parse.
 - **Index every FK column by default** in Drizzle. Postgres does not
   auto-index FK columns, so any WHERE/JOIN on an unindexed FK is a full
   `Seq Scan`. Current example: `kid.guardianId` → `kid_guardian_idx`. Rule:
@@ -42,5 +45,8 @@ false, error }` with `as const`) — clients narrow with `if (!result.success)`.
   - Merge into a composite only when columns are _always_ filtered together.
   - Drop an index only when `EXPLAIN ANALYZE` shows it never used — never
     pre-optimize; index by default, profile later.
-  - Indexes live in the `pgTable` third-arg config callback, e.g.
-    `(table) => ({ guardianIdx: index('kid_guardian_idx').on(table.guardianId) })`.
+  - Indexes live in the `pgTable` third-arg config callback — **array style**
+    `(table) => [ index('kid_guardian_idx').on(table.guardianId) ]`.
+- **Auth gating placement is undecided** (requireOwner action-level vs
+  service-level vs future `roleGate()`). Don't write new call-site guidance;
+  track in [violations.md](patterns/violations.md).

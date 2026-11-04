@@ -16,10 +16,9 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 Little Rabbani Preschool LMS — a back-office tool for a small Indonesian
 preschool. The v1 app (observation/report domain) was archived to `_archives/`
-and the app rebuilt from the auth shell; only the kid/guardian module is
-implemented so far. Domain vocabulary lives in `CONTEXT.md`, the V2 plan in
-`docs/superpowers/plans/kid-module-v2.md`. Treat `_archives/` as read-only
-reference — it is the old v1, not live code.
+and the app rebuilt from the auth shell. Domain vocabulary lives in
+`CONTEXT.md`. Treat `_archives/` as read-only reference — it is the old v1,
+not live code.
 
 ## Stack
 
@@ -27,27 +26,30 @@ reference — it is the old v1, not live code.
 - **Package manager:** bun (never npm/pnpm/yarn — `bun run`, `bunx`, `bun add`)
 - **Styling:** Tailwind CSS 4 (CSS-first — no `tailwind.config.ts`) + shadcn/ui (style: base-nova, primitives: `@base-ui/react`, icons: `hugeicons`)
 - **Architecture:** Next.js App Router. Server Components by default. `"use client"` only when hooks/event handlers are needed.
-- **Key libs:** zod for all I/O boundaries (`env.mjs`). sonner for toasts. CVA + clsx for component variants. `@tanstack/react-table` v9 for DataTable.
-- **Testing:** Vitest (unit, native `tsconfigPaths` resolution). Playwright for E2E.
-- **Data layer:** Drizzle ORM + Neon Postgres (`@neondatabase/serverless`, WS `Pool` driver — required for transactions). Schema in `src/db/schema/`, one file per entity, exported from `src/db/schema/index.ts`. `db` singleton at `src/db/index.ts`. DB scripts (`db:generate`/`db:push`/`db:migrate`) use `--env-file=.env.local`.
-- **Auth:** Better Auth (better-auth + `@better-auth/drizzle-adapter`), Google OAuth + dev-session bypass. Session gate via `requireOwner()` in `src/lib/actions/require-owner.ts`. Roles: `owner` | `teacher`.
+- **Key libs:** zod for all I/O boundaries (`env.mjs`). sonner for toasts. clsx for class merging (no CVA outside auto-generated `ui/`). `@tanstack/react-table` v9 for DataTable.
+- **Testing:** Vitest (unit, native `tsconfigPaths` resolution). Playwright for E2E. All tests under `tests/` mirroring `src/`.
+- **Data layer:** Drizzle ORM + Neon Postgres (`@neondatabase/serverless`, WS `Pool` driver — required for transactions). Schema in `src/db/schema/`, one file per entity, exported from `src/db/schema/index.ts`. `db` singleton at `src/db/index.ts`. DB scripts (`db:generate`/`db:push`/`db:migrate`) use `--env-file=.env.local`. Schema changes ship via `db:generate` → `db:migrate`, never `db push`.
+- **Auth:** Better Auth (better-auth + `@better-auth/drizzle-adapter`), Google OAuth + dev-session bypass. Roles: `owner` | `teacher`. Auth gating placement (requireOwner / future roleGate) is **undecided** — see `docs/patterns/violations.md`.
 
 ## Architecture
 
 ```
-UI Component (Server Component / Client form) → Server Action → Drizzle → Neon
+Server Component / Client form → Service → Repository → Drizzle → Neon
+                                        ↑
+           Server Actions (mutations, parse-only) ──┘
 ```
 
 - **API:** Server Actions only. No `api/` routes except Better Auth's `api/auth/[...all]` and the dev-session helper. Auth traffic routes via `src/proxy.ts` (session + role-based route guard).
-- **Data flow:** Server Components fetch directly via `db.query.*`. Mutations are Server Actions returning a **discriminated-union result** (`{ success: true, data } | { success: false, error }`, `as const`) so client forms narrow with `if (!result.success)`.
-- **Action I/O:** every Server Action parses `unknown` input with `parseInput()` (zod) and wraps itself in `requireOwner()` (the single auth gate). Both live in `src/lib/actions/`.
-- **Feature verticals:** entity code under `src/features/<entity>/` (`actions.ts`, `schemas.ts`, `form-fields.ts`, `components/`, `types.ts`). Shared UI under `src/components/shared/`.
-- **File placement:** All source code under `src/`. `@/*` maps to `./src/*`.
+- **Data flow:** Server Components call **services** (`import * as xxxService from '@/features/<e>/services'`), which call repositories. Mutations are Server Actions returning a **discriminated-union result** (`{ success: true, message?, data } | { success: false, message, error? }`, `as const`) so client forms narrow with `if (!result.success)`.
+- **Action I/O:** every Server Action parses `unknown` input with `parseInput()` (zod, `src/lib/actions/`). Actions are parse-and-forward shells — they never touch `db`.
+- **Feature verticals:** entity code under `src/features/<entity>/` (`actions.ts`, `validation.ts`, `fields.ts(x)`, `constants.ts`, `columns.tsx`, `components/`, `types.ts`). Shared UI under `src/components/shared/`; cross-feature feature components under `src/components/features/`. Flat layer files by default; split a layer to a directory + `index.ts` barrel once it serves 2+ entities.
+- **File placement:** All source code under `src/`. `@/*` maps to `./src/*`. Tests live in `tests/` (mirroring `src/`), not `src/features/_tests_/`.
 
 ## Modules
 
-- **kid** (`src/features/kids/`) — the only implemented domain vertical. Combined kid+guardian form (ADR-0001), identity-only kid (ADR-0002), real Drizzle CRUD with transactional inserts in `createKid`/`updateKid` (see ADR-0003). Routes: `/dashboard/kid`, `/dashboard/kid/create`, `/dashboard/kid/[id]/edit`.
-- **auth** (`src/db/schema/auth.ts`, `src/lib/auth.ts`) — Better Auth tables (user, session, account, verification). `role` on user: `owner` gates all mutations via `requireOwner`.
+Implemented domain verticals: **kid**, **kid-enrollment**, **term**, **class-session**, **theme**, **daily-class-report**, **report** (kid + month), **auth** — under `src/features/<name>/`. Patterns per stack in `docs/patterns/`; debt in `docs/patterns/violations.md`.
+- **kid** — combined kid+guardian form (ADR-0001), identity-only kid (ADR-0002, `activeStatus` addendum), transactional inserts (ADR-0003). Routes: `/dashboard/kid`, `/dashboard/kid/create`, `/dashboard/kid/[id]/edit`.
+- **auth** (`src/db/schema/auth.ts`, `src/lib/auth.ts`) — Better Auth tables (user, session, account, verification). `role` on user.
 
 ## Rules
 
@@ -61,7 +63,7 @@ UI Component (Server Component / Client form) → Server Action → Drizzle → 
 
 - ❌ NO `npm run` / `npx` — use `bun run` / `bunx`
 - ❌ NO `any` types — use `unknown` or a proper interface
-- ❌ NO `console.log` in production code — use `console.warn`/`console.error` only
+- ❌ NO `console.log`/`console.error` in server code — use `logger` (`src/lib/logger.ts`, pino + redaction)
 - ❌ NO refactoring working legacy code unless told to
 - ❌ NO `@apply` in CSS — Tailwind v4 doesn't support it
 - ❌ NO editing `src/components/ui/` — shadcn base-nova components are auto-generated
@@ -79,25 +81,28 @@ UI Component (Server Component / Client form) → Server Action → Drizzle → 
 | File names       | kebab-case  | `api-endpoint.ts` |
 | Folder names     | kebab-case  | `class-session`   |
 
+Acronyms are words in identifiers: `Dcr`, `getDcrs` — not `DCR`, `getDCRs`.
+Enum constants follow the named-map stack (`NAME` / `Name` type / `NAME_VALUES` / `NAME_LABELS` — see `docs/patterns/typescript.md`).
+
 ## File Placement
 
 | Component Type                          | Location                                | Notes                                                            |
 | :-------------------------------------- | :-------------------------------------- | :--------------------------------------------------------------- |
 | Page/Layout                             | `src/app/`                              | App Router conventions                                           |
 | Feature sections                        | `src/features/<module>/components/`     | Per-module components                                            |
+| Cross-feature feature components        | `src/components/features/<domain>/`     | Used by 2+ features (e.g. TermSelector)                          |
 | Layout components                       | `src/components/layout/`                | Header, Footer, MobileMenu                                       |
 | Shared UI primitives                    | `src/components/ui/`                    | shadcn base-nova (auto-generated)                                |
 | Utilities & constants                   | `src/lib/`                              | 3rd party, all that affecting domain                             |
 | Helpers                                 | `src/utils/`                            | helpers                                                          |
 | Types                                   | `src/types/`                            | Add per-project as needed                                        |
-| Tests (unit)                            | `src/features/_tests_/`                 | Vitest                                                           |
-| Tests (integration, within 1 module)    | `src/features/_tests_/`                 | Vitest                                                           |
-| Tests (integration, cross module)       | `tests/`                                | Vitest                                                           |
+| Tests (unit / integration)              | `tests/features/<module>/`, `tests/`    | Vitest, mirrors `src/`                                           |
 | Tests (E2E)                             | `e2e/`                                  | Playwright                                                       |
 | Server Actions                          | `src/features/<module>/actions.ts`      | Controllers/Actions                                              |
 | Services                                | `src/features/<module>/services.ts`     | Business Logic                                                   |
 | Repositories                            | `src/features/<module>/repositories.ts` | Repositories                                                     |
-| Repositories (Module w/ cross entities) | `src/features/<module>/repositories/`   | Repositories: file barrel`index.ts` and `<table/entity_name>.ts` |
+| Any layer w/ 2+ entities                | `src/features/<module>/<layer>/`        | Directory + barrel `index.ts` (`export * as xRepo from './x'`)   |
+| Zod validation                          | `src/features/<module>/validation.ts`   | Shared primitives in `src/lib/validation/common.schema.ts`       |
 
 ## Commands
 

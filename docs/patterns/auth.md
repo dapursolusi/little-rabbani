@@ -14,17 +14,11 @@ Better Auth (`better-auth` + `@better-auth/drizzle-adapter`). Google OAuth + dev
 - `role` as additional user field (not editable by user)
 - `nextCookies()` plugin
 
-## Auth gate — `requireOwner()`
+## Auth gating — UNDECIDED
 
-Single auth gate for all mutations. Wraps any handler:
+`requireOwner()` (`src/lib/actions/require-owner.ts`) currently gates mutations: redirects to `/login` if unauthenticated, returns `{ success: false, message: 'Akses ditolak...' }` if role is not `owner`.
 
-```ts
-return requireOwner(async () => {
-  // ...action body...
-});
-```
-
-Redirects to `/login` if unauthenticated. Returns `{ success: false, error: 'Akses ditolak...' }` if role is not `owner`. Located at `src/lib/actions/require-owner.ts`.
+**Placement is not settled.** Call sites are split between services-level (majority) and action-level (newest modules), and a future `roleGate(['owner', 'teacher'])`-style design may replace the current gate. Do not write new requireOwner call-site guidance; track drift in violations.md until the design lands.
 
 ## Route proxy
 
@@ -47,9 +41,12 @@ const ROLE_ROUTES: Record<string, string[]> = {
 
 `owner` → `/dashboard`, `teacher` → `/dashboard/daily`.
 
-## Demo mode
+## Demo & dev bypass
 
-`src/features/auth/demo-login.ts` — dev-session bypass for one-click owner login. Only in development.
+Two distinct gates — don't conflate them:
+
+- **Demo login** (`src/features/auth/demo-login.ts`): gated on `NEXT_PUBLIC_DEMO_MODE === '1'`. ⚠️ This var is **not registered in `env.mjs`** (bug candidate — see violations.md).
+- **Dev-session route** (`src/app/api/auth/dev-session/route.ts`): blocked only when `VERCEL_ENV === 'production'` + `DEV_AUTH_BYPASS` — i.e. it can run on CI/preview, not just local dev.
 
 ## Auth client
 
@@ -57,7 +54,7 @@ const ROLE_ROUTES: Record<string, string[]> = {
 
 ## Database schema
 
-Better Auth tables in `src/db/schema/auth.ts`: `user`, `session`, `account`, `verification`. `role` enum on user: `owner | teacher`.
+Better Auth tables in `src/db/schema/auth.ts`: `user`, `session`, `account`, `verification`. `role` enum on user: `owner | teacher`. Better Auth tables skip the audit triplet (`deletedAt` etc.).
 
 ## On API error
 
@@ -65,4 +62,4 @@ Better Auth config routes errors to `/login?error=access_denied`.
 
 ## PII handling
 
-`src/lib/pii.ts` — detection and masking utilities for PII fields (names, emails, phones, addresses, DOBs, national IDs). Used at log boundaries, not in every action.
+`src/lib/pii.ts` — detection and masking utilities for PII fields (names, emails, phones, addresses, DOBs, national IDs). **Infrastructure-only today — zero call sites.** Intended for log boundaries once wired up (see violations.md).
