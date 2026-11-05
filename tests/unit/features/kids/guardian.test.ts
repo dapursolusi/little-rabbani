@@ -1,7 +1,7 @@
 import { type GuardianTx, resolveGuardian } from '@/features/kid/services';
 import { describe, expect, it } from 'vitest';
 
-import { createFakeTx } from '../../helpers/fake-tx';
+import { createFakeTx } from '../../../helpers/fake-tx';
 
 // Compile-time guard: if `createFakeTx().tx` fails the GuardianTx interface
 // this line type-errors — the fake is the test surface.

@@ -5,7 +5,7 @@ import * as kidEnrollmentRepo from '@/features/kid-enrollment/repositories';
 import { TransactionClient } from '@/types';
 import { SQL, and, ilike, isNull } from 'drizzle-orm';
 
-import { requireOwner } from '@/lib/actions/require-owner';
+import { requireOwner } from '@/lib/action/require-owner';
 
 import { GuardianSearchResult } from './actions';
 import { guardianRepo, kidRepo } from './repositories';

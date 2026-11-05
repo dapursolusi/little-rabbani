@@ -1,4 +1,4 @@
-import { requireOwner } from '@/lib/actions/require-owner';
+import { requireOwner } from '@/lib/action/require-owner';
 
 import * as classSessionRepo from './repositories';
 import { ClassSessionInput, OverlappingClassSessionInput } from './validation';

@@ -1,7 +1,7 @@
 import { db } from '@/db';
 
-import { parseInput } from '@/lib/actions/parse-input';
-import { requireOwner } from '@/lib/actions/require-owner';
+import { parseInput } from '@/lib/action/parse-input';
+import { requireOwner } from '@/lib/action/require-owner';
 import { uuidSchema } from '@/lib/validation/common.schema';
 
 import { LeanKid } from '../kid/types';

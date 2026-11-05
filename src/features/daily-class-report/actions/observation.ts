@@ -2,7 +2,7 @@
 
 import z from 'zod';
 
-import { parseInput } from '@/lib/actions/parse-input';
+import { parseInput } from '@/lib/action/parse-input';
 import { isoDateSchema, uuidSchema } from '@/lib/validation/common.schema';
 
 import { observationService } from '../services';

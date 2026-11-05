@@ -1,8 +1,10 @@
+import * as kidEnrollmentService from '@/features/kid-enrollment/services';
 import { ActionResult } from '@/types';
 import { getLocalDateString, isWithinEditWindow } from '@/utils/date';
 import z from 'zod';
 
-import { parseInput } from '@/lib/actions/parse-input';
+import { parseInput } from '@/lib/action/parse-input';
+import { KidNotEnrolledError } from '@/lib/errors';
 import { logger } from '@/lib/logger';
 import { uuidSchema } from '@/lib/validation/common.schema';
 
@@ -31,9 +33,30 @@ export async function getOrCreateDCR({
 
 export async function getDcrsByMonth(input: {
   classSessionId: string;
-  month: string;
+  yearMonth: string;
 }) {
   return await dcrRepo.findManyByMonth(input);
+}
+
+export async function getDcrsWithObservationsByKidAndMonth(input: {
+  kidId: string;
+  termId: string;
+  yearMonth: string;
+}) {
+  const enrollment = await kidEnrollmentService.verifyKidEnrollment({
+    kidId: input.kidId,
+    termId: input.termId,
+  });
+
+  if (!enrollment) {
+    throw new KidNotEnrolledError();
+  }
+
+  return await dcrRepo.findManyWithObservationsByKidAndMonth({
+    kidId: input.kidId,
+    classSessionId: enrollment.classSessionId,
+    yearMonth: input.yearMonth,
+  });
 }
 
 export async function saveDCR(

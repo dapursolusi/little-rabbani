@@ -1,8 +1,8 @@
 'use server';
 import z from 'zod';
 
-import { parseInput } from '@/lib/actions/parse-input';
-import { requireOwner } from '@/lib/actions/require-owner';
+import { parseInput } from '@/lib/action/parse-input';
+import { requireOwner } from '@/lib/action/require-owner';
 
 import * as templateService from '../services/report-template';
 

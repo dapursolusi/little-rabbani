@@ -95,13 +95,7 @@ export async function findMany({
     with: {
       kid: { columns: leanKidColumnSelection },
       kidReport: {
-        columns: {
-          id: true,
-          dcrObservationId: true,
-          narrative: true,
-          reportStatus: true,
-          sentAt: true,
-        },
+        columns: omitAuditColumns,
       },
     },
   });
