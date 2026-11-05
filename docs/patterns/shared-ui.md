@@ -88,7 +88,6 @@ Per-call classNames are inline utility strings; Tailwind v4 important-suffix (`w
 ## Every page must
 
 1. Export `metadata` object using `baseMetadata`
-2. Be responsive (mobile: stack, desktop: grid)
 
 ## Form field components
 
@@ -96,4 +95,4 @@ Per-call classNames are inline utility strings; Tailwind v4 important-suffix (`w
 
 ## Toast
 
-Sonner for all user-facing mutations. Engine-owned forms toast inside `FormFieldGenerator` — consumers never double-toast. Hand-rolled mutations: `toast.success(result.message ?? default)` / `toast.error(result.message)`. Copy is Indonesian.
+Sonner for all user-facing mutations. Engine-owned forms toast inside `FormFieldGenerator` — consumers never double-toast. Copy is Indonesian; tone rules in SSOT `stacks/react.md` + project `nextjs.md` gotchas.

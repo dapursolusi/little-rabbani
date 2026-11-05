@@ -97,12 +97,7 @@ Sequential grouping: a `{ groupLabel }` header opens a `<FieldSet>` section. Eve
 
 ## Optional fields + nullable columns
 
-Untouched RHF fields arrive as `undefined`. zod `min(1)` rejects them. Pattern: nullable+optional in schema, coerce `''` → `null` on write:
-
-```ts
-nickName: z.string().nullable().optional(),
-// On insert: nickName: data.nickName || null,
-```
+Untouched RHF fields arrive as `undefined`. zod `min(1)` rejects them. Pattern: `.nullable().optional()` in schema, coerce `''` → `null` on write (`nickName: data.nickName || null`).
 
 ## Combined forms
 

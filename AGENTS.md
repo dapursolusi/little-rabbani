@@ -47,9 +47,7 @@ Server Component / Client form → Service → Repository → Drizzle → Neon
 
 ## Modules
 
-Implemented domain verticals: **kid**, **kid-enrollment**, **term**, **class-session**, **theme**, **daily-class-report**, **report** (kid + month), **auth** — under `src/features/<name>/`. Patterns per stack in `docs/patterns/`; debt in `docs/patterns/violations.md`.
-- **kid** — combined kid+guardian form (ADR-0001), identity-only kid (ADR-0002, `activeStatus` addendum), transactional inserts (ADR-0003). Routes: `/dashboard/kid`, `/dashboard/kid/create`, `/dashboard/kid/[id]/edit`.
-- **auth** (`src/db/schema/auth.ts`, `src/lib/auth.ts`) — Better Auth tables (user, session, account, verification). `role` on user.
+Implemented domain verticals under `src/features/<name>/`: **kid** (kid+guardian combined form ADR-0001, identity-only kid ADR-0002, transactional inserts ADR-0003), **kid-enrollment**, **term**, **class-session**, **theme**, **daily-class-report**, **report** (kid + month), **auth**. Routes under `/dashboard/<name>/`. Patterns per stack in `docs/patterns/`; debt in `docs/patterns/violations.md`.
 
 ## Rules
 
@@ -91,8 +89,9 @@ Enum constants follow the named-map stack (`NAME` / `Name` type / `NAME_VALUES` 
 | Page/Layout                             | `src/app/`                              | App Router conventions                                           |
 | Feature sections                        | `src/features/<module>/components/`     | Per-module components                                            |
 | Cross-feature feature components        | `src/components/features/<domain>/`     | Used by 2+ features (e.g. TermSelector)                          |
-| Layout components                       | `src/components/layout/`                | Header, Footer, MobileMenu                                       |
+| Layout components                       | `src/components/layout/`                | Global shell                                                     |
 | Shared UI primitives                    | `src/components/ui/`                    | shadcn base-nova (auto-generated)                                |
+| Shared sections & logic-heavy comps     | `src/components/sections/`, `src/components/shared/` | confirm-dialog, empty-state, pagination; form engine, table      |
 | Utilities & constants                   | `src/lib/`                              | 3rd party, all that affecting domain                             |
 | Helpers                                 | `src/utils/`                            | helpers                                                          |
 | Types                                   | `src/types/`                            | Add per-project as needed                                        |
@@ -141,40 +140,22 @@ This project uses both graphify and CodeGraph for code intelligence. See `docs/p
 
 ## Code Patterns
 
-`docs/patterns.md` is the index. Follow `docs/patterns/` for new code. Code wins if doc disagrees.
+Two rule layers — don't intertwine them:
 
-**Extract new pattern** after repeatable shape lands. Promote to AGENTS.md only after 3+ entities use it unchanged.
+- **General project rules** live here in AGENTS.md (architecture, conventions, gotchas, locked decisions).
+- **Per-stack/task/dep specifics** live in `docs/patterns/<topic>.md`: [typescript](patterns/typescript.md), [nextjs](patterns/nextjs.md), [database](patterns/database.md), [forms](patterns/forms.md), [tables](patterns/tables.md), [auth](patterns/auth.md), [shared-ui](patterns/shared-ui.md). Personal-universal principles live in the SSOT `stacks/` files and lose to project docs on overlap.
+
+Follow `docs/patterns/` for new code. Code wins if doc disagrees. **Extract new pattern** after a repeatable shape lands. Promote to AGENTS.md only after 3+ entities use it unchanged.
 
 ### Settled hard rules (locked here)
 
-These are decisions, not in-flux patterns — they live in AGENTS.md:
+These are decisions, not in-flux patterns:
 
-- **Generic form engine:** the shared renderer is `FormFieldGenerator`
-  (`src/components/shared/form/form-field-generator.tsx`) + `InputFieldRenderer`.
-  It takes a Zod schema, `initialData`, and a `FormField[]` from the entity's
-  `form-fields.ts` (`src/types/field.ts`). Grouping is done by `{ groupLabel }`
-  headers in the field list → `<FieldSet>` sections. Zod resolver is
-  `zodResolver(schema) as never` — one cast at the `zodResolver` ↔
-  react-hook-form seam, accepted because zod v4's `$ZodType` variance makes
-  generic passthrough unworkable across 3 library seams. Tradeoff: ~1 cast in a
-  shared component vs. per-entity form components. Upgrade to per-entity
-  components when `onSubmit` needs compile-time verification against a
-  server-action param schema. See ADR-0003.
-- **`src/components/ui/` is auto-generated** (shadcn base-nova) — never edited
-  by hand. Brand customization happens via tokens in `globals.css` or
-  per-call classNames.
-- **Discriminated-union action results** (`{ success: true, data } | { success:
-false, error }` with `as const`) — clients narrow with `if (!result.success)`.
-  `parseInput()` produces one directly from a failed zod parse.
-- **Index every FK column by default** in Drizzle. Postgres does not
-  auto-index FK columns, so any WHERE/JOIN on an unindexed FK is a full
-  `Seq Scan`. Current example: `kid.guardianId` → `kid_guardian_idx`. Rule:
-  - Single-column `index()` per FK as the baseline.
-  - Merge into a composite only when columns are _always_ filtered together.
-  - Drop an index only when `EXPLAIN ANALYZE` shows it never used — never
-    pre-optimize; index by default, profile later.
-  - Indexes live in the `pgTable` third-arg config callback, e.g.
-    `(table) => ({ guardianIdx: index('kid_guardian_idx').on(table.guardianId) })`.
+- **Generic form engine:** shared renderer `FormFieldGenerator` (`src/components/shared/form/form-field-generator.tsx`) + `InputFieldRenderer`. Takes Zod schema, `initialData`, `FormField[]` from the entity's `fields.ts(x)` (`src/types/field.ts`). Grouping via `{ groupLabel }` headers → `<FieldSet>` sections. Zod resolver `zodResolver(schema) as never` — one cast at the resolver↔RHF seam (ADR-0003). Upgrade to per-entity form components when `onSubmit` needs compile-time verification against action param schemas.
+- **`src/components/ui/` is auto-generated** (shadcn base-nova) — never hand-edited. Brand customization via `globals.css` tokens or per-call classNames.
+- **Discriminated-union action results** with `as const` — exact contract in `docs/patterns/typescript.md`.
+- **Index every FK column by default** — details in `docs/patterns/database.md` + SSOT `stacks/database.md`.
+- **Auth gating placement is undecided** (requireOwner action-level vs service-level vs future `roleGate()`). Don't write new call-site guidance; track in `docs/patterns/violations.md`.
 
 ## Doc Compression
 
