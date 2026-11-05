@@ -3,6 +3,7 @@
 Auto-generated from `src/components/` directory structure.
 
 ## UI Primitives (shadcn base-nova)
+
 ```
 accordion.tsx
 alert-dialog.tsx
@@ -43,11 +44,13 @@ tooltip.tsx
 ```
 
 ## Sections
+
 ```
 confirm-dialog.tsx
 ```
 
 ## Layout
+
 ```
 app-sidebar.tsx
 logout-button.tsx
