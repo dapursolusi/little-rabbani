@@ -84,24 +84,24 @@ Enum constants follow the named-map stack (`NAME` / `Name` type / `NAME_VALUES` 
 
 ## File Placement
 
-| Component Type                          | Location                                | Notes                                                            |
-| :-------------------------------------- | :-------------------------------------- | :--------------------------------------------------------------- |
-| Page/Layout                             | `src/app/`                              | App Router conventions                                           |
-| Feature sections                        | `src/features/<module>/components/`     | Per-module components                                            |
-| Cross-feature feature components        | `src/components/features/<domain>/`     | Used by 2+ features (e.g. TermSelector)                          |
-| Layout components                       | `src/components/layout/`                | Global shell                                                     |
-| Shared UI primitives                    | `src/components/ui/`                    | shadcn base-nova (auto-generated)                                |
-| Shared sections & logic-heavy comps     | `src/components/sections/`, `src/components/shared/` | confirm-dialog, empty-state, pagination; form engine, table      |
-| Utilities & constants                   | `src/lib/`                              | 3rd party, all that affecting domain                             |
-| Helpers                                 | `src/utils/`                            | helpers                                                          |
-| Types                                   | `src/types/`                            | Add per-project as needed                                        |
-| Tests (unit / integration)              | `tests/features/<module>/`, `tests/`    | Vitest, mirrors `src/`                                           |
-| Tests (E2E)                             | `e2e/`                                  | Playwright                                                       |
-| Server Actions                          | `src/features/<module>/actions.ts`      | Controllers/Actions                                              |
-| Services                                | `src/features/<module>/services.ts`     | Business Logic                                                   |
-| Repositories                            | `src/features/<module>/repositories.ts` | Repositories                                                     |
-| Any layer w/ 2+ entities                | `src/features/<module>/<layer>/`        | Directory + barrel `index.ts` (`export * as xRepo from './x'`)   |
-| Zod validation                          | `src/features/<module>/validation.ts`   | Shared primitives in `src/lib/validation/common.schema.ts`       |
+| Component Type                      | Location                                             | Notes                                                          |
+| :---------------------------------- | :--------------------------------------------------- | :------------------------------------------------------------- |
+| Page/Layout                         | `src/app/`                                           | App Router conventions                                         |
+| Feature sections                    | `src/features/<module>/components/`                  | Per-module components                                          |
+| Cross-feature feature components    | `src/components/features/<domain>/`                  | Used by 2+ features (e.g. TermSelector)                        |
+| Layout components                   | `src/components/layout/`                             | Global shell                                                   |
+| Shared UI primitives                | `src/components/ui/`                                 | shadcn base-nova (auto-generated)                              |
+| Shared sections & logic-heavy comps | `src/components/sections/`, `src/components/shared/` | confirm-dialog, empty-state, pagination; form engine, table    |
+| Utilities & constants               | `src/lib/`                                           | 3rd party, all that affecting domain                           |
+| Helpers                             | `src/utils/`                                         | helpers                                                        |
+| Types                               | `src/types/`                                         | Add per-project as needed                                      |
+| Tests (unit / integration)          | `tests/features/<module>/`, `tests/`                 | Vitest, mirrors `src/`                                         |
+| Tests (E2E)                         | `e2e/`                                               | Playwright                                                     |
+| Server Actions                      | `src/features/<module>/actions.ts`                   | Controllers/Actions                                            |
+| Services                            | `src/features/<module>/services.ts`                  | Business Logic                                                 |
+| Repositories                        | `src/features/<module>/repositories.ts`              | Repositories                                                   |
+| Any layer w/ 2+ entities            | `src/features/<module>/<layer>/`                     | Directory + barrel `index.ts` (`export * as xRepo from './x'`) |
+| Zod validation                      | `src/features/<module>/validation.ts`                | Shared primitives in `src/lib/validation/common.schema.ts`     |
 
 ## Commands
 

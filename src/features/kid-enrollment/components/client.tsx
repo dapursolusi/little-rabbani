@@ -43,7 +43,6 @@ export default function KidEnrollmentClient({
   selectedTermId,
   classSessions,
   selectedClassSessionId,
-  currentTermId,
 }: {
   data: KidEnrollmentWithRelations[];
   terms: Term[];

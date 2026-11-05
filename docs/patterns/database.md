@@ -14,7 +14,7 @@ One file per domain under `src/db/schema/` (e.g. `auth.ts`, `kids.ts`, `enrollme
 
 ```ts
 export const entity = pgTable(
-  'entity_name',   // camelCase JS name, snake_case DB name
+  'entity_name', // camelCase JS name, snake_case DB name
   {
     id: uuid('id').defaultRandom().primaryKey(),
     // ...columns...
@@ -23,7 +23,7 @@ export const entity = pgTable(
   (table) => [
     // Array style — canonical (matches current Drizzle upstream direction).
     index('entity_fk_idx').on(table.fkId),
-  ],
+  ]
 );
 ```
 
@@ -62,7 +62,10 @@ Declared beside the table, named `*Relations` (not `*Relationship`):
 
 ```ts
 export const kidRelations = relations(kid, ({ one, many }) => ({
-  guardian: one(guardian, { fields: [kid.guardianId], references: [guardian.id] }),
+  guardian: one(guardian, {
+    fields: [kid.guardianId],
+    references: [guardian.id],
+  }),
   enrollments: many(kidEnrollment),
 }));
 ```

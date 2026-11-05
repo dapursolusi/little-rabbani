@@ -79,10 +79,7 @@ function MonthPicker({ currentMonth }: { currentMonth: string }) {
 }
 
 export default function KidReportClient({
-  currentKidId,
-  currentTermId,
   currentMonth,
-  terms,
   kidDetails,
   academicDetails,
 }: KidReportClientProps) {

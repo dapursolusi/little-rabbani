@@ -5,5 +5,5 @@ A Kid row records only identity and guardianship — name, nickname, gender, dob
 **Status:** accepted — **implemented** in `src/db/schema/kids.ts` (kid row: name, nickName, gender, dob, guardianId, relationship — no enrolledTermId).
 
 > **Update (2026-11):** the kid row gained `activeStatus` (`active_status` enum, default `ACTIVE` — Terdaftar/Aktif/Tidak Aktif, constants in `src/features/kid/constants.ts`). This is a liveness flag, not the v1 enrollment `status` — enrollment state still lives in the separate enrollment feature. The core decision (no `enrolledTermId`, enrollment as event rows) holds.
-**Considered options:** keep `status` + `enrolledTermId` on Kid (v1) — overwrites enrollment history and couples registration to scheduling. Rejected.
-**Consequences:** the kid list shows identity only (no status column yet); the enrollment feature owns status transitions and term history when it lands. See PRD FR2.
+> **Considered options:** keep `status` + `enrolledTermId` on Kid (v1) — overwrites enrollment history and couples registration to scheduling. Rejected.
+> **Consequences:** the kid list shows identity only (no status column yet); the enrollment feature owns status transitions and term history when it lands. See PRD FR2.

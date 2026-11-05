@@ -1,6 +1,5 @@
 import { dcrService } from '@/features/daily-class-report/services';
 import * as kidEnrollmentService from '@/features/kid-enrollment/services';
-import * as termService from '@/features/term/services';
 import z from 'zod';
 
 import { parseInput } from '@/lib/actions/parse-input';
@@ -35,7 +34,6 @@ export async function getMonthlyAcademicDetails(input: MonthlyKidReportParams) {
       message:
         'Tidak ada data registrasi anak untuk batch saat ini. Pilih batch lain atau periksa registrasi anak',
     };
-  const terms = await termService.getTerms();
   const dcrs = await dcrService.getDcrsByMonth({
     classSessionId,
     month: yearMonth,
@@ -47,7 +45,9 @@ export async function getMonthlyAcademicDetails(input: MonthlyKidReportParams) {
   };
 }
 
-export async function aggregateMonthlyReportData(input: {
+// WIP: aggregation over dcrs lands with the monthly report view
+// ponytail: stub signature only, implement when the report view needs it
+export async function aggregateMonthlyReportData(_input: {
   kidId: string;
   termId: string;
   month: string;

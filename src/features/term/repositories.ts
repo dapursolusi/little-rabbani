@@ -1,21 +1,9 @@
 import { db } from '@/db';
 import { term } from '@/db/schema';
 import { omitAuditColumns } from '@/db/selections/audit-columns';
-import { DbColumnSelection } from '@/types';
 import { and, eq, gt, gte, isNull, lt, lte } from 'drizzle-orm';
 
-import { TermData } from './types';
 import { TermInput } from './validation';
-
-// Constants
-
-const termColumnSelection = {
-  id: true,
-  name: true,
-  startDate: true,
-  endDate: true,
-  isAutoCreated: true,
-} as const satisfies DbColumnSelection<TermData>;
 
 export async function findCurrent(todayStr: string) {
   return db.query.term.findFirst({

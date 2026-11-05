@@ -7,17 +7,7 @@ import { SQL, and, eq, exists, inArray, isNull, not } from 'drizzle-orm';
 
 import { leanKidColumnSelection } from '../kid/repositories/kid';
 import { EnrollmentStatus } from './constants';
-import { KidEnrollment, KidEnrollmentInsert } from './types';
-
-// Column Selection
-
-const kidEnrollmentColumnSelection = {
-  id: true,
-  kidId: true,
-  classSessionId: true,
-  termId: true,
-  status: true,
-} as const satisfies Record<keyof KidEnrollment, boolean>;
+import { KidEnrollmentInsert } from './types';
 
 export async function hasKidEnrollment({
   termId,

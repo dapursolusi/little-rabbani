@@ -19,16 +19,16 @@ Fix: add `export const metadata = { ...baseMetadata, title: '...' }`.
 
 ## Server actions
 
-| Location | Deviation | Canonical |
-| --- | --- | --- |
-| `src/features/term/actions.ts:22-29` | `getTerms` queries `db.query.term` directly inside an actions file (actions→db layering violation) | Actions are parse-only shells; reads go through services |
-| `src/features/report/kid/actions.ts` | 0-byte empty file; only actions file without `'use server'` | Delete or implement |
-| `src/features/kid-enrollment/actions.ts:8-16` | `getKidsEnrollments`/`getAvailableKids` cast `input as { termId?: string }` instead of parsing | `parseInput()` at every trust boundary |
-| `src/features/theme/actions.ts:56,68` | `input: Record<string, unknown>` instead of `input: unknown` | `unknown` |
-| `src/features/kid-enrollment/services.ts:73-93` | `getAvailableKids` returns `{ success, error: string }` — string `error`, not `message` | ActionResult contract: `message` is the failure string |
-| `src/features/class-session/services.ts:50,55` | success literals missing `as const` (same file has them at :78, :101) | `as const` on every literal |
-| `src/features/daily-class-report/services/dcr.ts:50-57` | `saveDCR` reads `existingDCRResults.data?.id ?? ''` — empty-string id on sibling failure instead of early return | `if (!result.success) return …` early-return |
-| `src/features/daily-class-report/repositories/observation.ts:69` | commented-out code `// columns: dcrObservationColumnSelection,` | Remove |
+| Location                                                         | Deviation                                                                                                        | Canonical                                                |
+| ---------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `src/features/term/actions.ts:22-29`                             | `getTerms` queries `db.query.term` directly inside an actions file (actions→db layering violation)               | Actions are parse-only shells; reads go through services |
+| `src/features/report/kid/actions.ts`                             | 0-byte empty file; only actions file without `'use server'`                                                      | Delete or implement                                      |
+| `src/features/kid-enrollment/actions.ts:8-16`                    | `getKidsEnrollments`/`getAvailableKids` cast `input as { termId?: string }` instead of parsing                   | `parseInput()` at every trust boundary                   |
+| `src/features/theme/actions.ts:56,68`                            | `input: Record<string, unknown>` instead of `input: unknown`                                                     | `unknown`                                                |
+| `src/features/kid-enrollment/services.ts:73-93`                  | `getAvailableKids` returns `{ success, error: string }` — string `error`, not `message`                          | ActionResult contract: `message` is the failure string   |
+| `src/features/class-session/services.ts:50,55`                   | success literals missing `as const` (same file has them at :78, :101)                                            | `as const` on every literal                              |
+| `src/features/daily-class-report/services/dcr.ts:50-57`          | `saveDCR` reads `existingDCRResults.data?.id ?? ''` — empty-string id on sibling failure instead of early return | `if (!result.success) return …` early-return             |
+| `src/features/daily-class-report/repositories/observation.ts:69` | commented-out code `// columns: dcrObservationColumnSelection,`                                                  | Remove                                                   |
 
 ## Auth gating — UNDECIDED (do not fix mechanically)
 
@@ -46,11 +46,11 @@ Placement is not settled (see [auth.md](auth.md)). Open questions, not violation
 
 ## Schema
 
-| Location | Deviation | Canonical |
-| --- | --- | --- |
-| `src/db/schema/enrollment.ts` | array-style third arg `(table) => [check(...)]` — actually the NEW canonical; all other schema files use legacy object style | Array style; migrate others opportunistically |
-| `src/db/schema/daily.ts` | relations named `dcrRelationship`, `dailyKidReportRelationship` | `*Relations` |
-| `src/features/kid/repositories/kid.ts:101`, `dailyKidReport` repos | hard `db.delete()` on rows that have `deletedAt` (kid service even filters `isNull(deletedAt)`) | Soft delete for domain entities |
+| Location                                                           | Deviation                                                                                                                    | Canonical                                     |
+| ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| `src/db/schema/enrollment.ts`                                      | array-style third arg `(table) => [check(...)]` — actually the NEW canonical; all other schema files use legacy object style | Array style; migrate others opportunistically |
+| `src/db/schema/daily.ts`                                           | relations named `dcrRelationship`, `dailyKidReportRelationship`                                                              | `*Relations`                                  |
+| `src/features/kid/repositories/kid.ts:101`, `dailyKidReport` repos | hard `db.delete()` on rows that have `deletedAt` (kid service even filters `isNull(deletedAt)`)                              | Soft delete for domain entities               |
 
 ## Naming
 
@@ -58,15 +58,15 @@ Placement is not settled (see [auth.md](auth.md)). Open questions, not violation
 
 ## UI / components
 
-| Location | Deviation | Canonical |
-| --- | --- | --- |
-| `src/features/theme/components/{client,form}.tsx` | named exports (multi-component file, no default) | Default export for feature components |
-| `src/features/daily-class-report/components/form.tsx` | two named exports (`DailyClassReportForm`, `DCRObservationForm`), no default | Default export for feature components |
-| `src/features/kid-enrollment/columns.tsx` | exports non-column artifacts (`NewKidIdsContext`, `UpdateModeContext`, factories) alongside columns | `columns.tsx` exports only columns |
-| `src/app/(auth)/dashboard/kid/[id]/edit/page.tsx` | declares `interface EditKidPageProps` while all other pages inline props | Inline for trivial page props |
-| `src/app/(auth)/dashboard/report/month/page.tsx` | page title rendered as centered `<p>` — three header styles coexist (h1 block / centered p / none) | Pick one header style |
-| `src/app/(auth)/dashboard/report/kid/[id]/page.tsx:72` | `<TermSelector terms={[]}>` rendered with no data (WIP placeholder) | Selectors receive fetched data |
-| `src/features/report-template client` (`src/app/(auth)/dashboard/settings/report-template/client.tsx:23-31`) | hand-rolled mutation flow with inline toasts (legitimate — no schema — but only mutation off the engine path besides daily-report) | None (accepted exception) |
+| Location                                                                                                     | Deviation                                                                                                                          | Canonical                             |
+| ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------- |
+| `src/features/theme/components/{client,form}.tsx`                                                            | named exports (multi-component file, no default)                                                                                   | Default export for feature components |
+| `src/features/daily-class-report/components/form.tsx`                                                        | two named exports (`DailyClassReportForm`, `DCRObservationForm`), no default                                                       | Default export for feature components |
+| `src/features/kid-enrollment/columns.tsx`                                                                    | exports non-column artifacts (`NewKidIdsContext`, `UpdateModeContext`, factories) alongside columns                                | `columns.tsx` exports only columns    |
+| `src/app/(auth)/dashboard/kid/[id]/edit/page.tsx`                                                            | declares `interface EditKidPageProps` while all other pages inline props                                                           | Inline for trivial page props         |
+| `src/app/(auth)/dashboard/report/month/page.tsx`                                                             | page title rendered as centered `<p>` — three header styles coexist (h1 block / centered p / none)                                 | Pick one header style                 |
+| `src/app/(auth)/dashboard/report/kid/[id]/page.tsx:72`                                                       | `<TermSelector terms={[]}>` rendered with no data (WIP placeholder)                                                                | Selectors receive fetched data        |
+| `src/features/report-template client` (`src/app/(auth)/dashboard/settings/report-template/client.tsx:23-31`) | hand-rolled mutation flow with inline toasts (legitimate — no schema — but only mutation off the engine path besides daily-report) | None (accepted exception)             |
 
 ## Open structural questions (ambiguous, no winner yet)
 

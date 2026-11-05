@@ -5,7 +5,6 @@ import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
 
 import { Theme } from '../types';
 import type { ThemeInput } from '../validation';
-import { subThemeColumnSelection } from './sub-theme';
 
 export const themeColumnSelection = {
   id: true,

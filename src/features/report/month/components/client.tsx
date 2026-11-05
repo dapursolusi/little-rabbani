@@ -4,10 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { ClassSession } from '@/features/class-session/types';
-import {
-  KidEnrollment,
-  KidEnrollmentWithKid,
-} from '@/features/kid-enrollment/types';
+import { KidEnrollmentWithKid } from '@/features/kid-enrollment/types';
 import { Term } from '@/features/term/types';
 import { pushParam } from '@/utils/search-params';
 import { ChildIcon } from '@hugeicons/core-free-icons';

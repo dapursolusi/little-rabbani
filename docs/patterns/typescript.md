@@ -37,12 +37,16 @@ Zod schemas live in `features/<entity>/validation.ts` (not `schemas.ts`):
 
 ```ts
 export const omitAuditColumns = {
-  createdAt: false, updatedAt: false, deletedAt: false,
+  createdAt: false,
+  updatedAt: false,
+  deletedAt: false,
 } as const satisfies Record<keyof DbTableAuditFields, boolean>;
 
 // per-entity lean selection, exported from the repo file:
 export const leanKidColumnSelection = {
-  id: true, name: true, nickName: true,
+  id: true,
+  name: true,
+  nickName: true,
 } as const satisfies Record<keyof LeanKid, boolean>;
 ```
 
