@@ -1,5 +1,6 @@
+'use server';
+
 import * as kidReportService from '@/features/report/kid/services';
-import { Console } from '@hugeicons/core-free-icons';
 
 import { handleActionError } from '@/lib/action/action-error';
 

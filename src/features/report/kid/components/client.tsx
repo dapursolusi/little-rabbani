@@ -1,5 +1,7 @@
 'use client';
 
+import { useState } from 'react';
+
 import { useRouter } from 'next/navigation';
 
 import {
@@ -12,11 +14,13 @@ import { Term } from '@/features/term/types';
 import { formatDate } from '@/utils/date';
 import { pushParam } from '@/utils/search-params';
 import {
+  AiBrain01Icon,
   ChevronDown,
   SquareChevronLeftIcon,
   SquareChevronRightIcon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
+import { toast } from 'sonner';
 
 import TermSelector from '@/components/features/term/term-selector';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -36,7 +40,26 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 
-import { MonthlyAcademicDetails, MonthlyKidReportDetail } from '../types';
+import { generateMonthlyReport } from '../actions';
+import {
+  MonthlyAcademicDetails,
+  MonthlyKidReportDetail,
+  MonthlyReportOutput,
+} from '../types';
+
+function formatDraft(draft: MonthlyReportOutput): string {
+  return [
+    draft.socialEmotional,
+    '',
+    draft.wellbeing,
+    '',
+    'Sorotan:',
+    ...draft.highlights.map((h) => `- ${h}`),
+    '',
+    'Rekomendasi di rumah:',
+    ...draft.homeRecommendations.map((r) => `- ${r}`),
+  ].join('\n');
+}
 
 interface KidReportClientProps {
   currentKidId: string;
@@ -79,10 +102,36 @@ function MonthPicker({ currentMonth }: { currentMonth: string }) {
 }
 
 export default function KidReportClient({
+  currentKidId,
+  currentTermId,
   currentMonth,
   kidDetails,
   academicDetails,
 }: KidReportClientProps) {
+  const [aiDraft, setAiDraft] = useState('');
+  const [isGenerating, setIsGenerating] = useState(false);
+
+  async function handleGenerate() {
+    setIsGenerating(true);
+    try {
+      const result = await generateMonthlyReport({
+        kidId: currentKidId,
+        termId: currentTermId,
+        yearMonth: currentMonth,
+      });
+      if (result?.success) {
+        setAiDraft(formatDraft(result.data));
+        toast.success(result.message ?? 'Draft laporan berhasil dibuat');
+      } else {
+        toast.error(result?.message ?? 'Gagal membuat draft');
+      }
+    } catch {
+      toast.error('Terjadi kesalahan. Silahkan coba lagi');
+    } finally {
+      setIsGenerating(false);
+    }
+  }
+
   const totalAttendance = kidDetails?.dcrObservations.filter(
     (obs) => obs.attendance === KID_ATTENDANCE.PRESENT
   ).length;
@@ -180,7 +229,18 @@ export default function KidReportClient({
         </Collapsible>
         {/* Generation  */}
         <div className="my-2 p-4 border-2 rounded-md ">
-          <Textarea></Textarea>
+          <Textarea
+            value={aiDraft}
+            onChange={(e) => setAiDraft(e.target.value)}
+          />
+          <Button
+            className="mt-2 w-fit"
+            onClick={handleGenerate}
+            disabled={isGenerating}
+          >
+            <HugeiconsIcon icon={AiBrain01Icon} />
+            {isGenerating ? 'Membuat draft...' : 'Buat Draft dengan AI'}
+          </Button>
         </div>
       </div>
     </div>

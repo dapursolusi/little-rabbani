@@ -146,8 +146,7 @@ describe('aggregateMonthlyKidReportData', () => {
           {
             attendance: null,
             mood: undefined,
-            // @ts-expect-error — simulating corrupt DB row outside enum
-            appetite: 'weird-value',
+            appetite: 'weird-value', // untyped vi.fn() mock accepts it
           },
         ],
       },

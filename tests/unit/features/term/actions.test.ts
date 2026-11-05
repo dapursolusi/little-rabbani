@@ -5,7 +5,6 @@ import {
   deleteTerm,
   updateTerm,
 } from '@/features/term/actions';
-import { before } from 'node:test';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
@@ -154,12 +153,12 @@ describe('createTerm', () => {
 describe('checkCurrentTerm', () => {
   beforeEach(() => {
     vi.useFakeTimers();
-    vi.setSystemTime(new Date('2026-11-01T10:00:00Z'))
-  })
+    vi.setSystemTime(new Date('2026-11-01T10:00:00Z'));
+  });
 
   afterEach(() => {
-    vi.useRealTimers()
-  })
+    vi.useRealTimers();
+  });
 
   it('returns the active term when one exists', async () => {
     const active = {
@@ -215,7 +214,7 @@ describe('checkCurrentTerm', () => {
     const { startDate, endDate, isAutoCreated } = values.mock.calls[0][0];
     // new term starts today (fake time), spanning the old term's 180-day duration
     expect(startDate).toBe('2026-11-01');
-    expect(endDate).toBe('2027-04-30')
+    expect(endDate).toBe('2027-04-30');
     expect(new Date(endDate) > new Date(startDate)).toBe(true);
     expect(isAutoCreated).toBe(true);
   });
@@ -248,7 +247,7 @@ describe('checkNextTerm', () => {
 
     const result = await checkNextTerm();
 
-    expect(result).toEqual({success:true,data:next});
+    expect(result).toEqual({ success: true, data: next });
     expect(mocks.insert).not.toHaveBeenCalled();
   });
 

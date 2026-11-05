@@ -28,13 +28,13 @@ export default async function KidReportPage({
     kidReportService.getKidMonthlyReport({
       termId,
       kidId,
-      month: yearMonthParam,
+      yearMonth: yearMonthParam,
     }),
     termService.getTerms(),
     monthlyReportService.getMonthlyAcademicDetails({
       kidId,
       termId,
-      month: yearMonthParam,
+      yearMonth: yearMonthParam,
     }),
   ]);
   return (

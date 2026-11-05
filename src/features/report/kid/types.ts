@@ -1,3 +1,4 @@
+import { MonthlyReportOutput } from '@/features/report/kid/ai/output.schema';
 import * as kidReportRepo from '@/features/report/kid/repositories';
 import * as monthlyReportService from '@/features/report/month/services';
 
@@ -12,3 +13,5 @@ export type MonthlyAcademicDetails =
       { success: true }
     >['data']
   | undefined;
+
+export type { MonthlyReportOutput };

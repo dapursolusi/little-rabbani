@@ -120,10 +120,3 @@ export async function getDCRObservationsByDate(
     classSessionId,
   });
 }
-
-export async function getKidObservationsByMonth(input: {
-  kidId: string;
-  yearMonth: string;
-}) {
-  return observationRepo.findManyByMonth(input);
-}
