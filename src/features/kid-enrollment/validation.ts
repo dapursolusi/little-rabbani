@@ -8,7 +8,7 @@ export const BaseKidEnrollmentSchema = z.object({
 
 export const KidToBeEnrolledSchema = z.object({
   kidId: z.string().min(1, 'Pilih murid wajib diisi'),
-  status: z.enum(ENROLLMENT_STATUS).default('enrolled'),
+  status: z.enum(ENROLLMENT_STATUS).default(ENROLLMENT_STATUS.ENROLLED),
 });
 
 export const KidEnrollmentSchema = BaseKidEnrollmentSchema.extend({

@@ -6,44 +6,42 @@ import {
 } from '@/db/schema';
 import { DbTableAuditFields } from '@/types';
 
-import { Kid, LeanKid } from '../kid/types';
-import { SubTheme } from '../theme/types';
 import { dcrRepo } from './repositories';
 
-export type DailyClassReport = typeof dailyClassReport.$inferSelect & {
-  observations?: DCRObservation[];
-  subTheme?: SubTheme | null;
-};
+// Daily Class Report Types
 
 export type DailyClassReportRecord = typeof dailyClassReport.$inferSelect;
 export type DailyClassReportData = Omit<
   DailyClassReportRecord,
   keyof DbTableAuditFields
 >;
+export type DailyClassReport = Awaited<
+  ReturnType<typeof dcrRepo.findMany>
+>[number];
 
-export type DCRObservation = typeof dcrObservation.$inferSelect & {
-  kid?: Kid | null;
-  kidReport?: DailyKidReport | null;
-};
+// DCR Observation Types
 
 export type DcrObservationRecord = typeof dcrObservation.$inferSelect;
 export type DcrObservationData = Omit<
   DcrObservationRecord,
   keyof DbTableAuditFields
 >;
-export type DcrWithKidObservation = DailyClassReportData & {
-  observations: DcrObservationData[] & { kid: LeanKid }[];
-};
+export type DcrObservation = DailyClassReport['observations'][number];
 
-export type DailyKidReport = typeof dailyKidReport.$inferSelect;
+// Daily Kid Report Types
 
-export type ReportTemplate = typeof reportTemplate.$inferSelect;
+export type DailyKidReportRecord = typeof dailyKidReport.$inferSelect;
+export type DailyKidReportData = Omit<
+  DailyKidReportRecord,
+  keyof DbTableAuditFields
+>;
+export type DailyKidReport = NonNullable<DcrObservation['kidReport']>;
 
-export type DailyClassReportList = Awaited<ReturnType<typeof dcrRepo.findMany>>;
+// Report Template Types
 
-export type DailyClassReportItem = DailyClassReportList[number];
-
-export type DcrObservationList = DailyClassReportItem['observations'];
-
-export type DcrObservationItem = DcrObservationList[number];
-export type DailyKidReportItem = NonNullable<DcrObservationItem['kidReport']>;
+export type ReportTemplateRecord = typeof reportTemplate.$inferSelect;
+export type ReportTemplateData = Omit<
+  ReportTemplateRecord,
+  keyof DbTableAuditFields
+>;
+export type ReportTemplate = ReportTemplateData;

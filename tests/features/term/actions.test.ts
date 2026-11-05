@@ -161,7 +161,7 @@ describe('checkCurrentTerm', () => {
 
     const result = await checkCurrentTerm();
 
-    expect(result).toEqual({ success: true, data: active });
+    expect(result).toEqual(active);
     expect(mocks.insert).not.toHaveBeenCalled();
   });
 
@@ -178,7 +178,7 @@ describe('checkCurrentTerm', () => {
 
     const result = await checkCurrentTerm();
 
-    expect(result).toEqual({ success: true, data: latest });
+    expect(result).toEqual(latest);
     expect(mocks.insert).not.toHaveBeenCalled();
   });
 
@@ -196,8 +196,7 @@ describe('checkCurrentTerm', () => {
 
     const result = await checkCurrentTerm();
 
-    expect(result.success).toBe(true);
-    if (!result.success) return;
+    expect(result).toEqual(NEW_TERM); // inserted row (mockInsertResolves)
     expect(mocks.insert).toHaveBeenCalled();
     const values = mocks.insert.mock.results[0]!.value.values as ReturnType<
       typeof vi.fn

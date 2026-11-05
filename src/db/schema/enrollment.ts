@@ -1,4 +1,7 @@
-import { ENROLLMENT_STATUS } from '@/features/kid-enrollment/constants';
+import {
+  ENROLLMENT_STATUS,
+  ENROLLMENT_STATUS_VALUES,
+} from '@/features/kid-enrollment/constants';
 import { isNull, relations, sql } from 'drizzle-orm';
 import {
   boolean,
@@ -14,6 +17,7 @@ import {
 
 import { dailyClassReport } from './daily';
 import { kid } from './kids';
+import { monthlyKidReport } from './report';
 
 export const term = pgTable(
   'term',
@@ -35,6 +39,7 @@ export const term = pgTable(
 
 export const termRelations = relations(term, ({ many }) => ({
   kidEnrollments: many(kidEnrollment),
+  monthlyKidReports: many(monthlyKidReport),
 }));
 
 export const classSession = pgTable(
@@ -61,7 +66,7 @@ export const classSessionRelations = relations(classSession, ({ many }) => ({
 
 export const enrollmentStatusEnum = pgEnum(
   'enrollment_status',
-  ENROLLMENT_STATUS
+  ENROLLMENT_STATUS_VALUES
 );
 
 export const kidEnrollment = pgTable(
@@ -77,7 +82,9 @@ export const kidEnrollment = pgTable(
     kidId: uuid('kid_id')
       .notNull()
       .references(() => kid.id, { onDelete: 'no action' }),
-    status: enrollmentStatusEnum('status').notNull().default('enrolled'),
+    status: enrollmentStatusEnum('status')
+      .notNull()
+      .default(ENROLLMENT_STATUS.ENROLLED),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .notNull()

@@ -12,6 +12,8 @@ export interface DbTableAuditFields {
   deletedAt?: Date | null;
 }
 
+export type DbColumnSelection<T> = Partial<Record<keyof T, boolean>>;
+
 export interface SelectOptions {
   value: string;
   label: string;

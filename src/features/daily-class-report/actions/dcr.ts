@@ -1,11 +1,17 @@
 'use server';
-import z from 'zod';
 
 import { parseInput } from '@/lib/actions/parse-input';
-import { uuidSchema } from '@/lib/validation/common';
+import { uuidSchema } from '@/lib/validation/common.schema';
 
 import { dcrService } from '../services';
 import { dailyClassReportSchema } from '../validation';
+
+export async function getDCRs(input: {
+  classSessionId?: string;
+  date?: { year?: number; month?: number };
+}) {
+  return await dcrService.getDCRs(input);
+}
 
 export async function getOrCreateDCR({
   classSessionId,
@@ -21,30 +27,12 @@ export async function getOrCreateDCR({
   return await dcrService.getOrCreateDCR({ classSessionId: parsed.data });
 }
 
-export async function getDCRs(input: unknown = {}) {
-  const parsed = parseInput({
-    input,
-    schema: z.object({
-      classSessionId: z.uuid().optional(),
-      date: z
-        .object({
-          year: z.number().int().min(2025).max(2100).optional(),
-          month: z.number().int().min(1).max(12).optional(),
-        })
-        .optional(),
-    }),
-    fallbackError: 'getDCRs: Opsi input tidak valid',
-  });
-  if (!parsed.success) return parsed;
-  return await dcrService.getDCRs(parsed.data);
-}
-
 export async function saveDCR(input: unknown) {
   const parsed = parseInput({
     input,
     schema: dailyClassReportSchema,
     fallbackError: 'saveDCR: Validasi input gagal',
   });
-  if (!parsed.success) return parsed;
+  if (!parsed.success) throw new Error(parsed.message);
   return await dcrService.saveDCR(parsed.data);
 }

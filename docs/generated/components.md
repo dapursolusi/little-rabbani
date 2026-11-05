@@ -54,6 +54,7 @@ confirm-dialog.tsx
 ```
 app-sidebar.tsx
 logout-button.tsx
+ongoing-term-label.tsx
 sidebar/
   breadcrumb.tsx
   nav-user.tsx

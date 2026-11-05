@@ -7,7 +7,7 @@ The v2 form engine is a shared renderer — `FormFieldGenerator`
 `form-fields.ts` (`src/types/field.ts`). Grouping into labeled sections
 (`<FieldSet>` + `<legend>`) is driven by `{ groupLabel }` headers in the field
 list — no separate registry step. An entity form is a thin wrapper
-(`src/features/kids/components/kid-form.tsx`) that maps the generic result to
+(`src/features/kid/components/form.tsx`) that maps the generic result to
 its server actions.
 
 This replaces the v1 "schema-registry" design (a `schemaKey` → schema map in a

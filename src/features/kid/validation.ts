@@ -1,4 +1,7 @@
-import { GENDERS, GUARDIAN_RELATIONSHIPS } from '@/features/kid/constants';
+import {
+  GENDER_VALUES,
+  GUARDIAN_RELATIONSHIP_VALUES,
+} from '@/features/kid/constants';
 import z from 'zod';
 
 // Phone = guardian identity (ADR-0001): local Indonesian, no country code.
@@ -31,9 +34,9 @@ const GuardianSchema = z.object({
 const BaseKidSchema = z.object({
   name: z.string().min(2, 'Nama lengkap murid wajib diisi'),
   nickName: z.string().nullable().optional(),
-  gender: z.enum(GENDERS, { message: 'Jenis kelamin wajib diisi' }),
+  gender: z.enum(GENDER_VALUES, { message: 'Jenis kelamin wajib diisi' }),
   dob: z.string().min(1, 'Tanggal lahir wajib diisi'),
-  relationship: z.enum(GUARDIAN_RELATIONSHIPS, {
+  relationship: z.enum(GUARDIAN_RELATIONSHIP_VALUES, {
     message: 'Hubungan dengan wali wajib diisi',
   }),
 });

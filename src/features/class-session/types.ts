@@ -1,5 +1,10 @@
-import { BaseDTOResponse } from '@/types';
+import { classSession } from '@/db/schema';
+import { DbTableAuditFields } from '@/types';
 
-import { ClassSessionInput } from './validation';
-
-export interface ClassSession extends BaseDTOResponse, ClassSessionInput {}
+export type ClassSessionRecord = typeof classSession.$inferSelect;
+export type ClassSessionData = Omit<
+  ClassSessionRecord,
+  keyof DbTableAuditFields
+>;
+export type ClassSession = ClassSessionData;
+export type LeanClassSession = Pick<ClassSession, 'id' | 'name'>;

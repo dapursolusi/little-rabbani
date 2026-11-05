@@ -1,8 +1,16 @@
 import { db } from '@/db';
 import { subTheme } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { and, eq, isNull } from 'drizzle-orm';
 
+import { SubTheme } from '../types';
 import type { SubThemeInput } from '../validation';
+
+export const subThemeColumnSelection = {
+  id: true,
+  themeId: true,
+  name: true,
+} as const satisfies Record<keyof SubTheme, boolean>;
 
 export async function findMany(params?: { themeId?: string }) {
   const conditions = [isNull(subTheme.deletedAt)];
@@ -10,7 +18,17 @@ export async function findMany(params?: { themeId?: string }) {
 
   return await db.query.subTheme.findMany({
     where: and(...conditions),
-    with: { theme: true },
+    columns: omitAuditColumns,
+    with: { theme: { columns: omitAuditColumns } },
+    orderBy: (st, { asc }) => [asc(st.name)],
+  });
+}
+
+export async function findManyWithTheme() {
+  return await db.query.subTheme.findMany({
+    where: isNull(subTheme.deletedAt),
+    columns: omitAuditColumns,
+    with: { theme: { columns: omitAuditColumns } },
     orderBy: (st, { asc }) => [asc(st.name)],
   });
 }
@@ -18,10 +36,7 @@ export async function findMany(params?: { themeId?: string }) {
 export async function findById(id: string) {
   return await db.query.subTheme.findFirst({
     where: and(isNull(subTheme.deletedAt), eq(subTheme.id, id)),
-    columns: {
-      id: true,
-      name: true,
-    },
+    columns: omitAuditColumns,
   });
 }
 
@@ -57,7 +72,10 @@ export async function findActive(params?: {
 
   return await db.query.subTheme.findMany({
     where: and(...conditions),
-    ...(params?.withTheme ? { with: { theme: true } } : {}),
+    columns: omitAuditColumns,
+    ...(params?.withTheme
+      ? { with: { theme: { columns: omitAuditColumns } } }
+      : {}),
     orderBy: (st, { asc }) => [asc(st.name)],
   });
 }

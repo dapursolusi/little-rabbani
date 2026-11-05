@@ -6,12 +6,12 @@ import ContentTabs from '@/components/shared/content-tabs';
 import { DataTable } from '@/components/shared/table/data-table';
 
 import { createSubThemeColumns, themeColumns } from '../columns';
-import { SubTheme, Theme } from '../types';
+import { SubThemeWithTheme, ThemeWithSubThemes } from '../types';
 import { SubThemeForm, ThemeForm } from './form';
 
 interface ThemeListClientProps {
-  themes: Theme[];
-  subThemes: SubTheme[];
+  themes: ThemeWithSubThemes[];
+  subThemes: SubThemeWithTheme[];
 }
 
 export function ThemeListClient({ themes, subThemes }: ThemeListClientProps) {

@@ -1,11 +1,9 @@
 import { notFound } from 'next/navigation';
 
-import * as classSessionAction from '@/features/class-session/actions';
-import { ClassSession } from '@/features/class-session/types';
-import * as kidAction from '@/features/kid/actions';
+import * as classSessionService from '@/features/class-session/services';
 import KidForm from '@/features/kid/components/form';
-import * as termAction from '@/features/term/actions';
-import { Term } from '@/features/term/types';
+import * as kidService from '@/features/kid/services';
+import * as termService from '@/features/term/services';
 
 import { baseMetadata } from '@/lib/metadata';
 
@@ -18,29 +16,15 @@ interface EditKidPageProps {
 export default async function EditKidPage({ params }: EditKidPageProps) {
   const { id } = await params;
 
-  const result = await kidAction.getKid(id);
-  if (!result.success) {
+  const kid = await kidService.getKid(id);
+  if (!kid) {
     notFound();
   }
 
-  const kid = result.data;
-
-  const results = await Promise.all([
-    termAction.getTerms(),
-    classSessionAction.getClassSessions(),
+  const [terms, classSessions] = await Promise.all([
+    termService.getTerms(),
+    classSessionService.getClassSessions(),
   ]);
-
-  if (!results.every((result) => result.success)) {
-    return (
-      <div className="p-4 text-center text-destructive">
-        {results.find((result) => !result.success)?.message}
-      </div>
-    );
-  }
-  const terms =
-    (results.find((result) => result.success)?.data as Term[]) ?? [];
-  const classSessions =
-    (results.find((result) => result.success)?.data as ClassSession[]) ?? [];
 
   return (
     <div className="p-4 sm:p-6">

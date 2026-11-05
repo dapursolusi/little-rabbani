@@ -1,6 +1,6 @@
 'use client';
 
-import { GENDER_LABELS } from '@/features/kid/constants';
+import { GENDER_LABELS, type Gender } from '@/features/kid/constants';
 import type { ColumnDef } from '@tanstack/react-table';
 
 import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';
@@ -10,11 +10,11 @@ import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
 import { formatAge } from '@/lib/format';
 
 import { deleteKid } from './actions';
-import { Kid } from './types';
+import { KidWithGuardian } from './types';
 
 // v9: first generic is the shared table feature set — `meta` is typed by its
 // `columnMeta` slot (AppColumnMeta: title/enableSearch/filter).
-export const kidColumns: ColumnDef<AppTableFeatures, Kid>[] = [
+export const kidColumns: ColumnDef<AppTableFeatures, KidWithGuardian>[] = [
   {
     accessorKey: 'name',
     meta: { title: 'Nama', enableSearch: true },
@@ -51,8 +51,8 @@ export const kidColumns: ColumnDef<AppTableFeatures, Kid>[] = [
       return <DataTableColumnHeader column={column} title="Jenis Kelamin" />;
     },
     cell: ({ row }) => {
-      const gender = row.getValue('gender') as string;
-      return <span>{gender === 'male' ? 'Laki-laki' : 'Perempuan'}</span>;
+      const gender = row.getValue('gender') as Gender;
+      return <span>{GENDER_LABELS[gender]}</span>;
     },
   },
   {

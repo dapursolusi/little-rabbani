@@ -1,35 +1,39 @@
 import { db } from '@/db';
 import { term } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { and, eq, gt, gte, isNull, lt, lte } from 'drizzle-orm';
 
 import { TermInput } from './validation';
 
 export async function findCurrent(todayStr: string) {
-  return await db.query.term.findFirst({
+  return db.query.term.findFirst({
     where: and(
       isNull(term.deletedAt),
       lte(term.startDate, todayStr),
       gte(term.endDate, todayStr)
     ),
+    columns: omitAuditColumns,
   });
 }
 
 export async function findNext(todayStr: string) {
-  return await db.query.term.findFirst({
+  return db.query.term.findFirst({
     where: and(isNull(term.deletedAt), gt(term.startDate, todayStr)),
+    columns: omitAuditColumns,
   });
 }
 
-export async function findAll() {
-  return await db.query.term.findMany({
+export async function findMany() {
+  return db.query.term.findMany({
     where: isNull(term.deletedAt),
     orderBy: (t, { desc }) => [desc(t.createdAt)],
   });
 }
 
 export async function findById(id: string) {
-  return await db.query.term.findFirst({
+  return db.query.term.findFirst({
     where: and(isNull(term.deletedAt), eq(term.id, id)),
+    columns: omitAuditColumns,
   });
 }
 
@@ -81,6 +85,7 @@ export async function findOverlapping(startDate: string, endDate: string) {
       lt(term.startDate, endDate),
       gt(term.endDate, startDate)
     ),
+    columns: omitAuditColumns,
   });
 }
 

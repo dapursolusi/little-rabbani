@@ -1,10 +1,29 @@
 import { db } from '@/db';
 import { kid, kidEnrollment } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
+import { ACTIVE_STATUS } from '@/features/kid/constants';
 import { TransactionClient } from '@/types';
 import { SQL, and, eq, exists, inArray, isNull, not } from 'drizzle-orm';
 
+import { leanKidColumnSelection } from '../kid/repositories/kid';
 import { EnrollmentStatus } from './constants';
-import { LeanKidEnrollment } from './types';
+import { KidEnrollmentInsert } from './types';
+
+export async function hasKidEnrollment({
+  termId,
+  kidId,
+}: {
+  termId: string;
+  kidId: string;
+}) {
+  return db.query.kidEnrollment.findFirst({
+    where: and(
+      eq(kidEnrollment.termId, termId),
+      eq(kidEnrollment.kidId, kidId)
+    ),
+    columns: { id: true, classSessionId: true },
+  });
+}
 
 export async function findMany({
   termId,
@@ -15,7 +34,7 @@ export async function findMany({
   classSessionId?: string;
   where?: SQL<unknown>;
 }) {
-  return await db.query.kidEnrollment.findMany({
+  return db.query.kidEnrollment.findMany({
     where: and(
       where,
       isNull(kidEnrollment.deletedAt),
@@ -24,10 +43,36 @@ export async function findMany({
         ? eq(kidEnrollment.classSessionId, classSessionId)
         : undefined
     ),
+    columns: omitAuditColumns,
     with: {
-      kid: { columns: { id: true, name: true, nickName: true } },
-      classSession: { columns: { name: true } },
-      term: { columns: { name: true } },
+      kid: { columns: leanKidColumnSelection },
+    },
+  });
+}
+
+export async function findManyWithRelations({
+  termId,
+  classSessionId,
+  where,
+}: {
+  termId?: string;
+  classSessionId?: string;
+  where?: SQL<unknown>;
+}) {
+  return db.query.kidEnrollment.findMany({
+    where: and(
+      where,
+      isNull(kidEnrollment.deletedAt),
+      termId ? eq(kidEnrollment.termId, termId) : undefined,
+      classSessionId
+        ? eq(kidEnrollment.classSessionId, classSessionId)
+        : undefined
+    ),
+    columns: omitAuditColumns,
+    with: {
+      kid: { columns: leanKidColumnSelection },
+      term: { columns: { id: true, name: true } },
+      classSession: { columns: { id: true, name: true } },
     },
   });
 }
@@ -42,7 +87,7 @@ export async function findAvailableKids({
   return await db.query.kid.findMany({
     where: and(
       isNull(kid.deletedAt),
-      eq(kid.activeStatus, 'active'),
+      eq(kid.activeStatus, ACTIVE_STATUS.ACTIVE),
       not(
         exists(
           db
@@ -61,11 +106,28 @@ export async function findAvailableKids({
         )
       )
     ),
+    columns: omitAuditColumns,
+  });
+}
+
+export async function findCsIdByTermId({
+  kidId,
+  termId,
+}: {
+  kidId: string;
+  termId: string;
+}) {
+  return db.query.kidEnrollment.findFirst({
+    where: and(
+      eq(kidEnrollment.termId, termId),
+      eq(kidEnrollment.kidId, kidId)
+    ),
+    columns: { classSessionId: true },
   });
 }
 
 export async function insertMany(
-  input: LeanKidEnrollment[],
+  input: KidEnrollmentInsert[],
   tx?: TransactionClient
 ) {
   const session = tx ? tx : db;

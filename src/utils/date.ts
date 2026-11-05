@@ -1,5 +1,3 @@
-import { getLocalDateString } from './date-local';
-
 /** 7-day edit window for DCR data. Past this, records become read-only. */
 export const EDIT_WINDOW_DAYS = 7;
 
@@ -26,4 +24,48 @@ export function isWithinEditWindow(
   cutoff.setDate(cutoff.getDate() - editWindowDays);
 
   return date >= cutoff && date <= nowEnd;
+}
+
+const DEFAULT_TIMEZONE = 'Asia/Jakarta';
+
+/**
+ * Return today's date as YYYY-MM-DD in the given timezone.
+ * Defaults to Asia/Jakarta (WIB, UTC+7) — Indonesia preschool.
+ */
+export function getLocalDateString({
+  timeZone = DEFAULT_TIMEZONE,
+  now = new Date(),
+}: {
+  timeZone?: string;
+  now?: Date;
+} = {}): string {
+  return new Intl.DateTimeFormat('fr-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(now);
+}
+
+export function formatDate(
+  dateString: string,
+  { showWeekday = false }: { showWeekday?: boolean } = {}
+) {
+  const isDayExist = dateString.split('-')[2];
+  const date = new Date(dateString);
+
+  return new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'UTC',
+    weekday: showWeekday && isDayExist ? 'long' : undefined,
+    day: isDayExist ? 'numeric' : undefined,
+    month: 'long',
+    year: 'numeric',
+  }).format(date);
+}
+
+export function startOfNextMonthDate(yearMonth: string) {
+  const nextMonth = new Date(`${yearMonth}-01T00:00:00Z`);
+  nextMonth.setUTCMonth(nextMonth.getUTCMonth() + 1);
+
+  return nextMonth.toISOString().slice(0, 10);
 }

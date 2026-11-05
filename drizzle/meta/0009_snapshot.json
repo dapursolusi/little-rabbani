@@ -1,6 +1,6 @@
 {
-  "id": "f6967f67-a35e-4de7-8cd4-7dd9da2931cb",
-  "prevId": "9751f9f0-b61b-43ae-aefa-6edda4a68966",
+  "id": "93a6cf0a-5149-49e5-9840-e280e9e3b746",
+  "prevId": "f6967f67-a35e-4de7-8cd4-7dd9da2931cb",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -455,6 +455,104 @@
           "name": "dcr_class_session_id_date_idx",
           "nullsNotDistinct": false,
           "columns": ["class_session_id", "date"]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.daily_report": {
+      "name": "daily_report",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "dcr_observation_id": {
+          "name": "dcr_observation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "narrative": {
+          "name": "narrative",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "report_status": {
+          "name": "report_status",
+          "type": "report_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'template'"
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "daily_report_dcr_observation_idx": {
+          "name": "daily_report_dcr_observation_idx",
+          "columns": [
+            {
+              "expression": "dcr_observation_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "daily_report_dcr_observation_id_dcr_observation_id_fk": {
+          "name": "daily_report_dcr_observation_id_dcr_observation_id_fk",
+          "tableFrom": "daily_report",
+          "tableTo": "dcr_observation",
+          "columnsFrom": ["dcr_observation_id"],
+          "columnsTo": ["id"],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "daily_report_dcr_observation_uniq": {
+          "name": "daily_report_dcr_observation_uniq",
+          "nullsNotDistinct": false,
+          "columns": ["dcr_observation_id"]
         }
       },
       "policies": {},
@@ -1135,6 +1233,58 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.report_template": {
+      "name": "report_template",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "deleted_at": {
+          "name": "deleted_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.sub_theme": {
       "name": "sub_theme",
       "schema": "",
@@ -1281,15 +1431,20 @@
       "schema": "public",
       "values": ["happy", "angry", "sad", "fear", "bored", "shy"]
     },
+    "public.report_status": {
+      "name": "report_status",
+      "schema": "public",
+      "values": ["draft", "template", "edited", "sent"]
+    },
     "public.enrollment_status": {
       "name": "enrollment_status",
       "schema": "public",
-      "values": ["waiting", "enrolled"]
+      "values": ["waiting", "enrolled", "completed", "cancelled"]
     },
     "public.active_status": {
       "name": "active_status",
       "schema": "public",
-      "values": ["active", "inactive", "alumni"]
+      "values": ["registered", "active", "inactive"]
     },
     "public.gender": {
       "name": "gender",

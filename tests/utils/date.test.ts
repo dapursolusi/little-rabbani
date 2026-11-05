@@ -1,5 +1,4 @@
-import { isWithinEditWindow } from '@/utils/date';
-import { getLocalDateString } from '@/utils/date-local';
+import { getLocalDateString, isWithinEditWindow } from '@/utils/date';
 import { describe, expect, it } from 'vitest';
 
 describe('getLocalDateString', () => {

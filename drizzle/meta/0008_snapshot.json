@@ -1,6 +1,6 @@
 {
   "id": "f6967f67-a35e-4de7-8cd4-7dd9da2931cb",
-  "prevId": "9751f9f0-b61b-43ae-aefa-6edda4a68966",
+  "prevId": "f0453fc5-d946-4893-90ce-680b65a756f2",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -528,6 +528,18 @@
         "deleted_at": {
           "name": "deleted_at",
           "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "narrative_generated": {
+          "name": "narrative_generated",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "narrative_edited": {
+          "name": "narrative_edited",
+          "type": "text",
           "primaryKey": false,
           "notNull": false
         }
@@ -1249,6 +1261,52 @@
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.report_template": {
+      "name": "report_template",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "name": {
+          "name": "name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content": {
+          "name": "content",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
         }
       },
       "indexes": {},

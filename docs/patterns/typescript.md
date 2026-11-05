@@ -1,46 +1,54 @@
 # TypeScript Patterns
 
+Stack-specific mechanics. Type-naming table, cast seams, comments, file-size rules live in the personal SSOT `stacks/typescript.md`.
+
 ## Discriminated-union results
 
-Every Server Action returns a discriminated union — the single pattern for all I/O boundaries:
+Exact contract — `ActionResult<T>` declared in `src/types/index.ts`:
 
 ```ts
 type ActionResult<T = void> =
-  { success: true; data: T } | { success: false; error: string };
+  | { success: true; message?: string; data: T; error?: never }
+  | { success: false; message: string; data?: never; error?: ActionError };
 ```
 
-Declared in `src/lib/actions/require-owner.ts`. Always `as const` on the literal so TS narrows with `if (!result.success)`.
+Failure field is **`message`**; `error` is an optional structured object (`validation | not_found | conflict | internal`).
 
 ## `parseInput()` — zod at every trust boundary
 
 ```ts
-parseInput({ schema, input, fallbackError });
-// → { success: true, data: z.infer<S> } | { success: false, error: string }
+parseInput({ schema, input, fallbackError?, withError? });
+// → ActionResult<z.output<S>>
 ```
 
-Returns an ActionResult directly from a failed zod parse. No branching needed in the action — just `if (!parsed.success) return parsed`.
+Returns an ActionResult directly from a failed zod parse — `if (!parsed.success) return parsed`. `withError: true` adds structured `fieldErrors`.
 
-## Entity types pattern
+## Validation file
+
+Zod schemas live in `features/<entity>/validation.ts` (not `schemas.ts`):
+
+- Base + `.extend` composition (`CreateXxxSchema = BaseXxxSchema`, `UpdateXxxSchema = BaseXxxSchema.extend({...})`).
+- Enum schemas reference constants: `z.enum(NAME_VALUES)` — no inline literal arrays.
+- Messages inline per field, Indonesian.
+- Shared primitives in `src/lib/validation/common.schema.ts`: `uuidSchema`, `isoDateSchema`, `isoYearMonthSchema` (+ inferred `UUID`, `ISODate`, `ISOYearMonth`). Reuse before redefining.
+- One-off schemas may live inline at the action seam when used exactly once.
+
+## Column selections
 
 ```ts
-// types.ts
-export interface Entity extends BaseDTOResponse, EntityInput {}
+export const omitAuditColumns = {
+  createdAt: false,
+  updatedAt: false,
+  deletedAt: false,
+} as const satisfies Record<keyof DbTableAuditFields, boolean>;
+
+// per-entity lean selection, exported from the repo file:
+export const leanKidColumnSelection = {
+  id: true,
+  name: true,
+  nickName: true,
+} as const satisfies Record<keyof LeanKid, boolean>;
 ```
-
-`BaseDTOResponse` provides `id`, `createdAt`, `updatedAt`, `deletedAt ?`. Entity-specific input type comes from `z.infer<typeof EntitySchema>`.
-
-## Re-export pattern
-
-`schema.ts` exports both the schema and the inferred type:
-
-```ts
-export { EntitySchema };
-export type EntityInput = z.infer<typeof EntitySchema>;
-```
-
-## Form field types
-
-`src/types/field.ts` defines `FormFieldInput` (discriminated union by `type`), `FormField` (includes `FormFieldGroupHeader`), `SelectOption`, `SelectOptionGroup`. StrictHTMLInputType mirrors but does not import from React — intentional to avoid import churn.
 
 ## Repository exports
 
@@ -51,22 +59,12 @@ export * as kidRepo from './kid';
 export * as guardianRepo from './guardian';
 ```
 
-## No `any`
-
-Use `unknown` or proper interfaces. `as never` at the zodResolver ↔ react-hook-form seam is the one accepted cast (see forms.md).
-
-## `cn()` utility
-
-```ts
-import { cn } from '@/lib/utils';
-
-// clsx + tailwind-merge
-```
-
-## Ponytail comments
-
-Known-simplification comments marked with `// ponytail:` explaining the tradeoff and upgrade path.
+Single-entity modules use one flat `repositories.ts` consumed as `import * as kidRepo from './repositories'`.
 
 ## Icon type
 
 Hugeicons icons use `IconSvgElement` from `@hugeicons/react`. The `isIconSvgElement()` utility in `src/utils/icon-checker.ts` guards runtime type checks.
+
+## Logging
+
+Use `logger` from `src/lib/logger.ts` (pino, PII-redacting) — not `console.*` — in server code: `logger.error({ err: error }, 'fnName')`. (Older services still use `console.error`; see violations.md.)

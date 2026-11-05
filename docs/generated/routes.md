@@ -20,6 +20,12 @@ Auto-generated from `src/app/` directory structure.
     page.tsx
     registration/
       page.tsx
+    report/
+      kid/
+        [id]/
+          page.tsx
+      month/
+        page.tsx
     settings/
       page.tsx
       report-template/

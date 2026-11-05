@@ -1,106 +1,78 @@
 # Next.js / App Router Patterns
 
-## Server Components by default
-
-Pages are Server Components. Server first priority.`"use client"` only when hooks/event handlers needed. Data fetching happens directly in the component via Server Action calls.
+Stack-specific mechanics. Data-flow principle, action/layering rules, page shapes, directive gotchas, URL-as-filter, React Compiler trap live in the personal SSOT `stacks/nextjs.md`.
 
 ## Server Actions (`'use server'`)
 
-Every mutation is a Server Action. Pattern:
+Layering: `features/<entity>/actions[.ts|/]` → `services` → `repositories`.
 
-```
-features/<entity>/actions.ts  →  features/<entity>/services.ts  →  features/<entity>/repositories/
-```
-
-**Layered:** actions.ts is the controller — parses input with `parseInput()`, calls service, returns result. services.ts owns all business logic including auth gating via `requireOwner()`. repositories/ talk to DB. Thin actions layer, fat services layer.
+**Actions are parse-only controllers** (see SSOT for the full rule). Canonical shape:
 
 ```ts
-// actions.ts — controller only
-export async function createXxx(input: Record<string, unknown>) {
-  const parsed = parseInput({ schema, input, fallbackError: '...' });
+// actions.ts — parse and forward, nothing else
+export async function createXxx(input: unknown) {
+  const parsed = parseInput({ schema: XxxSchema, input, fallbackError: '...' });
   if (!parsed.success) return parsed;
   return xxxService.createXxx(parsed.data);
 }
 
-// services.ts — business logic + auth gate
-export async function createXxx(input: XxxInput) {
-  return requireOwner(async () => {
-    try {
-      const newItem = await xxxRepo.insert(input);
-      return { success: true as const, data: newItem };
-    } catch (error) {
-      console.error('createXxx', error);
-      return { success: false as const, error: 'Gagal membuat data' };
-    }
-  });
+export async function updateXxx(id: string, input: unknown) {
+  const parsed = parseInput({ schema: XxxSchema, input, fallbackError: '...' });
+  if (!parsed.success) return parsed;
+  return xxxService.updateXxx(id, parsed.data);
 }
 ```
 
-Read-only queries (`getXxx`) follow the same pattern — `requireOwner` in services, not actions.
+- Multi-input actions: positional `(id, input)` or a single object with reserved `input` key.
+- **Read actions** follow the same parse-only shape when they take filter params. Ungated parameterless reads may omit parsing.
+- Services may call sibling services and repos; actions never touch `db`.
 
-**Action shape:** every action returns `ActionResult<T>`:
+## ActionResult
 
-```ts
-type ActionResult<T = void> =
-  { success: true; data: T } | { success: false; error: string };
-```
-
-Narrow client-side with `if (!result.success)`.
-
-**Reads:** export `async function getXxx(params?)` that calls service. Services wrap `requireOwner()`. Used directly in Server Components.
-
-**Mutations:** `createXxx(input: unknown)` — parse with `parseInput()`, then delegate to service. `updateXxx(id, input)` — same pattern. `deleteXxx(id)` — soft delete via `deletedAt`.
+Exact contract in [typescript.md](typescript.md) → Discriminated-union results. Success may carry optional `message`; clients render `result.message ?? <default label>`.
 
 ## Page pattern
 
-Every page exports `metadata` using `baseMetadata`:
-
-```ts
-import { baseMetadata } from '@/lib/metadata';
-
-export const metadata = { ...baseMetadata, title: '...' };
-```
-
-Page fetches data, passes to DataTable. Error state rendered inline with `<Alert>`:
+Canonical standardized page (commit 7d8ad55):
 
 ```tsx
-if (!result.success) {
-  return (
-    <Alert>
-      <AlertTitle>Error</AlertTitle>
-      <AlertDescription>...</AlertDescription>
-    </Alert>
-  );
+import { kidColumns } from '@/features/kid/columns';
+import * as kidService from '@/features/kid/services';
+import { DataTable } from '@/components/shared/table/data-table';
+import { baseMetadata } from '@/lib/metadata';
+
+export const metadata = { ...baseMetadata, title: 'Murid' };
+
+export default async function KidListPage() {
+  const kids = await kidService.getKids();
+  return <DataTable columns={kidColumns} data={kids.items} meta={...} />;
 }
 ```
 
-## Data flow
+- `baseMetadata` at `src/lib/metadata.ts`, title template `%s | Little Rabbani`.
+- Missing resource → `notFound()`; missing required search param → **redirect to canonicalize** (`report/month` redirects to add `?termId=` when absent).
+- No `loading.tsx` / `error.tsx` / `not-found.tsx` — pages handle missing data in the body; clients handle their own load/error states.
 
-```
-Server Component / Client form → Server Action → Service → Repository → Drizzle → Neon
-```
+## Page composition (three shapes, by page kind)
 
-No `api/` routes except Better Auth's `api/auth/[...all]` and dev-session helper.
+1. **List page** — server page renders `<DataTable columns data meta emptyState />` directly.
+2. **Interactive page** — server page fetches, hands plain-data props to `<XxxClient>` from `@/features/<e>/components/client`.
+3. **Static/settings page** — inline JSX + `PageBreadcrumbs`.
 
-## React Compiler (ON)
+## Routing
 
-`reactCompiler: true` in next.config. Auto-memoizes everything. **Stable-identity trap:** values from stable handles (TanStack Table `table` instance, zustand stores) get memoized stale. Mirror state into `useState`, derive UI from that.
+App Router under `src/app/`. Route group `(auth)`: dashboard pages `(auth)/dashboard/...`, login at `(auth)/login/`. One nested layout (`dashboard/layout.tsx`).
 
-## Metadata
+## Auth gating — UNDECIDED
 
-`src/lib/metadata.ts` exports `baseMetadata` — use as spread in every page.
+Auth gating placement (requireOwner in actions vs services; possible future `roleGate([...])` design) is **not settled** — see violations.md. Do not write new requireOwner guidance; existing call sites stay as-is until the design lands.
 
 ## Route proxy
 
 `src/proxy.ts` handles auth checking + role-based routing + distributed tracing headers. See [auth.md](auth.md).
 
-## Routing
-
-App Router under `src/app/`. Auth routes under `src/app/(auth)/dashboard/`. Login under `src/app/login/`.
-
-## Gotchas
+## Project gotchas
 
 - Port 3000 must be free.
-- `'use client'` at top of file, not mid-file.
-- `router.refresh()` after mutations to revalidate server data.
-- No `api/` routes for business logic — Server Actions only.
+- URL filter pushes go through `pushParam()` (`src/utils/search-params.ts`).
+- Toast copy is Indonesian; `toast.success` on success, `toast.error` on failure, `toast.warning` on delete-confirm.

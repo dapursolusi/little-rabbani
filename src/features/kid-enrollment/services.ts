@@ -1,12 +1,12 @@
 import { db } from '@/db';
-import { ActionResult } from '@/types';
 
+import { parseInput } from '@/lib/actions/parse-input';
 import { requireOwner } from '@/lib/actions/require-owner';
+import { uuidSchema } from '@/lib/validation/common.schema';
 
 import { LeanKid } from '../kid/types';
 import * as termService from '../term/services';
 import * as kidEnrollmentRepo from './repositories';
-import { KidEnrollment } from './types';
 import { KidEnrollmentInput, SaveEnrollmentChangesInput } from './validation';
 
 export async function getKidsEnrollments({
@@ -16,61 +16,43 @@ export async function getKidsEnrollments({
   termId?: string;
   classSessionId?: string;
 }) {
-  try {
-    // termId is the filter basis; classSessionId is optional. 'all' (the
-    // "Pilih Semua Sesi Kelas" sentinel) and '' both mean "no session filter" —
-    // passing a non-uuid string to eq() makes Postgres throw.
-    const effectiveClassSessionId =
-      classSessionId && classSessionId !== 'all' ? classSessionId : undefined;
-    const kidsEnrollments = await kidEnrollmentRepo.findMany({
-      termId: termId ?? '',
-      classSessionId: effectiveClassSessionId,
-    });
-    return {
-      success: true as const,
-      data: kidsEnrollments,
-    };
-  } catch (error) {
-    console.error('getKidsEnrollments: ', error);
-    return {
-      success: false as const,
-      error: 'Gagal memuat data. Coba muat ulang halaman.',
-    };
-  }
+  // termId is the filter basis; classSessionId is optional. 'all' (the
+  // "Pilih Semua Sesi Kelas" sentinel) and '' both mean "no session filter" —
+  // passing a non-uuid string to eq() makes Postgres throw.
+  const effectiveClassSessionId =
+    classSessionId && classSessionId !== 'all' ? classSessionId : undefined;
+  const kidsEnrollments = await kidEnrollmentRepo.findManyWithRelations({
+    termId: termId ?? '',
+    classSessionId: effectiveClassSessionId,
+  });
+  return kidsEnrollments;
 }
 
-export async function getCurrentTermKidEnrollmentsByClassSession(
+export async function getCurrentTermEnrolledKidsByClassSession(
   classSessionId: string
-): Promise<ActionResult<KidEnrollment[]>> {
-  try {
-    if (!classSessionId)
-      return {
-        success: false as const,
-        message: 'Wajib memilih sesi kelas terlebih dahulu',
-      };
+) {
+  const parsed = parseInput({
+    input: classSessionId,
+    schema: uuidSchema,
+    fallbackError: 'Input kelas sesi tidak valid',
+  });
+  if (!parsed.success) throw new Error(parsed.message);
 
-    const currentTermId = (await termService.checkCurrentTerm())?.data?.id;
-    if (!currentTermId) {
-      return {
-        success: false as const,
-        message: 'Gagal memuat data. Coba muat ulang halaman.',
-      };
-    }
-    const kidsEnrollments = await kidEnrollmentRepo.findMany({
-      termId: currentTermId,
-      classSessionId,
-    });
-    return {
-      success: true as const,
-      data: kidsEnrollments,
-    };
-  } catch (error) {
-    console.error('getCurrentTermKidEnrollments: ', error);
-    return {
-      success: false as const,
-      message: 'Gagal memuat data. Coba muat ulang halaman.',
-    };
+  const currentTermId = (await termService.checkCurrentTerm())?.id;
+
+  if (!currentTermId) {
+    throw new Error('Gagal memuat data. Coba muat ulang halaman.');
   }
+  const enrollments = await kidEnrollmentRepo.findMany({
+    termId: currentTermId,
+    classSessionId,
+  });
+
+  return enrollments.map((enrollment) => ({
+    id: enrollment.kidId,
+    name: enrollment.kid.name,
+    nickName: enrollment.kid.nickName,
+  }));
 }
 
 export async function getAvailableKids({
@@ -109,6 +91,30 @@ export async function getAvailableKids({
       error: 'Gagal memuat data. Coba muat ulang halaman.',
     };
   }
+}
+
+export async function verifyKidEnrollment({
+  termId,
+  kidId,
+}: {
+  termId: string;
+  kidId: string;
+}) {
+  return kidEnrollmentRepo.hasKidEnrollment({
+    termId,
+    kidId,
+  });
+}
+
+export async function getKidClassSessionIdByTermId(input: {
+  kidId: string;
+  termId: string;
+}) {
+  const enrollment = await kidEnrollmentRepo.findCsIdByTermId(input);
+  if (!enrollment) {
+    throw new Error('Kid enrollment not found');
+  }
+  return enrollment?.classSessionId;
 }
 
 export async function createKidsEnrollments(input: KidEnrollmentInput) {
@@ -183,7 +189,16 @@ export async function saveEnrollmentChanges(input: SaveEnrollmentChangesInput) {
         return { insertedCount, deletedCount, updatedCount };
       });
 
-      return { success: true as const, data: result };
+      const updatedEnrollments = await getKidsEnrollments({
+        termId: input.termId,
+        classSessionId: input.classSessionId,
+      });
+
+      return {
+        success: true as const,
+        message: `Berhasil menyimpan perubahan pendaftaran. (${result.insertedCount} ditambahkan, ${result.deletedCount} dihapus, ${result.updatedCount} diperbarui)`,
+        data: updatedEnrollments,
+      };
     } catch (error) {
       console.error('saveEnrollmentChanges: ', error);
       // ponytail: check unique violation code — Postgres 23505 = duplicate key

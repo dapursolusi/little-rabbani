@@ -6,4 +6,6 @@ Registration of a kid requires a guardian, so the form is one unit: a guardian f
 **Considered options:** split guardian-first workflow (v1, forced a pre-step dead-end); explicit existing-guardian picker only (revives the two-step flow); read-only guardian on kid edit (denied sibling-correction). Rejected.
 **Consequences:** a phone typo that collides with another guardian errors on the unique constraint; changing a phone fires a confirm warning since it changes identity.
 
+> **Update (2026-11):** the "use existing guardian" search-picker toggle **is now implemented** — `GuardianPicker` is wired via a custom field render in `src/features/kid/fields.tsx` and the `guardianMode` discriminated-union form (`src/features/kid/components/form.tsx`). The `guardian_relationship` enum shipped as `older_sibling` (not v1's `brother_sister`). The sibling-count badge remains unimplemented.
+
 > **Update (2026-08):** the v2 plan's "use existing guardian" search-picker toggle and the sibling-count badge are **not implemented** — the shipped form is the plain combined form with new-guardian entry only. `searchGuardians` exists in `actions.ts` but is not yet wired to any UI. The `guardian_relationship` enum shipped as `older_sibling` (not v1's `brother_sister`).

@@ -1,15 +1,20 @@
-import { BaseDTOResponse } from '@/types';
+import { kidEnrollment } from '@/db/schema';
+import { DbTableAuditFields } from '@/types';
 
-import { ClassSession } from '../class-session/types';
+import { LeanClassSession } from '../class-session/types';
 import { LeanKid } from '../kid/types';
-import { Term } from '../term/types';
-import { KidEnrollmentInput, KidToBeEnrolled } from './validation';
+import { LeanTerm } from '../term/types';
 
-export interface KidEnrollment extends BaseDTOResponse, LeanKidEnrollment {
+export type KidEnrollmentRecord = typeof kidEnrollment.$inferSelect;
+export type KidEnrollmentData = Omit<
+  KidEnrollmentRecord,
+  keyof DbTableAuditFields
+>;
+export type KidEnrollment = KidEnrollmentData;
+export type KidEnrollmentWithKid = KidEnrollment & { kid: LeanKid };
+export type KidEnrollmentInsert = typeof kidEnrollment.$inferInsert;
+export type KidEnrollmentWithRelations = KidEnrollment & {
   kid: LeanKid;
-  classSession: Pick<ClassSession, 'name'>;
-  term: Pick<Term, 'name'>;
-}
-
-export interface LeanKidEnrollment
-  extends Omit<KidEnrollmentInput, 'kids'>, KidToBeEnrolled {}
+  classSession: LeanClassSession;
+  term: LeanTerm;
+};

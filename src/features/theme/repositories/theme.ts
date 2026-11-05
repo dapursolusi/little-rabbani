@@ -1,13 +1,30 @@
 import { db } from '@/db';
 import { theme } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { and, eq, ilike, isNull, sql } from 'drizzle-orm';
 
+import { Theme } from '../types';
 import type { ThemeInput } from '../validation';
+
+export const themeColumnSelection = {
+  id: true,
+  name: true,
+} as const satisfies Record<keyof Theme, boolean>;
 
 export async function findMany() {
   return await db.query.theme.findMany({
     where: isNull(theme.deletedAt),
     orderBy: (t, { asc }) => [asc(t.name)],
+    columns: omitAuditColumns,
+  });
+}
+
+export async function findManyWithSubThemes() {
+  return await db.query.theme.findMany({
+    where: isNull(theme.deletedAt),
+    orderBy: (t, { asc }) => [asc(t.name)],
+    columns: omitAuditColumns,
+    with: { subThemes: { columns: omitAuditColumns } },
   });
 }
 
@@ -30,14 +47,14 @@ export async function findManyWithCount({
       orderBy: (t, { asc }) => [asc(t.name)],
       limit,
       offset,
-      with: { subThemes: true },
+      columns: omitAuditColumns,
+      with: { subThemes: { columns: omitAuditColumns } },
     }),
     db
       .select({ count: sql<number>`count(*)` })
       .from(theme)
       .where(where),
   ]);
-
   const total = totalResult?.[0]?.count ?? 0;
   return { items, total };
 }
@@ -45,6 +62,7 @@ export async function findManyWithCount({
 export async function findById(id: string) {
   return await db.query.theme.findFirst({
     where: and(isNull(theme.deletedAt), eq(theme.id, id)),
+    columns: omitAuditColumns,
   });
 }
 

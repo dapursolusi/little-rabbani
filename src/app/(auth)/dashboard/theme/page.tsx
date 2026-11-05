@@ -1,29 +1,15 @@
-import { getSubThemes, getThemes } from '@/features/theme/actions';
-import { ThemeListClient } from '@/features/theme/components/theme-list-client';
+import { ThemeListClient } from '@/features/theme/components/client';
+import * as themeService from '@/features/theme/services';
 
 import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Tema' };
 
 export default async function ThemeListPage() {
-  const [themeResult, subThemeResult] = await Promise.all([
-    getThemes(),
-    getSubThemes(),
+  const [themes, subThemes] = await Promise.all([
+    themeService.getThemesWithSubThemes(),
+    themeService.getSubThemesWithTheme(),
   ]);
 
-  if (!themeResult.success || !subThemeResult.success) {
-    return (
-      <section className="p-4 text-center text-destructive">
-        {!themeResult.success && themeResult.message}
-        {!subThemeResult.success && subThemeResult.message}
-      </section>
-    );
-  }
-
-  return (
-    <ThemeListClient
-      themes={themeResult.data ?? []}
-      subThemes={subThemeResult.data ?? []}
-    />
-  );
+  return <ThemeListClient themes={themes} subThemes={subThemes} />;
 }

@@ -1,11 +1,11 @@
 import { db } from '@/db';
 import { dcrObservation } from '@/db/schema/daily';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
+import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
 import { and, eq } from 'drizzle-orm';
 
-import { DcrObservationItem } from '../types';
+import { DcrObservation } from '../types';
 import { DCRObservationInput } from '../validation';
-
-// Constants
 
 // Insert
 
@@ -24,7 +24,7 @@ export async function insert(input: DCRObservationInput) {
     throw new Error('Inserted DCR Observation not found');
   }
 
-  return result satisfies DcrObservationItem;
+  return result satisfies DcrObservation;
 }
 
 // Find
@@ -32,15 +32,7 @@ export async function insert(input: DCRObservationInput) {
 export async function findById(id: string) {
   return db.query.dcrObservation.findFirst({
     where: eq(dcrObservation.id, id),
-    columns: {
-      id: true,
-      dcrId: true,
-      kidId: true,
-      attendance: true,
-      mood: true,
-      appetite: true,
-      notes: true,
-    },
+    columns: omitAuditColumns,
     with: {
       kid: { columns: { id: true, name: true, nickName: true } },
       kidReport: {
@@ -74,20 +66,11 @@ export async function findObservation({
 export async function findByIdWithKid(id: string) {
   return await db.query.dcrObservation.findFirst({
     where: eq(dcrObservation.id, id),
-    columns: {
-      id: true,
-      dcrId: true,
-      attendance: true,
-      mood: true,
-      appetite: true,
-      notes: true,
-    },
+    // columns: dcrObservationColumnSelection,
+    columns: omitAuditColumns,
     with: {
       kid: {
-        columns: {
-          name: true,
-          nickName: true,
-        },
+        columns: leanKidColumnSelection,
       },
     },
   });
@@ -108,16 +91,9 @@ export async function findMany({
 
   return await db.query.dcrObservation.findMany({
     where: and(...filters),
-    columns: {
-      id: true,
-      dcrId: true,
-      attendance: true,
-      mood: true,
-      appetite: true,
-      notes: true,
-    },
+    columns: omitAuditColumns,
     with: {
-      kid: { columns: { id: true, name: true } },
+      kid: { columns: leanKidColumnSelection },
       kidReport: {
         columns: {
           id: true,
@@ -155,7 +131,7 @@ export async function update(input: DCRObservationInput) {
     throw new Error('Updated DCR observation not found');
   }
 
-  return result satisfies DcrObservationItem;
+  return result satisfies DcrObservation;
 }
 
 // Remove

@@ -48,47 +48,42 @@ function formatTermName(
 
 export async function checkCurrentTerm() {
   const today = new Date().toISOString().split('T')[0];
-  try {
-    const currentTerm = await termRepo.findCurrent(today);
+  const currentTerm = await termRepo.findCurrent(today);
 
-    if (currentTerm) return { success: true as const, data: currentTerm };
+  if (currentTerm) return currentTerm;
 
-    const terms = await termRepo.findAll();
-    const latestTerm = terms[0];
+  const terms = await termRepo.findMany();
+  const latestTerm = terms[0];
 
-    // Only auto-create when the latest batch has actually ended — never on top
-    // of a future-dated one. Otherwise hand back whatever we have.
-    if (latestTerm && !(latestTerm.endDate < today)) {
-      return { success: true as const, data: latestTerm };
-    }
-
-    const startDate = today;
-    const base = new Date(today).getTime();
-    const endDate = latestTerm
-      ? new Date(
-          base +
-            new Date(latestTerm.endDate).getTime() -
-            new Date(latestTerm.startDate).getTime()
-        )
-          .toISOString()
-          .split('T')[0]
-      : new Date(base + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-
-    const insertedTerm = await termRepo.insert({
-      name: formatTermName(startDate, endDate, terms.length + 1),
-      startDate,
-      endDate,
-      isAutoCreated: true,
-    });
-
-    return { success: true as const, data: insertedTerm };
-  } catch (error) {
-    console.error('checkCurrentTerm', error);
-    return {
-      success: false as const,
-      message: 'Gagal memeriksa batch saat ini',
-    };
+  // Only auto-create when the latest batch has actually ended — never on top
+  // of a future-dated one. Otherwise hand back whatever we have.
+  if (latestTerm && !(latestTerm.endDate < today)) {
+    return latestTerm;
   }
+
+  const startDate = today;
+  const base = new Date(today).getTime();
+
+  const endDate = latestTerm
+    ? new Date(
+        base +
+          new Date(latestTerm.endDate).getTime() -
+          new Date(latestTerm.startDate).getTime()
+      )
+        .toISOString()
+        .split('T')[0]
+    : new Date(base + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+  return termRepo.insert({
+    name: formatTermName(startDate, endDate, terms.length + 1),
+    startDate,
+    endDate,
+    isAutoCreated: true,
+  });
+}
+
+export async function getTerms() {
+  return await termRepo.findMany();
 }
 
 export async function checkNextTerm() {
@@ -105,7 +100,7 @@ export async function checkNextTerm() {
     // "app untouched for months" edge case (creates a fresh current term).
     if (!currentTerm) return { success: true as const, data: undefined };
 
-    const terms = await termRepo.findAll();
+    const terms = await termRepo.findMany();
 
     // Term N+1 starts the day after term N ends — no overlap, no gap.
     const duration =

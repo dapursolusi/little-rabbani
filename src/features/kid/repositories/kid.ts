@@ -1,37 +1,20 @@
 import { db } from '@/db';
 import { kid } from '@/db/schema';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { TransactionClient } from '@/types';
 import { SQL, eq, sql } from 'drizzle-orm';
 
+import { LeanKid } from '../types';
 import { UpdateKidInput } from '../validation';
 
-export async function findMany(
-  limit?: number,
-  offset?: number,
-  where?: SQL<unknown>
-) {
-  return await db.query.kid.findMany({
-    where,
-    with: { guardian: true },
-    orderBy: (kid, { desc }) => [desc(kid.createdAt)],
-    limit,
-    offset,
-  });
-}
+// Column Selection
+export const leanKidColumnSelection = {
+  id: true,
+  nickName: true,
+  name: true,
+} as const satisfies Record<keyof LeanKid, boolean>;
 
-export async function findById(id: string) {
-  return await db.query.kid.findFirst({
-    where: eq(kid.id, id),
-    with: { guardian: true },
-  });
-}
-
-export async function count(where?: SQL<unknown>) {
-  return await db
-    .select({ count: sql<number>`count(*)` })
-    .from(kid)
-    .where(where);
-}
+// Insert
 
 export async function insert(kidData: UpdateKidInput, tx?: TransactionClient) {
   const session = tx ? tx : db;
@@ -49,6 +32,47 @@ export async function insert(kidData: UpdateKidInput, tx?: TransactionClient) {
 
   return inserted;
 }
+
+// Find
+
+export async function findMany(
+  limit?: number,
+  offset?: number,
+  where?: SQL<unknown>
+) {
+  return db.query.kid.findMany({
+    where,
+    columns: omitAuditColumns,
+    with: { guardian: true },
+    orderBy: (kid, { desc }) => [desc(kid.createdAt)],
+    limit,
+    offset,
+  });
+}
+
+export async function findById(id: string) {
+  return await db.query.kid.findFirst({
+    where: eq(kid.id, id),
+    columns: omitAuditColumns,
+    with: { guardian: { columns: omitAuditColumns } },
+  });
+}
+
+export async function findBasicInfo(id: string) {
+  return db.query.kid.findFirst({
+    where: eq(kid.id, id),
+    columns: leanKidColumnSelection,
+  });
+}
+
+export async function count(where?: SQL<unknown>) {
+  return await db
+    .select({ count: sql<number>`count(*)` })
+    .from(kid)
+    .where(where);
+}
+
+// Update
 
 export async function update(
   kidId: string,
@@ -70,6 +94,8 @@ export async function update(
     .returning();
   return updated;
 }
+
+// Remove
 
 export async function remove(id: string) {
   return await db.delete(kid).where(eq(kid.id, id));

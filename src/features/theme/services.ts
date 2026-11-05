@@ -8,20 +8,16 @@ export async function getThemes(params?: {
   limit?: number;
   offset?: number;
 }) {
-  return requireOwner(async () => {
-    try {
-      const { search, limit = 50, offset = 0 } = params ?? {};
-      const { items, total } = await themeRepo.findManyWithCount({
-        search,
-        limit,
-        offset,
-      });
-      return { success: true as const, data: items, total };
-    } catch (error) {
-      console.error('getThemes', error);
-      return { success: false as const, message: 'Gagal mengambil data tema' };
-    }
+  const { search, limit = 50, offset = 0 } = params ?? {};
+  return themeRepo.findManyWithCount({
+    search,
+    limit,
+    offset,
   });
+}
+
+export async function getThemesWithSubThemes() {
+  return themeRepo.findManyWithSubThemes();
 }
 
 export async function getTheme(id: string) {
@@ -96,18 +92,11 @@ export async function getActiveThemes() {
 // ──────── SubTheme services ────────
 
 export async function getSubThemes(params?: { themeId?: string }) {
-  return requireOwner(async () => {
-    try {
-      const items = await subThemeRepo.findMany(params);
-      return { success: true as const, data: items };
-    } catch (error) {
-      console.error('getSubThemes', error);
-      return {
-        success: false as const,
-        message: 'Gagal mengambil data sub tema',
-      };
-    }
-  });
+  return await subThemeRepo.findMany(params);
+}
+
+export async function getSubThemesWithTheme() {
+  return await subThemeRepo.findManyWithTheme();
 }
 
 export async function getSubThemeById(id: string) {

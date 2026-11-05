@@ -1,10 +1,42 @@
 import { db } from '@/db';
 import { dailyClassReport } from '@/db/schema/daily';
 import { subTheme } from '@/db/schema/theme';
-import { and, eq, gte, lt } from 'drizzle-orm';
+import { omitAuditColumns } from '@/db/selections/audit-columns';
+import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
+import { startOfNextMonthDate } from '@/utils/date';
+import { and, eq, gte, isNull, lt } from 'drizzle-orm';
 
-import { DcrWithKidObservation } from '../types';
+import { DailyClassReportData } from '../types';
 import { DailyClassReportInput } from '../validation';
+
+// Column Selection
+
+export const dcrColumnSelection = {
+  id: true,
+  date: true,
+  classSessionId: true,
+  subThemeId: true,
+  description: true,
+} as const satisfies Record<keyof DailyClassReportData, boolean>;
+
+export async function findManyByMonth({
+  classSessionId,
+  month: yearMonth,
+}: {
+  classSessionId: string;
+  month: string;
+}) {
+  const reports = await db.query.dailyClassReport.findMany({
+    where: and(
+      eq(dailyClassReport.classSessionId, classSessionId),
+      gte(dailyClassReport.date, `${yearMonth}-01`),
+      lt(dailyClassReport.date, startOfNextMonthDate(yearMonth)),
+      isNull(dailyClassReport.deletedAt)
+    ),
+    columns: { id: true, date: true },
+  });
+  return reports;
+}
 
 export async function insert(input: DailyClassReportInput) {
   const [inserted] = await db
@@ -35,7 +67,7 @@ export async function findDCR({
 }: {
   date?: string;
   classSessionId?: string;
-}): Promise<DcrWithKidObservation | undefined> {
+}) {
   const filters = [
     date ? eq(dailyClassReport.date, date) : undefined,
     classSessionId
@@ -46,10 +78,11 @@ export async function findDCR({
 
   return db.query.dailyClassReport.findFirst({
     where: and(...filters),
+    columns: omitAuditColumns,
     with: {
       observations: {
         with: {
-          kid: { columns: { id: true, name: true, nickName: true } },
+          kid: { columns: leanKidColumnSelection },
         },
       },
     },
@@ -69,6 +102,7 @@ export async function findById(id: string) {
 export async function findByIdWithObservations(id: string) {
   return await db.query.dailyClassReport.findFirst({
     where: eq(dailyClassReport.id, id),
+    columns: omitAuditColumns,
     with: {
       observations: {
         with: {
@@ -154,6 +188,7 @@ export async function findMany({
 
   return await db.query.dailyClassReport.findMany({
     where: filters.length ? and(...filters) : undefined,
+    columns: omitAuditColumns,
     with: {
       subTheme: {
         columns: { name: true },
@@ -162,25 +197,11 @@ export async function findMany({
         },
       },
       observations: {
-        columns: {
-          id: true,
-          dcrId: true,
-          kidId: true,
-          mood: true,
-          appetite: true,
-          attendance: true,
-          notes: true,
-        },
+        columns: omitAuditColumns,
         with: {
-          kid: { columns: { id: true, name: true, nickName: true } },
+          kid: { columns: leanKidColumnSelection },
           kidReport: {
-            columns: {
-              id: true,
-              dcrObservationId: true,
-              narrative: true,
-              sentAt: true,
-              reportStatus: true,
-            },
+            columns: omitAuditColumns,
           },
         },
       },

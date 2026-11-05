@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import { ClassSession } from '@/features/class-session/types';
 import { LeanKid } from '@/features/kid/types';
 import { Term } from '@/features/term/types';
+import { pushParam } from '@/utils/search-params';
 import {
   Add02Icon,
   AddTeamIcon,
@@ -16,18 +17,11 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
+import ClassSessionSelector from '@/components/features/class-session/class-session-selector';
+import TermSelector from '@/components/features/term/term-selector';
 import { Modal } from '@/components/shared/modal';
 import { DataTable } from '@/components/shared/table/data-table';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
 
 import * as kidEnrollmentAction from '../actions';
@@ -38,8 +32,8 @@ import {
   kidEnrollmentSessionColumn,
   kidEnrollmentUpdateActionColumn,
 } from '../columns';
-import { EnrollmentStatus } from '../constants';
-import { KidEnrollment } from '../types';
+import { ENROLLMENT_STATUS, EnrollmentStatus } from '../constants';
+import { KidEnrollment, KidEnrollmentWithRelations } from '../types';
 import { KidToBeEnrolled } from '../validation';
 import UpdateEnrolledKids, { CheckboxInTable } from './update-enrolled-kids';
 
@@ -49,9 +43,8 @@ export default function KidEnrollmentClient({
   selectedTermId,
   classSessions,
   selectedClassSessionId,
-  currentTermId,
 }: {
-  data: KidEnrollment[];
+  data: KidEnrollmentWithRelations[];
   terms: Term[];
   selectedTermId?: string;
   classSessions: ClassSession[];
@@ -61,7 +54,8 @@ export default function KidEnrollmentClient({
   const router = useRouter();
   const [isUpdateMode, setIsUpdateMode] = useState<boolean>(false);
   const [availableKids, setAvailableKids] = useState<LeanKid[]>([]);
-  const [enrolledKids, setEnrolledKids] = useState(data);
+  const [enrolledKids, setEnrolledKids] =
+    useState<KidEnrollmentWithRelations[]>(data);
   const [created, setCreated] = useState<KidToBeEnrolled[]>([]);
 
   const [updated, setUpdated] = useState<Map<string, KidEnrollment>>(new Map());
@@ -69,17 +63,6 @@ export default function KidEnrollmentClient({
   const [deleted, setDeleted] = useState<Set<string>>(new Set());
   const [selectedRows, setSelectedRows] = useState<Set<string>>(new Set());
   const [isAddKidModalOpen, setIsAddKidModalOpen] = useState(false);
-
-  // Merge into the current query string so pushing one param keeps the others
-  // (?termId stays when a class session is picked, and vice versa).
-  const pushParam = (
-    key: 'termId' | 'classSessionId',
-    value: string | null
-  ) => {
-    const params = new URLSearchParams(window.location.search);
-    params.set(key, value ?? '');
-    router.push(`?${params.toString()}`);
-  };
 
   const showAllSessions = selectedClassSessionId === 'all';
   const columns = showAllSessions
@@ -205,22 +188,27 @@ export default function KidEnrollmentClient({
       const selectedKids = availableKids.filter((kid) => kidIds.has(kid.id));
       const newEnrollments: KidToBeEnrolled[] = selectedKids.map((kid) => ({
         kidId: kid.id,
-        status: 'enrolled',
+        status: ENROLLMENT_STATUS.ENROLLED,
       }));
 
       setEnrolledKids((current) => {
-        const newKids: KidEnrollment[] = selectedKids.map((kid) => ({
+        const newKids = selectedKids.map((kid) => ({
           id: crypto.randomUUID(),
           termId: selectedTermId ?? '',
           classSessionId: selectedClassSessionId ?? '',
           kidId: kid.id,
-          status: 'enrolled',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-          deletedAt: null,
+          status: ENROLLMENT_STATUS.ENROLLED,
           kid: { id: kid.id, name: kid.name, nickName: kid.nickName },
-          classSession: { name: '' },
-          term: { name: '' },
+          classSession: {
+            id: selectedClassSessionId ?? '',
+            name:
+              classSessions.find((cs) => cs.id === selectedClassSessionId)
+                ?.name ?? '',
+          },
+          term: {
+            id: selectedTermId ?? '',
+            name: terms.find((t) => t.id === selectedTermId)?.name ?? '',
+          },
         }));
         return [...newKids, ...current];
       });
@@ -250,17 +238,11 @@ export default function KidEnrollmentClient({
     if (result.success) {
       toast.success('Perubahan pendaftaran berhasil disimpan');
       setIsUpdateMode(false);
+      setSelectedRows(new Set());
       setCreated([]);
       setUpdated(new Map());
       setDeleted(new Set());
-      // Re-fetch fresh data so local state matches server
-      const fresh = await kidEnrollmentAction.getKidsEnrollments({
-        termId: selectedTermId ?? '',
-        classSessionId: selectedClassSessionId ?? '',
-      });
-      if (fresh.success) {
-        setEnrolledKids(fresh.data as KidEnrollment[]);
-      }
+      setEnrolledKids(result.data ?? []);
     } else {
       toast.error(result.message);
     }
@@ -276,70 +258,25 @@ export default function KidEnrollmentClient({
   return (
     <div className="p-4 sm:p-6 flex flex-col gap-4">
       <div className="flex gap-4 items-center justify-between">
-        <div className="flex flex-col gap-4 items-start">
-          <Label
-            htmlFor="term-select"
-            className="text-sm font-medium text-muted-foreground"
-          >
-            Batch
-          </Label>
-          <Select
-            id="term-select"
-            onValueChange={(termId) => pushParam('termId', termId)}
-            value={selectedTermId ?? terms[0]?.id ?? ''}
-          >
-            <SelectTrigger className="w-100">
-              <SelectValue>
-                {terms.find((term) => term.id === selectedTermId)?.name ??
-                  'Pilih Batch'}
-                {selectedTermId === currentTermId && (
-                  <Badge>Sedang Berjalan</Badge>
-                )}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              {terms.map((term) => (
-                <SelectItem key={term.id} value={term.id}>
-                  {term.name}
-                  {term.id === currentTermId && <Badge>Sedang Berjalan</Badge>}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <TermSelector
+          terms={terms}
+          value={selectedTermId}
+          onValueChange={(termId) =>
+            pushParam({ key: 'termId', value: termId, router })
+          }
+        />
         <Separator orientation="vertical" />
-        <div className="flex flex-col gap-4 items-start">
-          <Label
-            htmlFor="class-session-select"
-            className="text-sm font-medium text-muted-foreground"
-          >
-            Sesi Kelas
-          </Label>
-          <Select
-            id="class-session-select"
-            onValueChange={(classSessionId) =>
-              pushParam('classSessionId', classSessionId)
-            }
-            value={selectedClassSessionId ?? 'all'}
-          >
-            <SelectTrigger className="w-100">
-              <SelectValue>
-                {selectedClassSessionId
-                  ? classSessions.find((cs) => cs.id === selectedClassSessionId)
-                      ?.name
-                  : 'Pilih Semua Sesi Kelas'}
-              </SelectValue>
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Pilih Semua Sesi Kelas</SelectItem>
-              {classSessions.map((cs) => (
-                <SelectItem key={cs.id} value={cs.id}>
-                  {cs.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
+        <ClassSessionSelector
+          classSessions={classSessions}
+          value={selectedClassSessionId}
+          onValueChange={(classSessionId) =>
+            pushParam({
+              key: 'classSessionId',
+              value: classSessionId,
+              router,
+            })
+          }
+        />
       </div>
       <Separator />
       <NewKidIdsContext.Provider value={newKidIds}>
@@ -400,34 +337,7 @@ export default function KidEnrollmentClient({
                     footer={
                       <Button
                         className="flex justify-center items-center gap-3"
-                        onClick={async () => {
-                          const result =
-                            await kidEnrollmentAction.saveEnrollmentChanges({
-                              termId: selectedTermId ?? '',
-                              classSessionId: selectedClassSessionId ?? '',
-                              created: Array.from(selectedRows).map(
-                                (kidId) => ({
-                                  kidId,
-                                  status: 'enrolled',
-                                })
-                              ),
-                            });
-                          if (result.success) {
-                            toast.success('Murid berhasil ditambahkan');
-                            setSelectedRows(new Set());
-                            setIsAddKidModalOpen(false);
-                            const fresh =
-                              await kidEnrollmentAction.getKidsEnrollments({
-                                termId: selectedTermId ?? '',
-                                classSessionId: selectedClassSessionId ?? '',
-                              });
-                            if (fresh.success) {
-                              setEnrolledKids(fresh.data as KidEnrollment[]);
-                            }
-                          } else {
-                            toast.error(result.message);
-                          }
-                        }}
+                        onClick={handleSave}
                         disabled={availableKids.length === 0}
                       >
                         <HugeiconsIcon icon={Add02Icon} />
