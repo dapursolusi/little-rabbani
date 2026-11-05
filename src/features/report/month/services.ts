@@ -119,7 +119,8 @@ export async function aggregateMonthlyKidReportData({
     },
     period: {
       start: `${yearMonth}-01`,
-      end: new Date(year, month, 0).toISOString().split('T')[0], // last day of the month
+      // Date.UTC: local-midnight would shift back a day for UTC+ timezones
+      end: new Date(Date.UTC(year, month, 0)).toISOString().split('T')[0], // last day of the month
     },
     attendance: {
       totalSchoolDay: 20,
