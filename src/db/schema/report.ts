@@ -4,6 +4,7 @@ import {
 } from '@/features/report/constants';
 import { relations } from 'drizzle-orm';
 import {
+  index,
   pgEnum,
   pgTable,
   text,
@@ -55,6 +56,8 @@ export const monthlyKidReport = pgTable(
     deletedAt: timestamp('deleted_at'),
   },
   (table) => [
+    index('mkr_kid_id_idx').on(table.kidId),
+    index('mkr_term_id_idx').on(table.termId),
     uniqueIndex('monthly_kid_report_kid_term_month_uniq').on(
       table.kidId,
       table.termId,
