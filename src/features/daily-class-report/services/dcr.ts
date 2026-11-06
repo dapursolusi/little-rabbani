@@ -33,7 +33,8 @@ export async function getOrCreateDCR({
 
 export async function getDcrsByMonth(input: {
   classSessionId: string;
-  yearMonth: string;
+  startDate: string;
+  endDate: string;
 }) {
   return await dcrRepo.findManyByMonth(input);
 }
@@ -41,7 +42,8 @@ export async function getDcrsByMonth(input: {
 export async function getDcrsWithObservationsByKidAndMonth(input: {
   kidId: string;
   termId: string;
-  yearMonth: string;
+  startDate: string;
+  endDate: string;
 }) {
   const enrollment = await kidEnrollmentService.verifyKidEnrollment({
     kidId: input.kidId,
@@ -55,7 +57,8 @@ export async function getDcrsWithObservationsByKidAndMonth(input: {
   return await dcrRepo.findManyWithObservationsByKidAndMonth({
     kidId: input.kidId,
     classSessionId: enrollment.classSessionId,
-    yearMonth: input.yearMonth,
+    startDate: input.startDate,
+    endDate: input.endDate,
   });
 }
 

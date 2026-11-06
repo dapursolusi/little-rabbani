@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -22,13 +23,14 @@ import {
   AiBrain01Icon,
   ChevronDown,
   FloppyDiskIcon,
+  NoteEditIcon,
   SquareChevronLeftIcon,
   SquareChevronRightIcon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
-import TermSelector from '@/components/features/term/term-selector';
+import TermSelectorBase from '@/components/features/term/term-selector';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -55,11 +57,16 @@ import {
 } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
 
 import * as kidReportAction from '../actions';
 import { MonthlyAcademicDetails, MonthlyKidReportDetail } from '../types';
 
-export interface InitialReport {
+interface MonthlyInitialReport {
   id: string;
   narrative: string | null;
   reportStatus: MonthlyReportStatus;
@@ -69,39 +76,100 @@ interface KidReportClientProps {
   currentKidId: string;
   currentTermId: string;
   currentMonth: string;
+  /** Previous eligible month, or null at the earliest boundary. */
+  prevMonth: string | null;
+  /** Next eligible month, or null at the latest boundary. */
+  nextMonth: string | null;
+  /** Terms the kid is enrolled in that overlap the selected month. */
   terms: Term[];
+  /** Selected term's final month → termly reporting, not monthly narrative. */
+  isFinalMonth: boolean;
   kidDetails: MonthlyKidReportDetail;
   academicDetails: MonthlyAcademicDetails;
-  initialReport: InitialReport | null;
+  initialReport: MonthlyInitialReport | null;
 }
 
-function MonthPicker({ currentMonth }: { currentMonth: string }) {
+function TermSelector({
+  terms,
+  value,
+  currentMonth,
+}: {
+  terms: Term[];
+  value: string;
+  currentMonth: string;
+}) {
   const router = useRouter();
-  const handleChangeMonth = (offset: number) => {
-    const [year, monthNumber] = currentMonth.split('-').map(Number);
+  // One eligible term in this month → nothing to choose, lock the selector.
+  const isLocked = terms.length < 2;
+  return (
+    <TermSelectorBase
+      terms={terms}
+      value={value}
+      disabled={isLocked}
+      onValueChange={(termId) => {
+        const params = new URLSearchParams(window.location.search);
+        params.set('termId', termId);
+        params.set('month', currentMonth);
+        router.push(`?${params.toString()}`);
+      }}
+    />
+  );
+}
 
-    const date = new Date(year, monthNumber - 1 + offset, 1);
+function MonthPicker({
+  currentMonth,
+  prevMonth,
+  nextMonth,
+}: {
+  currentMonth: string;
+  prevMonth: string | null;
+  nextMonth: string | null;
+}) {
+  const router = useRouter();
+  const goTo = (month: string) =>
+    pushParam({ key: 'month', value: month, router });
 
-    const changedMonth = [
-      date.getFullYear(),
-      String(date.getMonth() + 1).padStart(2, '0'),
-    ].join('-');
-
-    pushParam({ key: 'month', value: changedMonth, router });
-  };
   return (
     <div className="my-2 flex items-center justify-between border-2 rounded-xl">
-      <Button
-        render={<HugeiconsIcon icon={SquareChevronLeftIcon} size={100} />}
-        className="w-fit"
-        onClick={() => handleChangeMonth(-1)}
-      />
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <span>
+              <Button
+                aria-label="Bulan sebelumnya"
+                className="w-fit"
+                disabled={!prevMonth}
+                onClick={() => prevMonth && goTo(prevMonth)}
+              >
+                <HugeiconsIcon icon={SquareChevronLeftIcon} size={100} />
+              </Button>
+            </span>
+          }
+        />
+        {!prevMonth && (
+          <TooltipContent>Tidak ada laporan sebelumnya</TooltipContent>
+        )}
+      </Tooltip>
       <span>{formatDate(currentMonth)}</span>
-      <Button
-        render={<HugeiconsIcon icon={SquareChevronRightIcon} size={100} />}
-        className="w-fit"
-        onClick={() => handleChangeMonth(1)}
-      />
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <span>
+              <Button
+                aria-label="Bulan berikutnya"
+                className="w-fit"
+                disabled={!nextMonth}
+                onClick={() => nextMonth && goTo(nextMonth)}
+              >
+                <HugeiconsIcon icon={SquareChevronRightIcon} size={100} />
+              </Button>
+            </span>
+          }
+        />
+        {!nextMonth && (
+          <TooltipContent>Tidak ada laporan setelah bulan ini</TooltipContent>
+        )}
+      </Tooltip>
     </div>
   );
 }
@@ -110,6 +178,10 @@ export default function KidReportClient({
   currentKidId,
   currentTermId,
   currentMonth,
+  prevMonth,
+  nextMonth,
+  terms,
+  isFinalMonth,
   kidDetails,
   academicDetails,
   initialReport,
@@ -130,6 +202,10 @@ export default function KidReportClient({
 
   const isSent = reportStatus === MONTHLY_REPORT_STATUS.SENT;
   const isDirty = narrative !== savedNarrative;
+
+  // Final month of the selected term belongs to termly reporting. No termly
+  // report module exists yet, so the link is always the create state.
+  const termlyReportHref = `/dashboard/report/quarterly/${currentKidId}?termId=${currentTermId}`;
 
   const params = {
     kidId: currentKidId,
@@ -205,10 +281,18 @@ export default function KidReportClient({
         </Avatar>
         <div></div>
         {`(${kidDetails?.nickName}) ${kidDetails?.name}`}
-        <TermSelector terms={[]} showLabel={false} />
+        <TermSelector
+          terms={terms}
+          value={currentTermId}
+          currentMonth={currentMonth}
+        />
       </div>
       {/* Month Selector */}
-      <MonthPicker currentMonth={currentMonth} />
+      <MonthPicker
+        currentMonth={currentMonth}
+        prevMonth={prevMonth}
+        nextMonth={nextMonth}
+      />
       {/* Report Content */}
       <div className="my-2 p-4 border-2 rounded-xl ">
         Ringkasan Data Observasi Bulan Ini
@@ -275,44 +359,60 @@ export default function KidReportClient({
             ))}
           </CollapsibleContent>
         </Collapsible>
-        {/* Generation  */}
-        <div className="my-2 p-4 border-2 rounded-md ">
-          {reportStatus && (
-            <div className="mb-2">
-              <Badge>{MONTHLY_REPORT_STATUS_LABELS[reportStatus]}</Badge>
-            </div>
-          )}
-          <Textarea
-            value={narrative}
-            onChange={(e) => setNarrative(e.target.value)}
-            readOnly={isSent}
-            placeholder="Buat draft dengan AI, atau tulis manual di sini"
-          />
-          <div className="mt-2 flex flex-wrap gap-2">
-            {!hasReport && (
-              <Button onClick={handleRegenerateClick} disabled={isGenerating}>
-                <HugeiconsIcon icon={AiBrain01Icon} />
-                {isGenerating ? 'Membuat draft...' : 'Buat Draft dengan AI'}
-              </Button>
-            )}
-            {hasReport && !isSent && (
-              <>
-                <Button
-                  onClick={handleRegenerateClick}
-                  disabled={isGenerating}
-                  variant="outline"
-                >
-                  <HugeiconsIcon icon={AiBrain01Icon} />
-                  {isGenerating ? 'Membuat draft...' : 'Regenerate'}
-                </Button>
-                <Button onClick={handleSave} disabled={isSaving || !isDirty}>
-                  <HugeiconsIcon icon={FloppyDiskIcon} />
-                  {isSaving ? 'Menyimpan...' : 'Simpan'}
-                </Button>
-              </>
-            )}
+        {/* Generation — final month of the term defers to termly reporting */}
+        {isFinalMonth ? (
+          <div className="my-2 p-4 border-2 rounded-md ">
+            <p className="mb-2 text-sm text-muted-foreground">
+              Bulan ini adalah bulan terakhir batch. Laporan untuk orang tua
+              dibuat sebagai laporan triwulanan.
+            </p>
+            <Button
+              nativeButton={false}
+              render={<Link href={termlyReportHref} />}
+            >
+              <HugeiconsIcon icon={NoteEditIcon} />
+              Create termly report
+            </Button>
           </div>
-        </div>
+        ) : (
+          <div className="my-2 p-4 border-2 rounded-md ">
+            {reportStatus && (
+              <div className="mb-2">
+                <Badge>{MONTHLY_REPORT_STATUS_LABELS[reportStatus]}</Badge>
+              </div>
+            )}
+            <Textarea
+              value={narrative}
+              onChange={(e) => setNarrative(e.target.value)}
+              readOnly={isSent}
+              placeholder="Buat draft dengan AI, atau tulis manual di sini"
+            />
+            <div className="mt-2 flex flex-wrap gap-2">
+              {!hasReport && (
+                <Button onClick={handleRegenerateClick} disabled={isGenerating}>
+                  <HugeiconsIcon icon={AiBrain01Icon} />
+                  {isGenerating ? 'Membuat draft...' : 'Buat Draft dengan AI'}
+                </Button>
+              )}
+              {hasReport && !isSent && (
+                <>
+                  <Button
+                    onClick={handleRegenerateClick}
+                    disabled={isGenerating}
+                    variant="outline"
+                  >
+                    <HugeiconsIcon icon={AiBrain01Icon} />
+                    {isGenerating ? 'Membuat draft...' : 'Regenerate'}
+                  </Button>
+                  <Button onClick={handleSave} disabled={isSaving || !isDirty}>
+                    <HugeiconsIcon icon={FloppyDiskIcon} />
+                    {isSaving ? 'Menyimpan...' : 'Simpan'}
+                  </Button>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Unsaved-changes guard before regeneration */}

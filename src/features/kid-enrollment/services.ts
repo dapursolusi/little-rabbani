@@ -106,6 +106,19 @@ export async function verifyKidEnrollment({
   });
 }
 
+/**
+ * Terms the kid is actually enrolled in, oldest first, with date ranges.
+ * Soft-deleted enrollments are excluded — a removed enrollment must not
+ * contribute reportable months.
+ */
+export async function getKidEnrolledTerms(kidId: string) {
+  const enrollments = await kidEnrollmentRepo.findTermsByKid(kidId);
+  return enrollments
+    .map((enrollment) => enrollment.term)
+    .filter((term) => term !== undefined)
+    .sort((a, b) => a.startDate.localeCompare(b.startDate));
+}
+
 export async function getKidClassSessionIdByTermId(input: {
   kidId: string;
   termId: string;

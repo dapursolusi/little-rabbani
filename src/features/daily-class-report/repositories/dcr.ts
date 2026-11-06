@@ -3,23 +3,24 @@ import { dailyClassReport, dcrObservation } from '@/db/schema/daily';
 import { subTheme } from '@/db/schema/theme';
 import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
-import { startOfNextMonthDate } from '@/utils/date';
-import { and, asc, eq, gte, isNull, lt } from 'drizzle-orm';
+import { and, asc, eq, gte, isNull, lt, lte } from 'drizzle-orm';
 
 import { DailyClassReportInput } from '../validation';
 
 export async function findManyByMonth({
   classSessionId,
-  yearMonth,
+  startDate,
+  endDate,
 }: {
   classSessionId: string;
-  yearMonth: string;
+  startDate: string;
+  endDate: string;
 }) {
   const reports = await db.query.dailyClassReport.findMany({
     where: and(
       eq(dailyClassReport.classSessionId, classSessionId),
-      gte(dailyClassReport.date, `${yearMonth}-01`),
-      lt(dailyClassReport.date, startOfNextMonthDate(yearMonth)),
+      gte(dailyClassReport.date, startDate),
+      lte(dailyClassReport.date, endDate),
       isNull(dailyClassReport.deletedAt)
     ),
     columns: { id: true, date: true },
@@ -30,17 +31,19 @@ export async function findManyByMonth({
 export async function findManyWithObservationsByKidAndMonth({
   classSessionId,
   kidId,
-  yearMonth,
+  startDate,
+  endDate,
 }: {
   classSessionId: string;
   kidId: string;
-  yearMonth: string;
+  startDate: string;
+  endDate: string;
 }) {
   return db.query.dailyClassReport.findMany({
     where: and(
       eq(dailyClassReport.classSessionId, classSessionId),
-      gte(dailyClassReport.date, `${yearMonth}-01`),
-      lt(dailyClassReport.date, startOfNextMonthDate(yearMonth)),
+      gte(dailyClassReport.date, startDate),
+      lte(dailyClassReport.date, endDate),
       isNull(dailyClassReport.deletedAt)
     ),
     columns: omitAuditColumns,

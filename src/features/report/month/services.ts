@@ -1,11 +1,18 @@
 import { dcrService } from '@/features/daily-class-report/services';
 import * as kidEnrollmentService from '@/features/kid-enrollment/services';
 import * as kidService from '@/features/kid/services';
+import {
+  isTermFinalMonth,
+  monthEndDate,
+  monthStartDate,
+} from '@/features/report/utils';
+import * as termService from '@/features/term/services';
 import { observationAggregator } from '@/utils/aggregate';
 import z from 'zod';
 
 import { parseInput } from '@/lib/action/parse-input';
 import {
+  KidNotEnrolledError,
   NoDcrsError,
   NoKidFoundError,
   NoKidObservationsError,
@@ -37,32 +44,63 @@ export async function getMonthlyAcademicDetails(input: MonthlyKidReportParams) {
   if (!parsed.success) return parsed;
   const { kidId, termId, yearMonth } = parsed.data;
 
-  // 2. Validate batch and class session & load required data
-  const classSessionId =
-    await kidEnrollmentService.getKidClassSessionIdByTermId({
-      termId,
-      kidId,
-    });
-  if (!classSessionId)
+  // 2. Resolve the term + month intersection; observations never leak across
+  //    terms that merely share a calendar month.
+  const range = await resolveReportRange({ kidId, termId, yearMonth });
+  if (!range) {
     return {
       success: false as const,
       message:
         'Tidak ada data registrasi anak untuk batch saat ini. Pilih batch lain atau periksa registrasi anak',
     };
+  }
+
   const dcrs = await dcrService.getDcrsByMonth({
-    classSessionId,
-    yearMonth,
+    classSessionId: range.classSessionId,
+    startDate: range.startDate,
+    endDate: range.endDate,
   });
 
   return {
     success: true as const,
-    data: { dcrs },
+    data: { dcrs, isFinalMonth: range.isFinalMonth },
   };
 }
 
 // ============================================
 // INTERNAL OPERATIONS
 // ============================================
+
+/**
+ * Resolve the effective observation window for one kid/term/month: the
+ * intersection of the calendar month and the term's date range, plus the
+ * enrolled class session. Returns null when the kid is not enrolled in the
+ * term or the term does not overlap the month — callers must refuse to
+ * generate or persist in that case.
+ */
+export async function resolveReportRange(input: MonthlyKidReportParams) {
+  const { kidId, termId, yearMonth } = input;
+
+  const [enrollment, term] = await Promise.all([
+    kidEnrollmentService.verifyKidEnrollment({ kidId, termId }),
+    termService.getTermById(termId),
+  ]);
+  if (!enrollment || !term) return null;
+
+  const monthStart = monthStartDate(yearMonth);
+  const monthEnd = monthEndDate(yearMonth);
+  const startDate = term.startDate > monthStart ? term.startDate : monthStart;
+  const endDate = term.endDate < monthEnd ? term.endDate : monthEnd;
+  if (startDate > endDate) return null;
+
+  return {
+    classSessionId: enrollment.classSessionId,
+    term,
+    startDate,
+    endDate,
+    isFinalMonth: isTermFinalMonth(term, yearMonth),
+  };
+}
 
 export async function aggregateMonthlyKidReportData({
   kidId,
@@ -73,6 +111,11 @@ export async function aggregateMonthlyKidReportData({
   termId: string;
   yearMonth: string;
 }) {
+  const range = await resolveReportRange({ kidId, termId, yearMonth });
+  if (!range) {
+    throw new KidNotEnrolledError();
+  }
+
   const kidBasicInfo = await kidService.getKidBasicInfo(kidId);
 
   if (!kidBasicInfo) {
@@ -83,7 +126,8 @@ export async function aggregateMonthlyKidReportData({
     await dcrService.getDcrsWithObservationsByKidAndMonth({
       kidId,
       termId,
-      yearMonth,
+      startDate: range.startDate,
+      endDate: range.endDate,
     });
 
   if (dcrsWithKidObservations.length === 0) {
@@ -106,8 +150,6 @@ export async function aggregateMonthlyKidReportData({
     },
   }));
 
-  const [year, month] = yearMonth.split('-').map(Number);
-
   const observationAggregate = observationAggregator({ observations });
 
   return {
@@ -116,9 +158,9 @@ export async function aggregateMonthlyKidReportData({
       nickName: kidBasicInfo?.nickName,
     },
     period: {
-      start: `${yearMonth}-01`,
-      // Date.UTC: local-midnight would shift back a day for UTC+ timezones
-      end: new Date(Date.UTC(year, month, 0)).toISOString().split('T')[0], // last day of the month
+      // The actual observed window: month ∩ term, not the bare calendar month.
+      start: range.startDate,
+      end: range.endDate,
     },
     attendance: {
       totalSchoolDay: 20,

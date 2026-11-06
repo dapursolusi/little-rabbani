@@ -25,6 +25,25 @@ export async function hasKidEnrollment({
   });
 }
 
+/** Enrolled terms for one kid with date ranges — the month-eligibility source. */
+export async function findTermsByKid(kidId: string) {
+  return db.query.kidEnrollment.findMany({
+    where: and(eq(kidEnrollment.kidId, kidId), isNull(kidEnrollment.deletedAt)),
+    columns: { termId: true },
+    with: {
+      term: {
+        columns: {
+          id: true,
+          name: true,
+          startDate: true,
+          endDate: true,
+          isAutoCreated: true,
+        },
+      },
+    },
+  });
+}
+
 export async function findMany({
   termId,
   classSessionId,

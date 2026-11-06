@@ -75,3 +75,39 @@ export class ReportNotFoundError extends AppError {
     super('Monthly report not found', 'Laporan tidak ditemukan');
   }
 }
+
+export class FinalMonthUsesTermlyReportError extends AppError {
+  constructor() {
+    super(
+      'Term final month uses termly reporting',
+      'Bulan terakhir batch menggunakan laporan triwulanan, bukan laporan bulanan'
+    );
+  }
+}
+
+export class KidNoEligibleMonthsError extends AppError {
+  constructor() {
+    super(
+      'Kid has no enrolled terms',
+      'Anak belum terdaftar di batch mana pun. Daftarkan anak terlebih dahulu.'
+    );
+  }
+}
+
+export class KidNoReportHistoryError extends AppError {
+  constructor() {
+    super(
+      'No reportable month has started yet',
+      'Belum ada riwayat laporan. Laporan tersedia setelah batch berjalan.'
+    );
+  }
+}
+
+export class FutureMonthReportError extends AppError {
+  constructor() {
+    super(
+      'Cannot report on a month that has not started',
+      'Laporan belum bisa dibuat untuk bulan yang belum berjalan'
+    );
+  }
+}

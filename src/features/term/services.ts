@@ -86,6 +86,10 @@ export async function getTerms() {
   return await termRepo.findMany();
 }
 
+export async function getTermById(id: string) {
+  return termRepo.findById(id);
+}
+
 export async function checkNextTerm() {
   const today = new Date().toISOString().split('T')[0];
   try {
