@@ -58,3 +58,20 @@ export class NoKidObservationsError extends AppError {
     super('No kid observations found', 'Belum ada observasi anak');
   }
 }
+
+// Monthly Kid Report
+
+export class ReportAlreadySentError extends AppError {
+  constructor() {
+    super(
+      'Monthly report already sent',
+      'Laporan sudah terkirim dan tidak dapat diubah'
+    );
+  }
+}
+
+export class ReportNotFoundError extends AppError {
+  constructor() {
+    super('Monthly report not found', 'Laporan tidak ditemukan');
+  }
+}

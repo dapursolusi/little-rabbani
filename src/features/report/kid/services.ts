@@ -2,12 +2,18 @@ import { dcrService } from '@/features/daily-class-report/services';
 import * as kidEnrollmentService from '@/features/kid-enrollment/services';
 import * as kidService from '@/features/kid/services';
 import * as monthlyReportService from '@/features/report/month/services';
+import { formatDraft } from '@/features/report/utils';
 import z from 'zod';
 
 import { parseInput } from '@/lib/action/parse-input';
-import { AppError } from '@/lib/errors';
+import {
+  AppError,
+  ReportAlreadySentError,
+  ReportNotFoundError,
+} from '@/lib/errors';
 import { isoYearMonthSchema, uuidSchema } from '@/lib/validation/common.schema';
 
+import { MONTHLY_REPORT_STATUS, MonthlyReportStatus } from '../constants';
 import { MonthlyKidReportParams } from '../types';
 import { generateMonthlyReportDraft } from './ai/generate';
 import * as kidReportRepo from './repositories';
@@ -28,7 +34,45 @@ export async function generateMonthlyReport(input: MonthlyKidReportParams) {
     );
   }
 
-  return aiDraft;
+  const narrative = formatDraft(aiDraft);
+
+  // Guard sent reports, then upsert: first generation inserts, regeneration
+  // overwrites. Single upsert avoids a find-then-insert race.
+  const existing = await kidReportRepo.findMonthlyReportRow(input);
+  if (existing?.reportStatus === MONTHLY_REPORT_STATUS.SENT) {
+    throw new ReportAlreadySentError();
+  }
+  const report = await kidReportRepo.createMonthlyReport({
+    ...input,
+    narrative,
+  });
+  if (!report)
+    throw new AppError('Report upsert failed', 'Gagal menyimpan draft');
+
+  return { narrative, aiDraft };
+}
+
+export async function saveMonthlyReportNarrative({
+  kidId,
+  termId,
+  yearMonth,
+  narrative,
+}: MonthlyKidReportParams & { narrative: string }) {
+  const existing = await kidReportRepo.findMonthlyReportRow({
+    kidId,
+    termId,
+    yearMonth,
+  });
+  if (!existing) throw new ReportNotFoundError();
+  if (existing.reportStatus === MONTHLY_REPORT_STATUS.SENT) {
+    throw new ReportAlreadySentError();
+  }
+
+  return kidReportRepo.updateMonthlyReportNarrative({
+    reportId: existing.id,
+    narrative,
+    reportStatus: MONTHLY_REPORT_STATUS.EDITED,
+  });
 }
 
 // ============================================
@@ -79,3 +123,18 @@ export async function getKidMonthlyReport({
   });
   return monthlyReport;
 }
+
+// ============================================
+// INTERNAL OPERATIONS
+// ============================================
+
+export async function findMonthlyReportRow({
+  kidId,
+  termId,
+  yearMonth,
+}: MonthlyKidReportParams) {
+  return kidReportRepo.findMonthlyReportRow({ kidId, termId, yearMonth });
+}
+
+// Re-export for the client component's status badge typing.
+export type { MonthlyReportStatus };

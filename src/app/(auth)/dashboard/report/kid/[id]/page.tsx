@@ -40,9 +40,19 @@ export default async function KidReportPage({
   return (
     <div>
       <KidReportClient
+        key={`${kidId}-${termId}-${yearMonthParam}`}
         currentKidId={kidId}
         currentTermId={termId}
         currentMonth={yearMonthParam}
+        initialReport={
+          kidDetails?.monthlyReports?.[0]?.reportStatus
+            ? {
+                id: kidDetails.monthlyReports[0].id,
+                narrative: kidDetails.monthlyReports[0].narrative,
+                reportStatus: kidDetails.monthlyReports[0].reportStatus,
+              }
+            : null
+        }
         kidDetails={kidDetails}
         terms={terms}
         academicDetails={academicDetailsResult.data}

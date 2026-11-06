@@ -10,12 +10,18 @@ import {
   KID_ATTENDANCE_LABELS,
   KID_MOOD_LABELS,
 } from '@/features/daily-class-report/constants';
+import {
+  MONTHLY_REPORT_STATUS,
+  MONTHLY_REPORT_STATUS_LABELS,
+  MonthlyReportStatus,
+} from '@/features/report/constants';
 import { Term } from '@/features/term/types';
 import { formatDate } from '@/utils/date';
 import { pushParam } from '@/utils/search-params';
 import {
   AiBrain01Icon,
   ChevronDown,
+  FloppyDiskIcon,
   SquareChevronLeftIcon,
   SquareChevronRightIcon,
 } from '@hugeicons/core-free-icons';
@@ -23,6 +29,16 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
 import TermSelector from '@/components/features/term/term-selector';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -40,25 +56,13 @@ import {
 import { Separator } from '@/components/ui/separator';
 import { Textarea } from '@/components/ui/textarea';
 
-import { generateMonthlyReport } from '../actions';
-import {
-  MonthlyAcademicDetails,
-  MonthlyKidReportDetail,
-  MonthlyReportOutput,
-} from '../types';
+import * as kidReportAction from '../actions';
+import { MonthlyAcademicDetails, MonthlyKidReportDetail } from '../types';
 
-function formatDraft(draft: MonthlyReportOutput): string {
-  return [
-    draft.socialEmotional,
-    '',
-    draft.wellbeing,
-    '',
-    'Sorotan:',
-    ...draft.highlights.map((h) => `- ${h}`),
-    '',
-    'Rekomendasi di rumah:',
-    ...draft.homeRecommendations.map((r) => `- ${r}`),
-  ].join('\n');
+export interface InitialReport {
+  id: string;
+  narrative: string | null;
+  reportStatus: MonthlyReportStatus;
 }
 
 interface KidReportClientProps {
@@ -68,6 +72,7 @@ interface KidReportClientProps {
   terms: Term[];
   kidDetails: MonthlyKidReportDetail;
   academicDetails: MonthlyAcademicDetails;
+  initialReport: InitialReport | null;
 }
 
 function MonthPicker({ currentMonth }: { currentMonth: string }) {
@@ -107,21 +112,44 @@ export default function KidReportClient({
   currentMonth,
   kidDetails,
   academicDetails,
+  initialReport,
 }: KidReportClientProps) {
-  const [aiDraft, setAiDraft] = useState('');
+  const router = useRouter();
+  const [hasReport, setHasReport] = useState(!!initialReport);
+  const [reportStatus, setReportStatus] = useState<MonthlyReportStatus | null>(
+    initialReport?.reportStatus ?? null
+  );
+  // What the DB holds right now — baseline for the dirty check.
+  const [savedNarrative, setSavedNarrative] = useState(
+    initialReport?.narrative ?? ''
+  );
+  const [narrative, setNarrative] = useState(initialReport?.narrative ?? '');
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [showRegenConfirm, setShowRegenConfirm] = useState(false);
+
+  const isSent = reportStatus === MONTHLY_REPORT_STATUS.SENT;
+  const isDirty = narrative !== savedNarrative;
+
+  const params = {
+    kidId: currentKidId,
+    termId: currentTermId,
+    yearMonth: currentMonth,
+  };
 
   async function handleGenerate() {
+    setShowRegenConfirm(false);
     setIsGenerating(true);
     try {
-      const result = await generateMonthlyReport({
-        kidId: currentKidId,
-        termId: currentTermId,
-        yearMonth: currentMonth,
-      });
+      const result = await kidReportAction.generateMonthlyReport(params);
       if (result?.success) {
-        setAiDraft(formatDraft(result.data));
+        // Server persisted the draft — adopt it locally only on success.
+        setHasReport(true);
+        setNarrative(result.data.narrative);
+        setSavedNarrative(result.data.narrative);
+        setReportStatus(MONTHLY_REPORT_STATUS.GENERATED);
         toast.success(result.message ?? 'Draft laporan berhasil dibuat');
+        router.refresh();
       } else {
         toast.error(result?.message ?? 'Gagal membuat draft');
       }
@@ -129,6 +157,37 @@ export default function KidReportClient({
       toast.error('Terjadi kesalahan. Silahkan coba lagi');
     } finally {
       setIsGenerating(false);
+    }
+  }
+
+  function handleRegenerateClick() {
+    // Protect unsaved manual edits before regeneration overwrites them.
+    if (isDirty) {
+      setShowRegenConfirm(true);
+      return;
+    }
+    handleGenerate();
+  }
+
+  async function handleSave() {
+    setIsSaving(true);
+    try {
+      const result = await kidReportAction.saveMonthlyReportNarrative({
+        ...params,
+        narrative,
+      });
+      if (result?.success) {
+        setSavedNarrative(result.data.narrative ?? '');
+        setReportStatus(result.data.reportStatus);
+        toast.success(result.message ?? 'Laporan berhasil disimpan');
+        router.refresh();
+      } else {
+        toast.error(result?.message ?? 'Gagal menyimpan laporan');
+      }
+    } catch {
+      toast.error('Terjadi kesalahan. Silahkan coba lagi');
+    } finally {
+      setIsSaving(false);
     }
   }
 
@@ -214,35 +273,68 @@ export default function KidReportClient({
                 <Separator />
               </div>
             ))}
-            <div className="flex items-baseline gap-2 py-2">
-              <div className="min-w-25">
-                <Badge>Selasa, 13 Okt</Badge>
-              </div>
-              <Separator orientation="vertical" className="" />
-              <div>
-                <p>Hadir-Mood-Makan</p>
-                <p>Catatan</p>
-                <p>Partipasi aktif</p>
-              </div>
-            </div>
           </CollapsibleContent>
         </Collapsible>
         {/* Generation  */}
         <div className="my-2 p-4 border-2 rounded-md ">
+          {reportStatus && (
+            <div className="mb-2">
+              <Badge>{MONTHLY_REPORT_STATUS_LABELS[reportStatus]}</Badge>
+            </div>
+          )}
           <Textarea
-            value={aiDraft}
-            onChange={(e) => setAiDraft(e.target.value)}
+            value={narrative}
+            onChange={(e) => setNarrative(e.target.value)}
+            readOnly={isSent}
+            placeholder="Buat draft dengan AI, atau tulis manual di sini"
           />
-          <Button
-            className="mt-2 w-fit"
-            onClick={handleGenerate}
-            disabled={isGenerating}
-          >
-            <HugeiconsIcon icon={AiBrain01Icon} />
-            {isGenerating ? 'Membuat draft...' : 'Buat Draft dengan AI'}
-          </Button>
+          <div className="mt-2 flex flex-wrap gap-2">
+            {!hasReport && (
+              <Button onClick={handleRegenerateClick} disabled={isGenerating}>
+                <HugeiconsIcon icon={AiBrain01Icon} />
+                {isGenerating ? 'Membuat draft...' : 'Buat Draft dengan AI'}
+              </Button>
+            )}
+            {hasReport && !isSent && (
+              <>
+                <Button
+                  onClick={handleRegenerateClick}
+                  disabled={isGenerating}
+                  variant="outline"
+                >
+                  <HugeiconsIcon icon={AiBrain01Icon} />
+                  {isGenerating ? 'Membuat draft...' : 'Regenerate'}
+                </Button>
+                <Button onClick={handleSave} disabled={isSaving || !isDirty}>
+                  <HugeiconsIcon icon={FloppyDiskIcon} />
+                  {isSaving ? 'Menyimpan...' : 'Simpan'}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Unsaved-changes guard before regeneration */}
+      <AlertDialog open={showRegenConfirm} onOpenChange={setShowRegenConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              Ada perubahan yang belum disimpan
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Regenerate akan mengganti isi laporan dengan draft AI baru dan
+              perubahan manual Anda akan hilang. Lanjutkan?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleGenerate}>
+              Ya, Regenerate
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

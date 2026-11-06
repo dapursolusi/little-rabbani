@@ -71,6 +71,13 @@
       "when": 1793176406209,
       "tag": "0009_swift_madame_hydra",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1793948187544,
+      "tag": "0010_striped_electro",
+      "breakpoints": true
     }
   ]
 }

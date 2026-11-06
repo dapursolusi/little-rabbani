@@ -3,7 +3,14 @@ import {
   MONTHLY_REPORT_STATUS_VALUES,
 } from '@/features/report/constants';
 import { relations } from 'drizzle-orm';
-import { pgEnum, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import {
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from 'drizzle-orm/pg-core';
 
 import { term } from './enrollment';
 import { kid } from './kids';
@@ -25,26 +32,36 @@ export const monthlyKidReportEnum = pgEnum(
   MONTHLY_REPORT_STATUS_VALUES
 );
 
-export const monthlyKidReport = pgTable('monthly_kid_report', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  kidId: uuid('kid_id')
-    .notNull()
-    .references(() => kid.id, { onDelete: 'cascade' }),
-  termId: uuid('term_id')
-    .notNull()
-    .references(() => term.id, { onDelete: 'cascade' }),
-  month: text('month').notNull(),
-  narrative: text('narrative'),
-  reportStatus: monthlyKidReportEnum('report_status').default(
-    MONTHLY_REPORT_STATUS.GENERATED
-  ),
-  createdAt: timestamp('created_at').notNull().defaultNow(),
-  updatedAt: timestamp('updated_at')
-    .notNull()
-    .defaultNow()
-    .$onUpdateFn(() => new Date()),
-  deletedAt: timestamp('deleted_at'),
-});
+export const monthlyKidReport = pgTable(
+  'monthly_kid_report',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    kidId: uuid('kid_id')
+      .notNull()
+      .references(() => kid.id, { onDelete: 'cascade' }),
+    termId: uuid('term_id')
+      .notNull()
+      .references(() => term.id, { onDelete: 'cascade' }),
+    month: text('month').notNull(),
+    narrative: text('narrative'),
+    reportStatus: monthlyKidReportEnum('report_status').default(
+      MONTHLY_REPORT_STATUS.GENERATED
+    ),
+    createdAt: timestamp('created_at').notNull().defaultNow(),
+    updatedAt: timestamp('updated_at')
+      .notNull()
+      .defaultNow()
+      .$onUpdateFn(() => new Date()),
+    deletedAt: timestamp('deleted_at'),
+  },
+  (table) => [
+    uniqueIndex('monthly_kid_report_kid_term_month_uniq').on(
+      table.kidId,
+      table.termId,
+      table.month
+    ),
+  ]
+);
 
 export const monthlyKidReportRelationship = relations(
   monthlyKidReport,
