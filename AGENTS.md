@@ -14,21 +14,14 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 > **Team size:** Solo
 > **Primary users:** Preschool owner-operator (Hanifah)
 
-Little Rabbani Preschool LMS — a back-office tool for a small Indonesian
-preschool. The v1 app (observation/report domain) was archived to `_archives/`
-and the app rebuilt from the auth shell. Domain vocabulary lives in
-`CONTEXT.md`. Treat `_archives/` as read-only reference — it is the old v1,
-not live code.
-
 ## Stack
 
-- **Runtime:** bun 1.3.13 (`@types/node` matches local runtime via bun itself)
 - **Package manager:** bun (never npm/pnpm/yarn — `bun run`, `bunx`, `bun add`)
 - **Styling:** Tailwind CSS 4 (CSS-first — no `tailwind.config.ts`) + shadcn/ui (style: base-nova, primitives: `@base-ui/react`, icons: `hugeicons`)
 - **Architecture:** Next.js App Router. Server Components by default. `"use client"` only when hooks/event handlers are needed.
 - **Key libs:** zod for all I/O boundaries (`env.mjs`). sonner for toasts. clsx for class merging (no CVA outside auto-generated `ui/`). `@tanstack/react-table` v9 for DataTable.
-- **Testing:** Vitest (unit, native `tsconfigPaths` resolution). Playwright for E2E. All tests under `tests/` mirroring `src/`.
-- **Data layer:** Drizzle ORM + Neon Postgres (`@neondatabase/serverless`, WS `Pool` driver — required for transactions). Schema in `src/db/schema/`, one file per entity, exported from `src/db/schema/index.ts`. `db` singleton at `src/db/index.ts`. DB scripts (`db:generate`/`db:push`/`db:migrate`) use `--env-file=.env.local`. Schema changes ship via `db:generate` → `db:migrate`, never `db push`.
+- **Testing:** Vitest (unit, native `tsconfigPaths` resolution). Playwright for E2E.
+- **Data layer:** Drizzle ORM + Neon Postgres (`@neondatabase/serverless`, WS `Pool` driver — required for transactions).
 - **Auth:** Better Auth (better-auth + `@better-auth/drizzle-adapter`), Google OAuth + dev-session bypass. Roles: `owner` | `teacher`. Auth gating placement (requireOwner / future roleGate) is **undecided** — see `docs/patterns/violations.md`.
 
 ## Architecture
@@ -36,26 +29,22 @@ not live code.
 ```
 Server Component / Client form → Service → Repository → Drizzle → Neon
                                         ↑
-           Server Actions (mutations, parse-only) ──┘
+Server Actions (mutations, parse-only) ──┘
 ```
 
 - **API:** Server Actions only. No `api/` routes except Better Auth's `api/auth/[...all]` and the dev-session helper. Auth traffic routes via `src/proxy.ts` (session + role-based route guard).
 - **Data flow:** Server Components call **services** (`import * as xxxService from '@/features/<e>/services'`), which call repositories. Mutations are Server Actions returning a **discriminated-union result** (`{ success: true, message?, data } | { success: false, message, error? }`, `as const`) so client forms narrow with `if (!result.success)`.
 - **Action I/O:** every Server Action parses `unknown` input with `parseInput()` (zod, `src/lib/actions/`). Actions are parse-and-forward shells — they never touch `db`.
-- **Feature verticals:** entity code under `src/features/<entity>/` (`actions.ts`, `validation.ts`, `fields.ts(x)`, `constants.ts`, `columns.tsx`, `components/`, `types.ts`). Shared UI under `src/components/shared/`; cross-feature feature components under `src/components/features/`. Flat layer files by default; split a layer to a directory + `index.ts` barrel once it serves 2+ entities.
-- **File placement:** All source code under `src/`. `@/*` maps to `./src/*`. Tests live in `tests/` (mirroring `src/`), not `src/features/_tests_/`.
-
-## Modules
-
-Implemented domain verticals under `src/features/<name>/`: **kid** (kid+guardian combined form ADR-0001, identity-only kid ADR-0002, transactional inserts ADR-0003), **kid-enrollment**, **term**, **class-session**, **theme**, **daily-class-report**, **report** (kid + month), **auth**. Routes under `/dashboard/<name>/`. Patterns per stack in `docs/patterns/`; debt in `docs/patterns/violations.md`.
 
 ## Rules
 
-1. Responsive design is non-negotiable, shadcn already support this. Focus on mobile and desktop.
-2. Must use shadcn components at all times. Prefer components from custom registries first then the standard shadcn.
-3. Toast feedback (sonner) required on all user-facing mutations.
-4. Check `env.mjs` before adding env vars. Add only when needed — don't pre-add "just in case".
-5. Every page must export a `metadata` object. Use `baseMetadata` from `@/lib/metadata`.
+1. Inspect source and relevant docs rather than assuming the docs are exhaustive.
+2. After commit / PR / task done, suggest to update stale or outdated contexts, docs, or rules.
+3. Responsive design is non-negotiable, shadcn already support this. Focus on mobile and desktop.
+4. Must use shadcn components at all times. Prefer components from custom registries first then the standard shadcn.
+5. Toast feedback (sonner) required on all user-facing mutations.
+6. Check `env.mjs` before adding env vars. Add only when needed — don't pre-add "just in case".
+7. Every page must export a `metadata` object. Use `baseMetadata` from `@/lib/metadata`.
 
 ## Forbidden
 
@@ -66,46 +55,40 @@ Implemented domain verticals under `src/features/<name>/`: **kid** (kid+guardian
 - ❌ NO `@apply` in CSS — Tailwind v4 doesn't support it
 - ❌ NO editing `src/components/ui/` — shadcn base-nova components are auto-generated
 
-## Naming Conventions
+## Project Structures & File Placement
 
-| Entity           | Convention  | Example           |
-| :--------------- | :---------- | :---------------- |
-| Components       | PascalCase  | `UserProfile.tsx` |
-| Utilities        | camelCase   | `formatDate.ts`   |
-| Functions        | camelCase   | `getUserById()`   |
-| Props interfaces | PascalCase  | `ButtonProps`     |
-| Types            | PascalCase  | `ComponentProps`  |
-| Constants        | UPPER_SNAKE | `MAX_RETRY_COUNT` |
-| File names       | kebab-case  | `api-endpoint.ts` |
-| Folder names     | kebab-case  | `class-session`   |
-
-Acronyms are words in identifiers: `Dcr`, `getDcrs` — not `DCR`, `getDCRs`.
-Enum constants follow the named-map stack (`NAME` / `Name` type / `NAME_VALUES` / `NAME_LABELS` — see `docs/patterns/typescript.md`).
-
-## File Placement
-
-| Component Type                      | Location                                             | Notes                                                          |
-| :---------------------------------- | :--------------------------------------------------- | :------------------------------------------------------------- |
-| Page/Layout                         | `src/app/`                                           | App Router conventions                                         |
-| Feature sections                    | `src/features/<module>/components/`                  | Per-module components                                          |
-| Cross-feature feature components    | `src/components/features/<domain>/`                  | Used by 2+ features (e.g. TermSelector)                        |
-| Layout components                   | `src/components/layout/`                             | Global shell                                                   |
-| Shared UI primitives                | `src/components/ui/`                                 | shadcn base-nova (auto-generated)                              |
-| Shared sections & logic-heavy comps | `src/components/sections/`, `src/components/shared/` | confirm-dialog, empty-state, pagination; form engine, table    |
-| Utilities & constants               | `src/lib/`                                           | 3rd party, all that affecting domain                           |
-| Helpers                             | `src/utils/`                                         | helpers                                                        |
-| Types                               | `src/types/`                                         | Add per-project as needed                                      |
-| Tests (unit / integration)          | `tests/features/<module>/`, `tests/`                 | Vitest, mirrors `src/`                                         |
-| Tests (E2E)                         | `e2e/`                                               | Playwright                                                     |
-| Server Actions                      | `src/features/<module>/actions.ts`                   | Controllers/Actions                                            |
-| Services                            | `src/features/<module>/services.ts`                  | Business Logic                                                 |
-| Repositories                        | `src/features/<module>/repositories.ts`              | Repositories                                                   |
-| Any layer w/ 2+ entities            | `src/features/<module>/<layer>/`                     | Directory + barrel `index.ts` (`export * as xRepo from './x'`) |
-| Zod validation                      | `src/features/<module>/validation.ts`                | Shared primitives in `src/lib/validation/common.schema.ts`     |
+| Item                            | Notes                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `src/`                          | App codebase lives here                                                                                                                                                                                                                                                                                                         |
+| `├──app/`                       | Next.js router pages. Route groups `(group)/` for auth/public splits. `api/` only for auth framework routes                                                                                                                                                                                                                     |
+| `├──components/`                | Shared components only — nothing entity-specific                                                                                                                                                                                                                                                                                |
+| `│  ├──features/<feature>/`     | Components shared by 2+ feature verticals, e.g. `term/term-selector.tsx`. Not `src/features/` (vertical code) — components extracted from them                                                                                                                                                                                  |
+| `│  ├──layout/`                 | Global shell: sidebar, header, breadcrumbs                                                                                                                                                                                                                                                                                      |
+| `│  ├──sections/`               | Shared section blocks: confirm-dialog, empty-state, pagination, search-input                                                                                                                                                                                                                                                    |
+| `│  ├──<concern>/`                 | Shared logic-heavy concern specific: form engine (`forms/`), table (`tables/`)                                                                                                                                                                                                                                                                               |
+| `│  └──ui/`                     | shadcn UI primitives (auto-generated, never hand-edited)                                                                                                                                                                                                                                                                        |
+| `├──config/`                    | App config: navigation, constants                                                                                                                                                                                                                                                                                               |
+| `├──contexts/`                  | React contexts (e.g. ongoing term context)                                                                                                                                                                                                                                                                                      |
+| `├──db/`                        | Drizzle: `schema/` (one file per entity), `selections/` (column selections), `seeds/`                                                                                                                                                                                                                                           |
+| `├──features/<module>/`         | Feature vertical — one dir per module (at least 1 entity). One flat file manages ONE entity's concern by default: e.g. `actions.ts`, `services.ts`, `validation.ts`, `types.ts`, `columns.tsx`, `fields.tsx`, `constants.ts`, `navigation.ts`. Split to directory + index barrel on concerns when operate more than one entity. |
+| `├──features/<module>/<layer>/` | Domain with sub-modules splits into nested dirs, e.g. `report/kid/`, `report/month/` — same file layout per sub                                                                                                                                                                                                                 |
+| `│  ├──actions`                 | Controller / Actions                                                                                                                                                                                                                                                                                                            |
+| `│  ├──columns`                 | Data table columns constants, `.ts` by default. `.tsx` when need rendering.                                                                                                                                                                                                                                                     |
+| `│  ├──components/`             | Feature client components                                                                                                                                                                                                                                                                                                       |
+| `│  ├──constants.ts`            | Feature constants                                                                                                                                                                                                                                                                                                               |
+| `│  ├──fields`                  | Data table columns constants, `.ts` by default. `.tsx` when need rendering.                                                                                                                                                                                                                                                     |
+| `│  ├──repositories`            | Feature db repositories                                                                                                                                                                                                                                                                                                         |
+| `│  ├──services`                | Feature business logic                                                                                                                                                                                                                                                                                                          |
+| `│  └──validations`             | Feature I/O validation                                                                                                                                                                                                                                                                                                          |
+| `├──hooks/`                     | Shared React hooks                                                                                                                                                                                                                                                                                                              |
+| `├──lib/`                       | Framework/infra glue: `actions/` (parseInput, requireOwner),`ai/`, `validation/`, `auth.ts`, `pii.ts`                                                                                                                                                                                                                           |
+| `├──types/`                     | Per-project shared types                                                                                                                                                                                                                                                                                                        |
+| `└──utils/`                     | Pure helpers                                                                                                                                                                                                                                                                                                                    |
+| `tests/`                        | Vitest tests. Mirrors `src/`: `tests/features/<feature>/`, `tests/lib/`, `tests/utils/`. Shared fakes in `tests/helpers/`                                                                                                                                                                                                       |
 
 ## Commands
 
-Standard scripts (`dev`, `build`, `lint`, `format`, `typecheck`, `test*`) live in `package.json`. Only the invocations that aren't discoverable from there:
+See [package.json](package.json). Use `bun run xxx`. Additional:
 
 ```bash
 bunx shadcn@latest add <component>   # Add base-nova component (NOT in package.json)
@@ -143,25 +126,15 @@ This project uses both graphify and CodeGraph for code intelligence. See `docs/p
 Two rule layers — don't intertwine them:
 
 - **General project rules** live here in AGENTS.md (architecture, conventions, gotchas, locked decisions).
-- **Per-stack/task/dep specifics** live in `docs/patterns/<topic>.md`: [typescript](patterns/typescript.md), [nextjs](patterns/nextjs.md), [database](patterns/database.md), [forms](patterns/forms.md), [tables](patterns/tables.md), [auth](patterns/auth.md), [shared-ui](patterns/shared-ui.md). Personal-universal principles live in the SSOT `stacks/` files and lose to project docs on overlap.
-
-Follow `docs/patterns/` for new code. Code wins if doc disagrees. **Extract new pattern** after a repeatable shape lands. Promote to AGENTS.md only after 3+ entities use it unchanged.
+- **Per-stack/task/dep specifics** live in `docs/patterns/<topic>.md`: Read only the relevant stack file when working in that specific stack.
+- Follow `docs/patterns/` for new code. Code wins if doc disagrees. **Extract new pattern** after a repeatable shape lands.
 
 ### Settled hard rules (locked here)
 
 These are decisions, not in-flux patterns:
 
-- **Generic form engine:** shared renderer `FormFieldGenerator` (`src/components/shared/form/form-field-generator.tsx`) + `InputFieldRenderer`. Takes Zod schema, `initialData`, `FormField[]` from the entity's `fields.ts(x)` (`src/types/field.ts`). Grouping via `{ groupLabel }` headers → `<FieldSet>` sections. Zod resolver `zodResolver(schema) as never` — one cast at the resolver↔RHF seam (ADR-0003). Upgrade to per-entity form components when `onSubmit` needs compile-time verification against action param schemas.
-- **`src/components/ui/` is auto-generated** (shadcn base-nova) — never hand-edited. Brand customization via `globals.css` tokens or per-call classNames.
-- **Discriminated-union action results** with `as const` — exact contract in `docs/patterns/typescript.md`.
-- **Index every FK column by default** — details in `docs/patterns/database.md` + SSOT `stacks/database.md`.
+- Brand customization via `globals.css` tokens or per-call classNames.
 - **Auth gating placement is undecided** (requireOwner action-level vs service-level vs future `roleGate()`). Don't write new call-site guidance; track in `docs/patterns/violations.md`.
-
-## Doc Compression
-
-Agent-only .md files compressed before commit. Rules in `docs/patterns/doc-compression.md`. Manual compression only — `caveman-compress` corrupts files.
-
-## Agent skills
 
 ## Subagent Driven Development (locked rule)
 
@@ -182,10 +155,18 @@ Issues live as GitHub issues in `narasena/little-rabbani` via the `gh` CLI. Exte
 
 Five canonical roles, each role's string equals its name (`needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, `wontfix`). See `docs/agents/triage-labels.md`.
 
-### Domain docs
+## Documentation map
 
-Single-context — one `CONTEXT.md` + `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+- `CONTEXT.md`: domain vocabulary, business rules, and product context.
+- `DESIGN.md`: visual/UI direction.
+- `docs/adr/`: settled architectural decisions and rationale.
+- `docs/patterns/`: project-specific implementation patterns. Read only the relevant pattern for the task.
+- `docs/known-issues.md` and `docs/patterns/violations.md`: unresolved or known technical debt; inspect before changing affected areas.
+- `CLAUDE.md` / `.claude/`: Claude Code-specific instructions, skills, and subagent configuration.
+- GitHub Issues: project backlog and task status.
 
----
+## Working with this repository
 
-> **Make every line count — or delete it.**
+Before coding, inspect the target feature, its neighboring implementation, relevant tests, and the relevant pattern/ADR if one exists. Source code, tests, and configuration establish current implementation; requirements and ADRs establish intended behavior. If they disagree, report the discrepancy rather than silently copying a possibly incorrect pattern.
+
+Follow established project patterns. If a new pattern proves reusable, update the relevant pattern document. Promote it to this file only when it is a high-impact project-wide invariant used consistently across the codebase.

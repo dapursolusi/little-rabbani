@@ -2,6 +2,14 @@
 
 Stack-specific mechanics. Principles (layering, soft delete, FK indexing, migrations philosophy) live in the personal SSOT `stacks/database.md` — read it first.
 
+## Conventions
+
+- Table variable camelCase, DB name snake_case (`dailyClassReport` → `'daily_class_report'`). One file per domain — a domain may hold multiple tables; never one file per table. Barrel-exported.
+- **Audit triplet on every domain table:** `createdAt` (default now), `updatedAt` (default now + auto-update), `deletedAt` (nullable). Defined once, shared.
+- **Soft delete by default:** destructive actions set `deletedAt`; reads filter `deletedAt === null`; unique indexes are partial (scoped to live rows only). Hard delete only for rows with no audit value.
+- UUID primary keys (with random default) unless the user or project dictates otherwise.
+- Business dates as ISO `text` strings validated at the boundary; engine timestamps as native timestamps. Pick per project and stay consistent.
+
 ## Stack
 
 Drizzle ORM + Neon Postgres. WS `Pool` driver (`@neondatabase/serverless`) — required for transactions. `db` singleton at `src/db/index.ts`.
@@ -34,15 +42,17 @@ export const entity = pgTable(
 
 ## Enum constants ownership
 
-The feature module owns the constants; the schema only declares the pgEnum:
+- The feature module owns the constants; the schema only declares the pgEnum:
 
-```ts
-// features/<entity>/constants.ts — the named-map stack (see typescript.md)
-export const GENDER = { MALE: 'male', FEMALE: 'female' } as const;
+  ```ts
+  // features/<entity>/constants.ts — the named-map stack (see typescript.md)
+  export const GENDER = { MALE: 'male', FEMALE: 'female' } as const;
 
-// src/db/schema/kids.ts — schema imports the VALUES
-export const genderEnum = pgEnum('gender', GENDER_VALUES);
-```
+  // src/db/schema/kids.ts — schema imports the VALUES
+  export const genderEnum = pgEnum('gender', GENDER_VALUES);
+  ```
+
+- Enum values come from the feature's constants module (named-map stack: `NAME` as const → type → `NAME_VALUES` → `NAME_LABELS`) — the schema references the VALUES; labels never live in the schema file.
 
 ## Soft delete
 
@@ -89,27 +99,34 @@ Use as `columns: { ...omitAuditColumns }` in `db.query.*`. Per-entity lean selec
 
 ## Repository layer
 
-Flat `repositories.ts` for single-entity modules; directory + barrel once 2+ entities. Barrel re-exports namespaced:
+- Flat `repositories.ts` for single-entity modules; directory + barrel once 2+ entities. Barrel re-exports namespaced:
 
-```ts
-// repositories/index.ts
-export * as themeRepo from './theme';
-```
+  ```ts
+  // repositories/index.ts
+  export * as themeRepo from './theme';
+  ```
 
-Each file exports standalone functions grouped `// Find` / `// Insert` / `// Update` / `// Remove`. Names: `findMany`, `findById`, `insert`, `update`, `remove`, `count`, plus domain finds. Repos return raw rows (`.returning()`) or throw — no ActionResult wrapping, no auth gating.
+- Each file exports standalone functions grouped `// Find` / `// Insert` / `// Update` / `// Remove`. Names: `findMany`, `findById`, `insert`, `update`, `remove`, `count`, plus domain finds. Repos return raw rows (`.returning()`) or throw — no ActionResult wrapping, no auth gating, throw on miss.
+- Services own business rules, conflict checks, error→result mapping, and user-facing messages; actions are parse-only shells.
+- Repos accept an optional transaction client and use `tx ?? db` — services open the transaction and pass `tx` down; cross-entity writes ride one transaction. Optional-transaction parameter:
 
-Optional-transaction parameter:
+  ```ts
+  export async function insert(data, tx?: TransactionClient) {
+    const session = tx ? tx : db;
+    const [inserted] = await session.insert(table).values(data).returning();
+    return inserted;
+  }
+  ```
 
-```ts
-export async function insert(data, tx?: TransactionClient) {
-  const session = tx ? tx : db;
-  const [inserted] = await session.insert(table).values(data).returning();
-  return inserted;
-}
-```
-
-`TransactionClient` type is at `src/types/index.ts`. Unit-test seam: repos typed against a narrow hand-written interface (`GuardianTx`) with in-memory fake tx in `tests/helpers/fake-tx.ts` — see `kid/services.ts`.
+- `TransactionClient` type is at `src/types/index.ts`. Unit-test seam: repos typed against a narrow hand-written interface (`GuardianTx`) with in-memory fake tx in `tests/helpers/fake-tx.ts` — see `kid/services.ts`.
 
 ## Migrations
 
-`bun run db:generate` → `bun run db:migrate` (`--env-file=.env.local`). During active feature work `bun run db:push` is fine locally. Never bypass the chain on shared/prod DBs.
+- During active development, local schema syncing (`push`) is fine — schema is free to edit until the feature works locally.
+- At freeze, ship schema changes as generated migrations (generate → migrate). Don't bypass the migration chain on shared/prod DBs.
+- The migration chain is the source of truth for production schema state.
+
+## Referential actions
+
+- `onDelete: 'restrict'` where deleting a parent with children is a data-loss bug.
+- `'cascade'` only where children are meaningless without the parent.
