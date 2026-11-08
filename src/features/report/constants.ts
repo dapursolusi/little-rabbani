@@ -1,8 +1,8 @@
 // —————————— Monthly Report Status ——————————
 
 export const MONTHLY_REPORT_STATUS = {
-  GENERATED: 'generated',
-  EDITED: 'edited',
+  DRAFT: 'draft',
+  REVIEWED: 'reviewed',
   SENT: 'sent',
 } as const;
 export type MonthlyReportStatus =
@@ -12,7 +12,7 @@ export const MONTHLY_REPORT_STATUS_VALUES = Object.values(
 ) as [MonthlyReportStatus, ...MonthlyReportStatus[]];
 export const MONTHLY_REPORT_STATUS_LABELS: Record<MonthlyReportStatus, string> =
   {
-    [MONTHLY_REPORT_STATUS.GENERATED]: 'AI Generated',
-    [MONTHLY_REPORT_STATUS.EDITED]: 'Diedit',
+    [MONTHLY_REPORT_STATUS.DRAFT]: 'Draft',
+    [MONTHLY_REPORT_STATUS.REVIEWED]: 'Direview',
     [MONTHLY_REPORT_STATUS.SENT]: 'Terkirim',
   };

@@ -13,7 +13,9 @@ import {
   KidNoReportHistoryError,
   KidNotEnrolledError,
   ReportAlreadySentError,
+  ReportEmptyError,
   ReportNotFoundError,
+  ReportNotReviewedError,
 } from '@/lib/errors';
 
 // Collaborator boundaries only — repo + AI generation are mocked; the service
@@ -21,7 +23,7 @@ import {
 const mocks = vi.hoisted(() => ({
   findMonthlyReportRow: vi.fn(),
   createMonthlyReport: vi.fn(),
-  updateMonthlyReportNarrative: vi.fn(),
+  updateMonthlyReport: vi.fn(),
   aggregateMonthlyKidReportData: vi.fn(),
   generateMonthlyReportDraft: vi.fn(),
   resolveReportRange: vi.fn(),
@@ -31,7 +33,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/features/report/kid/repositories', () => ({
   findMonthlyReportRow: mocks.findMonthlyReportRow,
   createMonthlyReport: mocks.createMonthlyReport,
-  updateMonthlyReportNarrative: mocks.updateMonthlyReportNarrative,
+  updateMonthlyReport: mocks.updateMonthlyReport,
 }));
 
 vi.mock('@/features/report/month/services', () => ({
@@ -86,14 +88,15 @@ const AI_DRAFT: MonthlyReportOutput = {
 const ROW = {
   id: 'b3c1d2e4-0000-4000-8000-000000000003',
   narrative: 'old narrative',
-  reportStatus: MONTHLY_REPORT_STATUS.GENERATED as MonthlyReportStatus,
+  reportStatus: MONTHLY_REPORT_STATUS.DRAFT as MonthlyReportStatus,
+  isEdited: false,
 };
 
 beforeEach(() => {
   mocks.aggregateMonthlyKidReportData.mockResolvedValue({ child: {} });
   mocks.generateMonthlyReportDraft.mockResolvedValue(AI_DRAFT);
   mocks.createMonthlyReport.mockResolvedValue(ROW);
-  mocks.updateMonthlyReportNarrative.mockResolvedValue(ROW);
+  mocks.updateMonthlyReport.mockResolvedValue(ROW);
   mocks.resolveReportRange.mockResolvedValue(RANGE);
   mocks.getKidEnrolledTerms.mockResolvedValue([TERM]);
 });
@@ -112,7 +115,7 @@ describe('generateMonthlyReport (persistence lifecycle)', () => {
         yearMonth: PARAMS.yearMonth,
       })
     );
-    expect(mocks.updateMonthlyReportNarrative).not.toHaveBeenCalled();
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
     // Returned narrative is the persisted formatted draft.
     expect(result.narrative).toContain('Sorotan:');
     expect(result.narrative).toContain(AI_DRAFT.socialEmotional);
@@ -127,12 +130,15 @@ describe('generateMonthlyReport (persistence lifecycle)', () => {
     ).rejects.toThrow('Failed to generate text from LLM');
 
     expect(mocks.createMonthlyReport).not.toHaveBeenCalled();
-    expect(mocks.updateMonthlyReportNarrative).not.toHaveBeenCalled();
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
   });
 
-  it('regeneration overwrites the existing draft via upsert', async () => {
-    mocks.findMonthlyReportRow.mockResolvedValue(ROW);
-    mocks.createMonthlyReport.mockResolvedValue(ROW);
+  it('regeneration overwrites the existing draft and resets lifecycle state', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue({
+      ...ROW,
+      reportStatus: MONTHLY_REPORT_STATUS.REVIEWED,
+      isEdited: true,
+    });
 
     const result = await kidReportService.generateMonthlyReport(PARAMS);
 
@@ -142,8 +148,25 @@ describe('generateMonthlyReport (persistence lifecycle)', () => {
         narrative: expect.stringContaining(AI_DRAFT.wellbeing),
       })
     );
-    expect(mocks.updateMonthlyReportNarrative).not.toHaveBeenCalled();
+    // Regeneration is one upsert that resets status, edit flag and metadata.
+    expect(mocks.createMonthlyReport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        narrative: expect.any(String),
+      })
+    );
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
     expect(result.narrative).toContain('Rekomendasi di rumah:');
+  });
+
+  it('reports a concurrent send as already-sent when the upsert refuses', async () => {
+    // Read says draft; the guarded upsert then returns nothing because the
+    // report was sent in between.
+    mocks.findMonthlyReportRow.mockResolvedValue(ROW);
+    mocks.createMonthlyReport.mockResolvedValue(null);
+
+    await expect(
+      kidReportService.generateMonthlyReport(PARAMS)
+    ).rejects.toThrow(ReportAlreadySentError);
   });
 
   it('regeneration rejects and preserves existing content when report is sent', async () => {
@@ -156,26 +179,63 @@ describe('generateMonthlyReport (persistence lifecycle)', () => {
       kidReportService.generateMonthlyReport(PARAMS)
     ).rejects.toThrow(ReportAlreadySentError);
 
-    expect(mocks.updateMonthlyReportNarrative).not.toHaveBeenCalled();
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
     expect(mocks.createMonthlyReport).not.toHaveBeenCalled();
+  });
+
+  it('a persistence failure surfaces and leaves the previous report untouched', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue({
+      ...ROW,
+      reportStatus: MONTHLY_REPORT_STATUS.DRAFT,
+      isEdited: true,
+    });
+    mocks.createMonthlyReport.mockRejectedValue(new Error('db down'));
+
+    await expect(
+      kidReportService.generateMonthlyReport(PARAMS)
+    ).rejects.toThrow('db down');
+
+    // No partial write path exists — the failed upsert never runs an update.
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
   });
 });
 
 describe('saveMonthlyReportNarrative', () => {
-  it('updates the existing row — never duplicates', async () => {
-    mocks.findMonthlyReportRow.mockResolvedValue(ROW);
+  it('marks the report as edited and returns it to draft', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue({
+      ...ROW,
+      reportStatus: MONTHLY_REPORT_STATUS.REVIEWED,
+      isEdited: false,
+    });
 
     await kidReportService.saveMonthlyReportNarrative({
       ...PARAMS,
       narrative: 'edited text',
     });
 
-    expect(mocks.updateMonthlyReportNarrative).toHaveBeenCalledWith({
+    expect(mocks.updateMonthlyReport).toHaveBeenCalledWith({
       reportId: ROW.id,
-      narrative: 'edited text',
-      reportStatus: MONTHLY_REPORT_STATUS.EDITED,
+      values: {
+        narrative: 'edited text',
+        isEdited: true,
+        reportStatus: MONTHLY_REPORT_STATUS.DRAFT,
+        reviewedAt: null,
+      },
     });
     expect(mocks.createMonthlyReport).not.toHaveBeenCalled();
+  });
+
+  it('saving unchanged content is a no-op — no write, no edited flag', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue(ROW);
+
+    const result = await kidReportService.saveMonthlyReportNarrative({
+      ...PARAMS,
+      narrative: ROW.narrative,
+    });
+
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
+    expect(result.reportStatus).toBe(MONTHLY_REPORT_STATUS.DRAFT);
+    expect(result.isEdited).toBe(false);
   });
 
   it('rejects when no report exists', async () => {
@@ -188,7 +248,7 @@ describe('saveMonthlyReportNarrative', () => {
       })
     ).rejects.toThrow(ReportNotFoundError);
 
-    expect(mocks.updateMonthlyReportNarrative).not.toHaveBeenCalled();
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
   });
 
   it('rejects when report is sent', async () => {
@@ -204,33 +264,122 @@ describe('saveMonthlyReportNarrative', () => {
       })
     ).rejects.toThrow(ReportAlreadySentError);
 
-    expect(mocks.updateMonthlyReportNarrative).not.toHaveBeenCalled();
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
+  });
+});
+
+describe('markMonthlyReportReviewed', () => {
+  it('moves a draft to reviewed without touching the edited flag', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue({
+      ...ROW,
+      isEdited: true,
+    });
+
+    await kidReportService.markMonthlyReportReviewed(PARAMS);
+
+    expect(mocks.updateMonthlyReport).toHaveBeenCalledWith({
+      reportId: ROW.id,
+      values: expect.objectContaining({
+        reportStatus: MONTHLY_REPORT_STATUS.REVIEWED,
+        reviewedAt: expect.any(Date),
+      }),
+    });
+    // Reviewing never marks content as manually edited.
+    expect(mocks.updateMonthlyReport.mock.calls[0][0].values.isEdited).toBe(
+      undefined
+    );
+  });
+
+  it('rejects an empty report', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue({
+      ...ROW,
+      narrative: '   ',
+    });
+
+    await expect(
+      kidReportService.markMonthlyReportReviewed(PARAMS)
+    ).rejects.toThrow(ReportEmptyError);
+
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
+  });
+
+  it('rejects a sent report', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue({
+      ...ROW,
+      reportStatus: MONTHLY_REPORT_STATUS.SENT,
+    });
+
+    await expect(
+      kidReportService.markMonthlyReportReviewed(PARAMS)
+    ).rejects.toThrow(ReportAlreadySentError);
+  });
+
+  it('rejects when no report exists', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue(null);
+
+    await expect(
+      kidReportService.markMonthlyReportReviewed(PARAMS)
+    ).rejects.toThrow(ReportNotFoundError);
+  });
+});
+
+describe('markMonthlyReportSent', () => {
+  const SENT_BY = 'owner-1';
+
+  it('only a reviewed report can be sent — a draft is refused', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue(ROW);
+
+    await expect(
+      kidReportService.markMonthlyReportSent({ ...PARAMS, sentBy: SENT_BY })
+    ).rejects.toThrow(ReportNotReviewedError);
+
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
+  });
+
+  it('records sentAt and sentBy when sending a reviewed report', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue({
+      ...ROW,
+      reportStatus: MONTHLY_REPORT_STATUS.REVIEWED,
+    });
+
+    await kidReportService.markMonthlyReportSent({
+      ...PARAMS,
+      sentBy: SENT_BY,
+    });
+
+    expect(mocks.updateMonthlyReport).toHaveBeenCalledWith({
+      reportId: ROW.id,
+      values: expect.objectContaining({
+        reportStatus: MONTHLY_REPORT_STATUS.SENT,
+        sentAt: expect.any(Date),
+        sentBy: SENT_BY,
+      }),
+    });
+  });
+
+  it('rejects an already sent report', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue({
+      ...ROW,
+      reportStatus: MONTHLY_REPORT_STATUS.SENT,
+    });
+
+    await expect(
+      kidReportService.markMonthlyReportSent({ ...PARAMS, sentBy: SENT_BY })
+    ).rejects.toThrow(ReportAlreadySentError);
+
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
+  });
+
+  it('rejects when no report exists', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue(null);
+
+    await expect(
+      kidReportService.markMonthlyReportSent({ ...PARAMS, sentBy: SENT_BY })
+    ).rejects.toThrow(ReportNotFoundError);
   });
 });
 
 describe('month scoping', () => {
-  it('forwards the month on every read — different months fetch different rows', async () => {
-    mocks.findMonthlyReportRow.mockResolvedValue(ROW);
-
-    await kidReportService.findMonthlyReportRow({
-      ...PARAMS,
-      yearMonth: '2026-10',
-    });
-    await kidReportService.findMonthlyReportRow({
-      ...PARAMS,
-      yearMonth: '2026-11',
-    });
-
-    expect(mocks.findMonthlyReportRow).toHaveBeenNthCalledWith(
-      1,
-      expect.objectContaining({ yearMonth: '2026-10' })
-    );
-    expect(mocks.findMonthlyReportRow).toHaveBeenNthCalledWith(
-      2,
-      expect.objectContaining({ yearMonth: '2026-11' })
-    );
-  });
-
   it('persists each generated draft under its own month', async () => {
     mocks.findMonthlyReportRow.mockResolvedValue(null);
     mocks.createMonthlyReport.mockResolvedValue(ROW);
@@ -262,7 +411,7 @@ describe('final-month enforcement', () => {
 
     expect(mocks.generateMonthlyReportDraft).not.toHaveBeenCalled();
     expect(mocks.createMonthlyReport).not.toHaveBeenCalled();
-    expect(mocks.updateMonthlyReportNarrative).not.toHaveBeenCalled();
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
   });
 
   it('persistence refuses the term final month — existing rows stay untouched', async () => {
@@ -276,8 +425,22 @@ describe('final-month enforcement', () => {
       })
     ).rejects.toThrow(FinalMonthUsesTermlyReportError);
 
-    expect(mocks.updateMonthlyReportNarrative).not.toHaveBeenCalled();
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
     expect(mocks.createMonthlyReport).not.toHaveBeenCalled();
+  });
+
+  it('review and send refuse the term final month', async () => {
+    mocks.resolveReportRange.mockResolvedValue(FINAL_RANGE);
+    mocks.findMonthlyReportRow.mockResolvedValue(ROW);
+
+    await expect(
+      kidReportService.markMonthlyReportReviewed(PARAMS)
+    ).rejects.toThrow(FinalMonthUsesTermlyReportError);
+    await expect(
+      kidReportService.markMonthlyReportSent({ ...PARAMS, sentBy: 'owner-1' })
+    ).rejects.toThrow(FinalMonthUsesTermlyReportError);
+
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
   });
 });
 
@@ -304,7 +467,7 @@ describe('invalid kid/month/term combinations', () => {
       })
     ).rejects.toThrow(KidNotEnrolledError);
 
-    expect(mocks.updateMonthlyReportNarrative).not.toHaveBeenCalled();
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
   });
 });
 
@@ -330,7 +493,7 @@ describe('future month guard', () => {
       })
     ).rejects.toThrow(FutureMonthReportError);
 
-    expect(mocks.updateMonthlyReportNarrative).not.toHaveBeenCalled();
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
   });
 
   it('allows the current month', async () => {

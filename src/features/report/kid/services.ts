@@ -22,7 +22,9 @@ import {
   KidNoReportHistoryError,
   KidNotEnrolledError,
   ReportAlreadySentError,
+  ReportEmptyError,
   ReportNotFoundError,
+  ReportNotReviewedError,
 } from '@/lib/errors';
 import { isoYearMonthSchema, uuidSchema } from '@/lib/validation/common.schema';
 
@@ -31,26 +33,24 @@ import { MonthlyKidReportParams } from '../types';
 import { generateMonthlyReportDraft } from './ai/generate';
 import * as kidReportRepo from './repositories';
 
+type MonthlyReportRow = NonNullable<
+  Awaited<ReturnType<typeof kidReportRepo.findMonthlyReportRow>>
+>;
+
 // ============================================
 // SERVER ACTION USE CASES
 // ============================================
 
 export async function generateMonthlyReport(input: MonthlyKidReportParams) {
-  // A month that has not started has no data to report on.
-  if (!hasMonthStarted(input.yearMonth)) throw new FutureMonthReportError();
-
-  // Final month of a term is termly-report territory — never generate or
-  // persist a monthly narrative there, no matter what the client sends.
-  const range = await monthlyReportService.resolveReportRange(input);
-  // Stale termId / ineligible month must never reach generation.
-  if (!range) throw new KidNotEnrolledError();
-  if (range.isFinalMonth) {
-    throw new FinalMonthUsesTermlyReportError();
-  }
+  // Future month, stale termId, or a term-final month (termly reporting
+  // territory) must never reach generation.
+  await assertReportableMonth(input);
 
   const kidContext =
     await monthlyReportService.aggregateMonthlyKidReportData(input);
 
+  // Generate and format the replacement BEFORE touching persisted content —
+  // a provider failure leaves the existing report exactly as it was.
   const aiDraft = await generateMonthlyReportDraft(kidContext);
   if (!aiDraft) {
     throw new AppError(
@@ -61,18 +61,23 @@ export async function generateMonthlyReport(input: MonthlyKidReportParams) {
 
   const narrative = formatDraft(aiDraft);
 
-  // Guard sent reports, then upsert: first generation inserts, regeneration
-  // overwrites. Single upsert avoids a find-then-insert race.
+  // Sent reports are immutable. Checked here for a useful message; the repo
+  // upsert also refuses to touch a sent row.
   const existing = await kidReportRepo.findMonthlyReportRow(input);
   if (existing?.reportStatus === MONTHLY_REPORT_STATUS.SENT) {
     throw new ReportAlreadySentError();
   }
+
+  // Upsert: first generation inserts, regeneration replaces. One statement
+  // avoids a find-then-insert race, and resetting the lifecycle here is what
+  // makes "successful regeneration returns the report to draft" true.
   const report = await kidReportRepo.createMonthlyReport({
     ...input,
     narrative,
   });
-  if (!report)
-    throw new AppError('Report upsert failed', 'Gagal menyimpan draft');
+  // The repo upsert refuses sent rows, so an empty result after a non-sent
+  // read means the report was sent concurrently — report it as such.
+  if (!report) throw new ReportAlreadySentError();
 
   return { narrative, aiDraft };
 }
@@ -83,34 +88,75 @@ export async function saveMonthlyReportNarrative({
   yearMonth,
   narrative,
 }: MonthlyKidReportParams & { narrative: string }) {
-  if (!hasMonthStarted(yearMonth)) throw new FutureMonthReportError();
+  await assertReportableMonth({ kidId, termId, yearMonth });
 
-  const range = await monthlyReportService.resolveReportRange({
-    kidId,
-    termId,
-    yearMonth,
-  });
-  // Stale termId / ineligible month must never reach persistence.
-  if (!range) throw new KidNotEnrolledError();
-  if (range.isFinalMonth) {
-    throw new FinalMonthUsesTermlyReportError();
-  }
+  const existing = await assertMutableReport({ kidId, termId, yearMonth });
 
-  const existing = await kidReportRepo.findMonthlyReportRow({
-    kidId,
-    termId,
-    yearMonth,
-  });
-  if (!existing) throw new ReportNotFoundError();
-  if (existing.reportStatus === MONTHLY_REPORT_STATUS.SENT) {
-    throw new ReportAlreadySentError();
-  }
+  // Saving unchanged content is a no-op — it must not flag manual edits or
+  // invalidate a review.
+  if (existing.narrative === narrative) return existing;
 
-  return kidReportRepo.updateMonthlyReportNarrative({
+  const updated = await kidReportRepo.updateMonthlyReport({
     reportId: existing.id,
-    narrative,
-    reportStatus: MONTHLY_REPORT_STATUS.EDITED,
+    values: {
+      narrative,
+      isEdited: true,
+      // Editing invalidates a prior review: back to draft for re-review.
+      reportStatus: MONTHLY_REPORT_STATUS.DRAFT,
+      reviewedAt: null,
+    },
   });
+  if (!updated) throw new ReportNotFoundError();
+
+  return updated;
+}
+
+export async function markMonthlyReportReviewed({
+  kidId,
+  termId,
+  yearMonth,
+}: MonthlyKidReportParams) {
+  await assertReportableMonth({ kidId, termId, yearMonth });
+
+  const existing = await assertMutableReport({ kidId, termId, yearMonth });
+  if (!existing.narrative?.trim()) throw new ReportEmptyError();
+
+  const updated = await kidReportRepo.updateMonthlyReport({
+    reportId: existing.id,
+    values: {
+      reportStatus: MONTHLY_REPORT_STATUS.REVIEWED,
+      reviewedAt: new Date(),
+    },
+  });
+  if (!updated) throw new ReportNotFoundError();
+
+  return updated;
+}
+
+export async function markMonthlyReportSent({
+  kidId,
+  termId,
+  yearMonth,
+  sentBy,
+}: MonthlyKidReportParams & { sentBy: string }) {
+  await assertReportableMonth({ kidId, termId, yearMonth });
+
+  const existing = await assertMutableReport({ kidId, termId, yearMonth });
+  if (existing.reportStatus !== MONTHLY_REPORT_STATUS.REVIEWED) {
+    throw new ReportNotReviewedError();
+  }
+
+  const updated = await kidReportRepo.updateMonthlyReport({
+    reportId: existing.id,
+    values: {
+      reportStatus: MONTHLY_REPORT_STATUS.SENT,
+      sentAt: new Date(),
+      sentBy,
+    },
+  });
+  if (!updated) throw new ReportNotFoundError();
+
+  return updated;
 }
 
 // ============================================
@@ -166,6 +212,42 @@ export async function getKidMonthlyReport({
 // ============================================
 // INTERNAL OPERATIONS
 // ============================================
+
+/** Shared guard: the month must have started and must be reportable. */
+async function assertReportableMonth({
+  kidId,
+  termId,
+  yearMonth,
+}: MonthlyKidReportParams) {
+  if (!hasMonthStarted(yearMonth)) throw new FutureMonthReportError();
+
+  const range = await monthlyReportService.resolveReportRange({
+    kidId,
+    termId,
+    yearMonth,
+  });
+  if (!range) throw new KidNotEnrolledError();
+  if (range.isFinalMonth) throw new FinalMonthUsesTermlyReportError();
+}
+
+/** Load a report row that may be changed: it must exist and not be sent. */
+async function assertMutableReport({
+  kidId,
+  termId,
+  yearMonth,
+}: MonthlyKidReportParams): Promise<MonthlyReportRow> {
+  const existing = await kidReportRepo.findMonthlyReportRow({
+    kidId,
+    termId,
+    yearMonth,
+  });
+  if (!existing) throw new ReportNotFoundError();
+  if (existing.reportStatus === MONTHLY_REPORT_STATUS.SENT) {
+    throw new ReportAlreadySentError();
+  }
+
+  return existing;
+}
 
 /**
  * Resolve the report context for one kid + requested month + requested term.
@@ -227,14 +309,6 @@ export async function getKidMonthlyReportContext({
     prevMonth: reportableMonths[selectedIndex - 1] ?? null,
     nextMonth: reportableMonths[selectedIndex + 1] ?? null,
   };
-}
-
-export async function findMonthlyReportRow({
-  kidId,
-  termId,
-  yearMonth,
-}: MonthlyKidReportParams) {
-  return kidReportRepo.findMonthlyReportRow({ kidId, termId, yearMonth });
 }
 
 // Re-export for the client component's status badge typing.

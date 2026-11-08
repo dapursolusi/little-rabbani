@@ -7,9 +7,31 @@ import {
   MONTHLY_REPORT_STATUS,
   MonthlyReportStatus,
 } from '@/features/report/constants';
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNull, ne } from 'drizzle-orm';
 
 import { MonthlyKidReportParams } from '../types';
+
+const monthlyReportColumns = {
+  id: true,
+  narrative: true,
+  reportStatus: true,
+  isEdited: true,
+  reviewedAt: true,
+  sentAt: true,
+  sentBy: true,
+} as const;
+
+// `returning()` needs column refs, not booleans — derive them from the same
+// key set so the two selections cannot drift.
+const monthlyReportReturning = {
+  id: monthlyKidReport.id,
+  narrative: monthlyKidReport.narrative,
+  reportStatus: monthlyKidReport.reportStatus,
+  isEdited: monthlyKidReport.isEdited,
+  reviewedAt: monthlyKidReport.reviewedAt,
+  sentAt: monthlyKidReport.sentAt,
+  sentBy: monthlyKidReport.sentBy,
+} satisfies Record<keyof typeof monthlyReportColumns, unknown>;
 
 export async function findMonthlyReport({
   kidId,
@@ -37,7 +59,7 @@ export async function findMonthlyReport({
           eq(monthlyKidReport.month, yearMonth),
           isNull(monthlyKidReport.deletedAt)
         ),
-        columns: { id: true, narrative: true, reportStatus: true },
+        columns: monthlyReportColumns,
       },
     },
   });
@@ -55,12 +77,17 @@ export async function findMonthlyReportRow({
       eq(monthlyKidReport.month, yearMonth),
       isNull(monthlyKidReport.deletedAt)
     ),
-    columns: { id: true, narrative: true, reportStatus: true },
+    columns: monthlyReportColumns,
   });
 }
 
 // Create
 
+/**
+ * Upsert a fresh AI draft. Refuses to touch a sent report at the DB level —
+ * those rows are immutable, so regeneration cannot overwrite one even if the
+ * service-layer guard is bypassed.
+ */
 export async function createMonthlyReport({
   kidId,
   termId,
@@ -74,7 +101,8 @@ export async function createMonthlyReport({
       termId,
       month: yearMonth,
       narrative,
-      reportStatus: MONTHLY_REPORT_STATUS.GENERATED,
+      reportStatus: MONTHLY_REPORT_STATUS.DRAFT,
+      isEdited: false,
     })
     .onConflictDoUpdate({
       target: [
@@ -82,38 +110,50 @@ export async function createMonthlyReport({
         monthlyKidReport.termId,
         monthlyKidReport.month,
       ],
+      setWhere: ne(monthlyKidReport.reportStatus, MONTHLY_REPORT_STATUS.SENT),
       set: {
         narrative,
-        reportStatus: MONTHLY_REPORT_STATUS.GENERATED,
+        reportStatus: MONTHLY_REPORT_STATUS.DRAFT,
+        isEdited: false,
+        reviewedAt: null,
+        sentAt: null,
+        sentBy: null,
         deletedAt: null,
       },
     })
-    .returning({ id: monthlyKidReport.id });
+    .returning(monthlyReportReturning);
 
   return report ?? null;
 }
 
 // Update
 
-export async function updateMonthlyReportNarrative({
+export async function updateMonthlyReport({
   reportId,
-  narrative,
-  reportStatus,
+  values,
 }: {
   reportId: string;
-  narrative: string;
-  reportStatus: MonthlyReportStatus;
+  values: Partial<{
+    narrative: string;
+    reportStatus: MonthlyReportStatus;
+    isEdited: boolean;
+    reviewedAt: Date | null;
+    sentAt: Date | null;
+    sentBy: string | null;
+  }>;
 }) {
   const [report] = await db
     .update(monthlyKidReport)
-    .set({ narrative, reportStatus })
-    .where(eq(monthlyKidReport.id, reportId))
-    .returning({
-      id: monthlyKidReport.id,
-      narrative: monthlyKidReport.narrative,
-      reportStatus: monthlyKidReport.reportStatus,
-      updatedAt: monthlyKidReport.updatedAt,
-    });
+    .set(values)
+    // Sent rows are immutable — enforce it in the write itself, not only in
+    // the caller's earlier read (which a concurrent send can invalidate).
+    .where(
+      and(
+        eq(monthlyKidReport.id, reportId),
+        ne(monthlyKidReport.reportStatus, MONTHLY_REPORT_STATUS.SENT)
+      )
+    )
+    .returning(monthlyReportReturning);
 
   return report ?? null;
 }

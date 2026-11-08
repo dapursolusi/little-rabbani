@@ -103,6 +103,8 @@ export default async function KidReportPage({
                 id: existingReport.id,
                 narrative: existingReport.narrative,
                 reportStatus: existingReport.reportStatus,
+                isEdited: existingReport.isEdited,
+                sentAt: existingReport.sentAt,
               }
             : null
         }

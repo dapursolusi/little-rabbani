@@ -15,6 +15,15 @@ export function getStatusBadge(status: string) {
           Draft
         </Badge>
       );
+    case 'reviewed':
+      return (
+        <Badge
+          variant="outline"
+          className="border-blue-500/30 text-blue-600 bg-blue-500/10"
+        >
+          Direview
+        </Badge>
+      );
     case 'sent':
       return (
         <Badge

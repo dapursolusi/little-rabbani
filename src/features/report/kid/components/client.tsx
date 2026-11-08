@@ -13,7 +13,6 @@ import {
 } from '@/features/daily-class-report/constants';
 import {
   MONTHLY_REPORT_STATUS,
-  MONTHLY_REPORT_STATUS_LABELS,
   MonthlyReportStatus,
 } from '@/features/report/constants';
 import { Term } from '@/features/term/types';
@@ -24,13 +23,16 @@ import {
   ChevronDown,
   FloppyDiskIcon,
   NoteEditIcon,
+  SendIcon,
   SquareChevronLeftIcon,
   SquareChevronRightIcon,
+  TickDouble03Icon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
 import TermSelectorBase from '@/components/features/term/term-selector';
+import { getStatusBadge } from '@/components/shared/get-status-badge';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,6 +58,7 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Tooltip,
@@ -70,6 +73,8 @@ interface MonthlyInitialReport {
   id: string;
   narrative: string | null;
   reportStatus: MonthlyReportStatus;
+  isEdited: boolean;
+  sentAt: Date | null;
 }
 
 interface KidReportClientProps {
@@ -174,6 +179,68 @@ function MonthPicker({
   );
 }
 
+/**
+ * Readable renderer for the persisted narrative: blank-line separated
+ * paragraphs, `Heading:` lines, and `- ` bullets. Manual edits that do not
+ * follow the shape still render as plain paragraphs.
+ */
+function NarrativePreview({ narrative }: { narrative: string }) {
+  const lines = narrative.split('\n');
+
+  if (!narrative.trim()) {
+    return (
+      <p className="text-sm text-muted-foreground">
+        Belum ada narasi laporan untuk bulan ini.
+      </p>
+    );
+  }
+
+  const blocks: React.ReactNode[] = [];
+  let bullets: string[] = [];
+
+  const flushBullets = () => {
+    if (bullets.length === 0) return;
+    blocks.push(
+      <ul key={`ul-${blocks.length}`} className="list-disc space-y-1 pl-5">
+        {bullets.map((b, i) => (
+          <li key={i}>{b}</li>
+        ))}
+      </ul>
+    );
+    bullets = [];
+  };
+
+  for (const raw of lines) {
+    const line = raw.trim();
+
+    if (line.startsWith('- ')) {
+      bullets.push(line.slice(2));
+      continue;
+    }
+
+    flushBullets();
+    if (!line) continue;
+
+    if (line.endsWith(':')) {
+      blocks.push(
+        <h3 key={`h-${blocks.length}`} className="mt-4 font-semibold">
+          {line}
+        </h3>
+      );
+      continue;
+    }
+
+    blocks.push(
+      <p key={`p-${blocks.length}`} className="leading-relaxed">
+        {line}
+      </p>
+    );
+  }
+  flushBullets();
+
+  return <div className="space-y-3 text-sm sm:text-base">{blocks}</div>;
+}
+
 export default function KidReportClient({
   currentKidId,
   currentTermId,
@@ -191,6 +258,10 @@ export default function KidReportClient({
   const [reportStatus, setReportStatus] = useState<MonthlyReportStatus | null>(
     initialReport?.reportStatus ?? null
   );
+  const [isEdited, setIsEdited] = useState(initialReport?.isEdited ?? false);
+  const [sentAt, setSentAt] = useState<Date | null>(
+    initialReport?.sentAt ?? null
+  );
   // What the DB holds right now — baseline for the dirty check.
   const [savedNarrative, setSavedNarrative] = useState(
     initialReport?.narrative ?? ''
@@ -198,10 +269,22 @@ export default function KidReportClient({
   const [narrative, setNarrative] = useState(initialReport?.narrative ?? '');
   const [isGenerating, setIsGenerating] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isReviewing, setIsReviewing] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const [showRegenConfirm, setShowRegenConfirm] = useState(false);
+  const [showSendConfirm, setShowSendConfirm] = useState(false);
+  const [tab, setTab] = useState(initialReport ? 'preview' : 'editor');
 
   const isSent = reportStatus === MONTHLY_REPORT_STATUS.SENT;
+  const isReviewed = reportStatus === MONTHLY_REPORT_STATUS.REVIEWED;
   const isDirty = narrative !== savedNarrative;
+  const isBusy = isGenerating || isSaving || isReviewing || isSending;
+
+  // Regeneration protection: unsaved edits block it entirely (they would be
+  // silently lost); saved manual edits or a completed review need explicit
+  // destructive confirmation.
+  const regenBlockedByDirty = isDirty;
+  const regenNeedsConfirm = hasReport && (isEdited || isReviewed);
 
   // Final month of the selected term belongs to termly reporting. No termly
   // report module exists yet, so the link is always the create state.
@@ -218,16 +301,18 @@ export default function KidReportClient({
     setIsGenerating(true);
     try {
       const result = await kidReportAction.generateMonthlyReport(params);
-      if (result?.success) {
+      if (result.success) {
         // Server persisted the draft — adopt it locally only on success.
         setHasReport(true);
         setNarrative(result.data.narrative);
         setSavedNarrative(result.data.narrative);
-        setReportStatus(MONTHLY_REPORT_STATUS.GENERATED);
+        setReportStatus(MONTHLY_REPORT_STATUS.DRAFT);
+        setIsEdited(false);
+        setSentAt(null);
         toast.success(result.message ?? 'Draft laporan berhasil dibuat');
         router.refresh();
       } else {
-        toast.error(result?.message ?? 'Gagal membuat draft');
+        toast.error(result.message ?? 'Gagal membuat draft');
       }
     } catch {
       toast.error('Terjadi kesalahan. Silahkan coba lagi');
@@ -237,8 +322,7 @@ export default function KidReportClient({
   }
 
   function handleRegenerateClick() {
-    // Protect unsaved manual edits before regeneration overwrites them.
-    if (isDirty) {
+    if (regenNeedsConfirm) {
       setShowRegenConfirm(true);
       return;
     }
@@ -252,18 +336,67 @@ export default function KidReportClient({
         ...params,
         narrative,
       });
-      if (result?.success) {
+      if (result.success) {
         setSavedNarrative(result.data.narrative ?? '');
         setReportStatus(result.data.reportStatus);
-        toast.success(result.message ?? 'Laporan berhasil disimpan');
+        setIsEdited(result.data.isEdited);
+        toast.success(
+          result.message ??
+            (result.data.isEdited
+              ? 'Laporan berhasil disimpan'
+              : 'Tidak ada perubahan untuk disimpan')
+        );
         router.refresh();
       } else {
-        toast.error(result?.message ?? 'Gagal menyimpan laporan');
+        toast.error(result.message ?? 'Gagal menyimpan laporan');
       }
     } catch {
       toast.error('Terjadi kesalahan. Silahkan coba lagi');
     } finally {
       setIsSaving(false);
+    }
+  }
+
+  async function handleReview() {
+    setIsReviewing(true);
+    try {
+      const result = await kidReportAction.reviewMonthlyReport(params);
+      if (result.success) {
+        setReportStatus(result.data.reportStatus);
+        toast.success(result.message ?? 'Laporan ditandai sudah direview');
+        router.refresh();
+      } else {
+        toast.error(result.message ?? 'Gagal menandai laporan direview');
+      }
+    } catch {
+      toast.error('Terjadi kesalahan. Silahkan coba lagi');
+    } finally {
+      setIsReviewing(false);
+    }
+  }
+
+  // Once sent, the editor tab is gone — force the readable preview.
+  function handleTabChange(value: unknown) {
+    if (typeof value === 'string') setTab(value);
+  }
+
+  async function handleSend() {
+    setShowSendConfirm(false);
+    setIsSending(true);
+    try {
+      const result = await kidReportAction.sendMonthlyReport(params);
+      if (result.success) {
+        setReportStatus(result.data.reportStatus);
+        setSentAt(result.data.sentAt);
+        toast.success(result.message ?? 'Laporan berhasil dikirim');
+        router.refresh();
+      } else {
+        toast.error(result.message ?? 'Gagal mengirim laporan');
+      }
+    } catch {
+      toast.error('Terjadi kesalahan. Silahkan coba lagi');
+    } finally {
+      setIsSending(false);
     }
   }
 
@@ -312,7 +445,7 @@ export default function KidReportClient({
             <ItemContent>
               <ItemTitle>Catatan Guru</ItemTitle>
               <ItemDescription>
-                <Badge>10</Badge>
+                <Badge>{kidDetails?.dcrObservations.length ?? 0}</Badge>
               </ItemDescription>
             </ItemContent>
           </Item>
@@ -377,60 +510,170 @@ export default function KidReportClient({
         ) : (
           <div className="my-2 p-4 border-2 rounded-md ">
             {reportStatus && (
-              <div className="mb-2">
-                <Badge>{MONTHLY_REPORT_STATUS_LABELS[reportStatus]}</Badge>
+              <div className="mb-2 flex flex-wrap items-center gap-2">
+                {getStatusBadge(reportStatus)}
+                {isEdited && !isSent && (
+                  <Badge variant="secondary">Diedit manual</Badge>
+                )}
+                {isSent && sentAt && (
+                  <span className="text-xs text-muted-foreground">
+                    Dikirim{' '}
+                    {Intl.DateTimeFormat('id-ID', {
+                      day: 'numeric',
+                      month: 'long',
+                      year: 'numeric',
+                    }).format(sentAt)}
+                  </span>
+                )}
               </div>
             )}
-            <Textarea
-              value={narrative}
-              onChange={(e) => setNarrative(e.target.value)}
-              readOnly={isSent}
-              placeholder="Buat draft dengan AI, atau tulis manual di sini"
-            />
-            <div className="mt-2 flex flex-wrap gap-2">
-              {!hasReport && (
-                <Button onClick={handleRegenerateClick} disabled={isGenerating}>
-                  <HugeiconsIcon icon={AiBrain01Icon} />
-                  {isGenerating ? 'Membuat draft...' : 'Buat Draft dengan AI'}
-                </Button>
-              )}
-              {hasReport && !isSent && (
-                <>
-                  <Button
-                    onClick={handleRegenerateClick}
-                    disabled={isGenerating}
-                    variant="outline"
-                  >
-                    <HugeiconsIcon icon={AiBrain01Icon} />
-                    {isGenerating ? 'Membuat draft...' : 'Regenerate'}
-                  </Button>
-                  <Button onClick={handleSave} disabled={isSaving || !isDirty}>
-                    <HugeiconsIcon icon={FloppyDiskIcon} />
-                    {isSaving ? 'Menyimpan...' : 'Simpan'}
-                  </Button>
-                </>
-              )}
-            </div>
+
+            <Tabs
+              value={isSent ? 'preview' : tab}
+              onValueChange={handleTabChange}
+            >
+              <TabsList>
+                <TabsTrigger value="editor" disabled={isSent}>
+                  Editor
+                </TabsTrigger>
+                <TabsTrigger value="preview">Pratinjau</TabsTrigger>
+              </TabsList>
+              <TabsContent value="editor">
+                <Textarea
+                  value={narrative}
+                  onChange={(e) => setNarrative(e.target.value)}
+                  readOnly={isSent}
+                  className="min-h-70"
+                  placeholder="Buat draft dengan AI, atau tulis manual di sini"
+                />
+              </TabsContent>
+              <TabsContent value="preview">
+                <div className="rounded-xl border p-4">
+                  <h2 className="mb-3 font-semibold">
+                    Laporan Bulanan · {formatDate(currentMonth)}
+                  </h2>
+                  <NarrativePreview narrative={narrative} />
+                </div>
+              </TabsContent>
+            </Tabs>
+
+            {!isSent && (
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                {!hasReport ? (
+                  <>
+                    <Button onClick={handleRegenerateClick} disabled={isBusy}>
+                      <HugeiconsIcon icon={AiBrain01Icon} />
+                      {isGenerating
+                        ? 'Membuat draft...'
+                        : 'Buat Draft dengan AI'}
+                    </Button>
+                    <Button
+                      onClick={handleSave}
+                      disabled={isBusy || !narrative.trim()}
+                      variant="secondary"
+                    >
+                      <HugeiconsIcon icon={FloppyDiskIcon} />
+                      {isSaving ? 'Menyimpan...' : 'Simpan Draft'}
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button onClick={handleSave} disabled={isBusy || !isDirty}>
+                      <HugeiconsIcon icon={FloppyDiskIcon} />
+                      {isSaving ? 'Menyimpan...' : 'Simpan'}
+                    </Button>
+                    <Button
+                      onClick={handleReview}
+                      disabled={isBusy || isDirty || isReviewed}
+                      variant="secondary"
+                    >
+                      <HugeiconsIcon icon={TickDouble03Icon} />
+                      {isReviewing
+                        ? 'Menandai...'
+                        : isReviewed
+                          ? 'Sudah Direview'
+                          : 'Tandai Direview'}
+                    </Button>
+                    <Button
+                      onClick={() => setShowSendConfirm(true)}
+                      disabled={isBusy || isDirty || !isReviewed}
+                    >
+                      <HugeiconsIcon icon={SendIcon} />
+                      Kirim Laporan
+                    </Button>
+                    <Button
+                      onClick={handleRegenerateClick}
+                      disabled={isBusy || regenBlockedByDirty}
+                      variant="outline"
+                    >
+                      <HugeiconsIcon icon={AiBrain01Icon} />
+                      {isGenerating ? 'Membuat draft...' : 'Regenerate'}
+                    </Button>
+                  </>
+                )}
+              </div>
+            )}
+
+            {regenBlockedByDirty && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                {hasReport
+                  ? 'Simpan atau batalkan perubahan di editor sebelum regenerate — perubahan yang belum disimpan akan hilang.'
+                  : 'Simpan draft tulisan Anda terlebih dahulu, atau kosongkan editor, sebelum membuat draft dengan AI.'}
+              </p>
+            )}
+            {!isSent && hasReport && isDirty && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Simpan perubahan terlebih dahulu untuk menandai laporan direview
+                atau mengirimnya.
+              </p>
+            )}
+            {isSent && (
+              <p className="mt-2 text-xs text-muted-foreground">
+                Laporan sudah dikirim dan tidak dapat diubah lagi.
+              </p>
+            )}
           </div>
         )}
       </div>
 
-      {/* Unsaved-changes guard before regeneration */}
+      {/* Destructive confirmation before regeneration replaces saved content */}
       <AlertDialog open={showRegenConfirm} onOpenChange={setShowRegenConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              Ada perubahan yang belum disimpan
+              Ganti laporan dengan draft AI baru?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Regenerate akan mengganti isi laporan dengan draft AI baru dan
-              perubahan manual Anda akan hilang. Lanjutkan?
+              Laporan yang tersimpan saat ini — termasuk{' '}
+              {isReviewed ? 'hasil review' : 'perubahan manual Anda'} — akan
+              diganti sepenuhnya oleh draft AI baru dan statusnya kembali
+              menjadi Draft. Tindakan ini tidak dapat dibatalkan.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
             <AlertDialogCancel>Batal</AlertDialogCancel>
             <AlertDialogAction onClick={handleGenerate}>
-              Ya, Regenerate
+              Ya, Ganti Laporan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Explicit confirmation before marking a report sent */}
+      <AlertDialog open={showSendConfirm} onOpenChange={setShowSendConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Kirim laporan ini?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Setelah ditandai terkirim, laporan tidak dapat diedit,
+              diregenerate, atau dihapus lagi. Pastikan isi laporan sudah sesuai
+              sebelum melanjutkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleSend}>
+              Ya, Kirim Laporan
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

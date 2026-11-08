@@ -4,6 +4,7 @@ import {
 } from '@/features/report/constants';
 import { relations } from 'drizzle-orm';
 import {
+  boolean,
   index,
   pgEnum,
   pgTable,
@@ -13,6 +14,7 @@ import {
   uuid,
 } from 'drizzle-orm/pg-core';
 
+import { user } from './auth';
 import { term } from './enrollment';
 import { kid } from './kids';
 
@@ -45,9 +47,14 @@ export const monthlyKidReport = pgTable(
       .references(() => term.id, { onDelete: 'cascade' }),
     month: text('month').notNull(),
     narrative: text('narrative'),
-    reportStatus: monthlyKidReportEnum('report_status').default(
-      MONTHLY_REPORT_STATUS.GENERATED
-    ),
+    reportStatus: monthlyKidReportEnum('report_status')
+      .notNull()
+      .default(MONTHLY_REPORT_STATUS.DRAFT),
+    /** Teacher changed the generated content — independent of lifecycle. */
+    isEdited: boolean('is_edited').notNull().default(false),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    sentAt: timestamp('sent_at', { withTimezone: true }),
+    sentBy: text('sent_by').references(() => user.id, { onDelete: 'set null' }),
     createdAt: timestamp('created_at').notNull().defaultNow(),
     updatedAt: timestamp('updated_at')
       .notNull()
@@ -58,6 +65,7 @@ export const monthlyKidReport = pgTable(
   (table) => [
     index('mkr_kid_id_idx').on(table.kidId),
     index('mkr_term_id_idx').on(table.termId),
+    index('mkr_sent_by_idx').on(table.sentBy),
     uniqueIndex('monthly_kid_report_kid_term_month_uniq').on(
       table.kidId,
       table.termId,
@@ -66,7 +74,7 @@ export const monthlyKidReport = pgTable(
   ]
 );
 
-export const monthlyKidReportRelationship = relations(
+export const monthlyKidReportRelations = relations(
   monthlyKidReport,
   ({ one }) => ({
     kid: one(kid, {
@@ -76,6 +84,10 @@ export const monthlyKidReportRelationship = relations(
     term: one(term, {
       fields: [monthlyKidReport.termId],
       references: [term.id],
+    }),
+    sentByUser: one(user, {
+      fields: [monthlyKidReport.sentBy],
+      references: [user.id],
     }),
   })
 );

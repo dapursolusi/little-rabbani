@@ -76,6 +76,24 @@ export class ReportNotFoundError extends AppError {
   }
 }
 
+export class ReportEmptyError extends AppError {
+  constructor() {
+    super(
+      'Monthly report has no narrative',
+      'Laporan masih kosong. Isi narasi sebelum direview'
+    );
+  }
+}
+
+export class ReportNotReviewedError extends AppError {
+  constructor() {
+    super(
+      'Monthly report has not been reviewed',
+      'Laporan harus direview terlebih dahulu sebelum dikirim'
+    );
+  }
+}
+
 export class FinalMonthUsesTermlyReportError extends AppError {
   constructor() {
     super(
