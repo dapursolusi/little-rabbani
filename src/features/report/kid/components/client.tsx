@@ -558,17 +558,6 @@ export default function KidReportClient({
               </div>
               {!isSent && (
                 <div className="flex flex-wrap items-center gap-2">
-                  {canUndo && (
-                    <Button
-                      onClick={() => setShowUndoConfirm(true)}
-                      disabled={isBusy}
-                      variant="ghost"
-                      size="sm"
-                    >
-                      <HugeiconsIcon icon={UndoIcon} />
-                      Undo
-                    </Button>
-                  )}
                   <Button
                     onClick={handleRegenerateClick}
                     disabled={isBusy}
@@ -585,49 +574,67 @@ export default function KidReportClient({
                 </div>
               )}
             </div>
+            <div className="flex items-center justify-between gap-2">
+              <Tabs
+                value={isSent ? 'preview' : tab}
+                onValueChange={handleTabChange}
+              >
+                <div className="flex items-center justify-between">
+                  <TabsList>
+                    <TabsTrigger value="editor" disabled={isSent}>
+                      <HugeiconsIcon icon={NoteEditIcon} />
+                      Editor
+                    </TabsTrigger>
+                    <TabsTrigger value="preview">
+                      <HugeiconsIcon icon={ViewIcon} />
+                      Pratinjau
+                    </TabsTrigger>
+                  </TabsList>
 
-            <Tabs
-              value={isSent ? 'preview' : tab}
-              onValueChange={handleTabChange}
-            >
-              <TabsList>
-                <TabsTrigger value="editor" disabled={isSent}>
-                  <HugeiconsIcon icon={NoteEditIcon} />
-                  Editor
-                </TabsTrigger>
-                <TabsTrigger value="preview">
-                  <HugeiconsIcon icon={ViewIcon} />
-                  Pratinjau
-                </TabsTrigger>
-              </TabsList>
-              <TabsContent value="editor">
-                <Textarea
-                  value={narrative}
-                  onChange={(e) => setNarrative(e.target.value)}
-                  readOnly={isSent}
-                  className="min-h-70"
-                  placeholder="Buat draft dengan AI, atau tulis manual di sini"
-                />
-              </TabsContent>
-              <TabsContent value="preview">
-                <div className="rounded-xl border p-4">
-                  <h2 className="mb-3 font-semibold">
-                    Laporan Bulanan · {formatDate(currentMonth)}
-                  </h2>
-                  <NarrativePreview narrative={narrative} />
+                  {!isSent && canUndo && (
+                    <Button
+                      onClick={() => setShowUndoConfirm(true)}
+                      disabled={isBusy}
+                      className="inline-flex"
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <HugeiconsIcon icon={UndoIcon} />
+                      Undo
+                    </Button>
+                  )}
                 </div>
-              </TabsContent>
-            </Tabs>
+
+                <TabsContent value="editor">
+                  <Textarea
+                    value={narrative}
+                    onChange={(e) => setNarrative(e.target.value)}
+                    readOnly={isSent}
+                    className="min-h-70"
+                    placeholder="Buat draft dengan AI, atau tulis manual di sini"
+                  />
+                </TabsContent>
+                <TabsContent value="preview">
+                  <div className="rounded-xl border p-4">
+                    <h2 className="mb-3 font-semibold">
+                      Laporan Bulanan · {formatDate(currentMonth)}
+                    </h2>
+                    <NarrativePreview narrative={narrative} />
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </div>
 
             {!isSent && (
-              <div className="mt-3 flex flex-wrap items-center gap-2">
+              <div className="mt-3 flex flex-wrap items-center gap-2 ">
                 {/* Workflow actions (left): save appears only while dirty. */}
-                <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2 max-sm:w-full">
                   {isDirty && (
                     <Button
                       onClick={handleSave}
                       disabled={isBusy || !narrative.trim()}
                       variant="secondary"
+                      className="max-sm:w-full"
                     >
                       <HugeiconsIcon icon={FloppyDiskIcon} />
                       {isSaving ? 'Menyimpan...' : 'Simpan'}
@@ -640,6 +647,7 @@ export default function KidReportClient({
                         onClick={handleReview}
                         disabled={isBusy}
                         variant="secondary"
+                        className="max-sm:w-full"
                       >
                         <HugeiconsIcon icon={TickDouble03Icon} />
                         {isReviewing ? 'Menandai...' : 'Tandai Direview'}
