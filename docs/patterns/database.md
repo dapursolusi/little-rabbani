@@ -122,8 +122,9 @@ Use as `columns: { ...omitAuditColumns }` in `db.query.*`. Per-entity lean selec
 
 ## Migrations
 
-- During active development, local schema syncing (`push`) is fine — schema is free to edit until the feature works locally.
-- At freeze, ship schema changes as generated migrations (generate → migrate). Don't bypass the migration chain on shared/prod DBs.
+- **One migration file per feature branch.** `db:generate` runs once, at PR time. `db:push` handles all schema sync during active dev and never writes migration files.
+- **Fold, don't add.** Schema moved after this branch's migration was generated? Delete the `.sql`, its `meta/NNNN_snapshot.json`, and its journal entry, then `db:generate` again — still one file for the branch.
+- **After the branch migration exists, regenerating or hand-editing migration files requires user confirmation.** Unconfirmed schema changes are pushed but not migrated; they land in the next feature's migration — only safe when this PR's code doesn't read the new schema.
 - The migration chain is the source of truth for production schema state.
 
 ## Referential actions

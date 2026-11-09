@@ -1,5 +1,5 @@
 {
-  "id": "a359de4c-be7d-4c9c-b5ed-3045f47c34ea",
+  "id": "ef0cc0d8-48f5-464b-802b-8f192c776acf",
   "prevId": "93a6cf0a-5149-49e5-9840-e280e9e3b746",
   "version": "7",
   "dialect": "postgresql",
@@ -1338,8 +1338,33 @@
           "type": "monthly_report_status",
           "typeSchema": "public",
           "primaryKey": false,
-          "notNull": false,
-          "default": "'generated'"
+          "notNull": true,
+          "default": "'draft'"
+        },
+        "is_edited": {
+          "name": "is_edited",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "default": false
+        },
+        "reviewed_at": {
+          "name": "reviewed_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sent_at": {
+          "name": "sent_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "sent_by": {
+          "name": "sent_by",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
         },
         "created_at": {
           "name": "created_at",
@@ -1363,6 +1388,51 @@
         }
       },
       "indexes": {
+        "mkr_kid_id_idx": {
+          "name": "mkr_kid_id_idx",
+          "columns": [
+            {
+              "expression": "kid_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mkr_term_id_idx": {
+          "name": "mkr_term_id_idx",
+          "columns": [
+            {
+              "expression": "term_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "mkr_sent_by_idx": {
+          "name": "mkr_sent_by_idx",
+          "columns": [
+            {
+              "expression": "sent_by",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "monthly_kid_report_kid_term_month_uniq": {
           "name": "monthly_kid_report_kid_term_month_uniq",
           "columns": [
@@ -1416,6 +1486,19 @@
             "id"
           ],
           "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "monthly_kid_report_sent_by_user_id_fk": {
+          "name": "monthly_kid_report_sent_by_user_id_fk",
+          "tableFrom": "monthly_kid_report",
+          "tableTo": "user",
+          "columnsFrom": [
+            "sent_by"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "set null",
           "onUpdate": "no action"
         }
       },
@@ -1700,8 +1783,8 @@
       "name": "monthly_report_status",
       "schema": "public",
       "values": [
-        "generated",
-        "edited",
+        "draft",
+        "reviewed",
         "sent"
       ]
     }

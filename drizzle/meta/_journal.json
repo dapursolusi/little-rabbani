@@ -75,15 +75,8 @@
     {
       "idx": 10,
       "version": "7",
-      "when": 1793948187544,
-      "tag": "0010_striped_electro",
-      "breakpoints": true
-    },
-    {
-      "idx": 11,
-      "version": "7",
-      "when": 1794180807561,
-      "tag": "0011_green_vertigo",
+      "when": 1794195819227,
+      "tag": "0010_neat_black_widow",
       "breakpoints": true
     }
   ]
