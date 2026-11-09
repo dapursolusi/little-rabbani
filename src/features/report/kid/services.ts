@@ -90,7 +90,26 @@ export async function saveMonthlyReportNarrative({
 }: MonthlyKidReportParams & { narrative: string }) {
   await assertReportableMonth({ kidId, termId, yearMonth });
 
-  const existing = await assertMutableReport({ kidId, termId, yearMonth });
+  // No row yet: the user wrote the first draft manually (no AI generation).
+  // Same upsert path as generation, flagged as a manual edit.
+  const existing = await kidReportRepo.findMonthlyReportRow({
+    kidId,
+    termId,
+    yearMonth,
+  });
+  if (!existing) {
+    const created = await kidReportRepo.createMonthlyReport({
+      kidId,
+      termId,
+      yearMonth,
+      narrative,
+      isEdited: true,
+    });
+    if (!created) throw new ReportAlreadySentError();
+
+    return created;
+  }
+  assertNotSent(existing);
 
   // Saving unchanged content is a no-op — it must not flag manual edits or
   // invalidate a review.
@@ -230,6 +249,13 @@ async function assertReportableMonth({
   if (range.isFinalMonth) throw new FinalMonthUsesTermlyReportError();
 }
 
+/** Sent reports are immutable — one guard shape for every caller. */
+function assertNotSent(existing: MonthlyReportRow) {
+  if (existing.reportStatus === MONTHLY_REPORT_STATUS.SENT) {
+    throw new ReportAlreadySentError();
+  }
+}
+
 /** Load a report row that may be changed: it must exist and not be sent. */
 async function assertMutableReport({
   kidId,
@@ -242,9 +268,7 @@ async function assertMutableReport({
     yearMonth,
   });
   if (!existing) throw new ReportNotFoundError();
-  if (existing.reportStatus === MONTHLY_REPORT_STATUS.SENT) {
-    throw new ReportAlreadySentError();
-  }
+  assertNotSent(existing);
 
   return existing;
 }

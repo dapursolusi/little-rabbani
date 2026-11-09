@@ -238,17 +238,33 @@ describe('saveMonthlyReportNarrative', () => {
     expect(result.isEdited).toBe(false);
   });
 
-  it('rejects when no report exists', async () => {
+  it('creates a manual draft when no report exists yet', async () => {
     mocks.findMonthlyReportRow.mockResolvedValue(null);
+
+    await kidReportService.saveMonthlyReportNarrative({
+      ...PARAMS,
+      narrative: 'manual draft',
+    });
+
+    expect(mocks.createMonthlyReport).toHaveBeenCalledWith({
+      ...PARAMS,
+      narrative: 'manual draft',
+      isEdited: true,
+    });
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
+  });
+
+  it('rejects saving a report that was sent concurrently', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue(null);
+    // The upsert refuses sent rows, so it returns nothing.
+    mocks.createMonthlyReport.mockResolvedValue(null);
 
     await expect(
       kidReportService.saveMonthlyReportNarrative({
         ...PARAMS,
         narrative: 'edited text',
       })
-    ).rejects.toThrow(ReportNotFoundError);
-
-    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
+    ).rejects.toThrow(ReportAlreadySentError);
   });
 
   it('rejects when report is sent', async () => {

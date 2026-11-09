@@ -93,7 +93,8 @@ export async function createMonthlyReport({
   termId,
   yearMonth,
   narrative,
-}: MonthlyKidReportParams & { narrative: string }) {
+  isEdited = false,
+}: MonthlyKidReportParams & { narrative: string; isEdited?: boolean }) {
   const [report] = await db
     .insert(monthlyKidReport)
     .values({
@@ -102,7 +103,7 @@ export async function createMonthlyReport({
       month: yearMonth,
       narrative,
       reportStatus: MONTHLY_REPORT_STATUS.DRAFT,
-      isEdited: false,
+      isEdited,
     })
     .onConflictDoUpdate({
       target: [
@@ -114,7 +115,9 @@ export async function createMonthlyReport({
       set: {
         narrative,
         reportStatus: MONTHLY_REPORT_STATUS.DRAFT,
-        isEdited: false,
+        // Same flag as the insert path — a concurrent create must not drop a
+        // manual-edit save into an unflagged AI-draft row.
+        isEdited,
         reviewedAt: null,
         sentAt: null,
         sentBy: null,

@@ -27,6 +27,8 @@ import {
   SquareChevronLeftIcon,
   SquareChevronRightIcon,
   TickDouble03Icon,
+  UndoIcon,
+  ViewIcon,
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
@@ -273,6 +275,8 @@ export default function KidReportClient({
   const [isSending, setIsSending] = useState(false);
   const [showRegenConfirm, setShowRegenConfirm] = useState(false);
   const [showSendConfirm, setShowSendConfirm] = useState(false);
+  // Content before the latest regeneration — the single-level undo baseline.
+  const [undoNarrative, setUndoNarrative] = useState<string | null>(null);
   const [tab, setTab] = useState(initialReport ? 'preview' : 'editor');
 
   const isSent = reportStatus === MONTHLY_REPORT_STATUS.SENT;
@@ -280,11 +284,10 @@ export default function KidReportClient({
   const isDirty = narrative !== savedNarrative;
   const isBusy = isGenerating || isSaving || isReviewing || isSending;
 
-  // Regeneration protection: unsaved edits block it entirely (they would be
-  // silently lost); saved manual edits or a completed review need explicit
-  // destructive confirmation.
-  const regenBlockedByDirty = isDirty;
-  const regenNeedsConfirm = hasReport && (isEdited || isReviewed);
+  // Regeneration protection: unsaved edits, saved manual edits, and a
+  // completed review are all destroyed by a replacement draft, so each needs
+  // explicit confirmation. The prior content is kept for a one-step undo.
+  const regenNeedsConfirm = isDirty || (hasReport && (isEdited || isReviewed));
 
   // Final month of the selected term belongs to termly reporting. No termly
   // report module exists yet, so the link is always the create state.
@@ -298,12 +301,17 @@ export default function KidReportClient({
 
   async function handleGenerate() {
     setShowRegenConfirm(false);
+    // Keep what the editor showed for a single-step undo — including a typed
+    // first draft that has no report row yet. An empty editor has nothing to
+    // restore.
+    const previousNarrative = narrative.trim() ? narrative : null;
     setIsGenerating(true);
     try {
       const result = await kidReportAction.generateMonthlyReport(params);
       if (result.success) {
         // Server persisted the draft — adopt it locally only on success.
         setHasReport(true);
+        setUndoNarrative(previousNarrative);
         setNarrative(result.data.narrative);
         setSavedNarrative(result.data.narrative);
         setReportStatus(MONTHLY_REPORT_STATUS.DRAFT);
@@ -329,6 +337,18 @@ export default function KidReportClient({
     handleGenerate();
   }
 
+  // Single-level undo: restore the pre-regeneration content as an unsaved
+  // edit. Saving it persists; there is no deeper history.
+  function handleUndo() {
+    if (undoNarrative === null) return;
+    setNarrative(undoNarrative);
+    setUndoNarrative(null);
+    setTab('editor');
+    toast.success(
+      'Konten sebelum regenerate dipulihkan. Simpan untuk menyimpan.'
+    );
+  }
+
   async function handleSave() {
     setIsSaving(true);
     try {
@@ -337,9 +357,13 @@ export default function KidReportClient({
         narrative,
       });
       if (result.success) {
+        setHasReport(true);
         setSavedNarrative(result.data.narrative ?? '');
         setReportStatus(result.data.reportStatus);
         setIsEdited(result.data.isEdited);
+        // The saved content is the new baseline — an old undo would silently
+        // discard it.
+        setUndoNarrative(null);
         toast.success(
           result.message ??
             (result.data.isEdited
@@ -509,9 +533,10 @@ export default function KidReportClient({
           </div>
         ) : (
           <div className="my-2 p-4 border-2 rounded-md ">
-            {reportStatus && (
-              <div className="mb-2 flex flex-wrap items-center gap-2">
-                {getStatusBadge(reportStatus)}
+            {/* Status (left) — content actions (right) */}
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                {reportStatus && getStatusBadge(reportStatus)}
                 {isEdited && !isSent && (
                   <Badge variant="secondary">Diedit manual</Badge>
                 )}
@@ -526,7 +551,35 @@ export default function KidReportClient({
                   </span>
                 )}
               </div>
-            )}
+              {!isSent && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {undoNarrative !== null && (
+                    <Button
+                      onClick={handleUndo}
+                      disabled={isBusy}
+                      variant="ghost"
+                      size="sm"
+                    >
+                      <HugeiconsIcon icon={UndoIcon} />
+                      Undo
+                    </Button>
+                  )}
+                  <Button
+                    onClick={handleRegenerateClick}
+                    disabled={isBusy}
+                    variant="outline"
+                    size="sm"
+                  >
+                    <HugeiconsIcon icon={AiBrain01Icon} />
+                    {isGenerating
+                      ? 'Membuat draft...'
+                      : hasReport
+                        ? 'Regenerate'
+                        : 'Buat Draft dengan AI'}
+                  </Button>
+                </div>
+              )}
+            </div>
 
             <Tabs
               value={isSent ? 'preview' : tab}
@@ -534,9 +587,13 @@ export default function KidReportClient({
             >
               <TabsList>
                 <TabsTrigger value="editor" disabled={isSent}>
+                  <HugeiconsIcon icon={NoteEditIcon} />
                   Editor
                 </TabsTrigger>
-                <TabsTrigger value="preview">Pratinjau</TabsTrigger>
+                <TabsTrigger value="preview">
+                  <HugeiconsIcon icon={ViewIcon} />
+                  Pratinjau
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="editor">
                 <Textarea
@@ -559,68 +616,43 @@ export default function KidReportClient({
 
             {!isSent && (
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                {!hasReport ? (
-                  <>
-                    <Button onClick={handleRegenerateClick} disabled={isBusy}>
-                      <HugeiconsIcon icon={AiBrain01Icon} />
-                      {isGenerating
-                        ? 'Membuat draft...'
-                        : 'Buat Draft dengan AI'}
-                    </Button>
+                {/* Workflow actions (left): save appears only while dirty. */}
+                <div className="flex flex-wrap items-center gap-2">
+                  {isDirty && (
                     <Button
                       onClick={handleSave}
                       disabled={isBusy || !narrative.trim()}
                       variant="secondary"
                     >
                       <HugeiconsIcon icon={FloppyDiskIcon} />
-                      {isSaving ? 'Menyimpan...' : 'Simpan Draft'}
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button onClick={handleSave} disabled={isBusy || !isDirty}>
-                      <HugeiconsIcon icon={FloppyDiskIcon} />
                       {isSaving ? 'Menyimpan...' : 'Simpan'}
                     </Button>
-                    <Button
-                      onClick={handleReview}
-                      disabled={isBusy || isDirty || isReviewed}
-                      variant="secondary"
-                    >
-                      <HugeiconsIcon icon={TickDouble03Icon} />
-                      {isReviewing
-                        ? 'Menandai...'
-                        : isReviewed
-                          ? 'Sudah Direview'
-                          : 'Tandai Direview'}
-                    </Button>
-                    <Button
-                      onClick={() => setShowSendConfirm(true)}
-                      disabled={isBusy || isDirty || !isReviewed}
-                    >
-                      <HugeiconsIcon icon={SendIcon} />
-                      Kirim Laporan
-                    </Button>
-                    <Button
-                      onClick={handleRegenerateClick}
-                      disabled={isBusy || regenBlockedByDirty}
-                      variant="outline"
-                    >
-                      <HugeiconsIcon icon={AiBrain01Icon} />
-                      {isGenerating ? 'Membuat draft...' : 'Regenerate'}
-                    </Button>
-                  </>
-                )}
+                  )}
+                  {hasReport &&
+                    !isDirty &&
+                    reportStatus === MONTHLY_REPORT_STATUS.DRAFT && (
+                      <Button
+                        onClick={handleReview}
+                        disabled={isBusy}
+                        variant="secondary"
+                      >
+                        <HugeiconsIcon icon={TickDouble03Icon} />
+                        {isReviewing ? 'Menandai...' : 'Tandai Direview'}
+                      </Button>
+                    )}
+                </div>
+                {/* Sending is the primary action, pinned right. */}
+                <Button
+                  className="ml-auto max-sm:w-full"
+                  onClick={() => setShowSendConfirm(true)}
+                  disabled={isBusy || !hasReport || isDirty || !isReviewed}
+                >
+                  <HugeiconsIcon icon={SendIcon} />
+                  {isSending ? 'Mengirim...' : 'Kirim Laporan'}
+                </Button>
               </div>
             )}
 
-            {regenBlockedByDirty && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                {hasReport
-                  ? 'Simpan atau batalkan perubahan di editor sebelum regenerate — perubahan yang belum disimpan akan hilang.'
-                  : 'Simpan draft tulisan Anda terlebih dahulu, atau kosongkan editor, sebelum membuat draft dengan AI.'}
-              </p>
-            )}
             {!isSent && hasReport && isDirty && (
               <p className="mt-2 text-xs text-muted-foreground">
                 Simpan perubahan terlebih dahulu untuk menandai laporan direview
@@ -644,10 +676,11 @@ export default function KidReportClient({
               Ganti laporan dengan draft AI baru?
             </AlertDialogTitle>
             <AlertDialogDescription>
-              Laporan yang tersimpan saat ini — termasuk{' '}
-              {isReviewed ? 'hasil review' : 'perubahan manual Anda'} — akan
-              diganti sepenuhnya oleh draft AI baru dan statusnya kembali
-              menjadi Draft. Tindakan ini tidak dapat dibatalkan.
+              {isDirty
+                ? 'Perubahan yang belum disimpan di editor akan hilang dan diganti sepenuhnya oleh draft AI baru. Setelah selesai Anda dapat membatalkannya dengan Undo.'
+                : `Laporan yang tersimpan saat ini — termasuk ${
+                    isReviewed ? 'hasil review' : 'perubahan manual Anda'
+                  } — akan diganti sepenuhnya oleh draft AI baru dan statusnya kembali menjadi Draft. Setelah selesai Anda dapat membatalkannya dengan Undo.`}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2">
