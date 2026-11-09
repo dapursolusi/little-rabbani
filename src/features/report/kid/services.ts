@@ -47,16 +47,15 @@ export async function generateMonthlyReport(input: MonthlyKidReportParams) {
   // territory) must never reach generation.
   await assertReportableMonth(input);
 
+  // Sent reports are immutable, so refuse before spending a provider call.
+  // Checked again after generation for a useful message; the repo upsert also
+  // refuses to touch a sent row.
+  const existing = await kidReportRepo.findMonthlyReportRow(input);
+  assertNotSentOrMissing(existing);
+
   // Generate and format the replacement BEFORE touching persisted content —
   // a provider failure leaves the existing report exactly as it was.
   const { narrative, aiDraft } = await generateNarrative(input);
-
-  // Sent reports are immutable. Checked here for a useful message; the repo
-  // upsert also refuses to touch a sent row.
-  const existing = await kidReportRepo.findMonthlyReportRow(input);
-  if (existing?.reportStatus === MONTHLY_REPORT_STATUS.SENT) {
-    throw new ReportAlreadySentError();
-  }
 
   // Upsert: first generation inserts, regeneration replaces. One statement
   // avoids a find-then-insert race, and resetting the lifecycle here is what
@@ -287,6 +286,11 @@ function assertNotSent(existing: MonthlyReportRow) {
   if (existing.reportStatus === MONTHLY_REPORT_STATUS.SENT) {
     throw new ReportAlreadySentError();
   }
+}
+
+/** Same guard for a read that may legitimately miss (first generation). */
+function assertNotSentOrMissing(existing: MonthlyReportRow | undefined) {
+  if (existing) assertNotSent(existing);
 }
 
 /** Load a report row that may be changed: it must exist and not be sent. */

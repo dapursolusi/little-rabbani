@@ -52,7 +52,10 @@ beforeEach(() => {
     user: { id: 'user-1', role: 'owner' },
   });
   mocks.generate.mockResolvedValue({ narrative: 'draft', aiDraft: {} });
-  mocks.generateIfMissing.mockResolvedValue({ narrative: 'draft', aiDraft: {} });
+  mocks.generateIfMissing.mockResolvedValue({
+    narrative: 'draft',
+    aiDraft: {},
+  });
   mocks.save.mockResolvedValue(ROW);
   mocks.review.mockResolvedValue({ ...ROW, reportStatus: 'reviewed' });
   mocks.send.mockResolvedValue({ ...ROW, reportStatus: 'sent' });
@@ -200,5 +203,48 @@ describe('generateMonthlyReportForBatch', () => {
     if (!result.success) {
       expect(result.message).not.toContain('sk-or-secret');
     }
+  });
+});
+
+describe('monthly report actions — input validation', () => {
+  const invalid = [
+    ['non-uuid kidId', { ...PARAMS, kidId: 'not-a-uuid' }],
+    ['non-uuid termId', { ...PARAMS, termId: 'x' }],
+    ['malformed month', { ...PARAMS, yearMonth: '2026-13' }],
+    ['month without zero padding', { ...PARAMS, yearMonth: '2026-1' }],
+  ] as const;
+
+  it.each(invalid)(
+    'rejects %s before reaching the service',
+    async (_n, input) => {
+      const result = await generateMonthlyReport(input as typeof PARAMS);
+
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.message).toBe('Data tidak valid');
+      expect(kidReportService.generateMonthlyReport).not.toHaveBeenCalled();
+    }
+  );
+
+  it('treats an empty narrative as invalid', async () => {
+    const result = await saveMonthlyReportNarrative({
+      ...PARAMS,
+      narrative: '',
+    });
+
+    expect(result.success).toBe(false);
+    expect(kidReportService.saveMonthlyReportNarrative).not.toHaveBeenCalled();
+  });
+
+  it('ignores a client-supplied sentBy on save — it is not part of the action contract', async () => {
+    await saveMonthlyReportNarrative({
+      ...PARAMS,
+      narrative: 'x',
+      ...({ sentBy: 'attacker' } as object),
+    });
+
+    expect(kidReportService.saveMonthlyReportNarrative).toHaveBeenCalledWith({
+      ...PARAMS,
+      narrative: 'x',
+    });
   });
 });

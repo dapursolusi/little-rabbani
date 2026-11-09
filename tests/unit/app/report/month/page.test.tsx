@@ -133,3 +133,12 @@ describe('MonthlyReportPage term and month selection', () => {
     });
   });
 });
+
+describe('MonthlyReportPage deployment budget', () => {
+  it('declares a function budget large enough for one bounded AI generation', async () => {
+    // Server Actions inherit the page's maxDuration. The provider call is
+    // bounded at 90s, so the page must reserve more than that.
+    const pageModule = await import('@/app/(auth)/dashboard/report/month/page');
+    expect(pageModule.maxDuration).toBeGreaterThanOrEqual(90);
+  });
+});

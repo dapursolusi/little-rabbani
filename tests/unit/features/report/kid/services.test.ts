@@ -187,6 +187,21 @@ describe('generateMonthlyReport (persistence lifecycle)', () => {
     expect(mocks.createMonthlyReport).not.toHaveBeenCalled();
   });
 
+  it('refuses a sent report before spending a provider call', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue({
+      ...ROW,
+      reportStatus: MONTHLY_REPORT_STATUS.SENT,
+    });
+
+    await expect(
+      kidReportService.generateMonthlyReport(PARAMS)
+    ).rejects.toThrow(ReportAlreadySentError);
+
+    // A sent report is immutable — there is no reason to call the LLM at all.
+    expect(mocks.generateMonthlyReportDraft).not.toHaveBeenCalled();
+    expect(mocks.aggregateMonthlyKidReportData).not.toHaveBeenCalled();
+  });
+
   it('a persistence failure surfaces and leaves the previous report untouched', async () => {
     mocks.findMonthlyReportRow.mockResolvedValue({
       ...ROW,
@@ -208,7 +223,8 @@ describe('generateMonthlyReportIfMissing (batch entry point)', () => {
   it('generates when no report exists', async () => {
     mocks.findMonthlyReportRow.mockResolvedValue(null);
 
-    const result = await kidReportService.generateMonthlyReportIfMissing(PARAMS);
+    const result =
+      await kidReportService.generateMonthlyReportIfMissing(PARAMS);
 
     expect(mocks.generateMonthlyReportDraft).toHaveBeenCalledTimes(1);
     expect(mocks.insertMonthlyReportIfMissing).toHaveBeenCalledTimes(1);

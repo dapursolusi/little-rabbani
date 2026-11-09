@@ -14,6 +14,11 @@ import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Laporan Bulanan Anak' };
 
+// Server Actions inherit this page's function budget. Generation bounds the
+// provider call at 90s; 120s leaves room for the DB reads and the write.
+// Keep in sync with `PROVIDER_TIMEOUT_MS` in features/report/kid/ai/generate.
+export const maxDuration = 120;
+
 export default async function KidReportPage({
   params,
   searchParams,

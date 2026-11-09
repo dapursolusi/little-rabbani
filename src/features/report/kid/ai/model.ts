@@ -1,7 +1,11 @@
 import { openrouter } from '@/lib/ai/provider';
 
+// Must match the variable `env.mjs` registers — an unregistered name is
+// silently absent in production and swaps the model without any error.
+const DEFAULT_MODEL = 'deepseek/deepseek-v4-flash';
+
 export const generateReportModel = openrouter(
-  process.env.OPENROUTER_DEFAULT_MODEL ?? 'openai/gpt-6-luna',
+  process.env.OPENROUTER_MODEL || DEFAULT_MODEL,
   {
     extraBody: {
       provider: {

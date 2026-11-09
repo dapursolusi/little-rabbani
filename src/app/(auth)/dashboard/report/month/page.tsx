@@ -10,6 +10,10 @@ import { baseMetadata } from '@/lib/metadata';
 
 export const metadata = { ...baseMetadata, title: 'Laporan Bulanan' };
 
+// Batch generation is one Server Action request per child; each carries the
+// same bounded generation budget as the individual page.
+export const maxDuration = 120;
+
 export default async function MonthlyReportPage({
   searchParams,
 }: {
