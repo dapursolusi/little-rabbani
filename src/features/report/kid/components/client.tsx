@@ -275,6 +275,7 @@ export default function KidReportClient({
   const [isSending, setIsSending] = useState(false);
   const [showRegenConfirm, setShowRegenConfirm] = useState(false);
   const [showSendConfirm, setShowSendConfirm] = useState(false);
+  const [showUndoConfirm, setShowUndoConfirm] = useState(false);
   // Content before the latest regeneration — the single-level undo baseline.
   const [undoNarrative, setUndoNarrative] = useState<string | null>(null);
   const [tab, setTab] = useState(initialReport ? 'preview' : 'editor');
@@ -288,6 +289,11 @@ export default function KidReportClient({
   // completed review are all destroyed by a replacement draft, so each needs
   // explicit confirmation. The prior content is kept for a one-step undo.
   const regenNeedsConfirm = isDirty || (hasReport && (isEdited || isReviewed));
+
+  // Undo restores the most recent baseline: the persisted content when there
+  // are unsaved edits, otherwise the pre-regeneration content.
+  const undoRestores = isDirty ? savedNarrative : undoNarrative;
+  const canUndo = !isSent && undoRestores !== null;
 
   // Final month of the selected term belongs to termly reporting. No termly
   // report module exists yet, so the link is always the create state.
@@ -337,16 +343,15 @@ export default function KidReportClient({
     handleGenerate();
   }
 
-  // Single-level undo: restore the pre-regeneration content as an unsaved
-  // edit. Saving it persists; there is no deeper history.
+  // Single-level undo: restore the last baseline as an unsaved edit. Saving
+  // it persists; there is no deeper history.
   function handleUndo() {
-    if (undoNarrative === null) return;
-    setNarrative(undoNarrative);
+    setShowUndoConfirm(false);
+    if (undoRestores === null) return;
+    setNarrative(undoRestores);
     setUndoNarrative(null);
     setTab('editor');
-    toast.success(
-      'Konten sebelum regenerate dipulihkan. Simpan untuk menyimpan.'
-    );
+    toast.success('Perubahan dibatalkan. Simpan untuk menyimpan.');
   }
 
   async function handleSave() {
@@ -553,9 +558,9 @@ export default function KidReportClient({
               </div>
               {!isSent && (
                 <div className="flex flex-wrap items-center gap-2">
-                  {undoNarrative !== null && (
+                  {canUndo && (
                     <Button
-                      onClick={handleUndo}
+                      onClick={() => setShowUndoConfirm(true)}
                       disabled={isBusy}
                       variant="ghost"
                       size="sm"
@@ -667,6 +672,26 @@ export default function KidReportClient({
           </div>
         )}
       </div>
+
+      {/* Destructive confirmation before undo discards the current edits */}
+      <AlertDialog open={showUndoConfirm} onOpenChange={setShowUndoConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Batalkan perubahan?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Editor akan kembali ke konten terakhir yang{' '}
+              {isDirty ? 'tersimpan' : 'diganti oleh regenerate'}. Perubahan
+              yang sedang Anda tulis akan hilang.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel>Batal</AlertDialogCancel>
+            <AlertDialogAction onClick={handleUndo}>
+              Ya, Batalkan Perubahan
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Destructive confirmation before regeneration replaces saved content */}
       <AlertDialog open={showRegenConfirm} onOpenChange={setShowRegenConfirm}>

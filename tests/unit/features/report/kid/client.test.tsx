@@ -366,10 +366,52 @@ describe('KidReportClient regeneration confirmation', () => {
   });
 });
 
-describe('KidReportClient regeneration undo', () => {
-  it('offers no undo before any regeneration', () => {
+describe('KidReportClient undo', () => {
+  it('offers no undo when nothing has changed', () => {
     renderClient({ initialReport: DRAFT_REPORT });
 
+    expect(screen.queryByText('Undo')).toBeNull();
+  });
+
+  it('offers undo as soon as the editor becomes dirty', () => {
+    renderClient({ initialReport: DRAFT_REPORT });
+    fireEvent.click(screen.getByText('Editor'));
+    fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER), {
+      target: { value: `${DRAFT_REPORT.narrative} tambahan` },
+    });
+
+    expect(screen.getByText('Undo')).not.toHaveAttribute('disabled');
+  });
+
+  it('asks for confirmation before discarding unsaved edits', () => {
+    renderClient({ initialReport: DRAFT_REPORT });
+    fireEvent.click(screen.getByText('Editor'));
+    fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER), {
+      target: { value: 'ketikan baru' },
+    });
+    fireEvent.click(screen.getByText('Undo'));
+
+    expect(screen.getByText('Batalkan perubahan?')).toBeDefined();
+    // Nothing changes until the user confirms.
+    expect(
+      (screen.getByPlaceholderText(PLACEHOLDER) as HTMLTextAreaElement).value
+    ).toBe('ketikan baru');
+  });
+
+  it('restores the saved content and clears dirty state', () => {
+    renderClient({ initialReport: DRAFT_REPORT });
+    fireEvent.click(screen.getByText('Editor'));
+    fireEvent.change(screen.getByPlaceholderText(PLACEHOLDER), {
+      target: { value: 'ketikan baru' },
+    });
+    fireEvent.click(screen.getByText('Undo'));
+    fireEvent.click(screen.getByText('Ya, Batalkan Perubahan'));
+
+    expect(
+      (screen.getByPlaceholderText(PLACEHOLDER) as HTMLTextAreaElement).value
+    ).toBe(DRAFT_REPORT.narrative);
+    // Back to the stored content — nothing to save, nothing to undo.
+    expect(screen.queryByText('Simpan')).toBeNull();
     expect(screen.queryByText('Undo')).toBeNull();
   });
 
@@ -386,16 +428,17 @@ describe('KidReportClient regeneration undo', () => {
 
     await waitFor(() => expect(screen.getByText('Undo')).toBeDefined());
     fireEvent.click(screen.getByText('Undo'));
+    fireEvent.click(screen.getByText('Ya, Batalkan Perubahan'));
 
     expect(
       (screen.getByPlaceholderText(PLACEHOLDER) as HTMLTextAreaElement).value
     ).toBe(DRAFT_REPORT.narrative);
     // Restored content differs from the persisted AI draft → must be saved.
     expect(screen.getByText('Simpan')).toBeDefined();
-    // One-step undo only.
-    expect(screen.queryByText('Undo')).toBeNull();
+    // Undo now toggles back to the stored AI draft, so it stays offered.
+    expect(screen.getByText('Undo')).not.toHaveAttribute('disabled');
     expect(toast.success).toHaveBeenCalledWith(
-      expect.stringContaining('dipulihkan')
+      expect.stringContaining('dibatalkan')
     );
   });
 });
