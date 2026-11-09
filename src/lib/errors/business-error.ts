@@ -61,6 +61,15 @@ export class NoKidObservationsError extends AppError {
 
 // Monthly Kid Report
 
+export class ReportAlreadyExistsError extends AppError {
+  constructor() {
+    super(
+      'Monthly report already exists',
+      'Laporan sudah ada dan tidak dibuat ulang'
+    );
+  }
+}
+
 export class ReportAlreadySentError extends AppError {
   constructor() {
     super(

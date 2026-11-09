@@ -9,6 +9,7 @@ import { z } from 'zod';
 import { handleActionError } from '@/lib/action/action-error';
 import { parseInput } from '@/lib/action/parse-input';
 import { auth } from '@/lib/auth';
+import { ReportAlreadyExistsError } from '@/lib/errors';
 import { isoYearMonthSchema, uuidSchema } from '@/lib/validation/common.schema';
 
 import { MonthlyKidReportParams } from '../types';
@@ -66,6 +67,44 @@ export async function generateMonthlyReport(input: MonthlyKidReportParams) {
       message: 'Berhasil membuat laporan dengan AI',
     };
   } catch (error) {
+    return handleActionError(error);
+  }
+}
+
+/**
+ * Batch generation for one child. Insert-only: refuses to regenerate or
+ * overwrite an existing report. The batch client calls this once per child so
+ * each child is its own server request; eligibility and report existence are
+ * revalidated here, never trusted from the client.
+ */
+export async function generateMonthlyReportForBatch(
+  input: MonthlyKidReportParams
+) {
+  const session = await requireReportEditor();
+  if (!session.success) return session;
+
+  try {
+    const parsed = parseInput({ input, schema: generateInputSchema });
+    if (!parsed.success) return parsed;
+
+    const reportDraft = await kidReportService.generateMonthlyReportIfMissing(
+      parsed.data
+    );
+    return {
+      success: true as const,
+      data: reportDraft,
+      message: 'Berhasil membuat laporan dengan AI',
+    };
+  } catch (error) {
+    // A row exists (or won the race): a skip, not a failure — the batch
+    // client must not count it as an error nor retry it.
+    if (error instanceof ReportAlreadyExistsError) {
+      return {
+        success: false as const,
+        message: error.publicMessage,
+        error: { type: 'conflict' as const },
+      };
+    }
     return handleActionError(error);
   }
 }

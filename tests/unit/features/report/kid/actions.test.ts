@@ -1,5 +1,6 @@
 import {
   generateMonthlyReport,
+  generateMonthlyReportForBatch,
   reviewMonthlyReport,
   saveMonthlyReportNarrative,
   sendMonthlyReport,
@@ -10,6 +11,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   getSession: vi.fn(),
   generate: vi.fn(),
+  generateIfMissing: vi.fn(),
   save: vi.fn(),
   review: vi.fn(),
   send: vi.fn(),
@@ -22,6 +24,7 @@ vi.mock('@/lib/auth', () => ({
 // Service layer is the collaborator boundary — auth must be enforced above it.
 vi.mock('@/features/report/kid/services', () => ({
   generateMonthlyReport: mocks.generate,
+  generateMonthlyReportIfMissing: mocks.generateIfMissing,
   saveMonthlyReportNarrative: mocks.save,
   markMonthlyReportReviewed: mocks.review,
   markMonthlyReportSent: mocks.send,
@@ -49,6 +52,7 @@ beforeEach(() => {
     user: { id: 'user-1', role: 'owner' },
   });
   mocks.generate.mockResolvedValue({ narrative: 'draft', aiDraft: {} });
+  mocks.generateIfMissing.mockResolvedValue({ narrative: 'draft', aiDraft: {} });
   mocks.save.mockResolvedValue(ROW);
   mocks.review.mockResolvedValue({ ...ROW, reportStatus: 'reviewed' });
   mocks.send.mockResolvedValue({ ...ROW, reportStatus: 'sent' });
@@ -56,6 +60,10 @@ beforeEach(() => {
 
 const actions = [
   ['generateMonthlyReport', () => generateMonthlyReport(PARAMS)],
+  [
+    'generateMonthlyReportForBatch',
+    () => generateMonthlyReportForBatch(PARAMS),
+  ],
   [
     'saveMonthlyReportNarrative',
     () => saveMonthlyReportNarrative({ ...PARAMS, narrative: 'x' }),
@@ -77,6 +85,9 @@ describe('monthly report actions — server-side authorization', () => {
         message: 'Anda harus masuk untuk mengubah laporan',
       });
       expect(kidReportService.generateMonthlyReport).not.toHaveBeenCalled();
+      expect(
+        kidReportService.generateMonthlyReportIfMissing
+      ).not.toHaveBeenCalled();
       expect(
         kidReportService.saveMonthlyReportNarrative
       ).not.toHaveBeenCalled();
@@ -101,6 +112,9 @@ describe('monthly report actions — owner-only', () => {
         message: 'Akses ditolak. Hanya Owner yang dapat mengubah laporan.',
       });
       expect(kidReportService.generateMonthlyReport).not.toHaveBeenCalled();
+      expect(
+        kidReportService.generateMonthlyReportIfMissing
+      ).not.toHaveBeenCalled();
       expect(
         kidReportService.saveMonthlyReportNarrative
       ).not.toHaveBeenCalled();
@@ -149,6 +163,42 @@ describe('action result contract', () => {
     expect(result.success).toBe(true);
     if (result.success) {
       expect(result.data).toEqual(ROW);
+    }
+  });
+});
+
+describe('generateMonthlyReportForBatch', () => {
+  it('delegates to the insert-only generation service — never the regenerating one', async () => {
+    const result = await generateMonthlyReportForBatch(PARAMS);
+
+    expect(mocks.generateIfMissing).toHaveBeenCalledWith(PARAMS);
+    expect(mocks.generate).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+  });
+
+  it('reports an existing report as a conflict so the batch skips it', async () => {
+    const { ReportAlreadyExistsError } = await import('@/lib/errors');
+    mocks.generateIfMissing.mockRejectedValue(new ReportAlreadyExistsError());
+
+    const result = await generateMonthlyReportForBatch(PARAMS);
+
+    expect(result).toEqual({
+      success: false,
+      message: 'Laporan sudah ada dan tidak dibuat ulang',
+      error: { type: 'conflict' },
+    });
+  });
+
+  it('does not leak provider errors to the client', async () => {
+    mocks.generateIfMissing.mockRejectedValue(
+      new Error('OpenRouter: sk-or-secret failed')
+    );
+
+    const result = await generateMonthlyReportForBatch(PARAMS);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.message).not.toContain('sk-or-secret');
     }
   });
 });

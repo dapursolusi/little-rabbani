@@ -21,6 +21,7 @@ import {
   KidNoEligibleMonthsError,
   KidNoReportHistoryError,
   KidNotEnrolledError,
+  ReportAlreadyExistsError,
   ReportAlreadySentError,
   ReportEmptyError,
   ReportNotFoundError,
@@ -46,20 +47,9 @@ export async function generateMonthlyReport(input: MonthlyKidReportParams) {
   // territory) must never reach generation.
   await assertReportableMonth(input);
 
-  const kidContext =
-    await monthlyReportService.aggregateMonthlyKidReportData(input);
-
   // Generate and format the replacement BEFORE touching persisted content —
   // a provider failure leaves the existing report exactly as it was.
-  const aiDraft = await generateMonthlyReportDraft(kidContext);
-  if (!aiDraft) {
-    throw new AppError(
-      'Failed to generate text from LLM',
-      'Gagal membuat draft'
-    );
-  }
-
-  const narrative = formatDraft(aiDraft);
+  const { narrative, aiDraft } = await generateNarrative(input);
 
   // Sent reports are immutable. Checked here for a useful message; the repo
   // upsert also refuses to touch a sent row.
@@ -78,6 +68,33 @@ export async function generateMonthlyReport(input: MonthlyKidReportParams) {
   // The repo upsert refuses sent rows, so an empty result after a non-sent
   // read means the report was sent concurrently — report it as such.
   if (!report) throw new ReportAlreadySentError();
+
+  return { narrative, aiDraft };
+}
+
+/**
+ * Batch generation entry point: create a report only when none exists.
+ * Same pipeline as `generateMonthlyReport` (eligibility → AI → format), but
+ * insert-only persistence — an existing row, even one written concurrently
+ * between the read and the LLM call, is never regenerated or overwritten.
+ */
+export async function generateMonthlyReportIfMissing(
+  input: MonthlyKidReportParams
+) {
+  await assertReportableMonth(input);
+
+  const existing = await kidReportRepo.findMonthlyReportRow(input);
+  if (existing) throw new ReportAlreadyExistsError();
+
+  const { narrative, aiDraft } = await generateNarrative(input);
+
+  const report = await kidReportRepo.insertMonthlyReportIfMissing({
+    ...input,
+    narrative,
+  });
+  // The insert is conflict-safe: an empty result means a concurrent request
+  // won the slot, so report it as an existing report.
+  if (!report) throw new ReportAlreadyExistsError();
 
   return { narrative, aiDraft };
 }
@@ -231,6 +248,22 @@ export async function getKidMonthlyReport({
 // ============================================
 // INTERNAL OPERATIONS
 // ============================================
+
+/** Shared AI pipeline: aggregate evidence → provider call → formatted text. */
+async function generateNarrative(input: MonthlyKidReportParams) {
+  const kidContext =
+    await monthlyReportService.aggregateMonthlyKidReportData(input);
+
+  const aiDraft = await generateMonthlyReportDraft(kidContext);
+  if (!aiDraft) {
+    throw new AppError(
+      'Failed to generate text from LLM',
+      'Gagal membuat draft'
+    );
+  }
+
+  return { narrative: formatDraft(aiDraft), aiDraft };
+}
 
 /** Shared guard: the month must have started and must be reportable. */
 async function assertReportableMonth({

@@ -12,6 +12,7 @@ import {
   KidNoEligibleMonthsError,
   KidNoReportHistoryError,
   KidNotEnrolledError,
+  ReportAlreadyExistsError,
   ReportAlreadySentError,
   ReportEmptyError,
   ReportNotFoundError,
@@ -23,6 +24,7 @@ import {
 const mocks = vi.hoisted(() => ({
   findMonthlyReportRow: vi.fn(),
   createMonthlyReport: vi.fn(),
+  insertMonthlyReportIfMissing: vi.fn(),
   updateMonthlyReport: vi.fn(),
   aggregateMonthlyKidReportData: vi.fn(),
   generateMonthlyReportDraft: vi.fn(),
@@ -33,6 +35,7 @@ const mocks = vi.hoisted(() => ({
 vi.mock('@/features/report/kid/repositories', () => ({
   findMonthlyReportRow: mocks.findMonthlyReportRow,
   createMonthlyReport: mocks.createMonthlyReport,
+  insertMonthlyReportIfMissing: mocks.insertMonthlyReportIfMissing,
   updateMonthlyReport: mocks.updateMonthlyReport,
 }));
 
@@ -96,6 +99,7 @@ beforeEach(() => {
   mocks.aggregateMonthlyKidReportData.mockResolvedValue({ child: {} });
   mocks.generateMonthlyReportDraft.mockResolvedValue(AI_DRAFT);
   mocks.createMonthlyReport.mockResolvedValue(ROW);
+  mocks.insertMonthlyReportIfMissing.mockResolvedValue(ROW);
   mocks.updateMonthlyReport.mockResolvedValue(ROW);
   mocks.resolveReportRange.mockResolvedValue(RANGE);
   mocks.getKidEnrolledTerms.mockResolvedValue([TERM]);
@@ -197,6 +201,77 @@ describe('generateMonthlyReport (persistence lifecycle)', () => {
 
     // No partial write path exists — the failed upsert never runs an update.
     expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
+  });
+});
+
+describe('generateMonthlyReportIfMissing (batch entry point)', () => {
+  it('generates when no report exists', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue(null);
+
+    const result = await kidReportService.generateMonthlyReportIfMissing(PARAMS);
+
+    expect(mocks.generateMonthlyReportDraft).toHaveBeenCalledTimes(1);
+    expect(mocks.insertMonthlyReportIfMissing).toHaveBeenCalledTimes(1);
+    expect(mocks.createMonthlyReport).not.toHaveBeenCalled();
+    expect(result.narrative).toContain(AI_DRAFT.socialEmotional);
+  });
+
+  it('refuses an existing report instead of regenerating or overwriting it', async () => {
+    mocks.findMonthlyReportRow.mockResolvedValue(ROW);
+
+    await expect(
+      kidReportService.generateMonthlyReportIfMissing(PARAMS)
+    ).rejects.toThrow(ReportAlreadyExistsError);
+
+    expect(mocks.generateMonthlyReportDraft).not.toHaveBeenCalled();
+    expect(mocks.createMonthlyReport).not.toHaveBeenCalled();
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
+  });
+
+  it('enforces the same eligibility guards as individual generation', async () => {
+    // The batch path is a separate entry point, so each guard is proven again
+    // here rather than inherited on trust.
+
+    // Future month.
+    await expect(
+      kidReportService.generateMonthlyReportIfMissing({
+        ...PARAMS,
+        yearMonth: '2026-12',
+      })
+    ).rejects.toThrow(FutureMonthReportError);
+
+    // Term final month.
+    mocks.resolveReportRange.mockResolvedValue({
+      ...RANGE,
+      isFinalMonth: true,
+    });
+    await expect(
+      kidReportService.generateMonthlyReportIfMissing(PARAMS)
+    ).rejects.toThrow(FinalMonthUsesTermlyReportError);
+
+    // Not enrolled / stale term.
+    mocks.resolveReportRange.mockResolvedValue(null);
+    await expect(
+      kidReportService.generateMonthlyReportIfMissing(PARAMS)
+    ).rejects.toThrow(KidNotEnrolledError);
+
+    expect(mocks.generateMonthlyReportDraft).not.toHaveBeenCalled();
+    expect(mocks.insertMonthlyReportIfMissing).not.toHaveBeenCalled();
+  });
+
+  it('refuses a report generated concurrently between the read and the LLM call', async () => {
+    // Read says "no report" — another request inserted one before our upsert.
+    mocks.findMonthlyReportRow.mockResolvedValueOnce(null);
+    mocks.insertMonthlyReportIfMissing.mockResolvedValueOnce(null);
+
+    await expect(
+      kidReportService.generateMonthlyReportIfMissing(PARAMS)
+    ).rejects.toThrow(ReportAlreadyExistsError);
+
+    // The guard is a plain insert: no update path, so a concurrent row cannot
+    // be silently replaced.
+    expect(mocks.updateMonthlyReport).not.toHaveBeenCalled();
+    expect(mocks.createMonthlyReport).not.toHaveBeenCalled();
   });
 });
 

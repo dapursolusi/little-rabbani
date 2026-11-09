@@ -1,19 +1,28 @@
 'use client';
 
+import { useState } from 'react';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import { ClassSession } from '@/features/class-session/types';
+import * as kidReportAction from '@/features/report/kid/actions';
 import { ClassReportKid, ClassReportOverview } from '@/features/report/types';
 import { buildReportableMonths } from '@/features/report/utils';
 import { Term } from '@/features/term/types';
 import { formatDate } from '@/utils/date';
 import { pushParam } from '@/utils/search-params';
-import { Alert01Icon, CheckmarkCircle01Icon } from '@hugeicons/core-free-icons';
+import {
+  Alert01Icon,
+  CheckmarkCircle01Icon,
+  Loading03Icon,
+} from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
+import { toast } from 'sonner';
 
 import ClassSessionSelector from '@/components/features/class-session/class-session-selector';
 import TermSelector from '@/components/features/term/term-selector';
+import { ConfirmDialog } from '@/components/sections/confirm-dialog';
 import { EmptyState } from '@/components/shared/empty-state';
 import { getStatusBadge } from '@/components/shared/get-status-badge';
 import { Badge } from '@/components/ui/badge';
@@ -117,18 +126,75 @@ function ReadinessBadge({ kid }: { kid: ClassReportKid }) {
   );
 }
 
+// Temporary batch-operation states — not persisted report lifecycle statuses.
+type BatchStatus = 'waiting' | 'generating' | 'success' | 'skipped' | 'failed';
+
+interface BatchEntry {
+  status: BatchStatus;
+  /** Safe, server-provided failure message (never a raw provider error). */
+  message?: string;
+}
+
+function BatchBadge({ entry }: { entry: BatchEntry }) {
+  if (entry.status === 'generating' || entry.status === 'waiting') {
+    return (
+      <Badge variant="secondary">
+        <HugeiconsIcon
+          icon={Loading03Icon}
+          data-icon="inline-start"
+          className="animate-spin"
+        />
+        {entry.status === 'generating' ? 'Membuat...' : 'Menunggu'}
+      </Badge>
+    );
+  }
+
+  if (entry.status === 'success') {
+    return (
+      <Badge variant="outline" className="border-success/30 text-success">
+        <HugeiconsIcon icon={CheckmarkCircle01Icon} data-icon="inline-start" />
+        Dibuat
+      </Badge>
+    );
+  }
+
+  if (entry.status === 'skipped') {
+    return (
+      <Badge variant="secondary">
+        <HugeiconsIcon icon={CheckmarkCircle01Icon} data-icon="inline-start" />
+        Dilewati
+      </Badge>
+    );
+  }
+
+  return (
+    <Badge variant="outline" className="border-destructive/30 text-destructive">
+      <HugeiconsIcon icon={Alert01Icon} data-icon="inline-start" />
+      Gagal
+    </Badge>
+  );
+}
+
 function ChildItem({
   kid,
   termId,
   month,
   isFinalMonth,
+  batchEntry,
+  onRetry,
+  retryDisabled,
 }: {
   kid: ClassReportKid;
   termId: string;
   month: string;
   isFinalMonth: boolean;
+  batchEntry?: BatchEntry;
+  onRetry?: () => void;
+  retryDisabled?: boolean;
 }) {
   const href = `/dashboard/report/kid/${kid.kidId}?termId=${termId}&month=${month}`;
+  const generatedInBatch =
+    batchEntry?.status === 'success' || batchEntry?.status === 'skipped';
 
   return (
     <Item variant="outline">
@@ -137,7 +203,9 @@ function ChildItem({
         {kid.nickName && <ItemDescription>{kid.nickName}</ItemDescription>}
         <div className="flex flex-wrap items-center gap-1.5 pt-1">
           <ReadinessBadge kid={kid} />
-          {kid.reportStatus ? (
+          {batchEntry ? (
+            <BatchBadge entry={batchEntry} />
+          ) : kid.reportStatus ? (
             getStatusBadge(kid.reportStatus)
           ) : (
             <Badge variant="secondary">Belum dibuat</Badge>
@@ -149,8 +217,13 @@ function ChildItem({
             {kid.readinessReason}
           </ItemDescription>
         )}
+        {batchEntry?.status === 'failed' && batchEntry.message && (
+          <ItemDescription className="pt-1 text-destructive">
+            {batchEntry.message}
+          </ItemDescription>
+        )}
       </ItemContent>
-      {kid.reportStatus ? (
+      {kid.reportStatus || generatedInBatch ? (
         <ItemActions>
           <Button
             variant="outline"
@@ -159,6 +232,17 @@ function ChildItem({
             render={<Link href={href} />}
           >
             Buka laporan
+          </Button>
+        </ItemActions>
+      ) : batchEntry?.status === 'failed' ? (
+        <ItemActions>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={onRetry}
+            disabled={retryDisabled}
+          >
+            Coba lagi
           </Button>
         </ItemActions>
       ) : (
@@ -193,6 +277,115 @@ export default function MonthlyReportClient({
   const router = useRouter();
   const term = terms.find((t) => t.id === currentTermId);
   const { kids, summary } = overview;
+
+  const [showBatchConfirm, setShowBatchConfirm] = useState(false);
+  const [batchEntries, setBatchEntries] = useState<Record<string, BatchEntry>>(
+    {}
+  );
+  // Batch state belongs to one term/month pair. A selection change must not
+  // carry old successes (or failures) into a different month's eligibility.
+  const batchScope = `${currentTermId}:${currentMonth}`;
+  const [batchState, setBatchState] = useState<{ scope: string }>({
+    scope: batchScope,
+  });
+  if (batchState.scope !== batchScope) {
+    setBatchState({ scope: batchScope });
+    setBatchEntries({});
+    setShowBatchConfirm(false);
+  }
+  // Null when idle; {current,total} while a batch runs.
+  const [batchProgress, setBatchProgress] = useState<{
+    current: number;
+    total: number;
+  } | null>(null);
+  const isBatchRunning = batchProgress !== null;
+
+  // Eligible = enough data, no report yet, and not already produced by this
+  // batch. Server state wins on reload; local success closes the loop without
+  // waiting for the refresh.
+  const candidates = kids.filter(
+    (kid) =>
+      kid.ready &&
+      !kid.reportStatus &&
+      batchEntries[kid.kidId]?.status !== 'success'
+  );
+
+  const successCount = Object.values(batchEntries).filter(
+    (entry) => entry.status === 'success'
+  ).length;
+  const skippedCount = Object.values(batchEntries).filter(
+    (entry) => entry.status === 'skipped'
+  ).length;
+  const failedCount = Object.values(batchEntries).filter(
+    (entry) => entry.status === 'failed'
+  ).length;
+  const batchFinished =
+    !isBatchRunning && successCount + skippedCount + failedCount > 0;
+
+  const classLabel =
+    classSessions.find((session) => session.id === currentClassSessionId)
+      ?.name ?? 'Semua kelas';
+  const periodLabel = `${classLabel}, ${formatDate(currentMonth)}`;
+
+  // Sequential, client-orchestrated: one server request per child, each
+  // awaited before the next. A failure is recorded and the run continues.
+  async function runBatch(kidIds: string[]) {
+    let runSuccesses = 0;
+    setBatchProgress({ current: 0, total: kidIds.length });
+    setBatchEntries((prev) => {
+      const next = { ...prev };
+      for (const kidId of kidIds) next[kidId] = { status: 'waiting' };
+      return next;
+    });
+
+    for (const [index, kidId] of kidIds.entries()) {
+      setBatchProgress({ current: index + 1, total: kidIds.length });
+      setBatchEntries((prev) => ({
+        ...prev,
+        [kidId]: { status: 'generating' },
+      }));
+      try {
+        const result = await kidReportAction.generateMonthlyReportForBatch({
+          kidId,
+          termId: currentTermId,
+          yearMonth: currentMonth,
+        });
+        setBatchEntries((prev) => ({
+          ...prev,
+          [kidId]: result.success
+            ? { status: 'success' }
+            : result.error?.type === 'conflict'
+              ? // Created concurrently or already persisted — not a failure.
+                { status: 'skipped' }
+              : { status: 'failed', message: result.message },
+        }));
+        if (result.success) runSuccesses += 1;
+      } catch {
+        setBatchEntries((prev) => ({
+          ...prev,
+          [kidId]: {
+            status: 'failed',
+            message: 'Terjadi kesalahan. Silahkan coba lagi',
+          },
+        }));
+      }
+    }
+
+    setBatchProgress(null);
+    // Persisted reports and readiness now come from the server.
+    router.refresh();
+    if (runSuccesses === 0) {
+      toast.error('Tidak ada laporan yang berhasil dibuat');
+    } else {
+      toast.success('Pembuatan laporan massal selesai');
+    }
+  }
+
+  function handleConfirmBatch() {
+    setShowBatchConfirm(false);
+    if (candidates.length === 0) return;
+    void runBatch(candidates.map((kid) => kid.kidId));
+  }
 
   return (
     <div>
@@ -252,23 +445,55 @@ export default function MonthlyReportClient({
             </p>
           )}
 
-          {summary.eligibleWithoutReport > 0 && !overview.isFinalMonth && (
-            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
-              <Button
-                disabled
-                aria-describedby="batch-generation-note"
-                className="w-full sm:w-fit"
-              >
-                Buat laporan tersisa ({summary.eligibleWithoutReport})
-              </Button>
-              <p
-                id="batch-generation-note"
-                className="text-xs text-muted-foreground"
-              >
-                Pembuatan massal belum tersedia.
-              </p>
+          {isBatchRunning && batchProgress && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <HugeiconsIcon
+                icon={Loading03Icon}
+                className="size-4 animate-spin"
+              />
+              Membuat {batchProgress.current} dari {batchProgress.total}
             </div>
           )}
+
+          {batchFinished && (
+            <p className="text-sm font-medium text-foreground">
+              Selesai: {successCount} berhasil
+              {skippedCount > 0 ? `, ${skippedCount} dilewati` : ''}
+              {failedCount > 0 ? `, ${failedCount} gagal` : ''} dari{' '}
+              {successCount + skippedCount + failedCount} anak.
+            </p>
+          )}
+
+          {candidates.length > 0 &&
+            !isBatchRunning &&
+            !overview.isFinalMonth && (
+              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+                <Button
+                  className="w-full sm:w-fit"
+                  onClick={() => setShowBatchConfirm(true)}
+                >
+                  Buat laporan tersisa ({candidates.length})
+                </Button>
+                <p className="text-xs text-muted-foreground">
+                  Laporan yang sudah ada tidak akan dibuat ulang.
+                </p>
+              </div>
+            )}
+
+          <ConfirmDialog
+            open={showBatchConfirm}
+            onOpenChange={setShowBatchConfirm}
+            onConfirm={handleConfirmBatch}
+            title="Buat laporan untuk anak yang siap?"
+            description={`${candidates.length} laporan akan dibuat. ${
+              summary.withReport
+            } laporan sudah ada dan dilewati. ${
+              summary.insufficientWithoutReport
+            } anak datanya kurang. ${periodLabel}.`}
+            confirmText="Ya, Buat"
+            cancelText="Batal"
+            variant="default"
+          />
 
           <ItemGroup>
             {kids.map((kid) => (
@@ -278,6 +503,9 @@ export default function MonthlyReportClient({
                 termId={currentTermId}
                 month={currentMonth}
                 isFinalMonth={overview.isFinalMonth}
+                batchEntry={batchEntries[kid.kidId]}
+                onRetry={() => void runBatch([kid.kidId])}
+                retryDisabled={isBatchRunning}
               />
             ))}
           </ItemGroup>

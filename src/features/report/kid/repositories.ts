@@ -7,7 +7,7 @@ import {
   MONTHLY_REPORT_STATUS,
   MonthlyReportStatus,
 } from '@/features/report/constants';
-import { and, eq, inArray, isNull, ne } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, ne } from 'drizzle-orm';
 
 import { MonthlyKidReportParams } from '../types';
 
@@ -113,6 +113,52 @@ export async function findManyByTermMonth({
 }
 
 // Create
+
+/**
+ * Insert-only creation for batch generation. If a live row already occupies
+ * the kid/term/month slot — including one written concurrently — nothing is
+ * changed and null is returned. A soft-deleted row is revived (reads treat it
+ * as absent, so refusing would strand the child). Never overwrites content.
+ */
+export async function insertMonthlyReportIfMissing({
+  kidId,
+  termId,
+  yearMonth,
+  narrative,
+}: MonthlyKidReportParams & { narrative: string }) {
+  const [report] = await db
+    .insert(monthlyKidReport)
+    .values({
+      kidId,
+      termId,
+      month: yearMonth,
+      narrative,
+      reportStatus: MONTHLY_REPORT_STATUS.DRAFT,
+      isEdited: false,
+    })
+    .onConflictDoUpdate({
+      target: [
+        monthlyKidReport.kidId,
+        monthlyKidReport.termId,
+        monthlyKidReport.month,
+      ],
+      // Revive only: a live row fails this predicate, so the write is a no-op
+      // and the upsert returns nothing.
+      setWhere: isNotNull(monthlyKidReport.deletedAt),
+      set: {
+        narrative,
+        reportStatus: MONTHLY_REPORT_STATUS.DRAFT,
+        isEdited: false,
+        reviewedAt: null,
+        sentAt: null,
+        sentBy: null,
+        deletedAt: null,
+      },
+    })
+    .returning(monthlyReportReturning);
+
+  return report ?? null;
+}
 
 /**
  * Upsert a fresh AI draft. Refuses to touch a sent report at the DB level —
