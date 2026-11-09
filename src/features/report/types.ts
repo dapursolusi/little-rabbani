@@ -41,9 +41,6 @@ export interface ClassReportOverview {
   summary: ClassReportSummary;
   /** Term final month — monthly reports do not apply (termly does). */
   isFinalMonth: boolean;
-  /** Observation window: calendar month clipped to the term. */
-  monthStart: string;
-  monthEnd: string;
 }
 
 export interface ClassReportOverviewParams {

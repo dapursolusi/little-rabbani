@@ -112,6 +112,31 @@ describe('getClassMonthlyReportOverview scoping', () => {
     });
   });
 
+  it('clips the window to a term that ends mid-month', async () => {
+    mocks.getTermById.mockResolvedValue({
+      ...TERM,
+      startDate: '2026-10-01',
+      endDate: '2026-10-20',
+    });
+
+    await getClassMonthlyReportOverview(INPUT);
+
+    expect(mocks.getObservationCountsByKidForMonth).toHaveBeenCalledWith({
+      classSessionId: CLASS_A,
+      startDate: '2026-10-01',
+      endDate: '2026-10-20',
+    });
+  });
+
+  it('treats an empty class filter as "all classes"', async () => {
+    await getClassMonthlyReportOverview({ ...INPUT, classSessionId: '' });
+
+    expect(mocks.getKidsEnrollments).toHaveBeenCalledWith({
+      termId: TERM_ID,
+      classSessionId: undefined,
+    });
+  });
+
   it('matches reports on the exact term + month + enrolled kid set', async () => {
     await getClassMonthlyReportOverview(INPUT);
 
@@ -174,10 +199,7 @@ describe('getClassMonthlyReportOverview readiness and lifecycle', () => {
       'Belum ada laporan harian di bulan ini'
     );
 
-    mocks.getKidsEnrollments.mockResolvedValue([
-      enrollment(KID_A, 'Aisyah'),
-      enrollment(KID_B, 'Budi'),
-    ]);
+    // Daily reports exist, but this kid has no observation in any of them.
     counts({ [CLASS_A]: { [KID_A]: 1 } });
     mocks.getKidsEnrollments.mockResolvedValue([
       enrollment(KID_A, 'Aisyah'),

@@ -121,10 +121,12 @@ function ChildItem({
   kid,
   termId,
   month,
+  isFinalMonth,
 }: {
   kid: ClassReportKid;
   termId: string;
   month: string;
+  isFinalMonth: boolean;
 }) {
   const href = `/dashboard/report/kid/${kid.kidId}?termId=${termId}&month=${month}`;
 
@@ -150,14 +152,27 @@ function ChildItem({
       </ItemContent>
       {kid.reportStatus ? (
         <ItemActions>
-          <Button variant="outline" size="sm" render={<Link href={href} />}>
+          <Button
+            variant="outline"
+            size="sm"
+            nativeButton={false}
+            render={<Link href={href} />}
+          >
             Buka laporan
           </Button>
         </ItemActions>
       ) : (
-        kid.ready && (
+        // The final month uses termly reporting — generation is refused
+        // there, so a "create" action would open a dead end.
+        kid.ready &&
+        !isFinalMonth && (
           <ItemActions>
-            <Button variant="outline" size="sm" render={<Link href={href} />}>
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<Link href={href} />}
+            >
               Buat laporan
             </Button>
           </ItemActions>
@@ -185,9 +200,10 @@ export default function MonthlyReportClient({
         terms={terms}
         value={currentTermId || undefined}
         onValueChange={(termId) => {
-          // A month belongs to a term; drop the stale month with the term.
+          // A month and class belong to a term; drop stale selections with it.
           const params = new URLSearchParams(window.location.search);
           params.delete('month');
+          params.delete('classSessionId');
           params.set('termId', termId);
           router.push(`?${params.toString()}`);
         }}
@@ -236,14 +252,22 @@ export default function MonthlyReportClient({
             </p>
           )}
 
-          {summary.eligibleWithoutReport > 0 && (
-            <Button
-              disabled
-              title="Batch generation belum tersedia"
-              className="w-full sm:w-fit"
-            >
-              Buat laporan tersisa ({summary.eligibleWithoutReport})
-            </Button>
+          {summary.eligibleWithoutReport > 0 && !overview.isFinalMonth && (
+            <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-3">
+              <Button
+                disabled
+                aria-describedby="batch-generation-note"
+                className="w-full sm:w-fit"
+              >
+                Buat laporan tersisa ({summary.eligibleWithoutReport})
+              </Button>
+              <p
+                id="batch-generation-note"
+                className="text-xs text-muted-foreground"
+              >
+                Pembuatan massal belum tersedia.
+              </p>
+            </div>
           )}
 
           <ItemGroup>
@@ -253,6 +277,7 @@ export default function MonthlyReportClient({
                 kid={kid}
                 termId={currentTermId}
                 month={currentMonth}
+                isFinalMonth={overview.isFinalMonth}
               />
             ))}
           </ItemGroup>

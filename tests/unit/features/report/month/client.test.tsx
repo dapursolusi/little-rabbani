@@ -125,10 +125,15 @@ describe('MonthlyReportClient summary', () => {
       }),
     });
 
-    expect(screen.getByText('Total anak')).toBeDefined();
-    expect(screen.getByText('Laporan ada')).toBeDefined();
-    expect(screen.getByText('Siap dibuat')).toBeDefined();
-    expect(screen.getByText('Data kurang')).toBeDefined();
+    for (const [label, value] of [
+      ['Total anak', '4'],
+      ['Laporan ada', '2'],
+      ['Siap dibuat', '1'],
+      ['Data kurang', '1'],
+    ] as const) {
+      const tile = screen.getByText(label).parentElement;
+      expect(tile?.textContent).toContain(value);
+    }
   });
 });
 
@@ -142,6 +147,26 @@ describe('MonthlyReportClient child rows', () => {
     });
 
     expect(screen.getByText('Aisyah')).toBeDefined();
+  });
+
+  it.each([
+    [MONTHLY_REPORT_STATUS.DRAFT, 'Draft'],
+    [MONTHLY_REPORT_STATUS.REVIEWED, 'Direview'],
+    [MONTHLY_REPORT_STATUS.SENT, 'Terkirim'],
+  ])('renders the %s lifecycle badge', (status, label) => {
+    renderClient({
+      overview: overview({
+        kids: [kid({ reportStatus: status })],
+        summary: {
+          totalKids: 1,
+          withReport: 1,
+          eligibleWithoutReport: 0,
+          insufficientWithoutReport: 0,
+        },
+      }),
+    });
+
+    expect(screen.getByText(label)).toBeDefined();
   });
 
   it('separates readiness, lifecycle and manual edits into distinct labels', () => {
@@ -315,5 +340,46 @@ describe('MonthlyReportClient final month', () => {
     });
 
     expect(screen.getByText(/laporan triwulanan/)).toBeDefined();
+  });
+
+  it('offers no monthly generation action in the final month', () => {
+    renderClient({
+      overview: overview({
+        kids: [kid()],
+        isFinalMonth: true,
+        summary: {
+          totalKids: 1,
+          withReport: 0,
+          eligibleWithoutReport: 1,
+          insufficientWithoutReport: 0,
+        },
+      }),
+    });
+
+    expect(screen.queryByText('Buat laporan')).toBeNull();
+    expect(
+      screen.queryByText(
+        (_, el) =>
+          el?.tagName === 'BUTTON' &&
+          (el.textContent ?? '').startsWith('Buat laporan tersisa')
+      )
+    ).toBeNull();
+  });
+
+  it('still opens an existing report in the final month', () => {
+    renderClient({
+      overview: overview({
+        kids: [kid({ reportStatus: MONTHLY_REPORT_STATUS.SENT })],
+        isFinalMonth: true,
+        summary: {
+          totalKids: 1,
+          withReport: 1,
+          eligibleWithoutReport: 0,
+          insufficientWithoutReport: 0,
+        },
+      }),
+    });
+
+    expect(screen.getByText('Buka laporan')).toBeDefined();
   });
 });

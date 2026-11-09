@@ -52,38 +52,42 @@ export async function findObservationCountsByKid({
   startDate: string;
   endDate: string;
 }) {
-  const [dcrCountRow] = await db
-    .select({ count: drizzleCount() })
-    .from(dailyClassReport)
-    .where(
-      and(
-        eq(dailyClassReport.classSessionId, classSessionId),
-        gte(dailyClassReport.date, startDate),
-        lte(dailyClassReport.date, endDate),
-        isNull(dailyClassReport.deletedAt)
+  const [dcrCountRows, rows] = await Promise.all([
+    db
+      .select({ count: drizzleCount() })
+      .from(dailyClassReport)
+      .where(
+        and(
+          eq(dailyClassReport.classSessionId, classSessionId),
+          gte(dailyClassReport.date, startDate),
+          lte(dailyClassReport.date, endDate),
+          isNull(dailyClassReport.deletedAt)
+        )
+      ),
+    db
+      .select({
+        kidId: dcrObservation.kidId,
+        count: drizzleCount(),
+      })
+      .from(dcrObservation)
+      .innerJoin(
+        dailyClassReport,
+        eq(dcrObservation.dcrId, dailyClassReport.id)
       )
-    );
-
-  const rows = await db
-    .select({
-      kidId: dcrObservation.kidId,
-      count: drizzleCount(),
-    })
-    .from(dcrObservation)
-    .innerJoin(dailyClassReport, eq(dcrObservation.dcrId, dailyClassReport.id))
-    .where(
-      and(
-        eq(dailyClassReport.classSessionId, classSessionId),
-        gte(dailyClassReport.date, startDate),
-        lte(dailyClassReport.date, endDate),
-        isNull(dailyClassReport.deletedAt),
-        isNull(dcrObservation.deletedAt)
+      .where(
+        and(
+          eq(dailyClassReport.classSessionId, classSessionId),
+          gte(dailyClassReport.date, startDate),
+          lte(dailyClassReport.date, endDate),
+          isNull(dailyClassReport.deletedAt),
+          isNull(dcrObservation.deletedAt)
+        )
       )
-    )
-    .groupBy(dcrObservation.kidId);
+      .groupBy(dcrObservation.kidId),
+  ]);
 
   return {
-    dcrCount: Number(dcrCountRow?.count ?? 0),
+    dcrCount: Number(dcrCountRows[0]?.count ?? 0),
     observationCountByKidId: Object.fromEntries(
       rows.map((row) => [row.kidId, Number(row.count)])
     ) as Record<string, number>,

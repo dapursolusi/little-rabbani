@@ -27,9 +27,20 @@ export default async function MonthlyReportPage({
     termService.checkCurrentTerm(),
   ]);
 
+  // A class id that is not one of this school's sessions is treated as absent;
+  // it must never reach the DB as a filter or throw past the page.
+  const selectedClassSessionId =
+    classSessionId && classSessions?.some((cs) => cs.id === classSessionId)
+      ? classSessionId
+      : undefined;
+
   // Missing required param → canonicalize the URL (never render half-scoped).
   if (!termId && currentTerm) {
-    redirect(`/dashboard/report/month?termId=${currentTerm.id}`);
+    const params = new URLSearchParams({ termId: currentTerm.id });
+    if (selectedClassSessionId) {
+      params.set('classSessionId', selectedClassSessionId);
+    }
+    redirect(`/dashboard/report/month?${params.toString()}`);
   }
 
   const term = terms?.find((t) => t.id === termId);
@@ -66,7 +77,9 @@ export default async function MonthlyReportPage({
       termId: term.id,
       month: selectedMonth,
     });
-    if (classSessionId) params.set('classSessionId', classSessionId);
+    if (selectedClassSessionId) {
+      params.set('classSessionId', selectedClassSessionId);
+    }
     redirect(`/dashboard/report/month?${params.toString()}`);
   }
 
@@ -74,7 +87,7 @@ export default async function MonthlyReportPage({
   // enrollment query only returns children of this term (and this class).
   const overview = await monthlyReportService.getClassMonthlyReportOverview({
     termId: term.id,
-    classSessionId,
+    classSessionId: selectedClassSessionId,
     yearMonth: selectedMonth,
   });
 
@@ -87,7 +100,7 @@ export default async function MonthlyReportPage({
         terms={terms ?? []}
         classSessions={classSessions ?? []}
         currentTermId={term.id}
-        currentClassSessionId={classSessionId ?? ''}
+        currentClassSessionId={selectedClassSessionId ?? ''}
         currentMonth={selectedMonth}
         overview={overview}
       />

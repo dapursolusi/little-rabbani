@@ -26,9 +26,19 @@ import {
 
 const classOverviewSchema = z.object({
   termId: uuidSchema,
-  classSessionId: uuidSchema.or(z.literal('all')).optional(),
+  // '' and 'all' both mean "every class in the term" (blank select values).
+  classSessionId: z
+    .union([uuidSchema, z.literal('all'), z.literal('')])
+    .optional(),
   yearMonth: isoYearMonthSchema,
 });
+
+const EMPTY_SUMMARY = {
+  totalKids: 0,
+  withReport: 0,
+  eligibleWithoutReport: 0,
+  insufficientWithoutReport: 0,
+};
 
 // ============================================
 // SERVER ACTION USE CASES
@@ -119,10 +129,11 @@ export async function getClassMonthlyReportOverview(
   const parsed = parseInput({
     input,
     schema: classOverviewSchema,
-    fallbackError: 'Invalid class overview params',
+    fallbackError: 'Pilihan batch, kelas, atau bulan tidak valid',
   });
   if (!parsed.success) throw new AppError(parsed.message, parsed.message);
   const { termId, yearMonth } = parsed.data;
+  // `''` (an empty select value) means the same as `'all'`: no class filter.
   const classSessionId =
     parsed.data.classSessionId && parsed.data.classSessionId !== 'all'
       ? parsed.data.classSessionId
@@ -149,15 +160,8 @@ export async function getClassMonthlyReportOverview(
   if (kidIds.length === 0) {
     return {
       kids: [],
-      summary: {
-        totalKids: 0,
-        withReport: 0,
-        eligibleWithoutReport: 0,
-        insufficientWithoutReport: 0,
-      },
+      summary: { ...EMPTY_SUMMARY },
       isFinalMonth: window.isFinalMonth,
-      monthStart: window.startDate,
-      monthEnd: window.endDate,
     };
   }
 
@@ -224,20 +228,13 @@ export async function getClassMonthlyReportOverview(
       }
       return acc;
     },
-    {
-      totalKids: 0,
-      withReport: 0,
-      eligibleWithoutReport: 0,
-      insufficientWithoutReport: 0,
-    }
+    { ...EMPTY_SUMMARY }
   );
 
   return {
     kids,
     summary,
     isFinalMonth: window.isFinalMonth,
-    monthStart: window.startDate,
-    monthEnd: window.endDate,
   };
 }
 
