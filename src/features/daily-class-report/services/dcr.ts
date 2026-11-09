@@ -39,6 +39,14 @@ export async function getDcrsByMonth(input: {
   return await dcrRepo.findManyByMonth(input);
 }
 
+export async function getObservationCountsByKidForMonth(input: {
+  classSessionId: string;
+  startDate: string;
+  endDate: string;
+}) {
+  return await dcrRepo.findObservationCountsByKid(input);
+}
+
 export async function getDcrsWithObservationsByKidAndMonth(input: {
   kidId: string;
   termId: string;

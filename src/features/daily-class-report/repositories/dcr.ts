@@ -3,7 +3,16 @@ import { dailyClassReport, dcrObservation } from '@/db/schema/daily';
 import { subTheme } from '@/db/schema/theme';
 import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
-import { and, asc, eq, gte, isNull, lt, lte } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count as drizzleCount,
+  eq,
+  gte,
+  isNull,
+  lt,
+  lte,
+} from 'drizzle-orm';
 
 import { DailyClassReportInput } from '../validation';
 
@@ -26,6 +35,59 @@ export async function findManyByMonth({
     columns: { id: true, date: true },
   });
   return reports;
+}
+
+/**
+ * Per-kid observation counts for one class in one window — the class-level
+ * overview's readiness input. Two aggregate queries (reports, then grouped
+ * observations) instead of one query per child; the counts are what the
+ * existing generation eligibility checks (DCRs exist + observations exist).
+ */
+export async function findObservationCountsByKid({
+  classSessionId,
+  startDate,
+  endDate,
+}: {
+  classSessionId: string;
+  startDate: string;
+  endDate: string;
+}) {
+  const [dcrCountRow] = await db
+    .select({ count: drizzleCount() })
+    .from(dailyClassReport)
+    .where(
+      and(
+        eq(dailyClassReport.classSessionId, classSessionId),
+        gte(dailyClassReport.date, startDate),
+        lte(dailyClassReport.date, endDate),
+        isNull(dailyClassReport.deletedAt)
+      )
+    );
+
+  const rows = await db
+    .select({
+      kidId: dcrObservation.kidId,
+      count: drizzleCount(),
+    })
+    .from(dcrObservation)
+    .innerJoin(dailyClassReport, eq(dcrObservation.dcrId, dailyClassReport.id))
+    .where(
+      and(
+        eq(dailyClassReport.classSessionId, classSessionId),
+        gte(dailyClassReport.date, startDate),
+        lte(dailyClassReport.date, endDate),
+        isNull(dailyClassReport.deletedAt),
+        isNull(dcrObservation.deletedAt)
+      )
+    )
+    .groupBy(dcrObservation.kidId);
+
+  return {
+    dcrCount: Number(dcrCountRow?.count ?? 0),
+    observationCountByKidId: Object.fromEntries(
+      rows.map((row) => [row.kidId, Number(row.count)])
+    ) as Record<string, number>,
+  };
 }
 
 export async function findManyWithObservationsByKidAndMonth({

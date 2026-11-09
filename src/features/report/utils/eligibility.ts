@@ -138,3 +138,21 @@ export function resolveTermForMonth({
 export function isTermFinalMonth(term: TermRange, yearMonth: string) {
   return term.endDate.slice(0, 7) === yearMonth;
 }
+
+/**
+ * The observation window shared by every kid in a term for one calendar month:
+ * the month clipped to the term. Null when the term does not overlap the month.
+ */
+export function monthWindowInTerm(term: TermRange, yearMonth: string) {
+  const monthStart = monthStartDate(yearMonth);
+  const monthEnd = monthEndDate(yearMonth);
+  const startDate = term.startDate > monthStart ? term.startDate : monthStart;
+  const endDate = term.endDate < monthEnd ? term.endDate : monthEnd;
+  if (startDate > endDate) return null;
+
+  return {
+    startDate,
+    endDate,
+    isFinalMonth: isTermFinalMonth(term, yearMonth),
+  };
+}

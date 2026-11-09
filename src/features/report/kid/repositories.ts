@@ -81,6 +81,37 @@ export async function findMonthlyReportRow({
   });
 }
 
+/**
+ * Reports for every kid in a class, in one query — the overview must not fan
+ * out one findFirst per child. Restricted to the term + calendar month and to
+ * the given (already authorization-scoped) kid ids.
+ */
+export async function findManyByTermMonth({
+  termId,
+  yearMonth,
+  kidIds,
+}: {
+  termId: string;
+  yearMonth: string;
+  kidIds: string[];
+}) {
+  if (kidIds.length === 0) return [];
+
+  return db.query.monthlyKidReport.findMany({
+    where: and(
+      eq(monthlyKidReport.termId, termId),
+      eq(monthlyKidReport.month, yearMonth),
+      inArray(monthlyKidReport.kidId, kidIds),
+      isNull(monthlyKidReport.deletedAt)
+    ),
+    columns: {
+      kidId: true,
+      reportStatus: true,
+      isEdited: true,
+    },
+  });
+}
+
 // Create
 
 /**
