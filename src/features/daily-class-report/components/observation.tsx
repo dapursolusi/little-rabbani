@@ -3,8 +3,8 @@ import { ReactNode } from 'react';
 import { Kid, LeanKid } from '@/features/kid/types';
 import { ChildIcon, DatabaseIcon } from '@hugeicons/core-free-icons';
 
-import { EmptyState } from '@/components/shared/empty-state';
-import { Modal } from '@/components/shared/modal';
+import { EmptyState } from '@/components/empty-state';
+import { Modal } from '@/components/modal';
 import {
   Accordion,
   AccordionContent,

@@ -20,11 +20,11 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
+import { EmptyState } from '@/components/empty-state';
 import ClassSessionSelector from '@/components/features/class-session/class-session-selector';
 import TermSelector from '@/components/features/term/term-selector';
+import { getStatusBadge } from '@/components/get-status-badge';
 import { ConfirmDialog } from '@/components/sections/confirm-dialog';
-import { EmptyState } from '@/components/shared/empty-state';
-import { getStatusBadge } from '@/components/shared/get-status-badge';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';

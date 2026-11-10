@@ -2,8 +2,8 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 
-import { AppTableFeatures } from '@/components/shared/table/features';
-import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
+import { AppTableFeatures } from '@/components/table/features';
+import { RowActionsDialog } from '@/components/table/row-actions-dialog';
 
 import { deleteClassSession, updateClassSession } from './actions';
 import { classSessionFormFields } from './fields';

@@ -9,8 +9,8 @@ import type { FormField } from '@/types/field';
 import { toast } from 'sonner';
 import type { ZodObject, ZodRawShape } from 'zod';
 
-import FormFieldGenerator from '@/components/shared/form/form-field-generator';
-import { Modal } from '@/components/shared/modal';
+import FormFieldGenerator from '@/components/form/form-field-generator';
+import { Modal } from '@/components/modal';
 import { Button } from '@/components/ui/button';
 import { DialogFooter } from '@/components/ui/dialog';
 

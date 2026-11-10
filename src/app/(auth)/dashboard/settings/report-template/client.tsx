@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { saveTemplate } from '@/features/daily-class-report/actions/report-template';
 import { toast } from 'sonner';
 
-import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
+import { PageBreadcrumbs } from '@/components/page-breadcrumbs';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 

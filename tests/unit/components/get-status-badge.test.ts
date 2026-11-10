@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
-import { getStatusBadge } from '@/components/shared/get-status-badge';
+import { getStatusBadge } from '@/components/get-status-badge';
 
 describe('getStatusBadge', () => {
   it('renders the Indonesian label for a known status', () => {

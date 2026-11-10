@@ -1,4 +1,4 @@
-import FormFieldGenerator from '@/components/shared/form/form-field-generator';
+import FormFieldGenerator from '@/components/form/form-field-generator';
 
 import { createSubTheme, createTheme } from '../actions';
 import { subThemeFields, themeFields } from '../fields';

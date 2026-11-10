@@ -17,7 +17,7 @@ import {
 import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
-import { EmptyState } from '@/components/shared/empty-state';
+import { EmptyState } from '@/components/empty-state';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

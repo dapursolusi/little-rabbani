@@ -2,7 +2,7 @@ import { classSessionColumns } from '@/features/class-session/columns';
 import ClassSessionForm from '@/features/class-session/components/form';
 import * as classSessionService from '@/features/class-session/services';
 
-import { DataTable } from '@/components/shared/table/data-table';
+import { DataTable } from '@/components/table/data-table';
 
 export default async function ClassSessionListPage() {
   const classSessions = await classSessionService.getClassSessions();

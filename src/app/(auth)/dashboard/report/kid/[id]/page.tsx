@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 import KidReportClient from '@/features/report/kid/components/client';
 import * as kidReportService from '@/features/report/kid/services';
 
-import { EmptyState } from '@/components/shared/empty-state';
+import { EmptyState } from '@/components/empty-state';
 
 import {
   KidNoEligibleMonthsError,

@@ -2,8 +2,8 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 
-import { AppTableFeatures } from '@/components/shared/table/features';
-import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
+import { AppTableFeatures } from '@/components/table/features';
+import { RowActionsDialog } from '@/components/table/row-actions-dialog';
 import { Badge } from '@/components/ui/badge';
 
 import { deleteTerm, updateTerm } from './actions';

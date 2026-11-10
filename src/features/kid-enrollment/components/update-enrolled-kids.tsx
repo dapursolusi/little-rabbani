@@ -10,7 +10,7 @@ import {
 } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
-import { Modal } from '@/components/shared/modal';
+import { Modal } from '@/components/modal';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import {

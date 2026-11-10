@@ -2,10 +2,7 @@ import { ClassSession } from '@/features/class-session/types';
 import { Term } from '@/features/term/types';
 import { FormField } from '@/types/field';
 
-import {
-  classSessionIdField,
-  termIdField,
-} from '@/components/shared/form/fields';
+import { classSessionIdField, termIdField } from '@/components/form/fields';
 
 import { Kid } from '../kid/types';
 import SelectEnrolledKidsTable from './components/select-enrolled-kids';

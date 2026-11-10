@@ -34,7 +34,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import { toast } from 'sonner';
 
 import TermSelectorBase from '@/components/features/term/term-selector';
-import { getStatusBadge } from '@/components/shared/get-status-badge';
+import { getStatusBadge } from '@/components/get-status-badge';
 import {
   AlertDialog,
   AlertDialogAction,

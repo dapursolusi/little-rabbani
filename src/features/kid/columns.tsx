@@ -3,9 +3,9 @@
 import { GENDER_LABELS, type Gender } from '@/features/kid/constants';
 import type { ColumnDef } from '@tanstack/react-table';
 
-import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';
-import type { AppTableFeatures } from '@/components/shared/table/features';
-import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
+import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import type { AppTableFeatures } from '@/components/table/features';
+import { RowActionsDialog } from '@/components/table/row-actions-dialog';
 
 import { formatAge } from '@/lib/format';
 
