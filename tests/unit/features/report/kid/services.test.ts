@@ -23,6 +23,7 @@ import {
 // layer's branching logic stays real.
 const mocks = vi.hoisted(() => ({
   findMonthlyReportRow: vi.fn(),
+  findMonthlyReport: vi.fn(),
   createMonthlyReport: vi.fn(),
   insertMonthlyReportIfMissing: vi.fn(),
   updateMonthlyReport: vi.fn(),
@@ -30,10 +31,12 @@ const mocks = vi.hoisted(() => ({
   generateMonthlyReportDraft: vi.fn(),
   resolveReportRange: vi.fn(),
   getKidEnrolledTerms: vi.fn(),
+  getDcrsByMonth: vi.fn(),
 }));
 
 vi.mock('@/features/report/kid/repositories', () => ({
   findMonthlyReportRow: mocks.findMonthlyReportRow,
+  findMonthlyReport: mocks.findMonthlyReport,
   createMonthlyReport: mocks.createMonthlyReport,
   insertMonthlyReportIfMissing: mocks.insertMonthlyReportIfMissing,
   updateMonthlyReport: mocks.updateMonthlyReport,
@@ -42,6 +45,10 @@ vi.mock('@/features/report/kid/repositories', () => ({
 vi.mock('@/features/report/month/services', () => ({
   aggregateMonthlyKidReportData: mocks.aggregateMonthlyKidReportData,
   resolveReportRange: mocks.resolveReportRange,
+}));
+
+vi.mock('@/features/daily-class-report/services', () => ({
+  dcrService: { getDcrsByMonth: mocks.getDcrsByMonth },
 }));
 
 vi.mock('@/features/kid-enrollment/services', () => ({
@@ -103,6 +110,8 @@ beforeEach(() => {
   mocks.updateMonthlyReport.mockResolvedValue(ROW);
   mocks.resolveReportRange.mockResolvedValue(RANGE);
   mocks.getKidEnrolledTerms.mockResolvedValue([TERM]);
+  mocks.getDcrsByMonth.mockResolvedValue([{ id: 'DCR1' }, { id: 'DCR2' }]);
+  mocks.findMonthlyReport.mockResolvedValue({ id: PARAMS.kidId });
 });
 
 describe('generateMonthlyReport (persistence lifecycle)', () => {
@@ -615,25 +624,25 @@ describe('future month guard', () => {
   });
 });
 
-describe('getKidMonthlyReportContext', () => {
+describe('getKidMonthlyReportPage', () => {
   const [YEAR, MONTH] = [2026, 10];
+
+  function read(overrides: { yearMonth?: string; termId?: string } = {}) {
+    return kidReportService.getKidMonthlyReportPage({
+      kidId: PARAMS.kidId,
+      yearMonth: overrides.yearMonth ?? '2026-10',
+      termId: overrides.termId,
+    });
+  }
 
   it('throws when the kid has no enrolled terms', async () => {
     mocks.getKidEnrolledTerms.mockResolvedValue([]);
 
-    await expect(
-      kidReportService.getKidMonthlyReportContext({
-        kidId: PARAMS.kidId,
-        yearMonth: '2026-10',
-      })
-    ).rejects.toThrow(KidNoEligibleMonthsError);
+    await expect(read()).rejects.toThrow(KidNoEligibleMonthsError);
   });
 
   it('falls back to the latest reportable month when the requested month is invalid', async () => {
-    const result = await kidReportService.getKidMonthlyReportContext({
-      kidId: PARAMS.kidId,
-      yearMonth: '2020-01',
-    });
+    const result = await read({ yearMonth: '2020-01' });
 
     // Term runs Aug–Dec; "today" is Nov 6, so December is not reportable yet.
     expect(result.selectedMonth).toBe('2026-11');
@@ -642,10 +651,7 @@ describe('getKidMonthlyReportContext', () => {
   });
 
   it('excludes future months from the reportable list', async () => {
-    const result = await kidReportService.getKidMonthlyReportContext({
-      kidId: PARAMS.kidId,
-      yearMonth: '2026-08',
-    });
+    const result = await read({ yearMonth: '2026-08' });
 
     expect(result.reportableMonths).toEqual([
       '2026-08',
@@ -656,11 +662,7 @@ describe('getKidMonthlyReportContext', () => {
   });
 
   it('redirects a requested future month back to the latest reportable month', async () => {
-    const result = await kidReportService.getKidMonthlyReportContext({
-      kidId: PARAMS.kidId,
-      yearMonth: '2026-12',
-      termId: TERM.id,
-    });
+    const result = await read({ yearMonth: '2026-12', termId: TERM.id });
 
     expect(result.selectedMonth).toBe('2026-11');
   });
@@ -670,27 +672,20 @@ describe('getKidMonthlyReportContext', () => {
       { ...TERM, startDate: '2027-01-01', endDate: '2027-04-30' },
     ]);
 
-    await expect(
-      kidReportService.getKidMonthlyReportContext({
-        kidId: PARAMS.kidId,
-        yearMonth: '2027-01',
-      })
-    ).rejects.toThrow(KidNoReportHistoryError);
+    await expect(read({ yearMonth: '2027-01' })).rejects.toThrow(
+      KidNoReportHistoryError
+    );
   });
 
   it('disables previous navigation at the earliest eligible month', async () => {
-    const result = await kidReportService.getKidMonthlyReportContext({
-      kidId: PARAMS.kidId,
-      yearMonth: '2026-08',
-    });
+    const result = await read({ yearMonth: '2026-08' });
 
     expect(result.prevMonth).toBeNull();
     expect(result.nextMonth).toBe('2026-09');
   });
 
   it('keeps a valid termId from the URL', async () => {
-    const result = await kidReportService.getKidMonthlyReportContext({
-      kidId: PARAMS.kidId,
+    const result = await read({
       yearMonth: `${YEAR}-${String(MONTH).padStart(2, '0')}`,
       termId: TERM.id,
     });
@@ -699,8 +694,7 @@ describe('getKidMonthlyReportContext', () => {
   });
 
   it('replaces a stale termId with an eligible term', async () => {
-    const result = await kidReportService.getKidMonthlyReportContext({
-      kidId: PARAMS.kidId,
+    const result = await read({
       yearMonth: '2026-10',
       termId: 'b3c1d2e4-0000-4000-8000-000000000099',
     });
@@ -718,28 +712,21 @@ describe('getKidMonthlyReportContext', () => {
     };
     mocks.getKidEnrolledTerms.mockResolvedValue([TERM, second]);
 
-    const result = await kidReportService.getKidMonthlyReportContext({
-      kidId: PARAMS.kidId,
-      yearMonth: '2026-10',
-      termId: TERM.id,
-    });
+    const result = await read({ yearMonth: '2026-10', termId: TERM.id });
 
     expect(result.monthTerms.map((t) => t.id)).toEqual([TERM.id, second.id]);
   });
 
-  it('reports isFinalMonth from the selected term, not the calendar month', async () => {
+  it('reports isFinalMonth from the resolved range', async () => {
     mocks.resolveReportRange.mockResolvedValue({
       ...RANGE,
       isFinalMonth: true,
     });
 
-    const result = await kidReportService.getKidMonthlyReportContext({
-      kidId: PARAMS.kidId,
-      yearMonth: '2026-10',
-      termId: TERM.id,
-    });
+    const result = await read({ yearMonth: '2026-10', termId: TERM.id });
 
     expect(result.isFinalMonth).toBe(true);
+    expect(result.academicDetails.isFinalMonth).toBe(true);
   });
 
   it('gives each term its own final-month verdict when a month is shared', async () => {
@@ -759,8 +746,6 @@ describe('getKidMonthlyReportContext', () => {
       endDate: '2026-12-01',
     };
     mocks.getKidEnrolledTerms.mockResolvedValue([endingTerm, startingTerm]);
-
-    // resolveReportRange reflects whichever term was selected.
     mocks.resolveReportRange.mockImplementation(
       async ({ termId }: { termId: string }) => ({
         ...RANGE,
@@ -768,23 +753,65 @@ describe('getKidMonthlyReportContext', () => {
       })
     );
 
-    const first = await kidReportService.getKidMonthlyReportContext({
-      kidId: PARAMS.kidId,
-      yearMonth: '2026-08',
-      termId: endingTerm.id,
-    });
-    const second = await kidReportService.getKidMonthlyReportContext({
-      kidId: PARAMS.kidId,
+    const first = await read({ yearMonth: '2026-08', termId: endingTerm.id });
+    const second = await read({
       yearMonth: '2026-08',
       termId: startingTerm.id,
     });
 
     expect(first.isFinalMonth).toBe(true);
     expect(second.isFinalMonth).toBe(false);
-    // Both terms remain selectable for that month.
     expect(first.monthTerms.map((t) => t.id)).toEqual([
       endingTerm.id,
       startingTerm.id,
     ]);
+  });
+
+  it('resolves the range and queries DCRs exactly once per page read', async () => {
+    await read();
+
+    expect(mocks.resolveReportRange).toHaveBeenCalledTimes(1);
+    expect(mocks.getDcrsByMonth).toHaveBeenCalledTimes(1);
+    expect(mocks.findMonthlyReport).toHaveBeenCalledTimes(1);
+    expect(mocks.resolveReportRange).toHaveBeenCalledWith({
+      kidId: PARAMS.kidId,
+      termId: TERM.id,
+      yearMonth: '2026-10',
+    });
+    expect(mocks.getDcrsByMonth).toHaveBeenCalledWith({
+      classSessionId: RANGE.classSessionId,
+      startDate: RANGE.startDate,
+      endDate: RANGE.endDate,
+    });
+  });
+
+  it('feeds the single DCR query into the report row and the editor evidence', async () => {
+    const result = await read();
+
+    expect(mocks.findMonthlyReport).toHaveBeenCalledWith({
+      kidId: PARAMS.kidId,
+      termId: TERM.id,
+      yearMonth: '2026-10',
+      dcrIds: ['DCR1', 'DCR2'],
+    });
+    expect(result.academicDetails.dcrs).toEqual([
+      { id: 'DCR1' },
+      { id: 'DCR2' },
+    ]);
+    expect(result.kidDetails).toEqual({ id: PARAMS.kidId });
+  });
+
+  it('throws when the report range does not resolve', async () => {
+    mocks.resolveReportRange.mockResolvedValue(null);
+
+    await expect(read()).rejects.toThrow('Data anak tidak ditemukan');
+    expect(mocks.getDcrsByMonth).not.toHaveBeenCalled();
+    expect(mocks.findMonthlyReport).not.toHaveBeenCalled();
+  });
+
+  it('throws when the kid row cannot be loaded', async () => {
+    mocks.findMonthlyReport.mockResolvedValue(undefined);
+
+    await expect(read()).rejects.toThrow('Data anak tidak ditemukan');
   });
 });

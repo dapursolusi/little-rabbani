@@ -1,19 +1,15 @@
 import { dcrService } from '@/features/daily-class-report/services';
 import * as kidEnrollmentService from '@/features/kid-enrollment/services';
-import * as kidService from '@/features/kid/services';
 import * as monthlyReportService from '@/features/report/month/services';
 import { formatDraft } from '@/features/report/utils';
 import {
   buildEligibleMonths,
   buildReportableMonths,
   hasMonthStarted,
-  isTermFinalMonth,
   resolveTermForMonth,
   termsOverlappingMonth,
 } from '@/features/report/utils';
-import z from 'zod';
 
-import { parseInput } from '@/lib/action/parse-input';
 import {
   AppError,
   FinalMonthUsesTermlyReportError,
@@ -27,7 +23,6 @@ import {
   ReportNotFoundError,
   ReportNotReviewedError,
 } from '@/lib/errors';
-import { isoYearMonthSchema, uuidSchema } from '@/lib/validation/common.schema';
 
 import { MONTHLY_REPORT_STATUS, MonthlyReportStatus } from '../constants';
 import { MonthlyKidReportParams } from '../types';
@@ -200,48 +195,83 @@ export async function markMonthlyReportSent({
 
 // Read
 
-export async function getKidMonthlyReport({
+/**
+ * The kid monthly report page's single read. Resolves the reportable month and
+ * term, the report window, the month's DCRs, the report row and the editor's
+ * evidence in one pass — the window is resolved once and shared, never
+ * re-derived per collaborator.
+ *
+ * `yearMonth` and `termId` are the requested (URL) values: an ineligible or
+ * future month falls back to the latest reportable one, and an eligible term
+ * for that month wins over the ongoing one.
+ */
+export async function getKidMonthlyReportPage({
   kidId,
-  termId,
   yearMonth,
-}: MonthlyKidReportParams) {
-  // 1. Input validation
-  const parsed = parseInput({
-    input: { kidId, termId, yearMonth },
-    schema: z.object({
-      kidId: uuidSchema,
-      termId: uuidSchema,
-      yearMonth: isoYearMonthSchema,
-    }),
-    fallbackError: 'Invalid search params format',
-  });
-  if (!parsed.success) throw new Error(parsed.message);
+  termId,
+}: {
+  kidId: string;
+  yearMonth?: string;
+  termId?: string;
+}) {
+  const enrolledTerms = await kidEnrollmentService.getKidEnrolledTerms(kidId);
+  if (buildEligibleMonths(enrolledTerms).length === 0) {
+    throw new KidNoEligibleMonthsError();
+  }
 
-  // 2. Validate kid and report then load required data
-  const kid = await kidService.getKidBasicInfo(kidId);
+  const reportableMonths = buildReportableMonths(enrolledTerms);
+  if (reportableMonths.length === 0) {
+    throw new KidNoReportHistoryError();
+  }
+
+  const selectedMonth =
+    yearMonth && reportableMonths.includes(yearMonth)
+      ? yearMonth
+      : reportableMonths[reportableMonths.length - 1];
+
+  const monthTerms = termsOverlappingMonth(enrolledTerms, selectedMonth);
+  const selectedTerm = resolveTermForMonth({
+    terms: monthTerms,
+    yearMonth: selectedMonth,
+    requestedTermId: termId,
+  });
+  if (!selectedTerm) throw new KidNoReportHistoryError();
+
   const range = await monthlyReportService.resolveReportRange({
     kidId,
-    termId,
-    yearMonth,
+    termId: selectedTerm.id,
+    yearMonth: selectedMonth,
+  });
+  if (!range) throw new Error('Data anak tidak ditemukan');
+
+  const dcrs = await dcrService.getDcrsByMonth({
+    classSessionId: range.classSessionId,
+    startDate: range.startDate,
+    endDate: range.endDate,
   });
 
-  if (!kid || !range) throw new Error('Data anak tidak ditemukan');
-
-  const dcrIdsByMonth = (
-    await dcrService.getDcrsByMonth({
-      classSessionId: range.classSessionId,
-      startDate: range.startDate,
-      endDate: range.endDate,
-    })
-  ).map((dcr) => dcr.id);
-
-  const monthlyReport = await kidReportRepo.findMonthlyReport({
+  const kidDetails = await kidReportRepo.findMonthlyReport({
     kidId,
-    termId,
-    yearMonth,
-    dcrIds: dcrIdsByMonth,
+    termId: selectedTerm.id,
+    yearMonth: selectedMonth,
+    dcrIds: dcrs.map((dcr) => dcr.id),
   });
-  return monthlyReport;
+  if (!kidDetails) throw new Error('Data anak tidak ditemukan');
+
+  const selectedIndex = reportableMonths.indexOf(selectedMonth);
+
+  return {
+    enrolledTerms,
+    reportableMonths,
+    selectedMonth,
+    selectedTerm,
+    monthTerms,
+    isFinalMonth: range.isFinalMonth,
+    prevMonth: reportableMonths[selectedIndex - 1] ?? null,
+    nextMonth: reportableMonths[selectedIndex + 1] ?? null,
+    kidDetails,
+    academicDetails: { dcrs, isFinalMonth: range.isFinalMonth },
+  };
 }
 
 // ============================================
@@ -308,68 +338,6 @@ async function assertMutableReport({
   assertNotSent(existing);
 
   return existing;
-}
-
-/**
- * Resolve the report context for one kid + requested month + requested term.
- * Only enrolled months that have already started are reportable; a future or
- * ineligible month falls back to the latest reportable one. Within a month, an
- * eligible `termId` from the URL wins, then the ongoing term, then the greatest
- * overlap.
- */
-export async function getKidMonthlyReportContext({
-  kidId,
-  yearMonth,
-  termId,
-}: {
-  kidId: string;
-  yearMonth?: string;
-  termId?: string;
-}) {
-  const enrolledTerms = await kidEnrollmentService.getKidEnrolledTerms(kidId);
-  if (buildEligibleMonths(enrolledTerms).length === 0) {
-    throw new KidNoEligibleMonthsError();
-  }
-
-  const reportableMonths = buildReportableMonths(enrolledTerms);
-  if (reportableMonths.length === 0) {
-    throw new KidNoReportHistoryError();
-  }
-
-  const isReportable = (month: string) => reportableMonths.includes(month);
-  const selectedMonth =
-    yearMonth && isReportable(yearMonth)
-      ? yearMonth
-      : reportableMonths[reportableMonths.length - 1];
-
-  const monthTerms = termsOverlappingMonth(enrolledTerms, selectedMonth);
-  const selectedTerm = resolveTermForMonth({
-    terms: monthTerms,
-    yearMonth: selectedMonth,
-    requestedTermId: termId,
-  });
-  if (!selectedTerm) {
-    throw new KidNoReportHistoryError();
-  }
-
-  const selectedIndex = reportableMonths.indexOf(selectedMonth);
-  const range = await monthlyReportService.resolveReportRange({
-    kidId,
-    termId: selectedTerm.id,
-    yearMonth: selectedMonth,
-  });
-
-  return {
-    enrolledTerms,
-    reportableMonths,
-    selectedMonth,
-    selectedTerm,
-    monthTerms,
-    isFinalMonth:
-      range?.isFinalMonth ?? isTermFinalMonth(selectedTerm, selectedMonth),
-    prevMonth: reportableMonths[selectedIndex - 1] ?? null,
-    nextMonth: reportableMonths[selectedIndex + 1] ?? null,
-  };
 }
 
 // Re-export for the client component's status badge typing.

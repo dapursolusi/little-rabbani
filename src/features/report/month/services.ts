@@ -41,52 +41,6 @@ const EMPTY_SUMMARY = {
 };
 
 // ============================================
-// SERVER ACTION USE CASES
-// ============================================
-
-// ============================================
-// SERVER COMPONENT QUERIES
-// ============================================
-
-// Read
-
-export async function getMonthlyAcademicDetails(input: MonthlyKidReportParams) {
-  // 1. Input validation
-  const parsed = parseInput({
-    input,
-    schema: z.object({
-      kidId: uuidSchema,
-      termId: uuidSchema,
-      yearMonth: isoYearMonthSchema,
-    }),
-  });
-  if (!parsed.success) return parsed;
-  const { kidId, termId, yearMonth } = parsed.data;
-
-  // 2. Resolve the term + month intersection; observations never leak across
-  //    terms that merely share a calendar month.
-  const range = await resolveReportRange({ kidId, termId, yearMonth });
-  if (!range) {
-    return {
-      success: false as const,
-      message:
-        'Tidak ada data registrasi anak untuk batch saat ini. Pilih batch lain atau periksa registrasi anak',
-    };
-  }
-
-  const dcrs = await dcrService.getDcrsByMonth({
-    classSessionId: range.classSessionId,
-    startDate: range.startDate,
-    endDate: range.endDate,
-  });
-
-  return {
-    success: true as const,
-    data: { dcrs, isFinalMonth: range.isFinalMonth },
-  };
-}
-
-// ============================================
 // INTERNAL OPERATIONS
 // ============================================
 

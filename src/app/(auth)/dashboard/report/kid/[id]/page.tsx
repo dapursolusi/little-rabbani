@@ -2,7 +2,6 @@ import { redirect } from 'next/navigation';
 
 import KidReportClient from '@/features/report/kid/components/client';
 import * as kidReportService from '@/features/report/kid/services';
-import * as monthlyReportService from '@/features/report/month/services';
 
 import { EmptyState } from '@/components/shared/empty-state';
 
@@ -32,8 +31,8 @@ export default async function KidReportPage({
   // Reportable months come from the kid's enrollments, filtered to months that
   // have already started. An ineligible or future month falls back to the
   // latest reportable one.
-  const context = await kidReportService
-    .getKidMonthlyReportContext({ kidId, yearMonth: month, termId })
+  const page = await kidReportService
+    .getKidMonthlyReportPage({ kidId, yearMonth: month, termId })
     .catch((error: unknown) => {
       if (
         error instanceof KidNoEligibleMonthsError ||
@@ -44,7 +43,7 @@ export default async function KidReportPage({
       throw error;
     });
 
-  if (context instanceof KidNoEligibleMonthsError) {
+  if (page instanceof KidNoEligibleMonthsError) {
     return (
       <EmptyState
         title="Belum ada batch"
@@ -58,7 +57,7 @@ export default async function KidReportPage({
     );
   }
 
-  if (context instanceof KidNoReportHistoryError) {
+  if (page instanceof KidNoReportHistoryError) {
     return (
       <EmptyState
         title="Belum ada riwayat laporan"
@@ -67,7 +66,7 @@ export default async function KidReportPage({
     );
   }
 
-  const { selectedMonth, selectedTerm, monthTerms, isFinalMonth } = context;
+  const { selectedMonth, selectedTerm, monthTerms, isFinalMonth } = page;
 
   // Canonicalise the URL so the client always navigates against resolved state.
   if (month !== selectedMonth || termId !== selectedTerm.id) {
@@ -76,20 +75,7 @@ export default async function KidReportPage({
     );
   }
 
-  const [kidDetails, academicDetailsResult] = await Promise.all([
-    kidReportService.getKidMonthlyReport({
-      termId: selectedTerm.id,
-      kidId,
-      yearMonth: selectedMonth,
-    }),
-    monthlyReportService.getMonthlyAcademicDetails({
-      kidId,
-      termId: selectedTerm.id,
-      yearMonth: selectedMonth,
-    }),
-  ]);
-
-  const existingReport = kidDetails?.monthlyReports?.[0];
+  const existingReport = page.kidDetails?.monthlyReports?.[0];
 
   return (
     <div>
@@ -98,8 +84,8 @@ export default async function KidReportPage({
         currentKidId={kidId}
         currentTermId={selectedTerm.id}
         currentMonth={selectedMonth}
-        prevMonth={context.prevMonth}
-        nextMonth={context.nextMonth}
+        prevMonth={page.prevMonth}
+        nextMonth={page.nextMonth}
         terms={monthTerms}
         isFinalMonth={isFinalMonth}
         initialReport={
@@ -113,8 +99,8 @@ export default async function KidReportPage({
               }
             : null
         }
-        kidDetails={kidDetails}
-        academicDetails={academicDetailsResult.data}
+        kidDetails={page.kidDetails}
+        academicDetails={page.academicDetails}
       />
     </div>
   );
