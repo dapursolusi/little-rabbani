@@ -9,7 +9,7 @@ import { KidEnrollmentSchema } from '@/features/kid-enrollment/validation';
 import { Kid } from '@/features/kid/types';
 import type { Term } from '@/features/term/types';
 
-import FormFieldGenerator from '@/components/shared/form/form-field-generator';
+import FormFieldGenerator from '@/components/form/form-field-generator';
 
 type KidEnrollmentFormProps = {
   terms: Term[];

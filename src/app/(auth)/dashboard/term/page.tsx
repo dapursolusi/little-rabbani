@@ -2,7 +2,7 @@ import { termColumns } from '@/features/term/columns';
 import TermForm from '@/features/term/components/form';
 import * as termService from '@/features/term/services';
 
-import { DataTable } from '@/components/shared/table/data-table';
+import { DataTable } from '@/components/table/data-table';
 
 export default async function TermListPage() {
   const terms = await termService.getTerms();

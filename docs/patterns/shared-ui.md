@@ -2,7 +2,7 @@
 
 ## Location
 
-Cross-feature components under `src/components/shared/`. Auto-generated shadcn base-nova under `src/components/ui/` — never edit.
+Cross-feature components under `src/components/<concern>/` e.g. `forms/` . Auto-generated shadcn base-nova under `src/components/ui/` — never edit.
 
 **Cross-feature feature components** (used by 2+ features, e.g. `TermSelector`, `ClassSessionSelector`) live under `src/components/features/<domain>/`. Entity-specific components stay in `src/features/<e>/components/`.
 

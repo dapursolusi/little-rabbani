@@ -9,16 +9,10 @@ import {
   KID_MOOD_LABELS,
 } from '@/features/daily-class-report/constants';
 import { Term } from '@/features/term/types';
-import { formatDate } from '@/utils/date';
-import { pushParam } from '@/utils/search-params';
-import {
-  ChevronDown,
-  SquareChevronLeftIcon,
-  SquareChevronRightIcon,
-} from '@hugeicons/core-free-icons';
+import { ChevronDown, NoteEditIcon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
-import TermSelector from '@/components/features/term/term-selector';
+import TermSelectorBase from '@/components/features/term/term-selector';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -34,55 +28,69 @@ import {
   ItemTitle,
 } from '@/components/ui/item';
 import { Separator } from '@/components/ui/separator';
-import { Textarea } from '@/components/ui/textarea';
 
 import { MonthlyAcademicDetails, MonthlyKidReportDetail } from '../types';
+import { MonthPicker } from './month-picker';
+import KidReportPanel, { MonthlyInitialReport } from './report-panel';
 
 interface KidReportClientProps {
   currentKidId: string;
   currentTermId: string;
   currentMonth: string;
+  /** Previous eligible month, or null at the earliest boundary. */
+  prevMonth: string | null;
+  /** Next eligible month, or null at the latest boundary. */
+  nextMonth: string | null;
+  /** Terms the kid is enrolled in that overlap the selected month. */
   terms: Term[];
+  /** Selected term's final month → termly reporting, not monthly narrative. */
+  isFinalMonth: boolean;
   kidDetails: MonthlyKidReportDetail;
   academicDetails: MonthlyAcademicDetails;
+  initialReport: MonthlyInitialReport | null;
 }
 
-function MonthPicker({ currentMonth }: { currentMonth: string }) {
+function TermSelector({
+  terms,
+  value,
+  currentMonth,
+}: {
+  terms: Term[];
+  value: string;
+  currentMonth: string;
+}) {
   const router = useRouter();
-  const handleChangeMonth = (offset: number) => {
-    const [year, monthNumber] = currentMonth.split('-').map(Number);
-
-    const date = new Date(year, monthNumber - 1 + offset, 1);
-
-    const changedMonth = [
-      date.getFullYear(),
-      String(date.getMonth() + 1).padStart(2, '0'),
-    ].join('-');
-
-    pushParam({ key: 'month', value: changedMonth, router });
-  };
+  // One eligible term in this month → nothing to choose, lock the selector.
+  const isLocked = terms.length < 2;
   return (
-    <div className="my-2 flex items-center justify-between border-2 rounded-xl">
-      <Button
-        render={<HugeiconsIcon icon={SquareChevronLeftIcon} size={100} />}
-        className="w-fit"
-        onClick={() => handleChangeMonth(-1)}
-      />
-      <span>{formatDate(currentMonth)}</span>
-      <Button
-        render={<HugeiconsIcon icon={SquareChevronRightIcon} size={100} />}
-        className="w-fit"
-        onClick={() => handleChangeMonth(1)}
-      />
-    </div>
+    <TermSelectorBase
+      terms={terms}
+      value={value}
+      disabled={isLocked}
+      onValueChange={(termId) => {
+        const params = new URLSearchParams(window.location.search);
+        params.set('termId', termId);
+        params.set('month', currentMonth);
+        router.push(`?${params.toString()}`);
+      }}
+    />
   );
 }
 
 export default function KidReportClient({
+  currentKidId,
+  currentTermId,
   currentMonth,
+  prevMonth,
+  nextMonth,
+  terms,
+  isFinalMonth,
   kidDetails,
   academicDetails,
+  initialReport,
 }: KidReportClientProps) {
+  // Final month of the selected term belongs to termly reporting. No termly
+  // report module exists yet, so the flow is disabled rather than linked.
   const totalAttendance = kidDetails?.dcrObservations.filter(
     (obs) => obs.attendance === KID_ATTENDANCE.PRESENT
   ).length;
@@ -97,10 +105,18 @@ export default function KidReportClient({
         </Avatar>
         <div></div>
         {`(${kidDetails?.nickName}) ${kidDetails?.name}`}
-        <TermSelector terms={[]} showLabel={false} />
+        <TermSelector
+          terms={terms}
+          value={currentTermId}
+          currentMonth={currentMonth}
+        />
       </div>
       {/* Month Selector */}
-      <MonthPicker currentMonth={currentMonth} />
+      <MonthPicker
+        currentMonth={currentMonth}
+        prevMonth={prevMonth}
+        nextMonth={nextMonth}
+      />
       {/* Report Content */}
       <div className="my-2 p-4 border-2 rounded-xl ">
         Ringkasan Data Observasi Bulan Ini
@@ -120,7 +136,7 @@ export default function KidReportClient({
             <ItemContent>
               <ItemTitle>Catatan Guru</ItemTitle>
               <ItemDescription>
-                <Badge>10</Badge>
+                <Badge>{kidDetails?.dcrObservations.length ?? 0}</Badge>
               </ItemDescription>
             </ItemContent>
           </Item>
@@ -165,23 +181,29 @@ export default function KidReportClient({
                 <Separator />
               </div>
             ))}
-            <div className="flex items-baseline gap-2 py-2">
-              <div className="min-w-25">
-                <Badge>Selasa, 13 Okt</Badge>
-              </div>
-              <Separator orientation="vertical" className="" />
-              <div>
-                <p>Hadir-Mood-Makan</p>
-                <p>Catatan</p>
-                <p>Partipasi aktif</p>
-              </div>
-            </div>
           </CollapsibleContent>
         </Collapsible>
-        {/* Generation  */}
-        <div className="my-2 p-4 border-2 rounded-md ">
-          <Textarea></Textarea>
-        </div>
+        {/* Generation — final month of the term defers to termly reporting */}
+        {isFinalMonth ? (
+          <div className="my-2 p-4 border-2 rounded-md ">
+            <p className="mb-2 text-sm text-muted-foreground">
+              Bulan ini adalah bulan terakhir batch. Laporan untuk orang tua
+              dibuat sebagai laporan triwulanan.
+            </p>
+            {/* The termly module does not exist yet; the link would 404. */}
+            <Button disabled>
+              <HugeiconsIcon icon={NoteEditIcon} />
+              Laporan triwulanan belum tersedia
+            </Button>
+          </div>
+        ) : (
+          <KidReportPanel
+            currentKidId={currentKidId}
+            currentTermId={currentTermId}
+            currentMonth={currentMonth}
+            initialReport={initialReport}
+          />
+        )}
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 'use client';
 import { FormField } from '@/types/field';
 
-import { classSessionIdField } from '@/components/shared/form/fields';
+import { classSessionIdField } from '@/components/form/fields';
 
 import { ClassSession } from '../class-session/types';
 import { ThemeWithSubThemes } from '../theme/types';

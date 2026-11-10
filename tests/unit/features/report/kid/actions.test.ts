@@ -1,0 +1,250 @@
+import {
+  generateMonthlyReport,
+  generateMonthlyReportForBatch,
+  reviewMonthlyReport,
+  saveMonthlyReportNarrative,
+  sendMonthlyReport,
+} from '@/features/report/kid/actions';
+import * as kidReportService from '@/features/report/kid/services';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+
+const mocks = vi.hoisted(() => ({
+  getSession: vi.fn(),
+  generate: vi.fn(),
+  generateIfMissing: vi.fn(),
+  save: vi.fn(),
+  review: vi.fn(),
+  send: vi.fn(),
+}));
+
+vi.mock('next/headers', () => ({ headers: () => new Headers() }));
+vi.mock('@/lib/auth', () => ({
+  auth: { api: { getSession: mocks.getSession } },
+}));
+// Service layer is the collaborator boundary — auth must be enforced above it.
+vi.mock('@/features/report/kid/services', () => ({
+  generateMonthlyReport: mocks.generate,
+  generateMonthlyReportIfMissing: mocks.generateIfMissing,
+  saveMonthlyReportNarrative: mocks.save,
+  markMonthlyReportReviewed: mocks.review,
+  markMonthlyReportSent: mocks.send,
+}));
+
+const PARAMS = {
+  kidId: 'b3c1d2e4-0000-4000-8000-000000000001',
+  termId: 'b3c1d2e4-0000-4000-8000-000000000002',
+  yearMonth: '2026-10',
+};
+
+const ROW = {
+  id: 'r1',
+  narrative: 'draft',
+  reportStatus: 'draft',
+  isEdited: false,
+  reviewedAt: null,
+  sentAt: null,
+  sentBy: null,
+};
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  mocks.getSession.mockResolvedValue({
+    user: { id: 'user-1', role: 'owner' },
+  });
+  mocks.generate.mockResolvedValue({ narrative: 'draft', aiDraft: {} });
+  mocks.generateIfMissing.mockResolvedValue({
+    narrative: 'draft',
+    aiDraft: {},
+  });
+  mocks.save.mockResolvedValue(ROW);
+  mocks.review.mockResolvedValue({ ...ROW, reportStatus: 'reviewed' });
+  mocks.send.mockResolvedValue({ ...ROW, reportStatus: 'sent' });
+});
+
+const actions = [
+  ['generateMonthlyReport', () => generateMonthlyReport(PARAMS)],
+  [
+    'generateMonthlyReportForBatch',
+    () => generateMonthlyReportForBatch(PARAMS),
+  ],
+  [
+    'saveMonthlyReportNarrative',
+    () => saveMonthlyReportNarrative({ ...PARAMS, narrative: 'x' }),
+  ],
+  ['reviewMonthlyReport', () => reviewMonthlyReport(PARAMS)],
+  ['sendMonthlyReport', () => sendMonthlyReport(PARAMS)],
+] as const;
+
+describe('monthly report actions — server-side authorization', () => {
+  it.each(actions)(
+    '%s rejects an unauthenticated caller before reaching the service',
+    async (_name, call) => {
+      mocks.getSession.mockResolvedValue(null);
+
+      const result = await call();
+
+      expect(result).toEqual({
+        success: false,
+        message: 'Anda harus masuk untuk mengubah laporan',
+      });
+      expect(kidReportService.generateMonthlyReport).not.toHaveBeenCalled();
+      expect(
+        kidReportService.generateMonthlyReportIfMissing
+      ).not.toHaveBeenCalled();
+      expect(
+        kidReportService.saveMonthlyReportNarrative
+      ).not.toHaveBeenCalled();
+      expect(kidReportService.markMonthlyReportReviewed).not.toHaveBeenCalled();
+      expect(kidReportService.markMonthlyReportSent).not.toHaveBeenCalled();
+    }
+  );
+});
+
+describe('monthly report actions — owner-only', () => {
+  it.each(actions)(
+    '%s rejects an authenticated teacher before reaching the service',
+    async (_name, call) => {
+      mocks.getSession.mockResolvedValue({
+        user: { id: 'teacher-1', role: 'teacher' },
+      });
+
+      const result = await call();
+
+      expect(result).toEqual({
+        success: false,
+        message: 'Akses ditolak. Hanya Owner yang dapat mengubah laporan.',
+      });
+      expect(kidReportService.generateMonthlyReport).not.toHaveBeenCalled();
+      expect(
+        kidReportService.generateMonthlyReportIfMissing
+      ).not.toHaveBeenCalled();
+      expect(
+        kidReportService.saveMonthlyReportNarrative
+      ).not.toHaveBeenCalled();
+      expect(kidReportService.markMonthlyReportReviewed).not.toHaveBeenCalled();
+      expect(kidReportService.markMonthlyReportSent).not.toHaveBeenCalled();
+    }
+  );
+});
+
+describe('sendMonthlyReport', () => {
+  it('records the session user as sender — never a client-supplied id', async () => {
+    await sendMonthlyReport({
+      ...PARAMS,
+      // A malicious caller smuggling an extra field.
+      ...({ sentBy: 'someone-else' } as object),
+    });
+
+    expect(mocks.send).toHaveBeenCalledWith({
+      ...PARAMS,
+      sentBy: 'user-1',
+    });
+  });
+});
+
+describe('action result contract', () => {
+  it('surfaces a service business error as a failed ActionResult', async () => {
+    const { ReportNotReviewedError } = await import('@/lib/errors');
+    mocks.send.mockRejectedValue(new ReportNotReviewedError());
+
+    const result = await sendMonthlyReport(PARAMS);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.message).toBe(
+        'Laporan harus direview terlebih dahulu sebelum dikirim'
+      );
+    }
+  });
+
+  it('returns the saved report data on success', async () => {
+    const result = await saveMonthlyReportNarrative({
+      ...PARAMS,
+      narrative: 'x',
+    });
+
+    expect(result.success).toBe(true);
+    if (result.success) {
+      expect(result.data).toEqual(ROW);
+    }
+  });
+});
+
+describe('generateMonthlyReportForBatch', () => {
+  it('delegates to the insert-only generation service — never the regenerating one', async () => {
+    const result = await generateMonthlyReportForBatch(PARAMS);
+
+    expect(mocks.generateIfMissing).toHaveBeenCalledWith(PARAMS);
+    expect(mocks.generate).not.toHaveBeenCalled();
+    expect(result.success).toBe(true);
+  });
+
+  it('reports an existing report as a conflict so the batch skips it', async () => {
+    const { ReportAlreadyExistsError } = await import('@/lib/errors');
+    mocks.generateIfMissing.mockRejectedValue(new ReportAlreadyExistsError());
+
+    const result = await generateMonthlyReportForBatch(PARAMS);
+
+    expect(result).toEqual({
+      success: false,
+      message: 'Laporan sudah ada dan tidak dibuat ulang',
+      error: { type: 'conflict' },
+    });
+  });
+
+  it('does not leak provider errors to the client', async () => {
+    mocks.generateIfMissing.mockRejectedValue(
+      new Error('OpenRouter: sk-or-secret failed')
+    );
+
+    const result = await generateMonthlyReportForBatch(PARAMS);
+
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.message).not.toContain('sk-or-secret');
+    }
+  });
+});
+
+describe('monthly report actions — input validation', () => {
+  const invalid = [
+    ['non-uuid kidId', { ...PARAMS, kidId: 'not-a-uuid' }],
+    ['non-uuid termId', { ...PARAMS, termId: 'x' }],
+    ['malformed month', { ...PARAMS, yearMonth: '2026-13' }],
+    ['month without zero padding', { ...PARAMS, yearMonth: '2026-1' }],
+  ] as const;
+
+  it.each(invalid)(
+    'rejects %s before reaching the service',
+    async (_n, input) => {
+      const result = await generateMonthlyReport(input as typeof PARAMS);
+
+      expect(result.success).toBe(false);
+      if (!result.success) expect(result.message).toBe('Data tidak valid');
+      expect(kidReportService.generateMonthlyReport).not.toHaveBeenCalled();
+    }
+  );
+
+  it('treats an empty narrative as invalid', async () => {
+    const result = await saveMonthlyReportNarrative({
+      ...PARAMS,
+      narrative: '',
+    });
+
+    expect(result.success).toBe(false);
+    expect(kidReportService.saveMonthlyReportNarrative).not.toHaveBeenCalled();
+  });
+
+  it('ignores a client-supplied sentBy on save — it is not part of the action contract', async () => {
+    await saveMonthlyReportNarrative({
+      ...PARAMS,
+      narrative: 'x',
+      ...({ sentBy: 'attacker' } as object),
+    });
+
+    expect(kidReportService.saveMonthlyReportNarrative).toHaveBeenCalledWith({
+      ...PARAMS,
+      narrative: 'x',
+    });
+  });
+});

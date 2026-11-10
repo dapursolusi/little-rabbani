@@ -2,7 +2,7 @@ import { headers } from 'next/headers';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
-import { PageBreadcrumbs } from '@/components/shared/page-breadcrumbs';
+import { PageBreadcrumbs } from '@/components/page-breadcrumbs';
 import {
   Card,
   CardDescription,

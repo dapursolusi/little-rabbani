@@ -2,8 +2,8 @@
 
 import { NodeAddIcon, SubnodeAddIcon } from '@hugeicons/core-free-icons';
 
-import ContentTabs from '@/components/shared/content-tabs';
-import { DataTable } from '@/components/shared/table/data-table';
+import ContentTabs from '@/components/content-tabs';
+import { DataTable } from '@/components/table/data-table';
 
 import { createSubThemeColumns, themeColumns } from '../columns';
 import { SubThemeWithTheme, ThemeWithSubThemes } from '../types';

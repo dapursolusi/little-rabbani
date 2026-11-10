@@ -2,9 +2,9 @@
 
 import { ColumnDef } from '@tanstack/react-table';
 
-import { DataTableColumnHeader } from '@/components/shared/table/data-table-column-header';
-import { AppTableFeatures } from '@/components/shared/table/features';
-import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
+import { DataTableColumnHeader } from '@/components/table/data-table-column-header';
+import { AppTableFeatures } from '@/components/table/features';
+import { RowActionsDialog } from '@/components/table/row-actions-dialog';
 
 import {
   deleteSubTheme,

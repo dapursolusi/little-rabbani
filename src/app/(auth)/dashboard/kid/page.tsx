@@ -1,7 +1,7 @@
 import { kidColumns } from '@/features/kid/columns';
 import * as kidService from '@/features/kid/services';
 
-import { DataTable } from '@/components/shared/table/data-table';
+import { DataTable } from '@/components/table/data-table';
 
 import { baseMetadata } from '@/lib/metadata';
 

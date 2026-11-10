@@ -30,12 +30,14 @@ export default function TermSelector({
   defaultValue,
   onValueChange,
   showLabel = true,
+  disabled = false,
 }: {
   terms: Term[];
   value?: string;
   defaultValue?: string;
   onValueChange?: (val: string) => void;
   showLabel?: boolean;
+  disabled?: boolean;
 }) {
   const { ongoingTerm } = useOngoingTerm();
   const [internalValue, setInternalValue] = useState<string>(
@@ -67,6 +69,7 @@ export default function TermSelector({
         id="term-select"
         onValueChange={handleValueChange}
         value={selectedTermId}
+        disabled={disabled}
       >
         <SelectTrigger className="w-full">
           <SelectValue>

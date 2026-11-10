@@ -1,41 +1,135 @@
 import { db } from '@/db';
-import { dailyClassReport } from '@/db/schema/daily';
+import { dailyClassReport, dcrObservation } from '@/db/schema/daily';
 import { subTheme } from '@/db/schema/theme';
 import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { leanKidColumnSelection } from '@/features/kid/repositories/kid';
-import { startOfNextMonthDate } from '@/utils/date';
-import { and, eq, gte, isNull, lt } from 'drizzle-orm';
+import {
+  and,
+  asc,
+  count as drizzleCount,
+  eq,
+  gte,
+  isNull,
+  lt,
+  lte,
+} from 'drizzle-orm';
 
-import { DailyClassReportData } from '../types';
 import { DailyClassReportInput } from '../validation';
-
-// Column Selection
-
-export const dcrColumnSelection = {
-  id: true,
-  date: true,
-  classSessionId: true,
-  subThemeId: true,
-  description: true,
-} as const satisfies Record<keyof DailyClassReportData, boolean>;
 
 export async function findManyByMonth({
   classSessionId,
-  month: yearMonth,
+  startDate,
+  endDate,
 }: {
   classSessionId: string;
-  month: string;
+  startDate: string;
+  endDate: string;
 }) {
   const reports = await db.query.dailyClassReport.findMany({
     where: and(
       eq(dailyClassReport.classSessionId, classSessionId),
-      gte(dailyClassReport.date, `${yearMonth}-01`),
-      lt(dailyClassReport.date, startOfNextMonthDate(yearMonth)),
+      gte(dailyClassReport.date, startDate),
+      lte(dailyClassReport.date, endDate),
       isNull(dailyClassReport.deletedAt)
     ),
     columns: { id: true, date: true },
   });
   return reports;
+}
+
+/**
+ * Per-kid observation counts for one class in one window — the class-level
+ * overview's readiness input. Two aggregate queries (reports, then grouped
+ * observations) instead of one query per child; the counts are what the
+ * existing generation eligibility checks (DCRs exist + observations exist).
+ */
+export async function findObservationCountsByKid({
+  classSessionId,
+  startDate,
+  endDate,
+}: {
+  classSessionId: string;
+  startDate: string;
+  endDate: string;
+}) {
+  const [dcrCountRows, rows] = await Promise.all([
+    db
+      .select({ count: drizzleCount() })
+      .from(dailyClassReport)
+      .where(
+        and(
+          eq(dailyClassReport.classSessionId, classSessionId),
+          gte(dailyClassReport.date, startDate),
+          lte(dailyClassReport.date, endDate),
+          isNull(dailyClassReport.deletedAt)
+        )
+      ),
+    db
+      .select({
+        kidId: dcrObservation.kidId,
+        count: drizzleCount(),
+      })
+      .from(dcrObservation)
+      .innerJoin(
+        dailyClassReport,
+        eq(dcrObservation.dcrId, dailyClassReport.id)
+      )
+      .where(
+        and(
+          eq(dailyClassReport.classSessionId, classSessionId),
+          gte(dailyClassReport.date, startDate),
+          lte(dailyClassReport.date, endDate),
+          isNull(dailyClassReport.deletedAt),
+          isNull(dcrObservation.deletedAt)
+        )
+      )
+      .groupBy(dcrObservation.kidId),
+  ]);
+
+  return {
+    dcrCount: Number(dcrCountRows[0]?.count ?? 0),
+    observationCountByKidId: Object.fromEntries(
+      rows.map((row) => [row.kidId, Number(row.count)])
+    ) as Record<string, number>,
+  };
+}
+
+export async function findManyWithObservationsByKidAndMonth({
+  classSessionId,
+  kidId,
+  startDate,
+  endDate,
+}: {
+  classSessionId: string;
+  kidId: string;
+  startDate: string;
+  endDate: string;
+}) {
+  return db.query.dailyClassReport.findMany({
+    where: and(
+      eq(dailyClassReport.classSessionId, classSessionId),
+      gte(dailyClassReport.date, startDate),
+      lte(dailyClassReport.date, endDate),
+      isNull(dailyClassReport.deletedAt)
+    ),
+    columns: omitAuditColumns,
+    with: {
+      observations: {
+        where: eq(dcrObservation.kidId, kidId),
+        columns: omitAuditColumns,
+        with: {
+          kid: { columns: leanKidColumnSelection },
+        },
+      },
+      subTheme: {
+        columns: { name: true },
+        with: {
+          theme: { columns: { name: true } },
+        },
+      },
+    },
+    orderBy: asc(dailyClassReport.date),
+  });
 }
 
 export async function insert(input: DailyClassReportInput) {

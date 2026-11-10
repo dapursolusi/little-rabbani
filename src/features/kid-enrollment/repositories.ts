@@ -1,5 +1,5 @@
 import { db } from '@/db';
-import { kid, kidEnrollment } from '@/db/schema';
+import { kid, kidEnrollment, term } from '@/db/schema';
 import { omitAuditColumns } from '@/db/selections/audit-columns';
 import { ACTIVE_STATUS } from '@/features/kid/constants';
 import { TransactionClient } from '@/types';
@@ -17,11 +17,36 @@ export async function hasKidEnrollment({
   kidId: string;
 }) {
   return db.query.kidEnrollment.findFirst({
+    // A kid who moved class leaves a soft-deleted row behind; the live row is
+    // the only one whose class session may scope a report.
     where: and(
       eq(kidEnrollment.termId, termId),
-      eq(kidEnrollment.kidId, kidId)
+      eq(kidEnrollment.kidId, kidId),
+      isNull(kidEnrollment.deletedAt)
     ),
     columns: { id: true, classSessionId: true },
+  });
+}
+
+/** Enrolled terms for one kid with date ranges — the month-eligibility source. */
+export async function findTermsByKid(kidId: string) {
+  return db.query.kidEnrollment.findMany({
+    where: and(eq(kidEnrollment.kidId, kidId), isNull(kidEnrollment.deletedAt)),
+    columns: { termId: true },
+    with: {
+      term: {
+        // A soft-deleted term is not reportable: its months must not become
+        // selectable, and `resolveReportRange` would refuse the term anyway.
+        where: isNull(term.deletedAt),
+        columns: {
+          id: true,
+          name: true,
+          startDate: true,
+          endDate: true,
+          isAutoCreated: true,
+        },
+      },
+    },
   });
 }
 
@@ -120,7 +145,8 @@ export async function findCsIdByTermId({
   return db.query.kidEnrollment.findFirst({
     where: and(
       eq(kidEnrollment.termId, termId),
-      eq(kidEnrollment.kidId, kidId)
+      eq(kidEnrollment.kidId, kidId),
+      isNull(kidEnrollment.deletedAt)
     ),
     columns: { classSessionId: true },
   });

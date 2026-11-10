@@ -1,65 +1,23 @@
 # Auth Patterns
 
-## Stack
+## Important unresolved decision
 
-Better Auth (`better-auth` + `@better-auth/drizzle-adapter`). Google OAuth + dev-session bypass.
+Authorization checks are currently placed inconsistently between actions and services. Do not expand the inconsistency or establish a new convention until the decision is settled. See `docs/patterns/violations.md` (or the canonical decision issue).
 
-## Configuration
+## Security-sensitive behavior
 
-`src/lib/auth.ts` — `betterAuth()` setup with:
+- Inspect `src/proxy.ts`, `src/lib/auth.ts`, and the relevant auth action before changing authentication or authorization.
+- Demo login and dev-session bypass are distinct mechanisms. Verify their environment guards before changing them; do not assume “development-only” means local-only.
+- Never expose session tokens, secrets, or PII in logs.
 
-- Drizzle adapter (`provider: 'pg'`)
-- Google social provider
-- Allowed hosts (localhost, lobo, vercel)
-- `role` as additional user field (not editable by user)
-- `nextCookies()` plugin
+## Source locations
 
-## Auth gating — UNDECIDED
+- Configuration: `src/lib/auth.ts`
+- Browser client: `src/lib/auth-client.ts`
+- Route/session guard: `src/proxy.ts`
+- Auth schema: `src/db/schema/auth.ts`
+- PII utilities: `src/lib/pii.ts`
 
-`requireOwner()` (`src/lib/actions/require-owner.ts`) currently gates mutations: redirects to `/login` if unauthenticated, returns `{ success: false, message: 'Akses ditolak...' }` if role is not `owner`.
+## Related debt
 
-**Placement is not settled.** Call sites are split between services-level (majority) and action-level (newest modules), and a future `roleGate(['owner', 'teacher'])`-style design may replace the current gate. Do not write new requireOwner call-site guidance; track drift in violations.md until the design lands.
-
-## Route proxy
-
-`src/proxy.ts` — middleware handling:
-
-1. Distributed tracing headers (`X-Request-Id`, `X-Trace-Id`)
-2. Session checking for `/dashboard/*` routes
-3. Role-based access: `ROLE_ROUTES` map defines which routes each role can access
-4. Root path redirect: unauthenticated → `/login`, authenticated → role home
-5. Teacher-preview mode (`?teacher-preview=true` in dev) for testing teacher role
-
-```ts
-const ROLE_ROUTES: Record<string, string[]> = {
-  owner: ['/dashboard'],
-  teacher: ['/dashboard/daily', '/dashboard/calendar'],
-};
-```
-
-## Role home
-
-`owner` → `/dashboard`, `teacher` → `/dashboard/daily`.
-
-## Demo & dev bypass
-
-Two distinct gates — don't conflate them:
-
-- **Demo login** (`src/features/auth/demo-login.ts`): gated on `NEXT_PUBLIC_DEMO_MODE === '1'`. ⚠️ This var is **not registered in `env.mjs`** (bug candidate — see violations.md).
-- **Dev-session route** (`src/app/api/auth/dev-session/route.ts`): blocked only when `VERCEL_ENV === 'production'` + `DEV_AUTH_BYPASS` — i.e. it can run on CI/preview, not just local dev.
-
-## Auth client
-
-`src/lib/auth-client.ts` — Better Auth client for the browser.
-
-## Database schema
-
-Better Auth tables in `src/db/schema/auth.ts`: `user`, `session`, `account`, `verification`. `role` enum on user: `owner | teacher`. Better Auth tables skip the audit triplet (`deletedAt` etc.).
-
-## On API error
-
-Better Auth config routes errors to `/login?error=access_denied`.
-
-## PII handling
-
-`src/lib/pii.ts` — detection and masking utilities for PII fields (names, emails, phones, addresses, DOBs, national IDs). **Infrastructure-only today — zero call sites.** Intended for log boundaries once wired up (see violations.md).
+Link the current PII call-site or environment-validation issue from `docs/patterns/violations.md` / `docs/known-issues.md` if it is still open.

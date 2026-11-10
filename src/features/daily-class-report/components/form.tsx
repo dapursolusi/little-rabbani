@@ -6,7 +6,7 @@ import { ThemeWithSubThemes } from '@/features/theme/types';
 import { getLocalDateString } from '@/utils/date';
 import { pushParam } from '@/utils/search-params';
 
-import FormFieldGenerator from '@/components/shared/form/form-field-generator';
+import FormFieldGenerator from '@/components/form/form-field-generator';
 
 import { dcrAction, observationAction } from '../actions';
 import {

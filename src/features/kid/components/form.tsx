@@ -12,7 +12,7 @@ import {
 import { Term } from '@/features/term/types';
 import { z } from 'zod';
 
-import FormFieldGenerator from '@/components/shared/form/form-field-generator';
+import FormFieldGenerator from '@/components/form/form-field-generator';
 
 type KidFormFieldsProps = {
   mode: 'create' | 'edit';

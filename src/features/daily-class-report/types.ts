@@ -27,6 +27,10 @@ export type DcrObservationData = Omit<
   keyof DbTableAuditFields
 >;
 export type DcrObservation = DailyClassReport['observations'][number];
+export type DcrObservationCaptureFields = Omit<
+  DcrObservationData,
+  'id' | 'kidId' | 'dcrId' | 'notes'
+>;
 
 // Daily Kid Report Types
 

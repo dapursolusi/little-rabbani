@@ -52,12 +52,19 @@ export default async function KidListPage() {
 - `baseMetadata` at `src/lib/metadata.ts`, title template `%s | Little Rabbani`.
 - Missing resource → `notFound()`; missing required search param → **redirect to canonicalize** (`report/month` redirects to add `?termId=` when absent).
 - No `loading.tsx` / `error.tsx` / `not-found.tsx` — pages handle missing data in the body; clients handle their own load/error states.
+- Independent fetches run in `Promise.all`.
+- `params`/`searchParams` are `Promise<...>` + `await` (Next 15+), typed inline in the signature.
+- Missing resource → `notFound()`; missing required search param → redirect to the canonical URL.
 
 ## Page composition (three shapes, by page kind)
 
 1. **List page** — server page renders `<DataTable columns data meta emptyState />` directly.
 2. **Interactive page** — server page fetches, hands plain-data props to `<XxxClient>` from `@/features/<e>/components/client`.
 3. **Static/settings page** — inline JSX + `PageBreadcrumbs`.
+
+## URL as filter state
+
+List filters live in the URL: server page redirects to fill required params; client components push changes through one shared `pushParam` util. Remount a client subtree with `key={...}` when server data changes under it.
 
 ## Routing
 
@@ -71,8 +78,13 @@ Auth gating placement (requireOwner in actions vs services; possible future `rol
 
 `src/proxy.ts` handles auth checking + role-based routing + distributed tracing headers. See [auth.md](auth.md).
 
+## Mutations
+
+- Discriminated-union results (`ActionResult`-style) end to end; clients narrow with `if (!result.success)`.
+- Toast, copy in Indonesian, on every user-facing mutation: success reads `result.message ?? <default label>`; failure toasts `result.message`.
+- `router.refresh()` after mutations to revalidate server data.
+- One shared form engine (schema + field-config driven) handles form state, validation, toasts, and refresh — entity forms are thin wrappers that never re-implement the flow.
+
 ## Project gotchas
 
 - Port 3000 must be free.
-- URL filter pushes go through `pushParam()` (`src/utils/search-params.ts`).
-- Toast copy is Indonesian; `toast.success` on success, `toast.error` on failure, `toast.warning` on delete-confirm.

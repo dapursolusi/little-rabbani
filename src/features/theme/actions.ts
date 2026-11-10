@@ -1,6 +1,6 @@
 'use server';
 
-import { parseInput } from '@/lib/actions/parse-input';
+import { parseInput } from '@/lib/action/parse-input';
 
 import * as themeService from './services';
 import { subThemeFormSchema, themeFormSchema } from './validation';

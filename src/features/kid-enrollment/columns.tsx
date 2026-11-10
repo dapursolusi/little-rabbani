@@ -9,8 +9,8 @@ import { Cancel02Icon, Undo02Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 import { ColumnDef } from '@tanstack/react-table';
 
-import { AppTableFeatures } from '@/components/shared/table/features';
-import { RowActionsDialog } from '@/components/shared/table/row-actions-dialog';
+import { AppTableFeatures } from '@/components/table/features';
+import { RowActionsDialog } from '@/components/table/row-actions-dialog';
 import { Badge } from '@/components/ui/badge';
 import {
   Select,

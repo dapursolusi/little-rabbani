@@ -6,6 +6,7 @@ import {
 
 import { logger } from '@/lib/logger';
 
+import { KID_ATTENDANCE, REPORT_STATUS } from '../constants';
 import { dailyKidReportRepo, dcrRepo, observationRepo } from '../repositories';
 import * as templateRepo from '../repositories/report-template';
 import { DailyKidReport } from '../types';
@@ -93,7 +94,7 @@ export async function generateDailyKidReportsByDcrId(
     const template = tmpl.content;
     const reports: GeneratedReport[] = [];
     for (const obs of existingDCR.observations) {
-      if (obs.attendance !== 'present') continue;
+      if (obs.attendance !== KID_ATTENDANCE.PRESENT) continue;
 
       const narrative = renderDailyReportTemplate({
         template,
@@ -169,7 +170,8 @@ export async function saveReportNarrative(
       dailyKidReport: existingKidReport,
     } = context.data;
 
-    const isDailyKidReportSent = existingKidReport?.reportStatus === 'sent';
+    const isDailyKidReportSent =
+      existingKidReport?.reportStatus === REPORT_STATUS.SENT;
     if (isDailyKidReportSent)
       return {
         success: false,
@@ -203,7 +205,7 @@ export async function saveReportNarrative(
       const newReport = await dailyKidReportRepo.insert({
         dcrObservationId: input.dcrObservationId,
         narrative: input.narrative,
-        reportStatus: 'edited',
+        reportStatus: REPORT_STATUS.EDITED,
       });
       return {
         success: true as const,
@@ -215,7 +217,7 @@ export async function saveReportNarrative(
       existingKidReport.id,
       {
         narrative: input.narrative,
-        reportStatus: 'edited',
+        reportStatus: REPORT_STATUS.EDITED,
       }
     );
     return {
@@ -262,7 +264,7 @@ export async function markReportAsSent({
       const inserted = await dailyKidReportRepo.insert({
         dcrObservationId,
         narrative: defaultNarrative,
-        reportStatus: 'sent',
+        reportStatus: REPORT_STATUS.SENT,
         sentAt: now,
       });
 
@@ -274,7 +276,8 @@ export async function markReportAsSent({
     }
 
     // 3b. Persist narrative if there is persisted report
-    const isDailyKidReportSent = dailyKidReport.reportStatus === 'sent';
+    const isDailyKidReportSent =
+      dailyKidReport.reportStatus === REPORT_STATUS.SENT;
     if (isDailyKidReportSent)
       return {
         success: true as const,
@@ -284,12 +287,12 @@ export async function markReportAsSent({
 
     // Persist narrative and marking sent
     const hasPersistedNarrative =
-      dailyKidReport.reportStatus === 'edited' &&
+      dailyKidReport.reportStatus === REPORT_STATUS.EDITED &&
       Boolean(dailyKidReport.narrative?.trim());
 
     const updated = await dailyKidReportRepo.update(dailyKidReport.id, {
       narrative: hasPersistedNarrative ? undefined : defaultNarrative,
-      reportStatus: 'sent',
+      reportStatus: REPORT_STATUS.SENT,
       sentAt: now,
     });
     return {

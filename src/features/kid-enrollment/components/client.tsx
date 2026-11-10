@@ -19,8 +19,8 @@ import { toast } from 'sonner';
 
 import ClassSessionSelector from '@/components/features/class-session/class-session-selector';
 import TermSelector from '@/components/features/term/term-selector';
-import { Modal } from '@/components/shared/modal';
-import { DataTable } from '@/components/shared/table/data-table';
+import { Modal } from '@/components/modal';
+import { DataTable } from '@/components/table/data-table';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 

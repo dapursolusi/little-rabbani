@@ -6,10 +6,7 @@ import {
 } from '@/features/kid/constants';
 import { FormField } from '@/types/field';
 
-import {
-  classSessionIdField,
-  termIdField,
-} from '@/components/shared/form/fields';
+import { classSessionIdField, termIdField } from '@/components/form/fields';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 import { ClassSession } from '../class-session/types';

@@ -12,10 +12,8 @@ import {
   Warning,
 } from '@hugeicons/core-free-icons';
 
-import ContentTabs, {
-  ContentTabsProps,
-} from '@/components/shared/content-tabs';
-import { EmptyState } from '@/components/shared/empty-state';
+import ContentTabs, { ContentTabsProps } from '@/components/content-tabs';
+import { EmptyState } from '@/components/empty-state';
 
 import {
   DailyClassReport,
