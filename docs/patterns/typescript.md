@@ -4,28 +4,27 @@ Stack-specific mechanics. Type-naming table, cast seams, comments, file-size rul
 
 ## Types
 
-- Type naming conventions:  
-  - Module types:  
+- Type naming conventions:
+  - Module types:
 
-  |Name|Description|Location|
-  |---|---|---|
-  |`XxxRecord`|Derived from db schema entity/table, e.g. `type KidRecord = typeof kid.$inferSelect`|Module `types.ts`|
-  |`XxxData`|Built for **backend**. Derived from `XxxRecord` with omitted audit fields, e.g. `type KidData = Omit<KidRecord, keyof DbTableAuditFields>`.|Module `types.ts`|
-  |`Xxx`|Built for **frontend**. Default equal to `XxxData`, e.g. `type Kid = KidData`.|Module `types.ts`|
-  |`XxxInsert`|Db insert for **backend**, usually repository. e.g. `type KidInsert = PickRequiredKeys<typeof kid.$inferInsert>`|Module `types.ts`|
-  |`XxxWithRelations`|When the module have list feature which give nested data structure, prioritize the type derived from the list e.g. `type KidWithRelations = Awaited<ReturnType<typeof kidRepo.findMany>>`. Narrow the type more when necessary, e.g. `type GuardianWithRelations = KidWithRelations['guardian'][number]`.|Module `types.ts`|
-  |`LeanXxx`|Default to basic info for an entity, e.g. `type LeanKid = Pick<Kid,'id'\|'name'\|'nickName'>`. Use only when there is a need or the type `Xxx` can be simplified to basic info, otherwise skip this.|Module `types.ts`|
-  |`XxxInput`|Derived from the validation from **frontend**, e.g. `type KidInput = z.infer<typeof kidSchema>`|Module validation `validation.ts`|
-
+  | Name               | Description                                                                                                                                                                                                                                                                                               | Location                          |
+  | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- |
+  | `XxxRecord`        | Derived from db schema entity/table, e.g. `type KidRecord = typeof kid.$inferSelect`                                                                                                                                                                                                                      | Module `types.ts`                 |
+  | `XxxData`          | Built for **backend**. Derived from `XxxRecord` with omitted audit fields, e.g. `type KidData = Omit<KidRecord, keyof DbTableAuditFields>`.                                                                                                                                                               | Module `types.ts`                 |
+  | `Xxx`              | Built for **frontend**. Default equal to `XxxData`, e.g. `type Kid = KidData`.                                                                                                                                                                                                                            | Module `types.ts`                 |
+  | `XxxInsert`        | Db insert for **backend**, usually repository. e.g. `type KidInsert = PickRequiredKeys<typeof kid.$inferInsert>`                                                                                                                                                                                          | Module `types.ts`                 |
+  | `XxxWithRelations` | When the module have list feature which give nested data structure, prioritize the type derived from the list e.g. `type KidWithRelations = Awaited<ReturnType<typeof kidRepo.findMany>>`. Narrow the type more when necessary, e.g. `type GuardianWithRelations = KidWithRelations['guardian'][number]`. | Module `types.ts`                 |
+  | `LeanXxx`          | Default to basic info for an entity, e.g. `type LeanKid = Pick<Kid,'id'\|'name'\|'nickName'>`. Use only when there is a need or the type `Xxx` can be simplified to basic info, otherwise skip this.                                                                                                      | Module `types.ts`                 |
+  | `XxxInput`         | Derived from the validation from **frontend**, e.g. `type KidInput = z.infer<typeof kidSchema>`                                                                                                                                                                                                           | Module validation `validation.ts` |
   - Global types:
 
-  |Name|Description|Location|
-  |---|---|---|
-  |`DbTableAuditFields`|<pre><code>interface DbTableAuditFields {<br>createdAt: Date;<br>updatedAt: Date;<br>deletedAt?: Date;<br>}</code></pre>|Project `types.ts`|
-  |`PickRequiredKeys<T>`|<pre><code>type RequiredKeys<T> = {<br>  [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];<br>};</code></pre>|Project `types.ts`|
-
+  | Name                  | Description                                                                                                              | Location           |
+  | --------------------- | ------------------------------------------------------------------------------------------------------------------------ | ------------------ |
+  | `DbTableAuditFields`  | <pre><code>interface DbTableAuditFields {<br>createdAt: Date;<br>updatedAt: Date;<br>deletedAt?: Date;<br>}</code></pre> | Project `types.ts` |
+  | `PickRequiredKeys<T>` | <pre><code>type RequiredKeys<T> = {<br> [K in keyof T as {} extends Pick<T, K> ? never : K]: T[K];<br>};</code></pre>    | Project `types.ts` |
   - Notes:
-  Other necessary types not listed above either module or project, follow the best practice or industry standard.
+    Other necessary types not listed above either module or project, follow the best practice or industry standard.
+
 - `as const satisfies Record<...>` for typed constant objects (column selections, config maps) — `satisfies` checks without widening.
 
 ## Enum constants — named-map stack

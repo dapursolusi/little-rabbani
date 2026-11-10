@@ -7,24 +7,28 @@ Last updated: 2026-11-10 (full implementation audit)
 ### LMS
 
 #### 1. Kid
+
 - **MVP:** CRUD page implemented.
 - **Built:** List (search/limit/count), create (new guardian OR existing guardian), edit (dual guardian modes), hard delete, guardian search, table + row actions.
 - **Deferred:** Kid media management, detail page, bulk ops, soft delete (schema has `deletedAt` but `remove()` is hard delete), restore, activeStatus filter on list.
 - **Won't Have:** Kid portal.
 
 #### 2. Guardian
+
 - **MVP:** No standalone module — lives inside `kid` (1 guardian : N kids via FK, ADR-0002).
 - **Built:** `resolveGuardian` upsert in tx, phone/email collision checks (live-only partial unique indexes), search by name/phone, shown in kid list + `GuardianPicker`.
 - **Deferred:** Guardian portal, standalone guardian pages (list/create/edit/delete), multi-guardian per kid.
 - **Won't Have:** Guardian media management.
 
 #### 3. Daily Class Report
+
 - **MVP:** Implemented (largest vertical: 23 files, ~2650 LOC).
 - **Built:** 4-layer vertical; per-kid observations (attendance/mood/appetite/notes); template narrative with `{{placeholder}}`/`{{#if}}` rendering; `draft/edited/sent` status; 7-day edit lock (`EDIT_WINDOW_DAYS`); send + copy-to-clipboard; history calendar.
 - **Deferred:** Dedicated `/dashboard/report/daily` route (nav link 404s), backfill/edit past-day UI, `draft` status persistence (currently client overlay only).
 - **Won't Have:** [Explicit exclusions]
 
 #### 4. Monthly Report
+
 - **MVP:** In progress (branch `feat/monthly-report`, 46 commits ahead of `main`, no PR yet).
 - **Built:** Generation (single + batch), editor, preview, save/review/send/undo lifecycle, regeneration guards, class overview, kid page single-read. 14 test files — best-covered area in repo.
 - **Remaining:** Finish client decomposition WIP, commit/PR, human smoke test.
@@ -32,16 +36,19 @@ Last updated: 2026-11-10 (full implementation audit)
 - **Won't Have:** [Explicit exclusions]
 
 #### 5. Term
+
 - **Built:** CRUD, overlap check, auto-create current term + chained next term (no gaps), `OngoingTermProvider`/`TermSelector`, 20 tests.
 - **Deferred:** School-year/sequence columns (name parsed at create time only).
 - **Won't Have:** [Explicit exclusions]
 
 #### 6. Class Session
+
 - **Built:** CRUD, overlap validation, last-session-delete guard, owner gating.
 - **Deferred:** Tests (zero), teacher assignment.
 - **Won't Have:** [Explicit exclusions]
 
 #### 7. Teacher
+
 - **MVP:** Role only — `roleEnum` owner|teacher + proxy route gate + dev preview bypass.
 - **Built:** Role enum, proxy read-gate, demo session.
 - **Deferred:** Teacher module, teacher routes, class-assignment model (no user↔classSession FK), teacher-scoped data filtering, `TeacherTabs` (zero call sites, links to nonexistent routes).
@@ -68,12 +75,14 @@ Last updated: 2026-11-10 (full implementation audit)
 Complete the monthly reporting workflow so teachers can generate, edit, review, and send monthly reports to guardians.
 
 **Current status:**
+
 - Monthly report generation implemented (single + batch).
 - Editor and preview implemented.
 - Save, review, send, and undo workflows implemented.
 - Class overview implemented; kid page now does a single read.
 
 **Current task (uncommitted WIP):**
+
 - Extract `MonthPicker` (done → `kid/components/month-picker.tsx`, 64 lines).
 - Extract `ConfirmationDialog` (done → `src/components/confirmation-dialog.tsx`, 49 lines).
 - Client diff: +32 / −134 in `src/features/report/kid/components/client.tsx` (647 lines left).
@@ -81,11 +90,13 @@ Complete the monthly reporting workflow so teachers can generate, edit, review, 
 - `temp/` untracked.
 
 **Decisions:**
+
 - Remaining planned extractions (`KidObservationSummary`, workflow hook, report panel) were not done — only the two above landed. Reassess before continuing; client is still 647 lines.
 - Keep tightly coupled implementations together.
 - No unrelated architectural cleanup.
 
 **Refactor implemented (2026-11-10, approved):**
+
 - `kid/components/client.tsx` 647 → 215 lines: header, term selector, month picker, observation summary, final-month branch, panel composition.
 - `kid/components/report-panel.tsx` (new, ~409 lines): lifecycle state, generate/save/review/send/undo handlers, tabs, workflow buttons, 3 confirmations.
 - `kid/components/narrative-preview.tsx` (new, ~61 lines): pure renderer.
@@ -120,4 +131,3 @@ Run `bun run check`, human smoke test the kid report page (generate → edit →
 - Guardian lives inside `kid` vertical — no standalone guardian module (ADR-0002 identity-only kid, 1 guardian : N kids).
 - Daily report editable only within 7 days (`EDIT_WINDOW_DAYS`); monthly reports immutable once sent.
 - `docs/patterns/violations.md` is accurate — check it before touching term/class-session/kid services.
-

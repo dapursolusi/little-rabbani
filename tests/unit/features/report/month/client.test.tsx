@@ -2,7 +2,13 @@ import { MONTHLY_REPORT_STATUS } from '@/features/report/constants';
 import * as kidReportAction from '@/features/report/kid/actions';
 import MonthlyReportClient from '@/features/report/month/components/client';
 import { ClassReportKid, ClassReportOverview } from '@/features/report/types';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import {
+  act,
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+} from '@testing-library/react';
 import { toast } from 'sonner';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -384,9 +390,11 @@ describe('MonthlyReportClient batch generation', () => {
     expect(kidReportAction.generateMonthlyReportForBatch).toHaveBeenCalledTimes(
       1
     );
-    expect(
-      kidReportAction.generateMonthlyReportForBatch
-    ).toHaveBeenCalledWith({ kidId: READY.kidId, termId: TERM.id, yearMonth: '2026-10' });
+    expect(kidReportAction.generateMonthlyReportForBatch).toHaveBeenCalledWith({
+      kidId: READY.kidId,
+      termId: TERM.id,
+      yearMonth: '2026-10',
+    });
   });
 
   it('processes children sequentially — the next request waits for the previous result', async () => {
@@ -399,8 +407,7 @@ describe('MonthlyReportClient batch generation', () => {
       .mockImplementationOnce(
         () =>
           new Promise((resolve) => {
-            resolveFirst = () =>
-              resolve(OK);
+            resolveFirst = () => resolve(OK);
           })
       )
       .mockResolvedValueOnce(OK);
@@ -421,7 +428,9 @@ describe('MonthlyReportClient batch generation', () => {
     fireEvent.click(confirmButton());
 
     await waitFor(() =>
-      expect(screen.getByText(/Generating 1 of 2|Membuat 1 dari 2/)).toBeDefined()
+      expect(
+        screen.getByText(/Generating 1 of 2|Membuat 1 dari 2/)
+      ).toBeDefined()
     );
     expect(kidReportAction.generateMonthlyReportForBatch).toHaveBeenCalledTimes(
       1
@@ -430,9 +439,9 @@ describe('MonthlyReportClient batch generation', () => {
     await act(async () => resolveFirst());
 
     await waitFor(() =>
-      expect(kidReportAction.generateMonthlyReportForBatch).toHaveBeenCalledTimes(
-        2
-      )
+      expect(
+        kidReportAction.generateMonthlyReportForBatch
+      ).toHaveBeenCalledTimes(2)
     );
     await waitFor(() => expect(screen.getByText(/2 berhasil/)).toBeDefined());
   });
@@ -491,9 +500,7 @@ describe('MonthlyReportClient batch generation', () => {
     fireEvent.click(batchButton());
     fireEvent.click(confirmButton());
 
-    await waitFor(() =>
-      expect(screen.getByText(/Coba lagi/)).toBeDefined()
-    );
+    await waitFor(() => expect(screen.getByText(/Coba lagi/)).toBeDefined());
     fireEvent.click(screen.getByText(/Coba lagi/));
 
     await waitFor(() => expect(screen.getByText(/1 berhasil/)).toBeDefined());
@@ -536,9 +543,9 @@ describe('MonthlyReportClient batch generation', () => {
           (el.textContent ?? '').startsWith('Buat laporan tersisa')
       )
     ).toBeNull();
-    expect(
-      kidReportAction.generateMonthlyReportForBatch
-    ).toHaveBeenCalledTimes(1);
+    expect(kidReportAction.generateMonthlyReportForBatch).toHaveBeenCalledTimes(
+      1
+    );
   });
 
   it('never starts an empty batch', () => {
@@ -568,8 +575,7 @@ describe('MonthlyReportClient batch generation', () => {
     vi.mocked(kidReportAction.generateMonthlyReportForBatch).mockImplementation(
       () =>
         new Promise((resolve) => {
-          resolveFirst = () =>
-            resolve(OK);
+          resolveFirst = () => resolve(OK);
         })
     );
 
@@ -588,7 +594,11 @@ describe('MonthlyReportClient batch generation', () => {
     fireEvent.click(batchButton());
     fireEvent.click(confirmButton());
 
-    await waitFor(() => expect(screen.getByText(/Membuat 1 dari 1|Generating 1 of 1/)).toBeDefined());
+    await waitFor(() =>
+      expect(
+        screen.getByText(/Membuat 1 dari 1|Generating 1 of 1/)
+      ).toBeDefined()
+    );
     // No batch trigger is available while running — double submission blocked.
     expect(
       screen.queryByText(
