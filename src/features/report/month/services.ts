@@ -253,7 +253,9 @@ export async function aggregateMonthlyKidReportData({
       end: range.endDate,
     },
     attendance: {
-      totalSchoolDay: 20,
+      // Every DCR in the window is one school day; the bare calendar month
+      // would over-report attendance for clipped or partly-observed months.
+      totalSchoolDay: dcrsWithKidObservations.length,
       ...observationAggregate['attendance'],
     },
     wellbeing: {

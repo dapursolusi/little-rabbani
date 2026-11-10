@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import {
@@ -91,9 +90,7 @@ export default function KidReportClient({
   initialReport,
 }: KidReportClientProps) {
   // Final month of the selected term belongs to termly reporting. No termly
-  // report module exists yet, so the link is always the create state.
-  const termlyReportHref = `/dashboard/report/quarterly/${currentKidId}?termId=${currentTermId}`;
-
+  // report module exists yet, so the flow is disabled rather than linked.
   const totalAttendance = kidDetails?.dcrObservations.filter(
     (obs) => obs.attendance === KID_ATTENDANCE.PRESENT
   ).length;
@@ -193,12 +190,10 @@ export default function KidReportClient({
               Bulan ini adalah bulan terakhir batch. Laporan untuk orang tua
               dibuat sebagai laporan triwulanan.
             </p>
-            <Button
-              nativeButton={false}
-              render={<Link href={termlyReportHref} />}
-            >
+            {/* The termly module does not exist yet; the link would 404. */}
+            <Button disabled>
               <HugeiconsIcon icon={NoteEditIcon} />
-              Create termly report
+              Laporan triwulanan belum tersedia
             </Button>
           </div>
         ) : (

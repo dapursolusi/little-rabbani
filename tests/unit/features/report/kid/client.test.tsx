@@ -120,13 +120,14 @@ describe('KidReportClient term final month', () => {
     expect(screen.queryByText('Simpan')).toBeNull();
   });
 
-  it('links to the termly report instead', () => {
+  it('defers to termly reporting without linking to a missing route', () => {
     renderClient({ isFinalMonth: true, nextMonth: null });
 
-    const link = screen.getByText('Create termly report');
-    expect(link.closest('a')?.getAttribute('href')).toBe(
-      `/dashboard/report/quarterly/k1?termId=${TERM.id}`
-    );
+    // The termly module does not exist yet, so the CTA is inert rather than
+    // pointing at a 404.
+    const cta = screen.getByText('Laporan triwulanan belum tersedia');
+    expect(cta.closest('a')).toBeNull();
+    expect(cta.closest('button')?.hasAttribute('disabled')).toBe(true);
   });
 
   it('keeps observations visible in the final month', () => {

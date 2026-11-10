@@ -190,7 +190,8 @@ describe('aggregateMonthlyKidReportData', () => {
     // period reflects the observed window (month ∩ term), not the bare month
     expect(result.period).toEqual({ start: '2026-10-01', end: '2026-10-31' });
     expect(result.attendance).toEqual({
-      totalSchoolDay: 20,
+      // One DCR per school day in the window — two were observed here.
+      totalSchoolDay: 2,
       present: 1,
       absent: 1,
       excused: 0,
@@ -234,7 +235,7 @@ describe('aggregateMonthlyKidReportData', () => {
     const result = await aggregateMonthlyKidReportData(input);
 
     expect(result.attendance).toEqual({
-      totalSchoolDay: 20,
+      totalSchoolDay: 1,
       present: 0,
       absent: 0,
       excused: 0,

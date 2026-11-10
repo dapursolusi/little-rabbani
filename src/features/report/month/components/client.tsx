@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -282,9 +282,9 @@ export default function MonthlyReportClient({
   const [batchEntries, setBatchEntries] = useState<Record<string, BatchEntry>>(
     {}
   );
-  // Batch state belongs to one term/month pair. A selection change must not
-  // carry old successes (or failures) into a different month's eligibility.
-  const batchScope = `${currentTermId}:${currentMonth}`;
+  // Batch state belongs to one term/month/class triple. A selection change must
+  // not carry old successes (or failures) into a different scope's eligibility.
+  const batchScope = `${currentTermId}:${currentMonth}:${currentClassSessionId}`;
   const [batchState, setBatchState] = useState<{ scope: string }>({
     scope: batchScope,
   });
@@ -293,6 +293,11 @@ export default function MonthlyReportClient({
     setBatchEntries({});
     setShowBatchConfirm(false);
   }
+  // A run started under a previous scope must stop writing into the new one.
+  const batchScopeRef = useRef(batchScope);
+  useEffect(() => {
+    batchScopeRef.current = batchScope;
+  }, [batchScope]);
   // Null when idle; {current,total} while a batch runs.
   const [batchProgress, setBatchProgress] = useState<{
     current: number;
@@ -330,6 +335,10 @@ export default function MonthlyReportClient({
   // Sequential, client-orchestrated: one server request per child, each
   // awaited before the next. A failure is recorded and the run continues.
   async function runBatch(kidIds: string[]) {
+    // Snapshot the scope this run belongs to; a selection change during the
+    // run resets batch state, and stale results must not repopulate it.
+    const runScope = batchScope;
+    const inRunScope = () => batchScopeRef.current === runScope;
     let runSuccesses = 0;
     setBatchProgress({ current: 0, total: kidIds.length });
     setBatchEntries((prev) => {
@@ -339,6 +348,7 @@ export default function MonthlyReportClient({
     });
 
     for (const [index, kidId] of kidIds.entries()) {
+      if (!inRunScope()) break;
       setBatchProgress({ current: index + 1, total: kidIds.length });
       setBatchEntries((prev) => ({
         ...prev,
@@ -350,6 +360,7 @@ export default function MonthlyReportClient({
           termId: currentTermId,
           yearMonth: currentMonth,
         });
+        if (!inRunScope()) break;
         setBatchEntries((prev) => ({
           ...prev,
           [kidId]: result.success
@@ -361,6 +372,7 @@ export default function MonthlyReportClient({
         }));
         if (result.success) runSuccesses += 1;
       } catch {
+        if (!inRunScope()) break;
         setBatchEntries((prev) => ({
           ...prev,
           [kidId]: {
@@ -371,6 +383,7 @@ export default function MonthlyReportClient({
       }
     }
 
+    if (!inRunScope()) return;
     setBatchProgress(null);
     // Persisted reports and readiness now come from the server.
     router.refresh();
