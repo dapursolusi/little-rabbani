@@ -1,6 +1,6 @@
 # Project Working Memory
 
-Last updated: 2026-11-10 (full implementation audit)
+Last updated: 2026-11-10 (monthly report MVP shipped, PR #102)
 
 ## 1. Project Status
 
@@ -29,10 +29,9 @@ Last updated: 2026-11-10 (full implementation audit)
 
 #### 4. Monthly Report
 
-- **MVP:** In progress (branch `feat/monthly-report`, 46 commits ahead of `main`, no PR yet).
-- **Built:** Generation (single + batch), editor, preview, save/review/send/undo lifecycle, regeneration guards, class overview, kid page single-read. 14 test files — best-covered area in repo.
-- **Remaining:** Finish client decomposition WIP, commit/PR, human smoke test.
-- **Deferred:** Persistence edge cases, rate limiting (see NEXT).
+- **MVP:** Shipped to `main` (PR #102, squash `7b22295`).
+- **Built:** Generation (single + batch), editor, preview, save/review/send/undo lifecycle, regeneration guards, class overview, kid page single-read, enrollment-aware month picker, kid client split into `client.tsx` / `report-panel.tsx` / `narrative-preview.tsx`. 15 test files — best-covered area in repo.
+- **Deferred:** Human smoke test (generate → edit → undo → review → send) still pending; persistence edge cases, rate limiting (see NEXT).
 - **Won't Have:** [Explicit exclusions]
 
 #### 5. Term
@@ -60,51 +59,26 @@ Last updated: 2026-11-10 (full implementation audit)
 - **Dashboard page is a stub** (`<div>Dashboard</div>`); 5 pages missing `metadata` (dashboard, term, daily, class-session, registration).
 - **Auth gating in 4 places, no single policy:** proxy route gate (`src/proxy.ts:81`), `requireOwner` inside services, action-level inline (`report/kid/actions.ts:34`), page-level inline (settings pages).
 - **Duplicate confirmation components:** `src/components/confirmation-dialog.tsx` (new, kid client only) vs `src/components/sections/confirm-dialog.tsx:25` (older, month client).
-- **Test coverage uneven:** 31 unit/integration files; zero for class-session, kid-enrollment, theme; 1 e2e spec (placeholder homepage).
+- **Test coverage uneven:** 32 unit/integration files; zero for class-session, kid-enrollment services, theme; 1 e2e spec (placeholder homepage).
 - **`console.error` in server services** violating logger rule: kid ×4, kid-enrollment ×3, term, class-session.
 - **`src/lib/action/` is singular** — AGENTS.md documents `src/lib/actions/`.
+- **`[id]` route params are not UUID-validated** on any dynamic route; a non-uuid reaches Postgres and 500s on the uuid compare.
 
 ---
 
 ## 2. Current Priorities
 
-### NOW — Monthly Report MVP
+### NOW — Next slice (monthly report shipped)
 
 **Why are we doing this?**
 
-Complete the monthly reporting workflow so teachers can generate, edit, review, and send monthly reports to guardians.
-
-**Current status:**
-
-- Monthly report generation implemented (single + batch).
-- Editor and preview implemented.
-- Save, review, send, and undo workflows implemented.
-- Class overview implemented; kid page now does a single read.
-
-**Current task (uncommitted WIP):**
-
-- Extract `MonthPicker` (done → `kid/components/month-picker.tsx`, 64 lines).
-- Extract `ConfirmationDialog` (done → `src/components/confirmation-dialog.tsx`, 49 lines).
-- Client diff: +32 / −134 in `src/features/report/kid/components/client.tsx` (647 lines left).
-- `.gitignore`: dropped `/temp*` (working memory now tracked).
-- `temp/` untracked.
-
-**Decisions:**
-
-- Remaining planned extractions (`KidObservationSummary`, workflow hook, report panel) were not done — only the two above landed. Reassess before continuing; client is still 647 lines.
-- Keep tightly coupled implementations together.
-- No unrelated architectural cleanup.
-
-**Refactor implemented (2026-11-10, approved):**
-
-- `kid/components/client.tsx` 647 → 215 lines: header, term selector, month picker, observation summary, final-month branch, panel composition.
-- `kid/components/report-panel.tsx` (new, ~409 lines): lifecycle state, generate/save/review/send/undo handlers, tabs, workflow buttons, 3 confirmations.
-- `kid/components/narrative-preview.tsx` (new, ~61 lines): pure renderer.
-- Verified: typecheck clean; `tests/unit/features/report` + `tests/unit/app/report` 195/195 pass; prettier clean. ESLint: 2 pre-existing-style warnings on stateful component (complexity/max-statements), no errors.
-- Not covered by automated tests: none new — behavior unchanged, tests render through `KidReportClient`.
+Monthly reports are live. Close the remaining quality gaps before starting the next feature.
 
 **Next action:**
-Run `bun run check`, human smoke test the kid report page (generate → edit → undo → review → send), then commit the WIP: month picker + confirmation dialog extraction + client decomposition.
+
+1. Human smoke test the kid report page: generate → edit → undo → review → send.
+2. Decide whether to validate `[id]` route params as UUIDs project-wide (currently unvalidated on every `[id]` route; a non-uuid 500s at the Postgres uuid compare).
+3. Pick the next slice: monthly report persistence edge cases / rate limiting, or hide the 5 dead nav links.
 
 ### NEXT
 
